@@ -1,20 +1,13 @@
-"""Typed data models shared across the optimizer.
-
-Kept deliberately small: just the four core records (Banner, Pull, State, Path)
-plus the Rarity enum. Behaviour that depends on the seed stream (rolling a
-rarity, switching tracks) lives in the graph builder, not here.
-"""
-
 from __future__ import annotations
 
 from collections.abc import Mapping
 from dataclasses import dataclass
-from enum import Enum
+from enum import StrEnum
 
 CATFOOD_PER_DRAW = 150  # one paid pull = 150 catfood
 
 
-class Rarity(str, Enum):
+class Rarity(StrEnum):
     """Gacha rarities, ordered cheapest to rarest."""
 
     RARE = "Rare"
@@ -25,11 +18,7 @@ class Rarity(str, Enum):
 
 @dataclass(frozen=True)
 class Banner:
-    """A gacha banner: which cats drop at each rarity and at what rate.
-
-    Not hashable (it holds mappings); banners are looked up by id, not put in
-    sets. Rates are parts-per-10000 and should sum to 10000 for a valid banner.
-    """
+    """A gacha banner: cats and drop rates (parts-per-10000) per rarity."""
 
     banner_id: str
     name: str
@@ -46,7 +35,7 @@ class Banner:
 
 @dataclass(frozen=True, slots=True)
 class Pull:
-    """The outcome of a single pull at a given position in the seed stream."""
+    """A single pull outcome."""
 
     position: int
     banner_id: str
@@ -56,12 +45,7 @@ class Pull:
 
 @dataclass(frozen=True, slots=True)
 class State:
-    """A node in the search graph.
-
-    Frozen + slotted so it is hashable (it keys the A* score/visited dicts) and
-    cheap to allocate in bulk. `found` holds only the wishlist targets collected
-    so far, so equal progress collapses to the same node.
-    """
+    """A search node; frozen so it's hashable. `found` holds only wishlist targets so far."""
 
     position: int
     tickets_left: int
@@ -82,7 +66,7 @@ class Path:
 
     @property
     def cost(self) -> int:
-        """Resource cost. Tickets are free, so only catfood counts."""
+        """Resource cost; tickets are free so only catfood counts."""
         return self.catfood_draws_used * CATFOOD_PER_DRAW
 
     @property
