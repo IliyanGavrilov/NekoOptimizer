@@ -6,7 +6,7 @@ module is just the number generator; turning the raw stream into rarities,
 units, and track switches is the graph builder's job.
 """
 
-MASK = 0xFFFFFFFF  # keep arithmetic in 32 bits, matching the game's uint32
+MASK = 0xFFFFFFFF  # 32-bit wraparound, like the game's uint32
 
 
 def xorshift(state: int) -> int:
