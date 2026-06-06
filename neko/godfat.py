@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import re
 from dataclasses import dataclass
+from datetime import date
 
 from bs4 import BeautifulSoup
 
@@ -49,3 +50,41 @@ def parse_rolls(html: str) -> list[TrackPull]:
         pulls.append(TrackPull(int(match.group(1)), match.group(2), cat, rarity))
     pulls.sort(key=lambda pull: (pull.position, pull.track))
     return pulls
+
+
+@dataclass(frozen=True, slots=True)
+class GachaEvent:
+    """An available banner from the event dropdown."""
+
+    event_id: str
+    name: str
+    start: date
+    end: date
+
+
+def _parse_label(label: str) -> tuple[str, date, date] | None:
+    dates, sep, name = label.partition(": ")
+    if not sep or " ~ " not in dates:
+        return None
+    start, _, end = dates.partition(" ~ ")
+    try:
+        return name.strip(), date.fromisoformat(start.strip()), date.fromisoformat(end.strip())
+    except ValueError:
+        return None
+
+
+def parse_events(html: str) -> list[GachaEvent]:
+    """Read the event/banner dropdown into typed events."""
+    soup = BeautifulSoup(html, "html.parser")
+    select = soup.find("select", id="event_select")
+    if select is None:
+        return []
+    events = []
+    for option in select.find_all("option"):
+        event_id = option.get("value", "").strip()
+        parsed = _parse_label(option.get_text(strip=True))
+        if not event_id or parsed is None:
+            continue
+        name, start, end = parsed
+        events.append(GachaEvent(event_id, name, start, end))
+    return events
