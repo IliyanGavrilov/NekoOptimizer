@@ -1,7 +1,7 @@
 from neko.godfat import TrackPull
 from neko.graph import BannerGraph
 from neko.models import CATFOOD_PER_DRAW, Path, Rarity, State
-from neko.search import astar
+from neko.search import astar, beam_search
 
 R = Rarity.RARE
 U = Rarity.UBER_SUPER_RARE
@@ -61,3 +61,36 @@ def test_follows_a_track_switch_to_reach_target():
     g = banner("x", (1, "A", "Cat", R), (2, "A", "Cat", R), (3, "B", "Bahamut", U))
     result = astar([g], {"Bahamut"}, start(tickets=3))
     assert result.cats == ("Cat", "Cat", "Bahamut")
+
+
+def test_upper_bound_at_optimal_still_finds_plan():
+    g = banner("x", (1, "A", "Bahamut", U))
+    result = astar([g], {"Bahamut"}, start(catfood=1), upper_bound=CATFOOD_PER_DRAW)
+    assert result.cost == CATFOOD_PER_DRAW
+
+
+def test_upper_bound_below_optimal_returns_none():
+    g = banner("x", (1, "A", "Bahamut", U))
+    assert astar([g], {"Bahamut"}, start(catfood=1), upper_bound=CATFOOD_PER_DRAW - 1) is None
+
+
+def test_beam_finds_reachable_target():
+    g = banner("x", (1, "A", "Cat", R), (2, "A", "Dog", R), (3, "A", "Bahamut", U))
+    assert beam_search([g], {"Bahamut"}, start(tickets=3), width=5).cats[-1] == "Bahamut"
+
+
+def test_beam_matches_astar_with_wide_beam():
+    x = banner("x", (1, "A", "Bahamut", U))
+    y = banner("y", (1, "A", "Cat", R), (2, "A", "Dog", R), (3, "A", "Bahamut", U))
+    s = start(catfood=5)
+    assert beam_search([x, y], {"Bahamut"}, s, width=50).cost == astar([x, y], {"Bahamut"}, s).cost
+
+
+def test_beam_unreachable_returns_none():
+    assert beam_search([banner("x", (1, "A", "Cat", R))], {"Bahamut"}, start(tickets=5), 5) is None
+
+
+def test_beam_collects_multiple_targets():
+    g = banner("x", (1, "A", "Bahamut", U), (2, "A", "Kasli", U))
+    result = beam_search([g], {"Bahamut", "Kasli"}, start(tickets=2), width=5)
+    assert set(result.cats) == {"Bahamut", "Kasli"}
