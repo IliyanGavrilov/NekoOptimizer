@@ -1,0 +1,63 @@
+from neko.godfat import TrackPull
+from neko.graph import BannerGraph
+from neko.models import CATFOOD_PER_DRAW, Path, Rarity, State
+from neko.search import astar
+
+R = Rarity.RARE
+U = Rarity.UBER_SUPER_RARE
+
+
+def banner(banner_id, *rows):
+    return BannerGraph(banner_id, [TrackPull(*row) for row in rows])
+
+
+def start(position=0, tickets=0, catfood=0, found=()):
+    return State(position, tickets, catfood, frozenset(found))
+
+
+def test_no_targets_returns_empty_plan():
+    assert astar([banner("x", (1, "A", "Cat", R))], set(), start(tickets=5)) == Path((), 0, 0)
+
+
+def test_target_on_free_ticket_is_free():
+    result = astar([banner("x", (1, "A", "Bahamut", U))], {"Bahamut"}, start(tickets=1))
+    assert result.cost == 0
+
+
+def test_target_paid_with_catfood():
+    result = astar([banner("x", (1, "A", "Bahamut", U))], {"Bahamut"}, start(catfood=1))
+    assert result.cost == CATFOOD_PER_DRAW
+
+
+def test_tickets_are_spent_before_catfood():
+    g = banner("x", (1, "A", "Cat", R), (2, "A", "Dog", R), (3, "A", "Bahamut", U))
+    result = astar([g], {"Bahamut"}, start(tickets=2, catfood=5))
+    assert result.cost == CATFOOD_PER_DRAW
+
+
+def test_unreachable_target_returns_none():
+    assert astar([banner("x", (1, "A", "Cat", R))], {"Bahamut"}, start(tickets=5)) is None
+
+
+def test_insufficient_resources_returns_none():
+    g = banner("x", (1, "A", "Cat", R), (2, "A", "Bahamut", U))
+    assert astar([g], {"Bahamut"}, start(tickets=1)) is None
+
+
+def test_picks_the_cheaper_banner():
+    x = banner("x", (1, "A", "Bahamut", U))
+    y = banner("y", (1, "A", "Cat", R), (2, "A", "Dog", R), (3, "A", "Bahamut", U))
+    result = astar([x, y], {"Bahamut"}, start(catfood=5))
+    assert result.cost == CATFOOD_PER_DRAW
+
+
+def test_collects_every_target():
+    g = banner("x", (1, "A", "Bahamut", U), (2, "A", "Kasli", U))
+    result = astar([g], {"Bahamut", "Kasli"}, start(tickets=2))
+    assert set(result.cats) == {"Bahamut", "Kasli"}
+
+
+def test_follows_a_track_switch_to_reach_target():
+    g = banner("x", (1, "A", "Cat", R), (2, "A", "Cat", R), (3, "B", "Bahamut", U))
+    result = astar([g], {"Bahamut"}, start(tickets=3))
+    assert result.cats == ("Cat", "Cat", "Bahamut")
