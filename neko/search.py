@@ -51,8 +51,33 @@ def _reconstruct(goal: State, came_from: dict, start: State) -> Path:
     )
 
 
-def astar(graphs: Iterable[BannerGraph], targets: Iterable[str], start: State) -> Path | None:
-    """Cheapest pull plan collecting all targets, or None if unreachable. A* over states."""
+def _pull(state: State, graph: BannerGraph, targets: frozenset[str]):
+    # The single legal move of pulling `graph` at `state`, or None if out of data/resources.
+    outcome = graph.outcome(state.position)
+    if outcome is None:
+        return None
+    if state.tickets_left > 0:
+        tickets, catfood, step = state.tickets_left - 1, state.catfood_draws, 0
+    elif state.catfood_draws > 0:
+        tickets, catfood, step = 0, state.catfood_draws - 1, CATFOOD_PER_DRAW
+    else:
+        return None
+    found = state.found
+    if not outcome.switched and outcome.cat in targets:
+        found = found | {outcome.cat}
+    return State(outcome.next_position, tickets, catfood, found), step, outcome
+
+
+def astar(
+    graphs: Iterable[BannerGraph],
+    targets: Iterable[str],
+    start: State,
+    upper_bound: float = INF,
+) -> Path | None:
+    """Cheapest pull plan collecting all targets, or None. A* over states.
+
+    Pass upper_bound (e.g. a beam-search cost) to prune branches that cannot beat it.
+    """
     graphs = list(graphs)
     targets = frozenset(targets)
     occurrences = _occurrences(graphs, targets)
@@ -68,25 +93,57 @@ def astar(graphs: Iterable[BannerGraph], targets: Iterable[str], start: State) -
         if targets <= state.found:
             return _reconstruct(state, came_from, start)
         for graph in graphs:
-            outcome = graph.outcome(state.position)
-            if outcome is None:
+            move = _pull(state, graph, targets)
+            if move is None:
                 continue
-            if state.tickets_left > 0:
-                tickets, catfood, step = state.tickets_left - 1, state.catfood_draws, 0
-            elif state.catfood_draws > 0:
-                tickets, catfood, step = 0, state.catfood_draws - 1, CATFOOD_PER_DRAW
-            else:
-                continue
-            found = state.found
-            if not outcome.switched and outcome.cat in targets:
-                found = found | {outcome.cat}
-            nxt = State(outcome.next_position, tickets, catfood, found)
+            nxt, step, outcome = move
             new_cost = cost + step
             if new_cost < g_score.get(nxt, INF):
-                h = _heuristic(nxt.position, tickets, targets - found, occurrences)
-                if h == INF:
+                h = _heuristic(nxt.position, nxt.tickets_left, targets - nxt.found, occurrences)
+                if h == INF or new_cost + h > upper_bound:
                     continue
                 g_score[nxt] = new_cost
                 came_from[nxt] = (state, graph.banner_id, outcome)
                 heapq.heappush(heap, (new_cost + h, next(counter), new_cost, nxt))
     return None
+
+
+def beam_search(
+    graphs: Iterable[BannerGraph], targets: Iterable[str], start: State, width: int
+) -> Path | None:
+    """Keep only the `width` most promising paths each step. Fast, not guaranteed optimal."""
+    graphs = list(graphs)
+    targets = frozenset(targets)
+    if targets <= start.found:
+        return _reconstruct(start, {}, start)
+    occurrences = _occurrences(graphs, targets)
+    best_cost: dict[State, int] = {start: 0}
+    came_from: dict[State, tuple] = {}
+    best_goal: State | None = None
+    best_goal_cost = INF
+    frontier = [start]
+    while frontier:
+        ranked: list[tuple[float, State]] = []
+        for state in frontier:
+            cost = best_cost[state]
+            for graph in graphs:
+                move = _pull(state, graph, targets)
+                if move is None:
+                    continue
+                nxt, step, outcome = move
+                new_cost = cost + step
+                if new_cost >= best_cost.get(nxt, INF):
+                    continue
+                best_cost[nxt] = new_cost
+                came_from[nxt] = (state, graph.banner_id, outcome)
+                if targets <= nxt.found:
+                    if new_cost < best_goal_cost:
+                        best_goal, best_goal_cost = nxt, new_cost
+                    continue
+                h = _heuristic(nxt.position, nxt.tickets_left, targets - nxt.found, occurrences)
+                if h == INF:
+                    continue
+                ranked.append((new_cost + h, nxt))
+        ranked.sort(key=lambda item: item[0])
+        frontier = [state for _, state in ranked[:width]]
+    return _reconstruct(best_goal, came_from, start) if best_goal is not None else None
