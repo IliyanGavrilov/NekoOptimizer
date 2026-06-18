@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Neko Optimizer</title>
+</head>
+<body>
+  <h1>Neko Optimizer</h1>
+
+  <form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit">Find plan</button>
+  </form>
+
+  {% if plans is not None %}
+    <h2>Results</h2>
+    {% if plans %}
+      {% for option in plans %}
+        <section>
+          <h3>{{ option.targets|join:", " }} &mdash; {{ option.plan.cost }} catfood</h3>
+          <ol>
+            {% for pull in option.plan.pulls %}
+              <li>{{ pull.banner_id }}: {{ pull.cat }} [{{ pull.rarity }}]</li>
+            {% endfor %}
+          </ol>
+        </section>
+      {% endfor %}
+    {% else %}
+      <p>No reachable plan with these resources.</p>
+    {% endif %}
+  {% endif %}
+</body>
+</html>
