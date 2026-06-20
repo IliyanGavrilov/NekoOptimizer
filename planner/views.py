@@ -1,8 +1,8 @@
-from django.shortcuts import render
+from django.shortcuts import redirect, render
 
 from neko.planning import plan
-from planner.forms import PlannerForm
-from planner.models import Seed
+from planner.forms import CatForm, PlannerForm
+from planner.models import Cat, Seed
 from planner.services import fetch_banners
 
 
@@ -13,9 +13,33 @@ def planner(request):
         if form.is_valid():
             seed = form.cleaned_data["seed"]
             Seed.store(seed)
+            targets = {cat.name for cat in form.cleaned_data["targets"]}
+            if form.cleaned_data["use_wishlist"]:
+                targets |= set(Cat.objects.wishlist().values_list("name", flat=True))
             pulls = fetch_banners(seed)
-            targets = [cat.name for cat in form.cleaned_data["targets"]]
             plans = plan(pulls, targets, form.cleaned_data["tickets"], form.cleaned_data["catfood"])
     else:
         form = PlannerForm(initial={"seed": Seed.current()})
     return render(request, "planner/planner.html", {"form": form, "plans": plans})
+
+
+def _save_flags(post) -> None:
+    owned = set(post.getlist("owned"))
+    wanted = set(post.getlist("wanted"))
+    for cat in Cat.objects.all():
+        cat.owned = str(cat.pk) in owned
+        cat.wanted = str(cat.pk) in wanted
+        cat.save(update_fields=["owned", "wanted"])
+
+
+def collection(request):
+    form = CatForm()
+    if request.method == "POST":
+        if "save" in request.POST:
+            _save_flags(request.POST)
+            return redirect("collection")
+        form = CatForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect("collection")
+    return render(request, "planner/collection.html", {"cats": Cat.objects.all(), "form": form})

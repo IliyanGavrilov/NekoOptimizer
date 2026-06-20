@@ -40,7 +40,23 @@ def test_post_persists_seed(client, monkeypatch):
 
 
 @pytest.mark.django_db
-def test_invalid_input_renders_no_plan(client):
+def test_use_wishlist_searches_wanted_cats(client, monkeypatch):
+    Cat.objects.create(name="Bahamut", wanted=True)
+    monkeypatch.setattr(
+        "planner.views.fetch_banners", fixed_banners(TrackPull(1, "A", "Bahamut", U))
+    )
+    response = client.post("/", {"seed": 7, "tickets": 1, "catfood": 0, "use_wishlist": "on"})
+    assert b"Bahamut" in response.content
+
+
+@pytest.mark.django_db
+def test_requires_targets_or_wishlist(client):
+    response = client.post("/", {"seed": 7, "tickets": 1, "catfood": 0})
+    assert response.context["plans"] is None
+
+
+@pytest.mark.django_db
+def test_negative_resources_rejected(client):
     cat = Cat.objects.create(name="Bahamut")
     response = client.post("/", {"seed": 7, "tickets": -1, "catfood": 0, "targets": [cat.pk]})
     assert response.context["plans"] is None

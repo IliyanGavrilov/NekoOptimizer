@@ -1,3 +1,4 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -6,10 +7,28 @@
 </head>
 <body>
   <h1>Neko Optimizer</h1>
+  <p><a href="{% url 'collection' %}">Manage collection &amp; wishlist</a></p>
 
   <form method="post">
     {% csrf_token %}
-    {{ form.as_p }}
+    <p>{{ form.seed.label_tag }} {{ form.seed }}</p>
+    <p>{{ form.tickets.label_tag }} {{ form.tickets }}</p>
+    <p>{{ form.catfood.label_tag }} {{ form.catfood }}</p>
+    <p>{{ form.use_wishlist }} {{ form.use_wishlist.label_tag }}</p>
+
+    <fieldset>
+      <legend>Targets</legend>
+      <input type="search" data-filter="targetList" placeholder="Filter cats&hellip;">
+      <div id="targetList">
+        {% for target in form.targets %}
+          <div data-name="{{ target.choice_label }}">{{ target.tag }} {{ target.choice_label }}</div>
+        {% empty %}
+          <p>No cats yet &mdash; <a href="{% url 'collection' %}">add some</a>.</p>
+        {% endfor %}
+      </div>
+    </fieldset>
+
+    {% if form.non_field_errors %}<p>{{ form.non_field_errors }}</p>{% endif %}
     <button type="submit">Find plan</button>
   </form>
 
@@ -30,5 +49,7 @@
       <p>No reachable plan with these resources.</p>
     {% endif %}
   {% endif %}
+
+  <script src="{% static 'planner/filter.js' %}"></script>
 </body>
 </html>
