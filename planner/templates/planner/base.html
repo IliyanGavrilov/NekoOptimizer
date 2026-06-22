@@ -1,0 +1,16 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Neko Optimizer{% endblock %}</title>
+  <link rel="stylesheet" href="{% static 'planner/style.css' %}">
+</head>
+<body>
+  <main>
+    {% block content %}{% endblock %}
+  </main>
+  <script src="{% static 'planner/filter.js' %}"></script>
+</body>
+</html>
