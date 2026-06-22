@@ -1,11 +1,8 @@
-{% load static %}
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="utf-8">
-  <title>Collection &mdash; Neko Optimizer</title>
-</head>
-<body>
+{% extends "planner/base.html" %}
+
+{% block title %}Collection &mdash; Neko Optimizer{% endblock %}
+
+{% block content %}
   <h1>Collection</h1>
   <p><a href="{% url 'planner' %}">&larr; Back to planner</a></p>
 
@@ -33,7 +30,4 @@
     </table>
     <button type="submit" name="save">Save</button>
   </form>
-
-  <script src="{% static 'planner/filter.js' %}"></script>
-</body>
-</html>
+{% endblock %}

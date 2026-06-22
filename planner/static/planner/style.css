@@ -1,0 +1,74 @@
+:root {
+  --bg: #1b1c22;
+  --panel: #25262e;
+  --ink: #e9e9ee;
+  --muted: #9a9ba6;
+  --accent: #f4a93b;
+  --line: #383944;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font: 16px/1.5 system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+}
+
+main {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 2rem 1.25rem 4rem;
+}
+
+h1 { color: var(--accent); margin-bottom: 0.25rem; }
+a { color: var(--accent); }
+
+form { margin: 1.5rem 0; }
+
+input, button {
+  font: inherit;
+  color: var(--ink);
+}
+
+input[type="number"], input[type="search"], input[type="text"] {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 0.4rem 0.6rem;
+}
+
+button {
+  background: var(--accent);
+  color: #1b1c22;
+  border: 0;
+  border-radius: 6px;
+  padding: 0.5rem 1rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+button:hover { filter: brightness(1.07); }
+
+fieldset {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  margin: 1rem 0;
+}
+
+#targetList { max-height: 320px; overflow: auto; display: block; }
+
+table { width: 100%; border-collapse: collapse; margin-top: 0.5rem; }
+th, td { text-align: left; padding: 0.35rem 0.5rem; border-bottom: 1px solid var(--line); }
+
+section {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  margin: 0.75rem 0;
+}
+
+section h3 { margin: 0.25rem 0 0.5rem; }
+.muted, label { color: var(--muted); }
