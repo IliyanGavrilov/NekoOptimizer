@@ -46,3 +46,12 @@ def test_positions_are_sorted_indices():
 def test_build_graphs_keeps_banner_ids():
     graphs = build_graphs({"x": [TrackPull(1, "A", "Cat", R)], "y": []})
     assert [g.banner_id for g in graphs] == ["x", "y"]
+
+
+def test_guaranteed_keeps_cat_and_advances_one():
+    g = BannerGraph("b", [], [TrackPull(1, "A", "Bahamut", U)])
+    assert g.guaranteed(0) == Outcome("Bahamut", U, 1, False)
+
+
+def test_guaranteed_missing_position_is_none():
+    assert graph((1, "A", "Cat", R)).guaranteed(0) is None

@@ -23,7 +23,12 @@ class Outcome:
 class BannerGraph:
     """A banner's pulls indexed by shared-seed position, with track switches resolved."""
 
-    def __init__(self, banner_id: str, pulls: Iterable[TrackPull]) -> None:
+    def __init__(
+        self,
+        banner_id: str,
+        pulls: Iterable[TrackPull],
+        guaranteed: Iterable[TrackPull] = (),
+    ) -> None:
         self.banner_id = banner_id
         cats: dict[int, str] = {}
         rarities: dict[int, Rarity] = {}
@@ -39,9 +44,17 @@ class BannerGraph:
             self._outcomes[index] = Outcome(
                 cat, rarities[index], index + (3 if switched else 2), switched
             )
+        # A guaranteed roll yields a known uber and consumes one seed step (+1, track flip).
+        self._guaranteed: dict[int, Outcome] = {}
+        for pull in guaranteed:
+            index = stream_index(pull.position, pull.track)
+            self._guaranteed[index] = Outcome(pull.cat, pull.rarity, index + 1, switched=False)
 
     def outcome(self, position: int) -> Outcome | None:
         return self._outcomes.get(position)
+
+    def guaranteed(self, position: int) -> Outcome | None:
+        return self._guaranteed.get(position)
 
     def positions(self) -> list[int]:
         return sorted(self._outcomes)
