@@ -8,6 +8,8 @@ from neko.models import Rarity
 
 _PAW = "\U0001f43e"  # godfat appends a paw glyph to every cat name
 _PICK = re.compile(r"pick\('(\d+)([AB])'\)")
+_PICK_GUARANTEED = re.compile(r"pick\('(\d+)([AB])G'\)")
+_ARROW = re.compile(r"(<-|->)\s*\d+[AB]")  # godfat's "-> 11B" landing hint
 _RARITY_BY_CLASS = {
     "rare": Rarity.RARE,
     "supa": Rarity.SUPER_RARE,
@@ -46,6 +48,24 @@ def parse_rolls(html: str) -> list[TrackPull]:
             continue
         cat = cell.get_text(strip=True).replace(_PAW, "").strip()
         pulls.append(TrackPull(int(match.group(1)), match.group(2), cat, rarity))
+    pulls.sort(key=lambda pull: (pull.position, pull.track))
+    return pulls
+
+
+def parse_guaranteed(html: str) -> list[TrackPull]:
+    """Extract the guaranteed-uber cells (the uber you'd get rolling a guaranteed here).
+
+    The cell's CSS class is unreliable here, so the result is marked Uber — a
+    guaranteed roll is an uber by definition; the cat name is what matters.
+    """
+    soup = BeautifulSoup(html, "html.parser")
+    pulls = []
+    for cell in soup.select("td.cat.pick"):
+        match = _PICK_GUARANTEED.search(cell.get("onclick", ""))
+        if match is None:
+            continue
+        cat = _ARROW.sub("", cell.get_text(strip=True)).replace(_PAW, "").strip()
+        pulls.append(TrackPull(int(match.group(1)), match.group(2), cat, Rarity.UBER_SUPER_RARE))
     pulls.sort(key=lambda pull: (pull.position, pull.track))
     return pulls
 
