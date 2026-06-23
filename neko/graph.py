@@ -38,13 +38,12 @@ class BannerGraph:
             rarities[index] = pull.rarity
         self._outcomes: dict[int, Outcome] = {}
         for index, cat in cats.items():
-            # A consecutive rare (vs the same-track predecessor at index-2) rerolls once,
-            # consuming an extra seed step (+3) that flips parity -> track switch.
+            # consecutive rare dupe rerolls once: +3 (extra step) flips track
             switched = rarities[index] == Rarity.RARE and cats.get(index - 2) == cat
             self._outcomes[index] = Outcome(
                 cat, rarities[index], index + (3 if switched else 2), switched
             )
-        # A guaranteed roll yields a known uber and consumes one seed step (+1, track flip).
+        # guaranteed roll: +1 step flips track
         self._guaranteed: dict[int, Outcome] = {}
         for pull in guaranteed:
             index = stream_index(pull.position, pull.track)
