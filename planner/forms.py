@@ -33,5 +33,5 @@ class PlannerForm(forms.Form):
             and not cleaned.get("targets")
             and not Cat.objects.wishlist()
         ):
-            raise forms.ValidationError("Your wishlist is empty — mark some cats as wanted first.")
+            raise forms.ValidationError("Your wishlist is empty - mark some cats as wanted first.")
         return cleaned
