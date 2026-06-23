@@ -53,11 +53,7 @@ def parse_rolls(html: str) -> list[TrackPull]:
 
 
 def parse_guaranteed(html: str) -> list[TrackPull]:
-    """Extract the guaranteed-uber cells (the uber you'd get rolling a guaranteed here).
-
-    The cell's CSS class is unreliable here, so the result is marked Uber — a
-    guaranteed roll is an uber by definition; the cat name is what matters.
-    """
+    """Extract the guaranteed-uber cells (the uber you'd get rolling a guaranteed here)."""
     soup = BeautifulSoup(html, "html.parser")
     pulls = []
     for cell in soup.select("td.cat.pick"):

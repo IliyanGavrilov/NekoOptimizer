@@ -37,11 +37,11 @@ def _heuristic(
 
 
 def _reconstruct(goal: State, came_from: dict, start: State) -> Path:
-    pulls = []
+    pulls: list[Pull] = []
     state = goal
     while state in came_from:
-        previous, banner_id, outcome = came_from[state]
-        pulls.append(Pull(previous.position, banner_id, outcome.cat, outcome.rarity))
+        previous, step_pulls = came_from[state]
+        pulls.extend(reversed(step_pulls))
         state = previous
     pulls.reverse()
     return Path(
@@ -65,7 +65,9 @@ def _pull(state: State, graph: BannerGraph, targets: frozenset[str]):
     found = state.found
     if not outcome.switched and outcome.cat in targets:
         found = found | {outcome.cat}
-    return State(outcome.next_position, tickets, catfood, found), step, outcome
+    nxt = State(outcome.next_position, tickets, catfood, found)
+    pull = Pull(state.position, graph.banner_id, outcome.cat, outcome.rarity)
+    return nxt, step, [pull]
 
 
 def astar(
@@ -96,14 +98,14 @@ def astar(
             move = _pull(state, graph, targets)
             if move is None:
                 continue
-            nxt, step, outcome = move
+            nxt, step, pulls = move
             new_cost = cost + step
             if new_cost < g_score.get(nxt, INF):
                 h = _heuristic(nxt.position, nxt.tickets_left, targets - nxt.found, occurrences)
                 if h == INF or new_cost + h > upper_bound:
                     continue
                 g_score[nxt] = new_cost
-                came_from[nxt] = (state, graph.banner_id, outcome)
+                came_from[nxt] = (state, pulls)
                 heapq.heappush(heap, (new_cost + h, next(counter), new_cost, nxt))
     return None
 
@@ -130,12 +132,12 @@ def beam_search(
                 move = _pull(state, graph, targets)
                 if move is None:
                     continue
-                nxt, step, outcome = move
+                nxt, step, pulls = move
                 new_cost = cost + step
                 if new_cost >= best_cost.get(nxt, INF):
                     continue
                 best_cost[nxt] = new_cost
-                came_from[nxt] = (state, graph.banner_id, outcome)
+                came_from[nxt] = (state, pulls)
                 if targets <= nxt.found:
                     if new_cost < best_goal_cost:
                         best_goal, best_goal_cost = nxt, new_cost
