@@ -38,6 +38,9 @@ def collection(request):
         if "save" in request.POST:
             _save_flags(request.POST)
             return redirect("collection")
+        if "remove" in request.POST:
+            Cat.objects.filter(pk__in=request.POST.getlist("delete")).delete()
+            return redirect("collection")
         form = CatForm(request.POST)
         if form.is_valid():
             form.save()

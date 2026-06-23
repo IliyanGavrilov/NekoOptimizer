@@ -29,3 +29,11 @@ def test_save_clears_unchecked_flags(client):
     client.post("/collection/", {"save": "1"})
     cat.refresh_from_db()
     assert (cat.owned, cat.wanted) == (False, False)
+
+
+@pytest.mark.django_db
+def test_remove_deletes_only_ticked_cats(client):
+    Cat.objects.create(name="Keep")
+    drop = Cat.objects.create(name="Drop")
+    client.post("/collection/", {"remove": "1", "delete": [drop.pk]})
+    assert list(Cat.objects.values_list("name", flat=True)) == ["Keep"]
