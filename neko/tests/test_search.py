@@ -1,7 +1,7 @@
 from neko.godfat import TrackPull
 from neko.graph import BannerGraph
 from neko.models import CATFOOD_PER_DRAW, Path, Rarity, State
-from neko.search import astar, beam_search
+from neko.search import Guaranteed, astar, beam_search
 
 R = Rarity.RARE
 U = Rarity.UBER_SUPER_RARE
@@ -94,3 +94,43 @@ def test_beam_collects_multiple_targets():
     g = banner("x", (1, "A", "Bahamut", U), (2, "A", "Kasli", U))
     result = beam_search([g], {"Bahamut", "Kasli"}, start(tickets=2), width=5)
     assert set(result.cats) == {"Bahamut", "Kasli"}
+
+
+def guaranteed_banner():
+    return BannerGraph(
+        "x",
+        [TrackPull(1, "A", "Cat", R), TrackPull(2, "A", "Dog", R)],
+        [TrackPull(3, "A", "Mecha", U)],
+    )
+
+
+def test_guaranteed_roll_obtains_the_guaranteed_uber():
+    result = astar(
+        [guaranteed_banner()], {"Mecha"}, start(catfood=3), guaranteed={"x": Guaranteed(3, 450)}
+    )
+    assert result.cats == ("Cat", "Dog", "Mecha")
+
+
+def test_guaranteed_roll_costs_the_fixed_price():
+    result = astar(
+        [guaranteed_banner()], {"Mecha"}, start(catfood=3), guaranteed={"x": Guaranteed(3, 450)}
+    )
+    assert result.cost == 450
+
+
+def test_guaranteed_unaffordable_returns_none():
+    result = astar(
+        [guaranteed_banner()], {"Mecha"}, start(catfood=2), guaranteed={"x": Guaranteed(3, 450)}
+    )
+    assert result is None
+
+
+def test_guaranteed_uber_unreachable_without_config():
+    assert astar([guaranteed_banner()], {"Mecha"}, start(catfood=9)) is None
+
+
+def test_beam_uses_guaranteed_rolls():
+    result = beam_search(
+        [guaranteed_banner()], {"Mecha"}, start(catfood=3), 5, guaranteed={"x": Guaranteed(3, 450)}
+    )
+    assert result.cats[-1] == "Mecha"
