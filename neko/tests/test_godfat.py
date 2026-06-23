@@ -3,7 +3,7 @@ from pathlib import Path
 
 import pytest
 
-from neko.godfat import parse_events, parse_rolls
+from neko.godfat import parse_events, parse_guaranteed, parse_rolls
 from neko.models import Rarity
 
 FIXTURES = Path(__file__).parent / "fixtures"
@@ -61,3 +61,12 @@ def test_parses_event_date_range():
 
 def test_missing_select_yields_no_events():
     assert parse_events("<html></html>") == []
+
+
+def test_parse_guaranteed_extracts_ubers_stripping_arrows():
+    names = {(p.position, p.track): p.cat for p in parse_guaranteed(FIXTURE)}
+    assert names == {(1, "A"): "Guaranteed Uber", (2, "B"): "Another Uber"}
+
+
+def test_parse_guaranteed_marks_results_uber():
+    assert all(p.rarity == Rarity.UBER_SUPER_RARE for p in parse_guaranteed(FIXTURE))
