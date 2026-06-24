@@ -5,12 +5,16 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 
 from neko.cache import RollCache
-from neko.godfat import GachaEvent, parse_rolls
+from neko.godfat import BannerRolls, GachaEvent, parse_guaranteed, parse_rolls
 from neko.scraper import GodfatScraper, active_events, aiohttp_fetch, roll_url
 
 FIXTURES = Path(__file__).parent / "fixtures"
 FIXTURE = (FIXTURES / "godfat_sample.html").read_text(encoding="utf-8")
 EVENTS = (FIXTURES / "godfat_events.html").read_text(encoding="utf-8")
+
+
+def banner_rolls(html):
+    return BannerRolls(parse_rolls(html), parse_guaranteed(html))
 
 
 def fetch_returning(html):
@@ -39,9 +43,13 @@ def test_roll_url_format():
     )
 
 
-async def test_rolls_fetches_and_parses():
+def test_roll_url_forces_guaranteed():
+    assert roll_url(1, "ev", 30, guaranteed=True).endswith("&force_guaranteed=1")
+
+
+async def test_rolls_parses_pulls_and_guaranteed():
     scraper = GodfatScraper(fetch_returning(FIXTURE))
-    assert await scraper.rolls(1, "ev") == parse_rolls(FIXTURE)
+    assert await scraper.rolls(1, "ev") == banner_rolls(FIXTURE)
 
 
 async def test_rolls_returns_cache_without_fetching(tmp_path):
@@ -49,7 +57,7 @@ async def test_rolls_returns_cache_without_fetching(tmp_path):
         raise AssertionError("fetched despite a cache hit")
 
     cache = RollCache(tmp_path)
-    expected = parse_rolls(FIXTURE)
+    expected = banner_rolls(FIXTURE)
     cache.save(1, "ev", 30, expected)
     scraper = GodfatScraper(boom, cache, count=30)
     assert await scraper.rolls(1, "ev") == expected
@@ -59,13 +67,13 @@ async def test_rolls_writes_to_cache(tmp_path):
     cache = RollCache(tmp_path)
     scraper = GodfatScraper(fetch_returning(FIXTURE), cache, count=30)
     await scraper.rolls(1, "ev")
-    assert cache.load(1, "ev", 30) == parse_rolls(FIXTURE)
+    assert cache.load(1, "ev", 30) == banner_rolls(FIXTURE)
 
 
 async def test_all_rolls_keyed_by_event():
     scraper = GodfatScraper(fetch_returning(FIXTURE))
     result = await scraper.all_rolls(1, ["a", "b"])
-    assert result == {"a": parse_rolls(FIXTURE), "b": parse_rolls(FIXTURE)}
+    assert result == {"a": banner_rolls(FIXTURE), "b": banner_rolls(FIXTURE)}
 
 
 async def test_events_parses_dropdown():

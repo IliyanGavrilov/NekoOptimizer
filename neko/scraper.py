@@ -6,7 +6,7 @@ from urllib.parse import urlencode
 import aiohttp
 
 from neko.cache import RollCache
-from neko.godfat import GachaEvent, TrackPull, parse_events, parse_rolls
+from neko.godfat import BannerRolls, GachaEvent, parse_events, parse_guaranteed, parse_rolls
 
 BASE_URL = "https://bc.godfat.org/"
 DEFAULT_COUNT = 100
@@ -14,9 +14,11 @@ DEFAULT_COUNT = 100
 Fetcher = Callable[[str], Awaitable[str]]
 
 
-def roll_url(seed: int, event: str, count: int = DEFAULT_COUNT) -> str:
-    query = urlencode({"seed": seed, "event": event, "count": count, "display": "text", "name": 2})
-    return f"{BASE_URL}?{query}"
+def roll_url(seed: int, event: str, count: int = DEFAULT_COUNT, guaranteed: bool = False) -> str:
+    query = {"seed": seed, "event": event, "count": count, "display": "text", "name": 2}
+    if guaranteed:
+        query["force_guaranteed"] = 1
+    return f"{BASE_URL}?{urlencode(query)}"
 
 
 async def aiohttp_fetch(session: aiohttp.ClientSession, url: str) -> str:
@@ -48,17 +50,18 @@ class GodfatScraper:
     async def events(self) -> list[GachaEvent]:
         return parse_events(await self._fetch(BASE_URL))
 
-    async def rolls(self, seed: int, event: str) -> list[TrackPull]:
+    async def rolls(self, seed: int, event: str) -> BannerRolls:
         if self._cache is not None:
             hit = self._cache.load(seed, event, self._count)
             if hit is not None:
                 return hit
-        pulls = parse_rolls(await self._fetch(roll_url(seed, event, self._count)))
+        html = await self._fetch(roll_url(seed, event, self._count, guaranteed=True))
+        rolls = BannerRolls(parse_rolls(html), parse_guaranteed(html))
         if self._cache is not None:
-            self._cache.save(seed, event, self._count, pulls)
-        return pulls
+            self._cache.save(seed, event, self._count, rolls)
+        return rolls
 
-    async def all_rolls(self, seed: int, events: Iterable[str]) -> dict[str, list[TrackPull]]:
+    async def all_rolls(self, seed: int, events: Iterable[str]) -> dict[str, BannerRolls]:
         events = list(events)
         results = await asyncio.gather(*(self.rolls(seed, event) for event in events))
         return dict(zip(events, results, strict=True))
@@ -70,7 +73,7 @@ async def scrape_active(
     count: int = DEFAULT_COUNT,
     cache: RollCache | None = None,
     today: date | None = None,
-) -> dict[str, list[TrackPull]]:
+) -> dict[str, BannerRolls]:
     async with aiohttp.ClientSession() as session:
         scraper = GodfatScraper(make_fetcher(session), cache, count)
         active = active_events(await scraper.events(), today)

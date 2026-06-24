@@ -2,12 +2,16 @@ import json
 from dataclasses import asdict
 from pathlib import Path
 
-from neko.godfat import TrackPull
+from neko.godfat import BannerRolls, TrackPull
 from neko.models import Rarity
 
 
+def _to_pulls(rows: list[dict]) -> list[TrackPull]:
+    return [TrackPull(r["position"], r["track"], r["cat"], Rarity(r["rarity"])) for r in rows]
+
+
 class RollCache:
-    """JSON-on-disk cache of parsed rolls, keyed by (seed, event, count)."""
+    """JSON-on-disk cache of a banner's rolls, keyed by (seed, event, count)."""
 
     def __init__(self, directory: Path) -> None:
         self._dir = Path(directory)
@@ -15,14 +19,17 @@ class RollCache:
     def _path(self, seed: int, event: str, count: int) -> Path:
         return self._dir / f"{seed}_{event}_{count}.json"
 
-    def load(self, seed: int, event: str, count: int) -> list[TrackPull] | None:
+    def load(self, seed: int, event: str, count: int) -> BannerRolls | None:
         path = self._path(seed, event, count)
         if not path.exists():
             return None
-        rows = json.loads(path.read_text(encoding="utf-8"))
-        return [TrackPull(r["position"], r["track"], r["cat"], Rarity(r["rarity"])) for r in rows]
+        data = json.loads(path.read_text(encoding="utf-8"))
+        return BannerRolls(_to_pulls(data["pulls"]), _to_pulls(data["guaranteed"]))
 
-    def save(self, seed: int, event: str, count: int, pulls: list[TrackPull]) -> None:
+    def save(self, seed: int, event: str, count: int, rolls: BannerRolls) -> None:
         self._dir.mkdir(parents=True, exist_ok=True)
-        rows = [asdict(pull) for pull in pulls]
-        self._path(seed, event, count).write_text(json.dumps(rows), encoding="utf-8")
+        data = {
+            "pulls": [asdict(pull) for pull in rolls.pulls],
+            "guaranteed": [asdict(pull) for pull in rolls.guaranteed],
+        }
+        self._path(seed, event, count).write_text(json.dumps(data), encoding="utf-8")
