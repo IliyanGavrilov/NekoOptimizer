@@ -4,13 +4,13 @@ from pathlib import Path
 
 from neko.cache import RollCache
 from neko.godfat import BannerRolls
-from neko.scraper import scrape_active
+from neko.scraper import ScrapeResult, scrape_active
 from planner.models import Cat
 
 _CACHE = RollCache(Path("rollcache"))
 
 
-def fetch_banners(seed: int) -> dict[str, BannerRolls]:
+def fetch_banners(seed: int) -> ScrapeResult:
     """Scrape the active banners for a seed (blocking wrapper around the async scraper)."""
     return asyncio.run(scrape_active(seed, cache=_CACHE))
 

@@ -2,6 +2,8 @@ import pytest
 
 from neko.godfat import BannerRolls, TrackPull
 from neko.models import Rarity
+from neko.scraper import ScrapeResult
+from neko.search import Guaranteed
 from planner.models import Cat, Seed
 
 U = Rarity.UBER_SUPER_RARE
@@ -9,7 +11,7 @@ U = Rarity.UBER_SUPER_RARE
 
 def fixed_banners(*pulls):
     def _fetch(seed):
-        return {"x": BannerRolls(list(pulls), [])}
+        return ScrapeResult({"x": BannerRolls(list(pulls), [])}, {})
 
     return _fetch
 
@@ -47,6 +49,18 @@ def test_use_wishlist_searches_wanted_cats(client, monkeypatch):
     )
     response = client.post("/", {"seed": 7, "tickets": 1, "catfood": 0, "use_wishlist": "on"})
     assert b"Bahamut" in response.content
+
+
+@pytest.mark.django_db
+def test_guaranteed_config_reaches_target(client, monkeypatch):
+    cat = Cat.objects.create(name="Target")
+    result = ScrapeResult(
+        {"x": BannerRolls([TrackPull(1, "A", "Filler", U)], [TrackPull(2, "A", "Target", U)])},
+        {"x": Guaranteed(rolls=2, cost=300)},
+    )
+    monkeypatch.setattr("planner.views.fetch_banners", lambda seed: result)
+    response = client.post("/", {"seed": 7, "tickets": 0, "catfood": 300, "targets": [cat.pk]})
+    assert response.context["plans"][0].targets == frozenset({"Target"})
 
 
 @pytest.mark.django_db
