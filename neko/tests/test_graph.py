@@ -55,3 +55,8 @@ def test_guaranteed_keeps_cat_and_advances_one():
 
 def test_guaranteed_missing_position_is_none():
     assert graph((1, "A", "Cat", R)).guaranteed(0) is None
+
+
+def test_build_graphs_wires_guaranteed_pulls():
+    graphs = build_graphs({"x": []}, {"x": [TrackPull(1, "A", "Bahamut", U)]})
+    assert graphs[0].guaranteed(0) == Outcome("Bahamut", U, 1, False)

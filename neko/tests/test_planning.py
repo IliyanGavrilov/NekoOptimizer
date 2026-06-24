@@ -1,6 +1,7 @@
 from neko.godfat import TrackPull
 from neko.models import Rarity
 from neko.planning import plan
+from neko.search import Guaranteed
 
 U = Rarity.UBER_SUPER_RARE
 
@@ -26,3 +27,15 @@ def test_catfood_floor_divides_to_afford_both():
 def test_unaffordable_wishlist_falls_back_to_subsets():
     result = plan(banners(), {"Bahamut", "Kasli"}, tickets=0, catfood=299)
     assert [sp.targets for sp in result] == [frozenset({"Bahamut"})]
+
+
+def test_guaranteed_multi_reaches_otherwise_unreachable_target():
+    result = plan(
+        {"x": pulls((1, "A", "Filler", U))},
+        {"Target"},
+        tickets=0,
+        catfood=300,
+        guaranteed_pulls={"x": pulls((2, "A", "Target", U))},
+        guaranteed={"x": Guaranteed(rolls=2, cost=300)},
+    )
+    assert result[0].targets == frozenset({"Target"})
