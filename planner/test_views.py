@@ -1,6 +1,6 @@
 import pytest
 
-from neko.godfat import TrackPull
+from neko.godfat import BannerRolls, TrackPull
 from neko.models import Rarity
 from planner.models import Cat, Seed
 
@@ -9,7 +9,7 @@ U = Rarity.UBER_SUPER_RARE
 
 def fixed_banners(*pulls):
     def _fetch(seed):
-        return {"x": list(pulls)}
+        return {"x": BannerRolls(list(pulls), [])}
 
     return _fetch
 

@@ -29,6 +29,14 @@ class TrackPull:
     rarity: Rarity
 
 
+@dataclass(frozen=True, slots=True)
+class BannerRolls:
+    """A banner's normal pulls plus its guaranteed-uber column."""
+
+    pulls: list[TrackPull]
+    guaranteed: list[TrackPull]
+
+
 def _rarity_from_classes(classes: list[str]) -> Rarity | None:
     for cls in classes:
         base = cls.removesuffix("_fest")
