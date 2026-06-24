@@ -38,12 +38,12 @@ class BannerGraph:
             rarities[index] = pull.rarity
         self._outcomes: dict[int, Outcome] = {}
         for index, cat in cats.items():
-            # consecutive rare dupe rerolls once: +3 (extra step) flips track
+            # Consecutive rare dupe rerolls once: +3 (extra step) flips track
             switched = rarities[index] == Rarity.RARE and cats.get(index - 2) == cat
             self._outcomes[index] = Outcome(
                 cat, rarities[index], index + (3 if switched else 2), switched
             )
-        # guaranteed roll: +1 step flips track
+        # Guaranteed roll: +1 step flips track
         self._guaranteed: dict[int, Outcome] = {}
         for pull in guaranteed:
             index = stream_index(pull.position, pull.track)
@@ -59,5 +59,12 @@ class BannerGraph:
         return sorted(self._outcomes)
 
 
-def build_graphs(parsed: Mapping[str, Iterable[TrackPull]]) -> list[BannerGraph]:
-    return [BannerGraph(banner_id, pulls) for banner_id, pulls in parsed.items()]
+def build_graphs(
+    parsed: Mapping[str, Iterable[TrackPull]],
+    guaranteed: Mapping[str, Iterable[TrackPull]] | None = None,
+) -> list[BannerGraph]:
+    guaranteed = guaranteed or {}
+    return [
+        BannerGraph(banner_id, pulls, guaranteed.get(banner_id, ()))
+        for banner_id, pulls in parsed.items()
+    ]
