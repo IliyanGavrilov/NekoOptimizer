@@ -1,17 +1,28 @@
 import asyncio
 from collections.abc import Awaitable, Callable, Iterable
+from dataclasses import dataclass
 from datetime import date
 from urllib.parse import urlencode
 
 import aiohttp
 
 from neko.cache import RollCache
+from neko.gacha import guaranteed_configs
 from neko.godfat import BannerRolls, GachaEvent, parse_events, parse_guaranteed, parse_rolls
+from neko.search import Guaranteed
 
 BASE_URL = "https://bc.godfat.org/"
 DEFAULT_COUNT = 100
 
 Fetcher = Callable[[str], Awaitable[str]]
+
+
+@dataclass(frozen=True, slots=True)
+class ScrapeResult:
+    """The active banners' rolls plus each banner's matched guaranteed-multi config."""
+
+    banners: dict[str, BannerRolls]
+    guaranteed: dict[str, Guaranteed]
 
 
 def roll_url(seed: int, event: str, count: int = DEFAULT_COUNT, guaranteed: bool = False) -> str:
@@ -73,8 +84,9 @@ async def scrape_active(
     count: int = DEFAULT_COUNT,
     cache: RollCache | None = None,
     today: date | None = None,
-) -> dict[str, BannerRolls]:
+) -> ScrapeResult:
     async with aiohttp.ClientSession() as session:
         scraper = GodfatScraper(make_fetcher(session), cache, count)
         active = active_events(await scraper.events(), today)
-        return await scraper.all_rolls(seed, [event.event_id for event in active])
+        banners = await scraper.all_rolls(seed, [event.event_id for event in active])
+        return ScrapeResult(banners, guaranteed_configs(active))

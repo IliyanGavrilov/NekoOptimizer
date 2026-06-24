@@ -16,15 +16,16 @@ def planner(request):
             targets = {cat.name for cat in form.cleaned_data["targets"]}
             if form.cleaned_data["use_wishlist"]:
                 targets |= set(Cat.objects.wishlist().values_list("name", flat=True))
-            banners = fetch_banners(seed)
-            pulls = {name: rolls.pulls for name, rolls in banners.items()}
-            guaranteed_pulls = {name: rolls.guaranteed for name, rolls in banners.items()}
+            result = fetch_banners(seed)
+            pulls = {name: rolls.pulls for name, rolls in result.banners.items()}
+            guaranteed_pulls = {name: rolls.guaranteed for name, rolls in result.banners.items()}
             plans = plan(
                 pulls,
                 targets,
                 form.cleaned_data["tickets"],
                 form.cleaned_data["catfood"],
                 guaranteed_pulls=guaranteed_pulls,
+                guaranteed=result.guaranteed,
             )
     else:
         form = PlannerForm(initial={"seed": Seed.current()})

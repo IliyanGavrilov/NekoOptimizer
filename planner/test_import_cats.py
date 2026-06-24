@@ -3,6 +3,7 @@ from django.core.management import call_command
 
 from neko.godfat import BannerRolls, TrackPull
 from neko.models import Rarity
+from neko.scraper import ScrapeResult
 from planner.models import Cat
 from planner.services import import_cats
 
@@ -45,7 +46,7 @@ def test_import_stores_rarity():
 def test_command_populates_catalogue(monkeypatch):
     monkeypatch.setattr(
         "planner.management.commands.import_cats.fetch_banners",
-        lambda seed: banners(x=[TrackPull(1, "A", "Bahamut", U)]),
+        lambda seed: ScrapeResult(banners(x=[TrackPull(1, "A", "Bahamut", U)]), {}),
     )
     call_command("import_cats", 7)
     assert Cat.objects.filter(name="Bahamut").exists()
