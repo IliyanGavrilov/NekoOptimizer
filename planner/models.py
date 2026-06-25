@@ -9,6 +9,18 @@ class CatQuerySet(models.QuerySet):
         return self.filter(wanted=True, owned=False)
 
 
+class Banner(models.Model):
+    """A gacha banner, identified by its recurring name; cats accumulate across re-runs."""
+
+    name = models.CharField(max_length=200, unique=True)
+
+    class Meta:
+        ordering = ["name"]
+
+    def __str__(self) -> str:
+        return self.name
+
+
 class Cat(models.Model):
     """A cat in the catalogue, with the player's ownership and wishlist flags."""
 
@@ -16,6 +28,7 @@ class Cat(models.Model):
     rarity = models.CharField(max_length=20, blank=True)
     owned = models.BooleanField(default=False)
     wanted = models.BooleanField(default=False)
+    banners = models.ManyToManyField(Banner, related_name="cats", blank=True)
 
     objects = CatQuerySet.as_manager()
 
