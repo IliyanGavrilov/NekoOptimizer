@@ -1,5 +1,5 @@
 {
   "rules": [
-    {"keywords": [], "rolls": 11, "cost": 1500}
+    {"keywords": [], "multis": [{"rolls": 11, "cost": 1500, "guaranteed": true}]}
   ]
 }

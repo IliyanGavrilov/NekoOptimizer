@@ -7,9 +7,9 @@ from urllib.parse import urlencode
 import aiohttp
 
 from neko.cache import RollCache
-from neko.gacha import guaranteed_configs
+from neko.gacha import multi_configs
 from neko.godfat import BannerRolls, GachaEvent, parse_events, parse_guaranteed, parse_rolls
-from neko.search import Guaranteed
+from neko.search import Multi
 
 BASE_URL = "https://bc.godfat.org/"
 DEFAULT_COUNT = 100
@@ -19,10 +19,10 @@ Fetcher = Callable[[str], Awaitable[str]]
 
 @dataclass(frozen=True, slots=True)
 class ScrapeResult:
-    """The active banners' rolls plus each banner's matched guaranteed-multi config."""
+    """The active banners' rolls plus each banner's matched multi-roll options."""
 
     banners: dict[str, BannerRolls]
-    guaranteed: dict[str, Guaranteed]
+    multis: dict[str, tuple[Multi, ...]]
 
 
 def roll_url(seed: int, event: str, count: int = DEFAULT_COUNT, guaranteed: bool = False) -> str:
@@ -89,4 +89,4 @@ async def scrape_active(
         scraper = GodfatScraper(make_fetcher(session), cache, count)
         active = active_events(await scraper.events(), today)
         banners = await scraper.all_rolls(seed, [event.event_id for event in active])
-        return ScrapeResult(banners, guaranteed_configs(active))
+        return ScrapeResult(banners, multi_configs(active))

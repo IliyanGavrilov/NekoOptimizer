@@ -1,6 +1,6 @@
 import heapq
 from bisect import bisect_left
-from collections.abc import Iterable, Mapping
+from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from itertools import count
 
@@ -11,11 +11,12 @@ INF = float("inf")
 
 
 @dataclass(frozen=True, slots=True)
-class Guaranteed:
-    """A banner's guaranteed multi-roll: `rolls` pulls (last = uber) for `cost` catfood."""
+class Multi:
+    """A multi-roll option: `rolls` pulls for `cost` catfood; if `guaranteed`, the last is uber."""
 
     rolls: int
     cost: int
+    guaranteed: bool = True
 
 
 def _occurrences(graphs: Iterable[BannerGraph], targets: frozenset[str]) -> dict[str, list[int]]:
@@ -45,10 +46,10 @@ def _heuristic(
     return max(0, worst - tickets_left) * CATFOOD_PER_DRAW
 
 
-def _node_h(state: State, targets: frozenset[str], occurrences, guaranteed) -> float:
-    # Guaranteed multis bundle many cats per fixed cost, undercutting the single-roll
-    # bound, so fall back to uniform-cost (0) when they're available.
-    if guaranteed:
+def _node_h(state: State, targets: frozenset[str], occurrences, multis) -> float:
+    # Multis bundle many cats per fixed cost, undercutting the single-roll bound,
+    # so fall back to uniform-cost (0) when any are available.
+    if multis:
         return 0.0
     return _heuristic(state.position, state.tickets_left, targets - state.found, occurrences)
 
@@ -86,15 +87,17 @@ def _pull(state: State, graph: BannerGraph, targets: frozenset[str]):
     return nxt, step, [Pull(state.position, graph.banner_id, outcome.cat, outcome.rarity)]
 
 
-def _guaranteed_move(state: State, graph: BannerGraph, config: Guaranteed, targets: frozenset[str]):
-    # rolls-1 normal pulls then one guaranteed uber, for a fixed catfood cost.
-    draws = config.cost // CATFOOD_PER_DRAW
+def _multi_move(state: State, graph: BannerGraph, multi: Multi, targets: frozenset[str]):
+    # `rolls` normal pulls (the last replaced by the guaranteed uber if guaranteed),
+    # for a fixed catfood cost.
+    draws = multi.cost // CATFOOD_PER_DRAW
     if state.catfood_draws < draws:
         return None
     position = state.position
     found = state.found
     pulls = []
-    for _ in range(config.rolls - 1):
+    normal_rolls = multi.rolls - 1 if multi.guaranteed else multi.rolls
+    for _ in range(normal_rolls):
         outcome = graph.outcome(position)
         if outcome is None:
             return None
@@ -102,25 +105,26 @@ def _guaranteed_move(state: State, graph: BannerGraph, config: Guaranteed, targe
         if not outcome.switched and outcome.cat in targets:
             found = found | {outcome.cat}
         position = outcome.next_position
-    final = graph.guaranteed(position)
-    if final is None:
-        return None
-    pulls.append(Pull(position, graph.banner_id, final.cat, final.rarity))
-    if final.cat in targets:
-        found = found | {final.cat}
-    nxt = State(final.next_position, state.tickets_left, state.catfood_draws - draws, found)
-    return nxt, config.cost, pulls
+    if multi.guaranteed:
+        final = graph.guaranteed(position)
+        if final is None:
+            return None
+        pulls.append(Pull(position, graph.banner_id, final.cat, final.rarity))
+        if final.cat in targets:
+            found = found | {final.cat}
+        position = final.next_position
+    nxt = State(position, state.tickets_left, state.catfood_draws - draws, found)
+    return nxt, multi.cost, pulls
 
 
-def _candidate_moves(state, graph, targets, guaranteed):
+def _candidate_moves(state, graph, targets, multis):
     single = _pull(state, graph, targets)
     if single is not None:
         yield single
-    config = guaranteed.get(graph.banner_id) if guaranteed else None
-    if config is not None:
-        multi = _guaranteed_move(state, graph, config, targets)
-        if multi is not None:
-            yield multi
+    for multi in multis.get(graph.banner_id, ()) if multis else ():
+        move = _multi_move(state, graph, multi, targets)
+        if move is not None:
+            yield move
 
 
 def astar(
@@ -128,12 +132,12 @@ def astar(
     targets: Iterable[str],
     start: State,
     upper_bound: float = INF,
-    guaranteed: Mapping[str, Guaranteed] | None = None,
+    multis: Mapping[str, Sequence[Multi]] | None = None,
 ) -> Path | None:
     """Cheapest pull plan collecting all targets, or None. A* over states.
 
     Pass upper_bound (e.g. a beam-search cost) to prune branches that cannot beat it.
-    Pass guaranteed to also consider each banner's guaranteed multi-roll.
+    Pass multis to also consider each banner's multi-roll options.
     """
     graphs = list(graphs)
     targets = frozenset(targets)
@@ -141,7 +145,7 @@ def astar(
     g_score: dict[State, int] = {start: 0}
     came_from: dict[State, tuple] = {}
     counter = count()
-    heap = [(_node_h(start, targets, occurrences, guaranteed), next(counter), 0, start)]
+    heap = [(_node_h(start, targets, occurrences, multis), next(counter), 0, start)]
     while heap:
         _, _, cost, state = heapq.heappop(heap)
         if cost > g_score[state]:
@@ -149,10 +153,10 @@ def astar(
         if targets <= state.found:
             return _reconstruct(state, came_from, start)
         for graph in graphs:
-            for nxt, step, pulls in _candidate_moves(state, graph, targets, guaranteed):
+            for nxt, step, pulls in _candidate_moves(state, graph, targets, multis):
                 new_cost = cost + step
                 if new_cost < g_score.get(nxt, INF):
-                    h = _node_h(nxt, targets, occurrences, guaranteed)
+                    h = _node_h(nxt, targets, occurrences, multis)
                     if h == INF or new_cost + h > upper_bound:
                         continue
                     g_score[nxt] = new_cost
@@ -166,7 +170,7 @@ def beam_search(
     targets: Iterable[str],
     start: State,
     width: int,
-    guaranteed: Mapping[str, Guaranteed] | None = None,
+    multis: Mapping[str, Sequence[Multi]] | None = None,
 ) -> Path | None:
     """Keep only the `width` most promising paths each step. Fast, not guaranteed optimal."""
     graphs = list(graphs)
@@ -184,7 +188,7 @@ def beam_search(
         for state in frontier:
             cost = best_cost[state]
             for graph in graphs:
-                for nxt, step, pulls in _candidate_moves(state, graph, targets, guaranteed):
+                for nxt, step, pulls in _candidate_moves(state, graph, targets, multis):
                     new_cost = cost + step
                     if new_cost >= best_cost.get(nxt, INF):
                         continue
@@ -194,7 +198,7 @@ def beam_search(
                         if new_cost < best_goal_cost:
                             best_goal, best_goal_cost = nxt, new_cost
                         continue
-                    h = _node_h(nxt, targets, occurrences, guaranteed)
+                    h = _node_h(nxt, targets, occurrences, multis)
                     if h == INF:
                         continue
                     ranked.append((new_cost + h, nxt))

@@ -1,7 +1,7 @@
 from neko.godfat import TrackPull
 from neko.models import Rarity
 from neko.planning import plan
-from neko.search import Guaranteed
+from neko.search import Multi
 
 U = Rarity.UBER_SUPER_RARE
 
@@ -36,6 +36,6 @@ def test_guaranteed_multi_reaches_otherwise_unreachable_target():
         tickets=0,
         catfood=300,
         guaranteed_pulls={"x": pulls((2, "A", "Target", U))},
-        guaranteed={"x": Guaranteed(rolls=2, cost=300)},
+        multis={"x": [Multi(rolls=2, cost=300)]},
     )
     assert result[0].targets == frozenset({"Target"})

@@ -1,7 +1,7 @@
 from neko.godfat import TrackPull
 from neko.graph import BannerGraph
 from neko.models import CATFOOD_PER_DRAW, Path, Rarity, State
-from neko.search import Guaranteed, astar, beam_search
+from neko.search import Multi, astar, beam_search
 
 R = Rarity.RARE
 U = Rarity.UBER_SUPER_RARE
@@ -106,21 +106,21 @@ def guaranteed_banner():
 
 def test_guaranteed_roll_obtains_the_guaranteed_uber():
     result = astar(
-        [guaranteed_banner()], {"Mecha"}, start(catfood=3), guaranteed={"x": Guaranteed(3, 450)}
+        [guaranteed_banner()], {"Mecha"}, start(catfood=3), multis={"x": [Multi(3, 450)]}
     )
     assert result.cats == ("Cat", "Dog", "Mecha")
 
 
 def test_guaranteed_roll_costs_the_fixed_price():
     result = astar(
-        [guaranteed_banner()], {"Mecha"}, start(catfood=3), guaranteed={"x": Guaranteed(3, 450)}
+        [guaranteed_banner()], {"Mecha"}, start(catfood=3), multis={"x": [Multi(3, 450)]}
     )
     assert result.cost == 450
 
 
 def test_guaranteed_unaffordable_returns_none():
     result = astar(
-        [guaranteed_banner()], {"Mecha"}, start(catfood=2), guaranteed={"x": Guaranteed(3, 450)}
+        [guaranteed_banner()], {"Mecha"}, start(catfood=2), multis={"x": [Multi(3, 450)]}
     )
     assert result is None
 
@@ -129,8 +129,15 @@ def test_guaranteed_uber_unreachable_without_config():
     assert astar([guaranteed_banner()], {"Mecha"}, start(catfood=9)) is None
 
 
+def test_plain_multi_rolls_normal_cats_for_fixed_cost():
+    g = banner("x", (1, "A", "Cat", R), (2, "A", "Dog", R), (3, "A", "Bahamut", U))
+    multi = {"x": [Multi(3, 300, guaranteed=False)]}
+    result = astar([g], {"Bahamut"}, start(catfood=3), multis=multi)
+    assert (result.cats, result.cost) == (("Cat", "Dog", "Bahamut"), 300)
+
+
 def test_beam_uses_guaranteed_rolls():
     result = beam_search(
-        [guaranteed_banner()], {"Mecha"}, start(catfood=3), 5, guaranteed={"x": Guaranteed(3, 450)}
+        [guaranteed_banner()], {"Mecha"}, start(catfood=3), 5, multis={"x": [Multi(3, 450)]}
     )
     assert result.cats[-1] == "Mecha"
