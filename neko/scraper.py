@@ -88,5 +88,10 @@ async def scrape_active(
     async with aiohttp.ClientSession() as session:
         scraper = GodfatScraper(make_fetcher(session), cache, count)
         active = active_events(await scraper.events(), today)
-        banners = await scraper.all_rolls(seed, [event.event_id for event in active])
-        return ScrapeResult(banners, multi_configs(active))
+        rolls = await scraper.all_rolls(seed, [event.event_id for event in active])
+        configs = multi_configs(active)
+        banners = {event.name: rolls[event.event_id] for event in active}
+        multis = {
+            event.name: configs[event.event_id] for event in active if event.event_id in configs
+        }
+        return ScrapeResult(banners, multis)

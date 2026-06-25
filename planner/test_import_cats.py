@@ -4,7 +4,7 @@ from django.core.management import call_command
 from neko.godfat import BannerRolls, TrackPull
 from neko.models import Rarity
 from neko.scraper import ScrapeResult
-from planner.models import Cat
+from planner.models import Banner, Cat
 from planner.services import import_cats
 
 U = Rarity.UBER_SUPER_RARE
@@ -28,6 +28,14 @@ def test_import_counts_distinct_new_cats():
 def test_import_includes_guaranteed_ubers():
     catalogue = {"x": BannerRolls([], [TrackPull(11, "A", "Kasli", U)])}
     assert import_cats(catalogue) == 1
+
+
+@pytest.mark.django_db
+def test_import_links_cats_to_their_banner():
+    import_cats(banners(Epicfest=[TrackPull(1, "A", "Bahamut", U)]))
+    assert list(Banner.objects.get(name="Epicfest").cats.values_list("name", flat=True)) == [
+        "Bahamut"
+    ]
 
 
 @pytest.mark.django_db
