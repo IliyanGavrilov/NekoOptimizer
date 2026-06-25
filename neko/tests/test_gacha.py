@@ -44,3 +44,7 @@ def test_configs_skip_unmatched_events():
 
 def test_load_rules_reads_default_eleven_roll():
     assert match_rule("anything", load_rules()) == ELEVEN
+
+
+def test_load_rules_matches_step_up_banner():
+    assert match_rule("Step Up Campaign", load_rules()) == STEP_UP

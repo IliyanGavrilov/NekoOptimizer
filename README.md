@@ -34,23 +34,6 @@ python manage.py runserver      # run the Django dev server
 python manage.py migrate        # apply database migrations
 ```
 
-## Roadmap
-
-Built in dependency order, most-testable core first. Tests are written
-alongside each module, not deferred.
-
-- [x] **0. Scaffold** - Django project, `neko` core package, deps, tooling.
-- [ ] **1. RNG core** - XOR-shift PRNG, sequence advance, track-switch logic.
-- [ ] **2. Data models** - `Banner`, `Pull`, `State`, `Path` dataclasses.
-- [ ] **3. Graph builder** - pull graph from RNG output; duplicate-rare track switch.
-- [ ] **4. A\* search** - `next_wanted` lookup table, admissible heuristic, `heapq`.
-- [ ] **5. Beam search** - top-K mode; optional upper-bound prune pass for A\*.
-- [ ] **6. Subset solver** - optimal plan per target subset, sorted by cost.
-- [ ] **7. Scraper + cache** - `aiohttp`/`asyncio` fetch, `BeautifulSoup` parse, JSON cache.
-- [ ] **8. SQLite collection** - cats, wishlist, seed persistence.
-- [ ] **9. Django layer** - views, forms, templates, ORM.
-- [ ] **10. Frontend** - plain HTML/CSS/vanilla JS.
-
 ## Tech stack
 
 Django · aiohttp + asyncio · BeautifulSoup4 · heapq · sqlite3 · dataclasses ·
