@@ -15,8 +15,13 @@
       <legend>Targets</legend>
       <input type="search" data-filter="targetList" placeholder="Filter cats&hellip;">
       <div id="targetList">
-        {% for target in form.targets %}
-          <div data-name="{{ target.choice_label }}">{{ target.tag }} {{ target.choice_label }}</div>
+        {% for banner_name, targets in form.target_groups %}
+          <div class="banner-group">
+            <h3>{{ banner_name }}</h3>
+            {% for target in targets %}
+              <div data-name="{{ target.choice_label }}">{{ target.tag }} {{ target.choice_label }}</div>
+            {% endfor %}
+          </div>
         {% empty %}
           <p class="muted">No cats yet &mdash; <a href="{% url 'collection' %}">add some</a>.</p>
         {% endfor %}

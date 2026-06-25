@@ -24,6 +24,25 @@ class PlannerForm(forms.Form):
         super().__init__(*args, **kwargs)
         self.fields["targets"].queryset = Cat.objects.unowned()
 
+    def target_groups(self):
+        """Group the target checkboxes by banner name; cats with no banner go under 'Other'."""
+        banners_by_pk = {
+            str(cat.pk): [banner.name for banner in cat.banners.all()]
+            for cat in Cat.objects.unowned().prefetch_related("banners")
+        }
+        groups: dict[str, list] = {}
+        other: list = []
+        for choice in self["targets"]:
+            names = banners_by_pk.get(str(choice.data["value"]))
+            for name in names or ():
+                groups.setdefault(name, []).append(choice)
+            if not names:
+                other.append(choice)
+        grouped = [(name, groups[name]) for name in sorted(groups)]
+        if other:
+            grouped.append(("Other", other))
+        return grouped
+
     def clean(self):
         cleaned = super().clean()
         if not cleaned.get("targets") and not cleaned.get("use_wishlist"):
