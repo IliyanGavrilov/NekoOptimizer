@@ -4,7 +4,7 @@ from neko.godfat import BannerRolls, TrackPull
 from neko.models import Rarity
 from neko.scraper import ScrapeResult
 from neko.search import Multi
-from planner.models import Cat, Seed
+from planner.models import Banner, Cat, Seed
 
 U = Rarity.UBER_SUPER_RARE
 
@@ -19,6 +19,13 @@ def fixed_banners(*pulls):
 @pytest.mark.django_db
 def test_get_shows_form(client):
     assert b"<form" in client.get("/").content
+
+
+@pytest.mark.django_db
+def test_targets_grouped_by_banner(client):
+    banner = Banner.objects.create(name="Epicfest")
+    Cat.objects.create(name="Bahamut").banners.add(banner)
+    assert b"Epicfest" in client.get("/").content
 
 
 @pytest.mark.django_db
