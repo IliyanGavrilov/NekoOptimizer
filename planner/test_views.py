@@ -3,7 +3,7 @@ import pytest
 from neko.godfat import BannerRolls, TrackPull
 from neko.models import Rarity
 from neko.scraper import ScrapeResult
-from neko.search import Guaranteed
+from neko.search import Multi
 from planner.models import Cat, Seed
 
 U = Rarity.UBER_SUPER_RARE
@@ -56,7 +56,7 @@ def test_guaranteed_config_reaches_target(client, monkeypatch):
     cat = Cat.objects.create(name="Target")
     result = ScrapeResult(
         {"x": BannerRolls([TrackPull(1, "A", "Filler", U)], [TrackPull(2, "A", "Target", U)])},
-        {"x": Guaranteed(rolls=2, cost=300)},
+        {"x": [Multi(rolls=2, cost=300)]},
     )
     monkeypatch.setattr("planner.views.fetch_banners", lambda seed: result)
     response = client.post("/", {"seed": 7, "tickets": 0, "catfood": 300, "targets": [cat.pk]})

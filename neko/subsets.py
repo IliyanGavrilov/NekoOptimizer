@@ -1,10 +1,10 @@
-from collections.abc import Callable, Iterable, Mapping
+from collections.abc import Callable, Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from itertools import combinations
 
 from neko.graph import BannerGraph
 from neko.models import Path, State
-from neko.search import Guaranteed, astar
+from neko.search import Multi, astar
 
 
 @dataclass(frozen=True, slots=True)
@@ -18,7 +18,7 @@ def solve_subsets(
     targets: Iterable[str],
     start: State,
     search: Callable[..., Path | None] = astar,
-    guaranteed: Mapping[str, Guaranteed] | None = None,
+    multis: Mapping[str, Sequence[Multi]] | None = None,
 ) -> list[SubsetPlan]:
     """Best plan for every reachable non-empty target subset, biggest-then-cheapest.
 
@@ -29,7 +29,7 @@ def solve_subsets(
     plans = []
     for size in range(len(items), 0, -1):
         for combo in combinations(items, size):
-            plan = search(graphs, combo, start, guaranteed=guaranteed)
+            plan = search(graphs, combo, start, multis=multis)
             if plan is not None:
                 plans.append(SubsetPlan(frozenset(combo), plan))
     plans.sort(key=lambda result: (-len(result.targets), result.plan.cost))
