@@ -14,21 +14,37 @@
   </form>
 
   <h2>Your cats</h2>
+  <p class="muted">
+    Group by:
+    {% if group_by == "banner" %}<strong>banner</strong>{% else %}<a href="?group=banner">banner</a>{% endif %}
+    &middot;
+    {% if group_by == "rarity" %}<strong>rarity</strong>{% else %}<a href="?group=rarity">rarity</a>{% endif %}
+  </p>
   <input type="search" data-filter="catList" placeholder="Filter cats&hellip;">
   <form method="post">
     {% csrf_token %}
-    <table id="catList">
-      <tr><th>Cat</th><th>Rarity</th><th>Owned</th><th>Wanted</th><th>Delete</th></tr>
-      {% for cat in cats %}
-        <tr data-name="{{ cat.name }}">
-          <td>{{ cat.name }}</td>
-          <td>{{ cat.rarity }}</td>
-          <td><input type="checkbox" name="owned" value="{{ cat.pk }}" {% if cat.owned %}checked{% endif %}></td>
-          <td><input type="checkbox" name="wanted" value="{{ cat.pk }}" {% if cat.wanted %}checked{% endif %}></td>
-          <td><input type="checkbox" name="delete" value="{{ cat.pk }}"></td>
-        </tr>
+    <div id="catList">
+      {% for heading, cats in sections %}
+        <section>
+          <h3>{{ heading }}</h3>
+          <table>
+            <tr><th>Cat</th><th>Rarity</th><th>How to obtain</th><th>Owned</th><th>Wanted</th><th>Delete</th></tr>
+            {% for cat in cats %}
+              <tr data-name="{{ cat.name }}">
+                <td>{{ cat.name }}</td>
+                <td>{{ cat.rarity }}</td>
+                <td>{% for banner in cat.banners.all %}{{ banner.name }}{% if not forloop.last %}, {% endif %}{% empty %}<span class="muted">&mdash;</span>{% endfor %}</td>
+                <td><input type="checkbox" name="owned" value="{{ cat.pk }}" {% if cat.owned %}checked{% endif %}></td>
+                <td><input type="checkbox" name="wanted" value="{{ cat.pk }}" {% if cat.wanted %}checked{% endif %}></td>
+                <td><input type="checkbox" name="delete" value="{{ cat.pk }}"></td>
+              </tr>
+            {% endfor %}
+          </table>
+        </section>
+      {% empty %}
+        <p class="muted">No cats yet &mdash; add one above.</p>
       {% endfor %}
-    </table>
+    </div>
     <button type="submit" name="save">Save</button>
     <button type="submit" name="remove" onclick="return confirm('Remove the ticked cats?')">Remove ticked</button>
   </form>

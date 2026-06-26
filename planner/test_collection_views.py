@@ -1,12 +1,25 @@
 import pytest
 
-from planner.models import Cat
+from planner.models import Banner, Cat
 
 
 @pytest.mark.django_db
 def test_collection_lists_cats(client):
     Cat.objects.create(name="Bahamut")
     assert b"Bahamut" in client.get("/collection/").content
+
+
+@pytest.mark.django_db
+def test_collection_groups_by_banner_by_default(client):
+    cat = Cat.objects.create(name="Bahamut")
+    cat.banners.add(Banner.objects.create(name="Epicfest"))
+    assert b"Epicfest" in client.get("/collection/").content
+
+
+@pytest.mark.django_db
+def test_collection_groups_by_rarity_on_request(client):
+    Cat.objects.create(name="Bahamut", rarity="Uber Super Rare")
+    assert b"Uber Super Rare" in client.get("/collection/?group=rarity").content
 
 
 @pytest.mark.django_db
