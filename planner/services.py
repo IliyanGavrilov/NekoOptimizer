@@ -4,7 +4,7 @@ from pathlib import Path
 
 from neko.cache import RollCache
 from neko.godfat import BannerRolls
-from neko.scraper import ScrapeResult, scrape_active
+from neko.scraper import ScrapeResult, scrape_active, scrape_catalogue
 from planner.models import Banner, Cat
 
 _CACHE = RollCache(Path("rollcache"))
@@ -15,6 +15,11 @@ RARITY_ORDER = ["Normal", "Rare", "Super Rare", "Uber Super Rare", "Legend Rare"
 def fetch_banners(seed: int) -> ScrapeResult:
     """Scrape the active banners for a seed (blocking wrapper around the async scraper)."""
     return asyncio.run(scrape_active(seed, cache=_CACHE))
+
+
+def fetch_catalogue(seed: int) -> ScrapeResult:
+    """Scrape every banner for a seed (blocking wrapper), to broaden the catalogue."""
+    return asyncio.run(scrape_catalogue(seed, cache=_CACHE))
 
 
 def group_cats(cats: Iterable[Cat], by: str = "banner") -> list[tuple[str, list[Cat]]]:

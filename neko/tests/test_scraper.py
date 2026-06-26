@@ -6,7 +6,7 @@ import pytest
 
 from neko.cache import RollCache
 from neko.godfat import BannerRolls, GachaEvent, parse_guaranteed, parse_rolls
-from neko.scraper import GodfatScraper, active_events, aiohttp_fetch, roll_url
+from neko.scraper import GodfatScraper, active_events, aiohttp_fetch, build_result, roll_url
 
 FIXTURES = Path(__file__).parent / "fixtures"
 FIXTURE = (FIXTURES / "godfat_sample.html").read_text(encoding="utf-8")
@@ -83,6 +83,26 @@ async def test_events_parses_dropdown():
         "2026-04-24_1047",
         "2026-01-01_900",
     ]
+
+
+async def test_build_result_keys_by_banner_name():
+    scraper = GodfatScraper(fetch_returning(FIXTURE))
+    events = [
+        GachaEvent("ev1", "Epicfest", date(2026, 1, 1), date(2026, 1, 8)),
+        GachaEvent("ev2", "Uberfest", date(2026, 2, 1), date(2026, 2, 8)),
+    ]
+    result = await build_result(scraper, 1, events)
+    assert set(result.banners) == {"Epicfest", "Uberfest"}
+
+
+async def test_build_result_collapses_recurring_names():
+    scraper = GodfatScraper(fetch_returning(FIXTURE))
+    events = [
+        GachaEvent("jan", "Epicfest", date(2026, 1, 1), date(2026, 1, 8)),
+        GachaEvent("feb", "Epicfest", date(2026, 2, 1), date(2026, 2, 8)),
+    ]
+    result = await build_result(scraper, 1, events)
+    assert list(result.banners) == ["Epicfest"]
 
 
 def test_active_events_keeps_only_current():

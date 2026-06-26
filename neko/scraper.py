@@ -78,6 +78,18 @@ class GodfatScraper:
         return dict(zip(events, results, strict=True))
 
 
+async def build_result(
+    scraper: GodfatScraper, seed: int, events: Iterable[GachaEvent]
+) -> ScrapeResult:
+    """Roll the given events and key them by banner name (recurring re-runs collapse)."""
+    events = list(events)
+    rolls = await scraper.all_rolls(seed, [event.event_id for event in events])
+    configs = multi_configs(events)
+    banners = {event.name: rolls[event.event_id] for event in events}
+    multis = {event.name: configs[event.event_id] for event in events if event.event_id in configs}
+    return ScrapeResult(banners, multis)
+
+
 async def scrape_active(
     seed: int,
     *,
@@ -88,10 +100,13 @@ async def scrape_active(
     async with aiohttp.ClientSession() as session:
         scraper = GodfatScraper(make_fetcher(session), cache, count)
         active = active_events(await scraper.events(), today)
-        rolls = await scraper.all_rolls(seed, [event.event_id for event in active])
-        configs = multi_configs(active)
-        banners = {event.name: rolls[event.event_id] for event in active}
-        multis = {
-            event.name: configs[event.event_id] for event in active if event.event_id in configs
-        }
-        return ScrapeResult(banners, multis)
+        return await build_result(scraper, seed, active)
+
+
+async def scrape_catalogue(
+    seed: int, *, count: int = DEFAULT_COUNT, cache: RollCache | None = None
+) -> ScrapeResult:
+    """Scrape every banner in the dropdown, not just the active ones, to broaden the catalogue."""
+    async with aiohttp.ClientSession() as session:
+        scraper = GodfatScraper(make_fetcher(session), cache, count)
+        return await build_result(scraper, seed, await scraper.events())
