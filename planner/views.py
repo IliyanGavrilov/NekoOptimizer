@@ -3,7 +3,7 @@ from django.shortcuts import redirect, render
 from neko.planning import plan
 from planner.forms import CatForm, PlannerForm
 from planner.models import Cat, Seed
-from planner.services import fetch_banners
+from planner.services import fetch_banners, group_cats
 
 
 def planner(request):
@@ -54,4 +54,8 @@ def collection(request):
         if form.is_valid():
             form.save()
             return redirect("collection")
-    return render(request, "planner/collection.html", {"cats": Cat.objects.all(), "form": form})
+    group_by = "rarity" if request.GET.get("group") == "rarity" else "banner"
+    cats = Cat.objects.prefetch_related("banners")
+    sections = group_cats(cats, group_by)
+    context = {"form": form, "sections": sections, "group_by": group_by}
+    return render(request, "planner/collection.html", context)
