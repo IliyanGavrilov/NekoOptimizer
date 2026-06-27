@@ -13,6 +13,8 @@ class Banner(models.Model):
     """A gacha banner, identified by its recurring name; cats accumulate across re-runs."""
 
     name = models.CharField(max_length=200, unique=True)
+    start = models.DateField(null=True, blank=True)
+    end = models.DateField(null=True, blank=True)
 
     class Meta:
         ordering = ["name"]
