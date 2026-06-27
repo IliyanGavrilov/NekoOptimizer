@@ -26,7 +26,7 @@ class ScrapeResult:
 
 
 def roll_url(seed: int, event: str, count: int = DEFAULT_COUNT, guaranteed: bool = False) -> str:
-    query = {"seed": seed, "event": event, "count": count, "display": "text", "name": 2}
+    query = {"seed": seed, "event": event, "count": count, "display": "text", "name": 0}
     if guaranteed:
         query["force_guaranteed"] = 1
     return f"{BASE_URL}?{urlencode(query)}"

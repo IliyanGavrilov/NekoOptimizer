@@ -39,7 +39,7 @@ def mock_session(html):
 def test_roll_url_format():
     assert (
         roll_url(12345, "2026-06-26_1052", 30)
-        == "https://bc.godfat.org/?seed=12345&event=2026-06-26_1052&count=30&display=text&name=2"
+        == "https://bc.godfat.org/?seed=12345&event=2026-06-26_1052&count=30&display=text&name=0"
     )
 
 
