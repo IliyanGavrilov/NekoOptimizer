@@ -49,6 +49,17 @@ class State:
     tickets_left: int
     catfood_draws: int
     found: frozenset[str]
+    last_banner: str = ""  # banner of the previous pull, to count banner switches
+
+
+@dataclass(frozen=True, slots=True)
+class Leg:
+    """One move in a plan: a single pull or a multi-roll on one banner, and its cats."""
+
+    banner_id: str
+    kind: str  # "Single pull", "11-roll", "15-roll (guaranteed)", ...
+    cost: int  # catfood spent on this leg (0 if ticket-funded)
+    pulls: tuple[Pull, ...]
 
 
 @dataclass(frozen=True, slots=True)
@@ -58,6 +69,7 @@ class Path:
     pulls: tuple[Pull, ...]
     tickets_used: int
     catfood_draws_used: int
+    moves: tuple[Leg, ...] = ()
 
     def __len__(self) -> int:
         return len(self.pulls)
@@ -70,3 +82,22 @@ class Path:
     @property
     def cats(self) -> tuple[str, ...]:
         return tuple(pull.cat for pull in self.pulls)
+
+    @property
+    def legs(self) -> list[Leg]:
+        """Moves with consecutive single pulls on the same banner merged, for display."""
+        merged: list[Leg] = []
+        for move in self.moves:
+            last = merged[-1] if merged else None
+            if (
+                last is not None
+                and last.kind == "Single pull"
+                and move.kind == "Single pull"
+                and last.banner_id == move.banner_id
+            ):
+                merged[-1] = Leg(
+                    last.banner_id, last.kind, last.cost + move.cost, last.pulls + move.pulls
+                )
+            else:
+                merged.append(move)
+        return merged
