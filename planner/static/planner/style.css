@@ -72,3 +72,8 @@ section {
 
 section h3 { margin: 0.25rem 0 0.5rem; }
 .muted, label { color: var(--muted); }
+
+h4.banner { margin: 1rem 0 0.1rem; color: var(--accent); font-size: 0.95rem; }
+p.leg { margin: 0.1rem 0 0.2rem; color: var(--muted); font-size: 0.85rem; }
+section ol { margin: 0.1rem 0 0.4rem; }
+li.target { font-weight: 700; color: var(--accent); }

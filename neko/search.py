@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from itertools import count
 
 from neko.graph import BannerGraph
-from neko.models import CATFOOD_PER_DRAW, Path, Pull, State
+from neko.models import CATFOOD_PER_DRAW, Leg, Path, Pull, State
 
 INF = float("inf")
 
@@ -55,17 +55,19 @@ def _node_h(state: State, targets: frozenset[str], occurrences, multis) -> float
 
 
 def _reconstruct(goal: State, came_from: dict, start: State) -> Path:
-    pulls: list[Pull] = []
+    legs: list[Leg] = []
     state = goal
     while state in came_from:
-        previous, step_pulls = came_from[state]
-        pulls.extend(reversed(step_pulls))
+        previous, leg = came_from[state]
+        legs.append(leg)
         state = previous
-    pulls.reverse()
+    legs.reverse()
+    pulls = tuple(pull for leg in legs for pull in leg.pulls)
     return Path(
-        tuple(pulls),
+        pulls,
         start.tickets_left - goal.tickets_left,
         start.catfood_draws - goal.catfood_draws,
+        tuple(legs),
     )
 
 
@@ -83,8 +85,9 @@ def _pull(state: State, graph: BannerGraph, targets: frozenset[str]):
     found = state.found
     if not outcome.switched and outcome.cat in targets:
         found = found | {outcome.cat}
-    nxt = State(outcome.next_position, tickets, catfood, found)
-    return nxt, step, [Pull(state.position, graph.banner_id, outcome.cat, outcome.rarity)]
+    nxt = State(outcome.next_position, tickets, catfood, found, graph.banner_id)
+    pull = Pull(state.position, graph.banner_id, outcome.cat, outcome.rarity)
+    return nxt, Leg(graph.banner_id, "Single pull", step, (pull,))
 
 
 def _multi_move(state: State, graph: BannerGraph, multi: Multi, targets: frozenset[str]):
@@ -113,8 +116,14 @@ def _multi_move(state: State, graph: BannerGraph, multi: Multi, targets: frozens
         if final.cat in targets:
             found = found | {final.cat}
         position = final.next_position
-    nxt = State(position, state.tickets_left, state.catfood_draws - draws, found)
-    return nxt, multi.cost, pulls
+    nxt = State(position, state.tickets_left, state.catfood_draws - draws, found, graph.banner_id)
+    kind = f"{multi.rolls}-roll" + (" (guaranteed)" if multi.guaranteed else "")
+    return nxt, Leg(graph.banner_id, kind, multi.cost, tuple(pulls))
+
+
+def _switch(state: State, leg: Leg) -> int:
+    # 1 if this leg rolls a different banner than the previous pull (the first pull is free).
+    return 1 if state.last_banner and state.last_banner != leg.banner_id else 0
 
 
 def _candidate_moves(state, graph, targets, multis):
@@ -142,26 +151,29 @@ def astar(
     graphs = list(graphs)
     targets = frozenset(targets)
     occurrences = _occurrences(graphs, targets)
-    g_score: dict[State, int] = {start: 0}
+    # Lexicographic cost (catfood, switches): cheapest first, fewest banner switches breaks ties.
+    g_score: dict[State, tuple[int, int]] = {start: (0, 0)}
     came_from: dict[State, tuple] = {}
     counter = count()
-    heap = [(_node_h(start, targets, occurrences, multis), next(counter), 0, start)]
+    heap = [(_node_h(start, targets, occurrences, multis), 0, next(counter), 0, 0, start)]
     while heap:
-        _, _, cost, state = heapq.heappop(heap)
-        if cost > g_score[state]:
+        _, _, _, cost, switches, state = heapq.heappop(heap)
+        if (cost, switches) > g_score[state]:
             continue
         if targets <= state.found:
             return _reconstruct(state, came_from, start)
         for graph in graphs:
-            for nxt, step, pulls in _candidate_moves(state, graph, targets, multis):
-                new_cost = cost + step
-                if new_cost < g_score.get(nxt, INF):
+            for nxt, leg in _candidate_moves(state, graph, targets, multis):
+                new_cost = cost + leg.cost
+                new_switches = switches + _switch(state, leg)
+                if (new_cost, new_switches) < g_score.get(nxt, (INF, INF)):
                     h = _node_h(nxt, targets, occurrences, multis)
                     if h == INF or new_cost + h > upper_bound:
                         continue
-                    g_score[nxt] = new_cost
-                    came_from[nxt] = (state, pulls)
-                    heapq.heappush(heap, (new_cost + h, next(counter), new_cost, nxt))
+                    g_score[nxt] = (new_cost, new_switches)
+                    came_from[nxt] = (state, leg)
+                    entry = (new_cost + h, new_switches, next(counter), new_cost, new_switches, nxt)
+                    heapq.heappush(heap, entry)
     return None
 
 
@@ -178,30 +190,32 @@ def beam_search(
     if targets <= start.found:
         return _reconstruct(start, {}, start)
     occurrences = _occurrences(graphs, targets)
-    best_cost: dict[State, int] = {start: 0}
+    # Lexicographic cost (catfood, switches): cheapest first, fewest banner switches breaks ties.
+    best_cost: dict[State, tuple[int, int]] = {start: (0, 0)}
     came_from: dict[State, tuple] = {}
     best_goal: State | None = None
-    best_goal_cost = INF
+    best_goal_cost = (INF, INF)
     frontier = [start]
     while frontier:
-        ranked: list[tuple[float, State]] = []
+        ranked: list[tuple[float, int, State]] = []
         for state in frontier:
-            cost = best_cost[state]
+            cost, switches = best_cost[state]
             for graph in graphs:
-                for nxt, step, pulls in _candidate_moves(state, graph, targets, multis):
-                    new_cost = cost + step
-                    if new_cost >= best_cost.get(nxt, INF):
+                for nxt, leg in _candidate_moves(state, graph, targets, multis):
+                    new_cost = cost + leg.cost
+                    new_switches = switches + _switch(state, leg)
+                    if (new_cost, new_switches) >= best_cost.get(nxt, (INF, INF)):
                         continue
-                    best_cost[nxt] = new_cost
-                    came_from[nxt] = (state, pulls)
+                    best_cost[nxt] = (new_cost, new_switches)
+                    came_from[nxt] = (state, leg)
                     if targets <= nxt.found:
-                        if new_cost < best_goal_cost:
-                            best_goal, best_goal_cost = nxt, new_cost
+                        if (new_cost, new_switches) < best_goal_cost:
+                            best_goal, best_goal_cost = nxt, (new_cost, new_switches)
                         continue
                     h = _node_h(nxt, targets, occurrences, multis)
                     if h == INF:
                         continue
-                    ranked.append((new_cost + h, nxt))
-        ranked.sort(key=lambda item: item[0])
-        frontier = [state for _, state in ranked[:width]]
+                    ranked.append((new_cost + h, new_switches, nxt))
+        ranked.sort(key=lambda item: (item[0], item[1]))
+        frontier = [state for _, _, state in ranked[:width]]
     return _reconstruct(best_goal, came_from, start) if best_goal is not None else None

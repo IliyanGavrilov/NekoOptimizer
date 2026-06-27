@@ -141,3 +141,23 @@ def test_beam_uses_guaranteed_rolls():
         [guaranteed_banner()], {"Mecha"}, start(catfood=3), 5, multis={"x": [Multi(3, 450)]}
     )
     assert result.cats[-1] == "Mecha"
+
+
+def test_legs_merge_consecutive_single_pulls():
+    g = banner("x", (1, "A", "Cat", R), (2, "A", "Dog", R), (3, "A", "Bahamut", U))
+    result = astar([g], {"Bahamut"}, start(tickets=3))
+    assert [(leg.kind, len(leg.pulls)) for leg in result.legs] == [("Single pull", 3)]
+
+
+def test_guaranteed_leg_is_labelled_and_separate():
+    result = astar(
+        [guaranteed_banner()], {"Mecha"}, start(catfood=3), multis={"x": [Multi(3, 450)]}
+    )
+    assert [(leg.kind, leg.cost) for leg in result.legs] == [("3-roll (guaranteed)", 450)]
+
+
+def test_prefers_single_banner_when_cost_is_equal():
+    x = banner("x", (1, "A", "Aqua", U), (2, "A", "Bora", U))
+    y = banner("y", (1, "A", "Aqua", U), (2, "A", "Bora", U))
+    result = astar([x, y], {"Aqua", "Bora"}, start(tickets=2))
+    assert len(result.legs) == 1  # both cats taken on one banner, no switch

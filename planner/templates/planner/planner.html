@@ -37,12 +37,19 @@
     {% if plans %}
       {% for option in plans %}
         <section>
-          <h3>{{ option.targets|join:", " }} &mdash; {{ option.plan.cost }} catfood</h3>
-          <ol>
-            {% for pull in option.plan.pulls %}
-              <li>{{ pull.banner_id }}: {{ pull.cat }} [{{ pull.rarity }}]</li>
-            {% endfor %}
-          </ol>
+          <h3>{{ option.targets|join:", " }} &mdash; {{ option.plan.cost }} catfood{% if option.plan.tickets_used %} &middot; {{ option.plan.tickets_used }} ticket{{ option.plan.tickets_used|pluralize }}{% endif %}</h3>
+          {% for leg in option.plan.legs %}
+            {% ifchanged leg.banner_id %}<h4 class="banner">{{ leg.banner_id }}</h4>{% endifchanged %}
+            <p class="leg">
+              {% if leg.kind == "Single pull" %}{{ leg.pulls|length }} single pull{{ leg.pulls|length|pluralize }}{% else %}{{ leg.kind }}{% endif %}
+              {% if leg.cost %}&middot; {{ leg.cost }} catfood{% else %}&middot; free (tickets){% endif %}
+            </p>
+            <ol>
+              {% for pull in leg.pulls %}
+                <li{% if pull.cat in option.targets %} class="target"{% endif %}>{{ pull.cat }} [{{ pull.rarity }}]</li>
+              {% endfor %}
+            </ol>
+          {% endfor %}
         </section>
       {% endfor %}
     {% else %}
