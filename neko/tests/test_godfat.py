@@ -70,3 +70,8 @@ def test_parse_guaranteed_extracts_ubers_stripping_arrows():
 
 def test_parse_guaranteed_marks_results_uber():
     assert all(p.rarity == Rarity.UBER_SUPER_RARE for p in parse_guaranteed(FIXTURE))
+
+
+def test_parse_guaranteed_reads_legend_rarity_from_cell_class():
+    html = '<table><td class="cat pick legend" onclick="pick(\'1AG\')">Wonder MOMOCO</td></table>'
+    assert parse_guaranteed(html)[0].rarity == Rarity.LEGEND_RARE

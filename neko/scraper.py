@@ -1,6 +1,6 @@
 import asyncio
 from collections.abc import Awaitable, Callable, Iterable
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import date
 from urllib.parse import urlencode
 
@@ -23,6 +23,7 @@ class ScrapeResult:
 
     banners: dict[str, BannerRolls]
     multis: dict[str, tuple[Multi, ...]]
+    dates: dict[str, tuple[date, date]] = field(default_factory=dict)
 
 
 def roll_url(seed: int, event: str, count: int = DEFAULT_COUNT, guaranteed: bool = False) -> str:
@@ -50,6 +51,19 @@ def active_events(events: Iterable[GachaEvent], today: date | None = None) -> li
     return [event for event in events if event.start <= today <= event.end]
 
 
+def latest_events(events: Iterable[GachaEvent], names: Iterable[str]) -> list[GachaEvent]:
+    """The most recent run of each named banner (a name can recur over time)."""
+    names = set(names)
+    chosen: dict[str, GachaEvent] = {}
+    for event in events:
+        if event.name not in names:
+            continue
+        current = chosen.get(event.name)
+        if current is None or event.start > current.start:
+            chosen[event.name] = event
+    return list(chosen.values())
+
+
 class GodfatScraper:
     """Fetch and parse banners through an injected fetcher, with optional caching."""
 
@@ -74,8 +88,15 @@ class GodfatScraper:
 
     async def all_rolls(self, seed: int, events: Iterable[str]) -> dict[str, BannerRolls]:
         events = list(events)
-        results = await asyncio.gather(*(self.rolls(seed, event) for event in events))
-        return dict(zip(events, results, strict=True))
+        results = await asyncio.gather(
+            *(self.rolls(seed, event) for event in events), return_exceptions=True
+        )
+        # godfat occasionally 500s on individual banners; skip those, keep the rest.
+        return {
+            event: rolls
+            for event, rolls in zip(events, results, strict=True)
+            if not isinstance(rolls, Exception)
+        }
 
 
 async def build_result(
@@ -85,9 +106,21 @@ async def build_result(
     events = list(events)
     rolls = await scraper.all_rolls(seed, [event.event_id for event in events])
     configs = multi_configs(events)
-    banners = {event.name: rolls[event.event_id] for event in events}
-    multis = {event.name: configs[event.event_id] for event in events if event.event_id in configs}
-    return ScrapeResult(banners, multis)
+    banners = {event.name: rolls[event.event_id] for event in events if event.event_id in rolls}
+    multis = {
+        event.name: configs[event.event_id]
+        for event in events
+        if event.event_id in configs and event.event_id in rolls
+    }
+    # A banner name can recur; keep its most recent run's dates.
+    dates: dict[str, tuple[date, date]] = {}
+    for event in events:
+        if event.event_id not in rolls:
+            continue
+        current = dates.get(event.name)
+        if current is None or event.start > current[0]:
+            dates[event.name] = (event.start, event.end)
+    return ScrapeResult(banners, multis, dates)
 
 
 async def scrape_active(
@@ -110,3 +143,17 @@ async def scrape_catalogue(
     async with aiohttp.ClientSession() as session:
         scraper = GodfatScraper(make_fetcher(session), cache, count)
         return await build_result(scraper, seed, await scraper.events())
+
+
+async def scrape_selected(
+    seed: int,
+    names: Iterable[str],
+    *,
+    count: int = DEFAULT_COUNT,
+    cache: RollCache | None = None,
+) -> ScrapeResult:
+    """Roll only the named banners (their most recent run) for a chosen session."""
+    async with aiohttp.ClientSession() as session:
+        scraper = GodfatScraper(make_fetcher(session), cache, count)
+        chosen = latest_events(await scraper.events(), names)
+        return await build_result(scraper, seed, chosen)

@@ -69,7 +69,10 @@ def parse_guaranteed(html: str) -> list[TrackPull]:
         if match is None:
             continue
         cat = _ARROW.sub("", cell.get_text(strip=True)).replace(_PAW, "").strip()
-        pulls.append(TrackPull(int(match.group(1)), match.group(2), cat, Rarity.UBER_SUPER_RARE))
+        # The guaranteed cell carries its own rarity class (e.g. a Legend Rare on a
+        # "guaranteed Uber or Legend" banner); fall back to Uber if it's missing.
+        rarity = _rarity_from_classes(cell.get("class", [])) or Rarity.UBER_SUPER_RARE
+        pulls.append(TrackPull(int(match.group(1)), match.group(2), cat, rarity))
     pulls.sort(key=lambda pull: (pull.position, pull.track))
     return pulls
 

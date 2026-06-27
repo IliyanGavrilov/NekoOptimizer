@@ -6,7 +6,14 @@ import pytest
 
 from neko.cache import RollCache
 from neko.godfat import BannerRolls, GachaEvent, parse_guaranteed, parse_rolls
-from neko.scraper import GodfatScraper, active_events, aiohttp_fetch, build_result, roll_url
+from neko.scraper import (
+    GodfatScraper,
+    active_events,
+    aiohttp_fetch,
+    build_result,
+    latest_events,
+    roll_url,
+)
 
 FIXTURES = Path(__file__).parent / "fixtures"
 FIXTURE = (FIXTURES / "godfat_sample.html").read_text(encoding="utf-8")
@@ -76,6 +83,16 @@ async def test_all_rolls_keyed_by_event():
     assert result == {"a": banner_rolls(FIXTURE), "b": banner_rolls(FIXTURE)}
 
 
+async def test_all_rolls_skips_banners_that_fail():
+    async def fetch(url):
+        if "bad" in url:
+            raise RuntimeError("godfat 500")
+        return FIXTURE
+
+    scraper = GodfatScraper(fetch)
+    assert list(await scraper.all_rolls(1, ["good", "bad"])) == ["good"]
+
+
 async def test_events_parses_dropdown():
     scraper = GodfatScraper(fetch_returning(EVENTS))
     assert [event.event_id for event in await scraper.events()] == [
@@ -105,6 +122,16 @@ async def test_build_result_collapses_recurring_names():
     assert list(result.banners) == ["Epicfest"]
 
 
+async def test_build_result_keeps_most_recent_run_dates():
+    scraper = GodfatScraper(fetch_returning(FIXTURE))
+    events = [
+        GachaEvent("jan", "Epicfest", date(2026, 1, 1), date(2026, 1, 8)),
+        GachaEvent("feb", "Epicfest", date(2026, 2, 1), date(2026, 2, 8)),
+    ]
+    result = await build_result(scraper, 1, events)
+    assert result.dates["Epicfest"] == (date(2026, 2, 1), date(2026, 2, 8))
+
+
 def test_active_events_keeps_only_current():
     events = [
         GachaEvent("past", "n", date(2026, 1, 1), date(2026, 1, 8)),
@@ -117,6 +144,14 @@ def test_active_events_keeps_only_current():
 def test_active_events_boundary_is_inclusive():
     event = GachaEvent("edge", "n", date(2026, 6, 1), date(2026, 6, 15))
     assert active_events([event], date(2026, 6, 15)) == [event]
+
+
+def test_latest_events_keeps_most_recent_run_of_each_name():
+    old = GachaEvent("jan", "Epicfest", date(2026, 1, 1), date(2026, 1, 8))
+    new = GachaEvent("feb", "Epicfest", date(2026, 2, 1), date(2026, 2, 8))
+    other = GachaEvent("x", "Uberfest", date(2026, 3, 1), date(2026, 3, 8))
+    chosen = latest_events([old, new, other], ["Epicfest"])
+    assert chosen == [new]
 
 
 async def test_aiohttp_fetch_returns_body():
