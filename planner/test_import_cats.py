@@ -51,6 +51,23 @@ def test_import_stores_rarity():
 
 
 @pytest.mark.django_db
+def test_import_corrects_stale_rarity():
+    Cat.objects.create(name="Wonder MOMOCO", rarity="Uber Super Rare")
+    import_cats(banners(x=[TrackPull(1, "A", "Wonder MOMOCO", Rarity.LEGEND_RARE)]))
+    assert Cat.objects.get(name="Wonder MOMOCO").rarity == "Legend Rare"
+
+
+@pytest.mark.django_db
+def test_import_stores_banner_dates():
+    from datetime import date
+
+    run = (date(2026, 2, 1), date(2026, 2, 8))
+    import_cats(banners(Epicfest=[TrackPull(1, "A", "Bahamut", U)]), {"Epicfest": run})
+    banner = Banner.objects.get(name="Epicfest")
+    assert (banner.start, banner.end) == run
+
+
+@pytest.mark.django_db
 def test_command_populates_catalogue(monkeypatch):
     monkeypatch.setattr(
         "planner.management.commands.import_cats.fetch_banners",
