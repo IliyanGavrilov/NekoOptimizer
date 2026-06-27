@@ -4,48 +4,41 @@
 
 {% block content %}
   <h1>Collection</h1>
-  <p><a href="{% url 'planner' %}">&larr; Back to planner</a></p>
+  <p class="muted">Click a cat to mark it <strong>owned</strong>; tap the star to add it to your <strong>wishlist</strong>. Saved instantly.</p>
 
-  <h2>Add a cat</h2>
-  <form method="post">
-    {% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit">Add</button>
-  </form>
+  <input type="hidden" id="csrfToken" value="{{ csrf_token }}">
+  <input type="search" data-filter="collectionBrowser" placeholder="Search cats&hellip;">
 
-  <h2>Your cats</h2>
-  <p class="muted">
-    Group by:
-    {% if group_by == "banner" %}<strong>banner</strong>{% else %}<a href="?group=banner">banner</a>{% endif %}
-    &middot;
-    {% if group_by == "rarity" %}<strong>rarity</strong>{% else %}<a href="?group=rarity">rarity</a>{% endif %}
-  </p>
-  <input type="search" data-filter="catList" placeholder="Filter cats&hellip;">
-  <form method="post">
-    {% csrf_token %}
-    <div id="catList">
-      {% for heading, cats in sections %}
-        <section>
-          <h3>{{ heading }}</h3>
-          <table>
-            <tr><th>Cat</th><th>Rarity</th><th>How to obtain</th><th>Owned</th><th>Wanted</th><th>Delete</th></tr>
-            {% for cat in cats %}
-              <tr data-name="{{ cat.name }}">
-                <td>{{ cat.name }}</td>
-                <td>{{ cat.rarity }}</td>
-                <td>{% for banner in cat.banners.all %}{{ banner.name }}{% if not forloop.last %}, {% endif %}{% empty %}<span class="muted">&mdash;</span>{% endfor %}</td>
-                <td><input type="checkbox" name="owned" value="{{ cat.pk }}" {% if cat.owned %}checked{% endif %}></td>
-                <td><input type="checkbox" name="wanted" value="{{ cat.pk }}" {% if cat.wanted %}checked{% endif %}></td>
-                <td><input type="checkbox" name="delete" value="{{ cat.pk }}"></td>
-              </tr>
-            {% endfor %}
-          </table>
-        </section>
-      {% empty %}
-        <p class="muted">No cats yet &mdash; add one above.</p>
-      {% endfor %}
-    </div>
-    <button type="submit" name="save">Save</button>
-    <button type="submit" name="remove" onclick="return confirm('Remove the ticked cats?')">Remove ticked</button>
-  </form>
+  <div class="cat-browser" id="collectionBrowser" data-toggle-url="{% url 'collection_toggle' %}">
+    {% for banner, rarities in sections %}
+      <details class="banner-group" open>
+        <summary>{{ banner }}</summary>
+        {% for rarity, cats in rarities %}
+          <div class="rarity-row" data-rarity-row>
+            <span class="rarity" data-rarity="{{ rarity }}">{{ rarity }}</span>
+            <div class="chips">
+              {% for cat in cats %}
+                <span class="own-chip{% if cat.owned %} owned{% endif %}{% if cat.wanted %} wanted{% endif %}"
+                      data-pk="{{ cat.pk }}" data-name="{{ cat.name }}">
+                  <button type="button" class="chip chip-own">{{ cat.name }}</button>
+                  <button type="button" class="chip-star" title="Wishlist" aria-label="Toggle wishlist">&#9733;</button>
+                </span>
+              {% endfor %}
+            </div>
+          </div>
+        {% endfor %}
+      </details>
+    {% empty %}
+      <p class="muted">No cats yet &mdash; add one below.</p>
+    {% endfor %}
+  </div>
+
+  <details class="add-cat">
+    <summary>&#43; Add a cat not in the catalogue</summary>
+    <form method="post">
+      {% csrf_token %}
+      {{ form.as_p }}
+      <button type="submit">Add</button>
+    </form>
+  </details>
 {% endblock %}

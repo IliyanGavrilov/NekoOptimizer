@@ -1,34 +1,64 @@
 {% extends "planner/base.html" %}
+{% load planner_extras %}
 
 {% block content %}
   <h1>Neko Optimizer</h1>
-  <p><a href="{% url 'collection' %}">Manage collection &amp; wishlist</a></p>
 
-  <form method="post">
+  <form method="post" id="plannerForm">
     {% csrf_token %}
-    <p>{{ form.seed.label_tag }} {{ form.seed }}</p>
-    <p>{{ form.tickets.label_tag }} {{ form.tickets }}</p>
-    <p>{{ form.catfood.label_tag }} {{ form.catfood }}</p>
-    <p>{{ form.use_wishlist }} {{ form.use_wishlist.label_tag }}</p>
+
+    <div class="field-grid">
+      <label>{{ form.seed.label_tag }} {{ form.seed }}</label>
+      <label>{{ form.tickets.label_tag }} {{ form.tickets }}</label>
+      <label>{{ form.catfood.label_tag }} {{ form.catfood }}</label>
+    </div>
+    <label class="check-row">{{ form.use_wishlist }} {{ form.use_wishlist.label_tag }}</label>
 
     <fieldset>
       <legend>Targets</legend>
-      <input type="search" data-filter="targetList" placeholder="Filter cats&hellip;">
-      <div id="targetList">
-        {% for banner_name, targets in form.target_groups %}
-          <div class="banner-group">
-            <h3>{{ banner_name }}</h3>
-            {% for target in targets %}
-              <div data-name="{{ target.choice_label }}">{{ target.tag }} {{ target.choice_label }}</div>
-            {% endfor %}
-          </div>
-        {% empty %}
-          <p class="muted">No cats yet &mdash; <a href="{% url 'collection' %}">add some</a>.</p>
-        {% endfor %}
+      <p class="muted hint">Tap <span class="key">&plus;</span> on a banner to roll its whole session; click a banner to open its cats. <span id="bannerCount" class="banner-count"></span></p>
+
+      <div class="selected-panel" id="selectedPanel" hidden>
+        <div class="selected-head">Selected <span class="count" id="selectedCount">0</span></div>
+        <div class="chips" id="selectedChips"></div>
+      </div>
+
+      <input type="search" id="targetSearch" placeholder="Search cats&hellip;">
+
+      <div id="targetPicker" class="picker-scroll">
+        <div id="targetFlat" class="chips flat" hidden>
+          {% for cat in target_flat %}
+            <button type="button" class="chip" data-pk="{{ cat.pk }}"
+                    data-name="{{ cat.name }}" data-rarity="{{ cat.rarity }}">{% if cat.rarity %}<span class="rarity" data-rarity="{{ cat.rarity }}">{{ cat.rarity }}</span> {% endif %}{{ cat.name }}</button>
+          {% endfor %}
+        </div>
+
+        <div class="cat-browser" id="targetBrowser">
+          {% for group_label, banner_sections in target_groups %}
+            {% if group_label == "Available now" %}
+              <h3 class="group">{{ group_label }} <span class="count-pill">{{ banner_sections|length }}</span></h3>
+              {% for banner, dates, rarities in banner_sections %}
+                {% include "planner/_banner.html" with banner=banner dates=dates rarities=rarities is_open=0 %}
+              {% endfor %}
+            {% else %}
+              <details class="group-drop"{% if group_label == "Upcoming" %} open{% endif %}>
+                <summary>{{ group_label }} <span class="count-pill">{{ banner_sections|length }}</span></summary>
+                {% for banner, dates, rarities in banner_sections %}
+                  {% include "planner/_banner.html" with banner=banner dates=dates rarities=rarities is_open=0 %}
+                {% endfor %}
+              </details>
+            {% endif %}
+          {% empty %}
+            <p class="muted">No cats yet &mdash; <a href="{% url 'collection' %}">add some</a>.</p>
+          {% endfor %}
+        </div>
       </div>
     </fieldset>
 
-    {% if form.non_field_errors %}<p class="muted">{{ form.non_field_errors }}</p>{% endif %}
+    <div id="targetInputs"></div>
+    <div id="bannerInputs"></div>
+
+    {% if form.non_field_errors %}<p class="error">{{ form.non_field_errors }}</p>{% endif %}
     <button type="submit">Find plan</button>
   </form>
 
@@ -39,14 +69,20 @@
         <section>
           <h3>{{ option.targets|join:", " }} &mdash; {{ option.plan.cost }} catfood{% if option.plan.tickets_used %} &middot; {{ option.plan.tickets_used }} ticket{{ option.plan.tickets_used|pluralize }}{% endif %}</h3>
           {% for leg in option.plan.legs %}
-            {% ifchanged leg.banner_id %}<h4 class="banner">{{ leg.banner_id }}</h4>{% endifchanged %}
+            {% ifchanged leg.banner_id %}
+              {% with names=equivalents|lookup:leg.banner_id %}
+                <h4 class="banner">
+                  {{ names|join:" · " }}{% if names|length > 1 %} <span class="equiv-note">same rolls</span>{% endif %}
+                </h4>
+              {% endwith %}
+            {% endifchanged %}
             <p class="leg">
               {% if leg.kind == "Single pull" %}{{ leg.pulls|length }} single pull{{ leg.pulls|length|pluralize }}{% else %}{{ leg.kind }}{% endif %}
               {% if leg.cost %}&middot; {{ leg.cost }} catfood{% else %}&middot; free (tickets){% endif %}
             </p>
             <ol>
               {% for pull in leg.pulls %}
-                <li{% if pull.cat in option.targets %} class="target"{% endif %}>{{ pull.cat }} [{{ pull.rarity }}]</li>
+                <li class="{% if pull.cat in option.targets %}target {% endif %}{% if pull.cat not in owned_names %}unowned{% endif %}">{{ pull.cat }} <span class="rarity" data-rarity="{{ pull.rarity }}">{{ pull.rarity }}</span></li>
               {% endfor %}
             </ol>
           {% endfor %}

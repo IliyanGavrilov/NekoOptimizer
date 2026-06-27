@@ -10,16 +10,16 @@ def test_collection_lists_cats(client):
 
 
 @pytest.mark.django_db
-def test_collection_groups_by_banner_by_default(client):
+def test_collection_groups_by_banner(client):
     cat = Cat.objects.create(name="Bahamut")
     cat.banners.add(Banner.objects.create(name="Epicfest"))
     assert b"Epicfest" in client.get("/collection/").content
 
 
 @pytest.mark.django_db
-def test_collection_groups_by_rarity_on_request(client):
+def test_collection_shows_rarity(client):
     Cat.objects.create(name="Bahamut", rarity="Uber Super Rare")
-    assert b"Uber Super Rare" in client.get("/collection/?group=rarity").content
+    assert b"Uber Super Rare" in client.get("/collection/").content
 
 
 @pytest.mark.django_db
@@ -29,24 +29,23 @@ def test_add_cat_creates_it(client):
 
 
 @pytest.mark.django_db
-def test_save_sets_owned_and_wanted(client):
+def test_toggle_owned_flips_flag(client):
     cat = Cat.objects.create(name="Bahamut")
-    client.post("/collection/", {"save": "1", "owned": [cat.pk], "wanted": [cat.pk]})
+    client.post("/collection/toggle/", {"pk": cat.pk, "field": "owned"})
     cat.refresh_from_db()
-    assert (cat.owned, cat.wanted) == (True, True)
+    assert cat.owned is True
 
 
 @pytest.mark.django_db
-def test_save_clears_unchecked_flags(client):
-    cat = Cat.objects.create(name="Bahamut", owned=True, wanted=True)
-    client.post("/collection/", {"save": "1"})
+def test_toggle_wanted_twice_returns_to_false(client):
+    cat = Cat.objects.create(name="Bahamut")
+    client.post("/collection/toggle/", {"pk": cat.pk, "field": "wanted"})
+    client.post("/collection/toggle/", {"pk": cat.pk, "field": "wanted"})
     cat.refresh_from_db()
-    assert (cat.owned, cat.wanted) == (False, False)
+    assert cat.wanted is False
 
 
 @pytest.mark.django_db
-def test_remove_deletes_only_ticked_cats(client):
-    Cat.objects.create(name="Keep")
-    drop = Cat.objects.create(name="Drop")
-    client.post("/collection/", {"remove": "1", "delete": [drop.pk]})
-    assert list(Cat.objects.values_list("name", flat=True)) == ["Keep"]
+def test_toggle_rejects_unknown_field(client):
+    cat = Cat.objects.create(name="Bahamut")
+    assert client.post("/collection/toggle/", {"pk": cat.pk, "field": "rarity"}).status_code == 400

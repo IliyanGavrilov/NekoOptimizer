@@ -1,13 +1,23 @@
-from django.shortcuts import redirect, render
+from django.http import HttpResponseBadRequest, JsonResponse
+from django.shortcuts import get_object_or_404, redirect, render
+from django.views.decorators.http import require_POST
 
 from neko.planning import plan
 from planner.forms import CatForm, PlannerForm
 from planner.models import Cat, Seed
-from planner.services import fetch_banners, group_cats
+from planner.services import (
+    RARITY_ORDER,
+    catalogue,
+    dated_catalogue,
+    equivalent_banners,
+    fetch_banners,
+    fetch_for_banners,
+)
 
 
 def planner(request):
     plans = None
+    equivalents: dict[str, list[str]] = {}
     if request.method == "POST":
         form = PlannerForm(request.POST)
         if form.is_valid():
@@ -16,7 +26,11 @@ def planner(request):
             targets = {cat.name for cat in form.cleaned_data["targets"]}
             if form.cleaned_data["use_wishlist"]:
                 targets |= set(Cat.objects.wishlist().values_list("name", flat=True))
-            result = fetch_banners(seed)
+            chosen_banners = request.POST.getlist("banners")
+            result = (
+                fetch_for_banners(seed, chosen_banners) if chosen_banners else fetch_banners(seed)
+            )
+            equivalents = equivalent_banners(result.banners)
             pulls = {name: rolls.pulls for name, rolls in result.banners.items()}
             guaranteed_pulls = {name: rolls.guaranteed for name, rolls in result.banners.items()}
             plans = plan(
@@ -29,33 +43,40 @@ def planner(request):
             )
     else:
         form = PlannerForm(initial={"seed": Seed.current()})
-    return render(request, "planner/planner.html", {"form": form, "plans": plans})
-
-
-def _save_flags(post) -> None:
-    owned = set(post.getlist("owned"))
-    wanted = set(post.getlist("wanted"))
-    for cat in Cat.objects.all():
-        cat.owned = str(cat.pk) in owned
-        cat.wanted = str(cat.pk) in wanted
-        cat.save(update_fields=["owned", "wanted"])
+    unowned = list(Cat.objects.unowned().prefetch_related("banners"))
+    owned_names = set(Cat.objects.filter(owned=True).values_list("name", flat=True))
+    rank = {name: i for i, name in enumerate(RARITY_ORDER)}
+    target_flat = sorted(unowned, key=lambda cat: (-rank.get(cat.rarity, -1), cat.name))
+    context = {
+        "form": form,
+        "plans": plans,
+        "target_groups": dated_catalogue(unowned, reverse_rarity=True),
+        "target_flat": target_flat,
+        "owned_names": owned_names,
+        "equivalents": equivalents,
+    }
+    return render(request, "planner/planner.html", context)
 
 
 def collection(request):
     form = CatForm()
     if request.method == "POST":
-        if "save" in request.POST:
-            _save_flags(request.POST)
-            return redirect("collection")
-        if "remove" in request.POST:
-            Cat.objects.filter(pk__in=request.POST.getlist("delete")).delete()
-            return redirect("collection")
         form = CatForm(request.POST)
         if form.is_valid():
             form.save()
             return redirect("collection")
-    group_by = "rarity" if request.GET.get("group") == "rarity" else "banner"
     cats = Cat.objects.prefetch_related("banners")
-    sections = group_cats(cats, group_by)
-    context = {"form": form, "sections": sections, "group_by": group_by}
+    context = {"form": form, "sections": catalogue(cats)}
     return render(request, "planner/collection.html", context)
+
+
+@require_POST
+def collection_toggle(request):
+    """Flip a single cat's owned/wanted flag and return the new state as JSON."""
+    field = request.POST.get("field")
+    if field not in {"owned", "wanted"}:
+        return HttpResponseBadRequest("field must be 'owned' or 'wanted'")
+    cat = get_object_or_404(Cat, pk=request.POST.get("pk"))
+    setattr(cat, field, not getattr(cat, field))
+    cat.save(update_fields=[field])
+    return JsonResponse({"owned": cat.owned, "wanted": cat.wanted})

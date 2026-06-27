@@ -1,0 +1,24 @@
+<details class="banner-group"{% if is_open %} open{% endif %}{% if dates %} data-start="{{ dates.0|date:'Y-m-d' }}" data-end="{{ dates.1|date:'Y-m-d' }}"{% endif %}>
+  <summary>
+    {% if dates %}<button type="button" class="banner-include" aria-pressed="false" data-banner="{{ banner }}" title="Roll this banner's session" aria-label="Include banner">&plus;</button>{% endif %}
+    <span class="banner-name">{{ banner }}</span>
+    {% if dates %}
+      {% if dates.1.year >= 2030 %}
+        <span class="dates">Since {{ dates.0|date:"M j, Y" }}</span>
+      {% else %}
+        <span class="dates">{{ dates.0|date:"M j" }} &ndash; {{ dates.1|date:"M j, Y" }}</span>
+      {% endif %}
+    {% endif %}
+  </summary>
+  {% for rarity, cats in rarities %}
+    <div class="rarity-row" data-rarity-row>
+      <span class="rarity" data-rarity="{{ rarity }}">{{ rarity }}</span>
+      <div class="chips">
+        {% for cat in cats %}
+          <button type="button" class="chip" data-pk="{{ cat.pk }}"
+                  data-name="{{ cat.name }}" data-rarity="{{ cat.rarity }}">{{ cat.name }}</button>
+        {% endfor %}
+      </div>
+    </div>
+  {% endfor %}
+</details>
