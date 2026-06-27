@@ -71,6 +71,23 @@ def test_guaranteed_config_reaches_target(client, monkeypatch):
 
 
 @pytest.mark.django_db
+def test_selected_banners_use_chosen_scrape(client, monkeypatch):
+    cat = Cat.objects.create(name="Bahamut")
+    called = {}
+
+    def fake_for_banners(seed, names):
+        called["names"] = list(names)
+        return ScrapeResult({"Pick": BannerRolls([TrackPull(1, "A", "Bahamut", U)], [])}, {})
+
+    monkeypatch.setattr("planner.views.fetch_for_banners", fake_for_banners)
+    monkeypatch.setattr("planner.views.fetch_banners", fixed_banners())
+    client.post(
+        "/", {"seed": 7, "tickets": 1, "catfood": 0, "targets": [cat.pk], "banners": ["Pick"]}
+    )
+    assert called["names"] == ["Pick"]
+
+
+@pytest.mark.django_db
 def test_requires_targets_or_wishlist(client):
     response = client.post("/", {"seed": 7, "tickets": 1, "catfood": 0})
     assert response.context["plans"] is None
