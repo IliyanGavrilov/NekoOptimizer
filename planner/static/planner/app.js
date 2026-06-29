@@ -30,6 +30,39 @@ if (picker) {
   const inputs = document.getElementById("targetInputs");
   const selected = new Map(); // pk -> name
 
+  // ---- Persist the form to localStorage (no accounts, so this is the only
+  // memory of catfood/tickets/targets/banners between visits). Seed and the
+  // owned/wishlist collection persist server-side instead.
+  const STORE_KEY = "nekoPlanner";
+  const ticketsEl = document.getElementById("id_tickets");
+  const catfoodEl = document.getElementById("id_catfood");
+  const wishlistEl = document.getElementById("id_use_wishlist");
+  const stored = (() => {
+    try {
+      return JSON.parse(localStorage.getItem(STORE_KEY)) || {};
+    } catch {
+      return {};
+    }
+  })();
+  let ready = false; // don't persist until the restore below has run
+  function save() {
+    if (!ready) return;
+    const banners = includes
+      .filter((b) => b.getAttribute("aria-pressed") === "true")
+      .map((b) => b.dataset.banner);
+    localStorage.setItem(
+      STORE_KEY,
+      JSON.stringify({
+        tickets: ticketsEl.value,
+        catfood: catfoodEl.value,
+        useWishlist: wishlistEl.checked,
+        search: search.value,
+        targets: [...selected.keys()],
+        banners,
+      }),
+    );
+  }
+
   const chipsFor = (pk) => picker.querySelectorAll(`.chip[data-pk="${pk}"]`);
 
   function render() {
@@ -60,6 +93,7 @@ if (picker) {
     const on = selected.has(pk);
     chipsFor(pk).forEach((c) => c.classList.toggle("selected", on));
     render();
+    save();
   }
 
   picker.addEventListener("click", (e) => {
@@ -101,6 +135,7 @@ if (picker) {
     bannerCount.textContent = n
       ? `Rolling ${n} banner${n === 1 ? "" : "s"}.`
       : "Rolling current banners.";
+    save();
   }
   // A "session" is a moment in time: clicking a banner selects every banner
   // live on its opening day — the rotation you'd roll together right then —
@@ -123,19 +158,12 @@ if (picker) {
     e.stopPropagation();
     toggleSession(btn);
   });
-  // Default to the session live today.
-  const today = new Date().toISOString().slice(0, 10);
-  for (const btn of includes) {
-    if (liveOn(rangeOf(btn), today)) setIncluded(btn, true);
-  }
-  syncBanners();
-
   // Searching shows a flat, undivided list of matching cats; clearing it
   // restores the banner/rarity grouping.
   const search = document.getElementById("targetSearch");
   const grouped = browser;
   const flat = document.getElementById("targetFlat");
-  search.addEventListener("input", () => {
+  function applySearch() {
     const query = search.value.trim().toLowerCase();
     const searching = query !== "";
     grouped.hidden = searching;
@@ -145,7 +173,47 @@ if (picker) {
         chip.hidden = !chip.dataset.name.toLowerCase().includes(query);
       });
     }
+  }
+  search.addEventListener("input", () => {
+    applySearch();
+    save();
   });
+
+  // Restore the saved form, then default whatever was never saved.
+  if (stored.tickets != null) ticketsEl.value = stored.tickets;
+  if (stored.catfood != null) catfoodEl.value = stored.catfood;
+  wishlistEl.checked = !!stored.useWishlist;
+  ticketsEl.addEventListener("input", save);
+  catfoodEl.addEventListener("input", save);
+  wishlistEl.addEventListener("change", save);
+
+  for (const pk of stored.targets || []) {
+    const chip = picker.querySelector(`.chip[data-pk="${pk}"]`);
+    if (chip && !selected.has(pk)) {
+      selected.set(pk, chip.dataset.name);
+      chipsFor(pk).forEach((c) => c.classList.add("selected"));
+    }
+  }
+  render();
+
+  if (stored.search) {
+    search.value = stored.search;
+    applySearch();
+  }
+
+  // An empty list means "I cleared every banner"; only a never-saved session
+  // falls back to whatever is live today.
+  if (stored.banners) {
+    const wanted = new Set(stored.banners);
+    for (const btn of includes) setIncluded(btn, wanted.has(btn.dataset.banner));
+  } else {
+    const today = new Date().toISOString().slice(0, 10);
+    for (const btn of includes) {
+      if (liveOn(rangeOf(btn), today)) setIncluded(btn, true);
+    }
+  }
+  ready = true;
+  syncBanners();
 }
 
 // ---- Collection: instant owned / wishlist toggles --------------------
