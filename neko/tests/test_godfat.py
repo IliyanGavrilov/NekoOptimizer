@@ -77,6 +77,12 @@ def test_parse_guaranteed_reads_legend_rarity_from_cell_class():
     assert parse_guaranteed(html)[0].rarity == Rarity.LEGEND_RARE
 
 
+def test_parse_guaranteed_ignores_the_rolled_slot_band():
+    # godfat tags this guaranteed uber's cell "rare" (the slot's band); it must stay uber.
+    html = '<table><td class="cat pick rare" onclick="pick(\'9AG\')">Lightmother Aset</td></table>'
+    assert parse_guaranteed(html)[0].rarity == Rarity.UBER_SUPER_RARE
+
+
 def test_parse_rerolls_extracts_the_rerolled_cat_stripping_the_arrow():
     html = (
         '<table><td class="cat pick rare" onclick="pick(\'7AR\')">'
