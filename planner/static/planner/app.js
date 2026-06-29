@@ -224,6 +224,16 @@ if (picker) {
   syncBanners();
 }
 
+// ---- Planner: advanced options popup ---------------------------------
+const advancedToggle = document.getElementById("advancedToggle");
+const advancedDialog = document.getElementById("advancedDialog");
+if (advancedToggle && advancedDialog) {
+  advancedToggle.addEventListener("click", () => advancedDialog.showModal());
+  document
+    .getElementById("advancedDone")
+    .addEventListener("click", () => advancedDialog.close());
+}
+
 // ---- Collection: instant owned / wishlist toggles --------------------
 const collectionBrowser = document.getElementById("collectionBrowser");
 if (collectionBrowser) {
