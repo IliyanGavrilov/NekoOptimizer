@@ -5,7 +5,13 @@ from pathlib import Path
 
 from neko.cache import RollCache
 from neko.godfat import BannerRolls
-from neko.scraper import ScrapeResult, scrape_active, scrape_catalogue, scrape_selected
+from neko.scraper import (
+    DEFAULT_COUNT,
+    ScrapeResult,
+    scrape_active,
+    scrape_catalogue,
+    scrape_selected,
+)
 from planner.models import Banner, Cat
 
 _CACHE = RollCache(Path("rollcache"))
@@ -22,9 +28,9 @@ def capped_banner_limits(names: Iterable[str], cap: int) -> dict[str, int]:
     return {name: cap for name in names if any(kw in name.lower() for kw in _CAPPED_KEYWORDS)}
 
 
-def fetch_banners(seed: int) -> ScrapeResult:
+def fetch_banners(seed: int, count: int = DEFAULT_COUNT) -> ScrapeResult:
     """Scrape the active banners for a seed (blocking wrapper around the async scraper)."""
-    return asyncio.run(scrape_active(seed, cache=_CACHE))
+    return asyncio.run(scrape_active(seed, count=count, cache=_CACHE))
 
 
 def fetch_catalogue(seed: int) -> ScrapeResult:
@@ -32,9 +38,9 @@ def fetch_catalogue(seed: int) -> ScrapeResult:
     return asyncio.run(scrape_catalogue(seed, cache=_CACHE))
 
 
-def fetch_for_banners(seed: int, names: Iterable[str]) -> ScrapeResult:
+def fetch_for_banners(seed: int, names: Iterable[str], count: int = DEFAULT_COUNT) -> ScrapeResult:
     """Scrape just the chosen banners for a seed (blocking wrapper)."""
-    return asyncio.run(scrape_selected(seed, names, cache=_CACHE))
+    return asyncio.run(scrape_selected(seed, names, count=count, cache=_CACHE))
 
 
 def _by_rarity(cats: Iterable[Cat], reverse: bool = False) -> list[tuple[str, list[Cat]]]:

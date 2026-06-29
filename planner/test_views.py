@@ -6,11 +6,12 @@ from neko.scraper import ScrapeResult
 from neko.search import Multi
 from planner.models import Banner, Cat, Seed
 
+R = Rarity.RARE
 U = Rarity.UBER_SUPER_RARE
 
 
 def fixed_banners(*pulls):
-    def _fetch(seed):
+    def _fetch(seed, count=100):
         return ScrapeResult({"x": BannerRolls(list(pulls), [])}, {})
 
     return _fetch
@@ -65,7 +66,7 @@ def test_guaranteed_config_reaches_target(client, monkeypatch):
         {"x": BannerRolls([TrackPull(1, "A", "Filler", U)], [TrackPull(2, "A", "Target", U)])},
         {"x": [Multi(rolls=2, cost=300)]},
     )
-    monkeypatch.setattr("planner.views.fetch_banners", lambda seed: result)
+    monkeypatch.setattr("planner.views.fetch_banners", lambda seed, count=100: result)
     response = client.post("/", {"seed": 7, "tickets": 0, "catfood": 300, "targets": [cat.pk]})
     assert response.context["plans"][0].targets == frozenset({"Target"})
 
@@ -75,7 +76,7 @@ def test_selected_banners_use_chosen_scrape(client, monkeypatch):
     cat = Cat.objects.create(name="Bahamut")
     called = {}
 
-    def fake_for_banners(seed, names):
+    def fake_for_banners(seed, names, count=100):
         called["names"] = list(names)
         return ScrapeResult({"Pick": BannerRolls([TrackPull(1, "A", "Bahamut", U)], [])}, {})
 
@@ -106,7 +107,7 @@ def test_platinum_legend_cap_zero_excludes_the_banner(client, monkeypatch):
     result = ScrapeResult(
         {"Platinum Capsules": BannerRolls([TrackPull(1, "A", "Bahamut", U)], [])}, {}
     )
-    monkeypatch.setattr("planner.views.fetch_banners", lambda seed: result)
+    monkeypatch.setattr("planner.views.fetch_banners", lambda seed, count=100: result)
     response = client.post(
         "/",
         {"seed": 7, "tickets": 1, "catfood": 0, "targets": [cat.pk], "platinum_legend_cap": 0},
@@ -120,9 +121,37 @@ def test_platinum_legend_allowed_by_default(client, monkeypatch):
     result = ScrapeResult(
         {"Platinum Capsules": BannerRolls([TrackPull(1, "A", "Bahamut", U)], [])}, {}
     )
-    monkeypatch.setattr("planner.views.fetch_banners", lambda seed: result)
+    monkeypatch.setattr("planner.views.fetch_banners", lambda seed, count=100: result)
     response = client.post("/", {"seed": 7, "tickets": 1, "catfood": 0, "targets": [cat.pk]})
     assert response.context["plans"][0].targets == frozenset({"Bahamut"})
+
+
+@pytest.mark.django_db
+def test_explore_mode_reaches_target_beyond_budget(client, monkeypatch):
+    cat = Cat.objects.create(name="Bahamut")
+    monkeypatch.setattr(
+        "planner.views.fetch_banners",
+        fixed_banners(TrackPull(1, "A", "Filler", R), TrackPull(2, "A", "Bahamut", U)),
+    )
+    response = client.post(
+        "/", {"seed": 7, "tickets": 0, "catfood": 0, "targets": [cat.pk], "explore": "on"}
+    )
+    assert response.context["plans"][0].plan.cost == 300
+
+
+@pytest.mark.django_db
+def test_explore_mode_scrapes_to_the_horizon(client, monkeypatch):
+    cat = Cat.objects.create(name="Bahamut")
+    seen = {}
+
+    def fake(seed, count=100):
+        seen["count"] = count
+        return ScrapeResult({"x": BannerRolls([TrackPull(1, "A", "Bahamut", U)], [])}, {})
+
+    monkeypatch.setattr("planner.views.fetch_banners", fake)
+    data = {"seed": 7, "tickets": 0, "catfood": 0, "targets": [cat.pk]}
+    client.post("/", {**data, "explore": "on", "horizon": 500})
+    assert seen["count"] == 500
 
 
 @pytest.mark.django_db

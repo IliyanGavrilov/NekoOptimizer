@@ -40,6 +40,9 @@ if (picker) {
   const preferEl = document.getElementById("id_prefer");
   const ticketValueEl = document.getElementById("id_ticket_value");
   const platLegendCapEl = document.getElementById("id_platinum_legend_cap");
+  const exploreEl = document.getElementById("id_explore");
+  const horizonEl = document.getElementById("id_horizon");
+  const horizonRow = document.querySelector(".explore-horizon");
   const stored = (() => {
     try {
       return JSON.parse(localStorage.getItem(STORE_KEY)) || {};
@@ -62,6 +65,8 @@ if (picker) {
         prefer: preferEl.value,
         ticketValue: ticketValueEl.value,
         platLegendCap: platLegendCapEl.value,
+        explore: exploreEl.checked,
+        horizon: horizonEl.value,
         search: search.value,
         targets: [...selected.keys()],
         banners,
@@ -192,12 +197,23 @@ if (picker) {
   if (stored.prefer != null) preferEl.value = stored.prefer;
   if (stored.ticketValue != null) ticketValueEl.value = stored.ticketValue;
   if (stored.platLegendCap != null) platLegendCapEl.value = stored.platLegendCap;
+  exploreEl.checked = !!stored.explore;
+  if (stored.horizon != null) horizonEl.value = stored.horizon;
+  const syncExplore = () => {
+    horizonRow.hidden = !exploreEl.checked;
+  };
+  syncExplore();
   ticketsEl.addEventListener("input", save);
   catfoodEl.addEventListener("input", save);
   wishlistEl.addEventListener("change", save);
   preferEl.addEventListener("change", save);
   ticketValueEl.addEventListener("input", save);
   platLegendCapEl.addEventListener("input", save);
+  exploreEl.addEventListener("change", () => {
+    syncExplore();
+    save();
+  });
+  horizonEl.addEventListener("input", save);
 
   for (const pk of stored.targets || []) {
     const chip = picker.querySelector(`.chip[data-pk="${pk}"]`);

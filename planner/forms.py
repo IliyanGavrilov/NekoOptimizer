@@ -3,6 +3,8 @@ from django import forms
 from neko.models import CATFOOD_PER_DRAW
 from planner.models import Cat
 
+EXPLORE_HORIZON = 1000  # default rolls to look ahead per banner in explore mode
+
 
 class CatForm(forms.ModelForm):
     class Meta:
@@ -38,6 +40,19 @@ class PlannerForm(forms.Form):
         required=False,
         label="Platinum/Legend pulls allowed",
     )
+    explore = forms.BooleanField(
+        required=False,
+        label="Explore mode (ignore my budget; show the cheapest way to reach a target)",
+    )
+    horizon = forms.IntegerField(
+        min_value=1,
+        initial=EXPLORE_HORIZON,
+        required=False,
+        label="Rolls to look ahead",
+    )
+
+    def clean_horizon(self):
+        return self.cleaned_data.get("horizon") or EXPLORE_HORIZON
 
     def clean_prefer(self):
         return self.cleaned_data.get("prefer") or "tickets"

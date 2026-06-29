@@ -44,21 +44,21 @@ pytest. Data source for pull sequences: [bc.godfat.org](https://bc.godfat.org).
 Reference projects surveyed for features to borrow. Functionality focus, not visual design.
 
 ### Planners / multipath solvers
-- [ubercarry.me](https://ubercarry.me/) & [catcpu.com](https://catcpu.com/) — by [thasmin/bcplanner](https://github.com/thasmin/bcplanner). Roll Planner (next 100 rolls, A/B tracks, rarity colors, guaranteed-Uber, duplicate detection), Uber Planner, Cat Dictionary (800+ units), Tier Lists. Main inspiration.
-- [xirba13/Batte-Cats-Gacha-Path-Finder](https://github.com/xirba13/Batte-Cats-Gacha-Path-Finder) — optimal multipath roll calculator. `BANNER_LIMITS` (per-banner action caps), search caps `MAX_SEARCH_STEPS`/`MAX_SOLUTIONS`, plain-text step output.
-- [bc.godfat.org](https://bc.godfat.org/) — the canonical seed tracker (our parser targets it).
-- [ampuri.github.io/bc-normal-seed-tracking](https://ampuri.github.io/bc-normal-seed-tracking/) — modern React normal-seed tracker.
-- [theusaf/battlecats-seed-tracker-util](https://github.com/theusaf/battlecats-seed-tracker-util) / [Greasy Fork script](https://greasyfork.org/en/scripts/480239-bc-seed-tracker-util) — godfat overlay showing paths to wanted cats.
+- [ubercarry.me](https://ubercarry.me/) & [catcpu.com](https://catcpu.com/) - by [thasmin/bcplanner](https://github.com/thasmin/bcplanner). Roll Planner (next 100 rolls, A/B tracks, rarity colors, guaranteed-Uber, duplicate detection), Uber Planner, Cat Dictionary (800+ units), Tier Lists. Main inspiration.
+- [xirba13/Batte-Cats-Gacha-Path-Finder](https://github.com/xirba13/Batte-Cats-Gacha-Path-Finder) - optimal multipath roll calculator. `BANNER_LIMITS` (per-banner action caps), search caps `MAX_SEARCH_STEPS`/`MAX_SOLUTIONS`, plain-text step output.
+- [bc.godfat.org](https://bc.godfat.org/) - the canonical seed tracker (our parser targets it).
+- [ampuri.github.io/bc-normal-seed-tracking](https://ampuri.github.io/bc-normal-seed-tracking/) - modern React normal-seed tracker.
+- [theusaf/battlecats-seed-tracker-util](https://github.com/theusaf/battlecats-seed-tracker-util) / [Greasy Fork script](https://greasyfork.org/en/scripts/480239-bc-seed-tracker-util) - godfat overlay showing paths to wanted cats.
 
 ### Tier lists / stats / database
-- [battlecatstierlist.com](https://www.battlecatstierlist.com/) — tier lists per banner, DPS-to-range, DPS graphs, matchup charts, Top 10, statistics; links to Miraheze wiki.
-- [battlecatsstats.com](https://battlecatsstats.com/) — true-damage calculator, talents/abilities, range DPS graphs, unit comparison.
-- [battlecats-calc.com](https://battlecats-calc.com/) — "Manage Cats" checkbox page -> "My Cats" view (like our Collection).
-- [matthewmarks stat calculator](https://production.matthewmarks.com/battle-cats-stat-calculator/) — stat breakdowns + tier list.
-- [Miraheze Cat Stats Tool](https://battlecats.miraheze.org/wiki/Cat_Stats_Tool) — view/compare/filter cats by stats, True/Ultra-form + talent toggles.
+- [battlecatstierlist.com](https://www.battlecatstierlist.com/) - tier lists per banner, DPS-to-range, DPS graphs, matchup charts, Top 10, statistics; links to Miraheze wiki.
+- [battlecatsstats.com](https://battlecatsstats.com/) - true-damage calculator, talents/abilities, range DPS graphs, unit comparison.
+- [battlecats-calc.com](https://battlecats-calc.com/) - "Manage Cats" checkbox page -> "My Cats" view (like our Collection).
+- [matthewmarks stat calculator](https://production.matthewmarks.com/battle-cats-stat-calculator/) - stat breakdowns + tier list.
+- [Miraheze Cat Stats Tool](https://battlecats.miraheze.org/wiki/Cat_Stats_Tool) - view/compare/filter cats by stats, True/Ultra-form + talent toggles.
 
 ### Reference wikis
-- [The Battle Cats Wiki (Miraheze)](https://battlecats.miraheze.org/) — primary wiki the tier-list site links to.
+- [The Battle Cats Wiki (Miraheze)](https://battlecats.miraheze.org/) - primary wiki the tier-list site links to.
 
 ### Feature ideas to borrow
 - Per-banner action limits as an optimizer constraint (xirba13 `BANNER_LIMITS`).
