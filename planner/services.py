@@ -12,6 +12,15 @@ _CACHE = RollCache(Path("rollcache"))
 
 RARITY_ORDER = ["Normal", "Rare", "Super Rare", "Uber Super Rare", "Legend Rare"]
 
+# Platinum/Legend run on scarce tickets, not catfood, so the optimizer treats them as
+# info-only: capped (0 by default) rather than modelled as ordinary catfood gacha.
+_CAPPED_KEYWORDS = ("platinum", "legend")
+
+
+def capped_banner_limits(names: Iterable[str], cap: int) -> dict[str, int]:
+    """Cap pulls on Platinum/Legend banners (matched by name) at `cap`."""
+    return {name: cap for name in names if any(kw in name.lower() for kw in _CAPPED_KEYWORDS)}
+
 
 def fetch_banners(seed: int) -> ScrapeResult:
     """Scrape the active banners for a seed (blocking wrapper around the async scraper)."""

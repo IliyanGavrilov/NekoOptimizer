@@ -32,12 +32,22 @@ class PlannerForm(forms.Form):
         required=False,
         label="1 rare ticket is worth (catfood)",
     )
+    platinum_legend_cap = forms.IntegerField(
+        min_value=0,
+        initial=0,
+        required=False,
+        label="Platinum/Legend pulls allowed",
+    )
 
     def clean_prefer(self):
         return self.cleaned_data.get("prefer") or "tickets"
 
     def clean_ticket_value(self):
         return self.cleaned_data.get("ticket_value") or CATFOOD_PER_DRAW
+
+    def clean_platinum_legend_cap(self):
+        cap = self.cleaned_data.get("platinum_legend_cap")
+        return 0 if cap is None else cap
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

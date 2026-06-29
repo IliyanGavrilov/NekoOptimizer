@@ -7,6 +7,7 @@ from planner.forms import CatForm, PlannerForm
 from planner.models import Cat, Seed
 from planner.services import (
     RARITY_ORDER,
+    capped_banner_limits,
     catalogue,
     dated_catalogue,
     equivalent_banners,
@@ -33,6 +34,7 @@ def planner(request):
             equivalents = equivalent_banners(result.banners)
             pulls = {name: rolls.pulls for name, rolls in result.banners.items()}
             guaranteed_pulls = {name: rolls.guaranteed for name, rolls in result.banners.items()}
+            banner_limits = capped_banner_limits(pulls, form.cleaned_data["platinum_legend_cap"])
             plans = plan(
                 pulls,
                 targets,
@@ -42,6 +44,7 @@ def planner(request):
                 multis=result.multis,
                 ticket_value=form.cleaned_data["ticket_value"],
                 prefer=form.cleaned_data["prefer"],
+                banner_limits=banner_limits,
             )
     else:
         form = PlannerForm(initial={"seed": Seed.current()})
