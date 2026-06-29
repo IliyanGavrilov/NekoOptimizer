@@ -88,6 +88,14 @@ def collection(request):
 
 
 @require_POST
+def apply_plan(request):
+    """Mark a plan's obtained cats as owned and drop them from the wishlist."""
+    names = request.POST.getlist("cats")
+    applied = Cat.objects.filter(name__in=names).update(owned=True, wanted=False)
+    return JsonResponse({"applied": applied})
+
+
+@require_POST
 def collection_toggle(request):
     """Flip a single cat's owned/wanted flag and return the new state as JSON."""
     field = request.POST.get("field")
