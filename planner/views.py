@@ -42,6 +42,7 @@ def planner(request):
             equivalents = equivalent_banners(result.banners)
             pulls = {name: rolls.pulls for name, rolls in result.banners.items()}
             guaranteed_pulls = {name: rolls.guaranteed for name, rolls in result.banners.items()}
+            rerolls = {name: rolls.rerolls for name, rolls in result.banners.items()}
             banner_limits = capped_banner_limits(pulls, form.cleaned_data["platinum_legend_cap"])
             if explore:
                 tickets, catfood = 0, form.cleaned_data["horizon"] * CATFOOD_PER_DRAW
@@ -57,6 +58,7 @@ def planner(request):
                 ticket_value=form.cleaned_data["ticket_value"],
                 prefer=form.cleaned_data["prefer"],
                 banner_limits=banner_limits,
+                rerolls=rerolls,
             )
     else:
         form = PlannerForm(initial={"seed": Seed.current()})
