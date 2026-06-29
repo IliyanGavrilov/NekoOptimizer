@@ -50,6 +50,7 @@ class State:
     catfood_draws: int
     found: frozenset[str]
     last_banner: str = ""  # banner of the previous pull, to count banner switches
+    banner_pulls: frozenset[tuple[str, int]] = frozenset()  # pulls so far on capped banners
 
 
 @dataclass(frozen=True, slots=True)
