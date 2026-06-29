@@ -174,6 +174,45 @@ def test_guaranteed_leg_is_labelled_and_separate():
     assert [(leg.kind, leg.cost) for leg in result.legs] == [("3-roll (guaranteed)", 450)]
 
 
+def test_banner_limit_zero_excludes_the_banner():
+    g = banner("x", (1, "A", "Bahamut", U))
+    assert astar([g], {"Bahamut"}, start(tickets=1), banner_limits={"x": 0}) is None
+
+
+def test_banner_limit_caps_total_pulls():
+    g = banner("x", (1, "A", "Cat", R), (2, "A", "Bahamut", U))
+    assert astar([g], {"Bahamut"}, start(tickets=2), banner_limits={"x": 1}) is None
+
+
+def test_banner_limit_allows_pulls_up_to_the_cap():
+    g = banner("x", (1, "A", "Cat", R), (2, "A", "Bahamut", U))
+    result = astar([g], {"Bahamut"}, start(tickets=2), banner_limits={"x": 2})
+    assert result.cats[-1] == "Bahamut"
+
+
+def test_banner_limit_routes_around_an_excluded_banner():
+    x = banner("x", (1, "A", "Bahamut", U))
+    y = banner("y", (1, "A", "Cat", R), (2, "A", "Dog", R), (3, "A", "Bahamut", U))
+    result = astar([x, y], {"Bahamut"}, start(tickets=3), banner_limits={"x": 0})
+    assert len(result.cats) == 3
+
+
+def test_banner_limit_blocks_a_too_large_multi():
+    result = astar(
+        [guaranteed_banner()],
+        {"Mecha"},
+        start(catfood=3),
+        multis={"x": [Multi(3, 450)]},
+        banner_limits={"x": 2},
+    )
+    assert result is None
+
+
+def test_beam_respects_banner_limit():
+    g = banner("x", (1, "A", "Cat", R), (2, "A", "Bahamut", U))
+    assert beam_search([g], {"Bahamut"}, start(tickets=2), 5, banner_limits={"x": 1}) is None
+
+
 def test_prefers_single_banner_when_cost_is_equal():
     x = banner("x", (1, "A", "Aqua", U), (2, "A", "Bora", U))
     y = banner("y", (1, "A", "Aqua", U), (2, "A", "Bora", U))

@@ -16,6 +16,7 @@ def plan(
     multis: Mapping[str, Sequence[Multi]] | None = None,
     ticket_value: int = CATFOOD_PER_DRAW,
     prefer: str = "tickets",
+    banner_limits: Mapping[str, int] | None = None,
 ) -> list[SubsetPlan]:
     """Best plan for the wishlist. Returns the single full plan if reachable,
     else the per-subset fallback breakdown (biggest-then-cheapest).
@@ -26,9 +27,23 @@ def plan(
     targets = frozenset(targets)
     start = State(0, tickets, catfood // CATFOOD_PER_DRAW, frozenset())
     graphs = build_graphs(pulls_by_banner, guaranteed_pulls)
-    full = astar(graphs, targets, start, multis=multis, ticket_value=ticket_value, prefer=prefer)
+    full = astar(
+        graphs,
+        targets,
+        start,
+        multis=multis,
+        ticket_value=ticket_value,
+        prefer=prefer,
+        banner_limits=banner_limits,
+    )
     if full is not None:
         return [SubsetPlan(targets, full)]
     return solve_subsets(
-        graphs, targets, start, multis=multis, ticket_value=ticket_value, prefer=prefer
+        graphs,
+        targets,
+        start,
+        multis=multis,
+        ticket_value=ticket_value,
+        prefer=prefer,
+        banner_limits=banner_limits,
     )
