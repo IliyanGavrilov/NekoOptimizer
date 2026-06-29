@@ -21,6 +21,7 @@ def solve_subsets(
     multis: Mapping[str, Sequence[Multi]] | None = None,
     ticket_value: int = CATFOOD_PER_DRAW,
     prefer: str = "tickets",
+    banner_limits: Mapping[str, int] | None = None,
 ) -> list[SubsetPlan]:
     """Best plan for every reachable non-empty target subset, biggest-then-cheapest.
 
@@ -32,7 +33,13 @@ def solve_subsets(
     for size in range(len(items), 0, -1):
         for combo in combinations(items, size):
             plan = search(
-                graphs, combo, start, multis=multis, ticket_value=ticket_value, prefer=prefer
+                graphs,
+                combo,
+                start,
+                multis=multis,
+                ticket_value=ticket_value,
+                prefer=prefer,
+                banner_limits=banner_limits,
             )
             if plan is not None:
                 plans.append(SubsetPlan(frozenset(combo), plan))
