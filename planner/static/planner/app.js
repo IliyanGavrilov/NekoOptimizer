@@ -260,8 +260,8 @@ if (collectionBrowser) {
 }
 
 // ---- Drag-to-scrub number inputs -------------------------------------
-// Click-drag left/right anywhere on a number field to step it down/up; a plain
-// click (no horizontal movement) still focuses the field for typing.
+// Click-drag up/down anywhere on a number field to step it up/down; a plain
+// click (no vertical movement) still focuses the field for typing.
 const PX_PER_STEP = 7;
 document.querySelectorAll('input[type="number"]').forEach((input) => {
   const step = Number(input.step) || 1;
@@ -269,26 +269,26 @@ document.querySelectorAll('input[type="number"]').forEach((input) => {
   const max = input.max === "" ? Infinity : Number(input.max);
   let dragging = false;
   let moved = false;
-  let startX = 0;
+  let startY = 0;
   let startVal = 0;
 
   input.addEventListener("pointerdown", (e) => {
     if (e.button !== 0) return;
     dragging = true;
     moved = false;
-    startX = e.clientX;
+    startY = e.clientY;
     startVal = Number(input.value) || 0;
     input.setPointerCapture(e.pointerId);
   });
 
   input.addEventListener("pointermove", (e) => {
     if (!dragging) return;
-    const dx = e.clientX - startX;
-    if (!moved && Math.abs(dx) < 3) return;
+    const dy = startY - e.clientY; // up is positive -> increases the value
+    if (!moved && Math.abs(dy) < 3) return;
     moved = true;
     e.preventDefault();
     if (document.activeElement === input) input.blur();
-    let val = startVal + Math.round(dx / PX_PER_STEP) * step;
+    let val = startVal + Math.round(dy / PX_PER_STEP) * step;
     val = Math.min(max, Math.max(min, val));
     if (String(val) !== input.value) {
       input.value = val;
