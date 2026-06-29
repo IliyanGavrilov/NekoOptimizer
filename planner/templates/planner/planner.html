@@ -14,6 +14,12 @@
     </div>
     <label class="check-row">{{ form.use_wishlist }} {{ form.use_wishlist.label_tag }}</label>
 
+    <details class="options">
+      <summary>Roll options</summary>
+      <label>{{ form.prefer.label_tag }} {{ form.prefer }}</label>
+      <label>{{ form.ticket_value.label_tag }} {{ form.ticket_value }}</label>
+    </details>
+
     <fieldset>
       <legend>Targets</legend>
       <p class="muted hint">Tap <span class="key">&plus;</span> on a banner to roll its whole session; click a banner to open its cats. <span id="bannerCount" class="banner-count"></span></p>
