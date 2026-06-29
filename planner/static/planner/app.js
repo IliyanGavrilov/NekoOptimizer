@@ -37,6 +37,8 @@ if (picker) {
   const ticketsEl = document.getElementById("id_tickets");
   const catfoodEl = document.getElementById("id_catfood");
   const wishlistEl = document.getElementById("id_use_wishlist");
+  const preferEl = document.getElementById("id_prefer");
+  const ticketValueEl = document.getElementById("id_ticket_value");
   const stored = (() => {
     try {
       return JSON.parse(localStorage.getItem(STORE_KEY)) || {};
@@ -56,6 +58,8 @@ if (picker) {
         tickets: ticketsEl.value,
         catfood: catfoodEl.value,
         useWishlist: wishlistEl.checked,
+        prefer: preferEl.value,
+        ticketValue: ticketValueEl.value,
         search: search.value,
         targets: [...selected.keys()],
         banners,
@@ -183,9 +187,13 @@ if (picker) {
   if (stored.tickets != null) ticketsEl.value = stored.tickets;
   if (stored.catfood != null) catfoodEl.value = stored.catfood;
   wishlistEl.checked = !!stored.useWishlist;
+  if (stored.prefer != null) preferEl.value = stored.prefer;
+  if (stored.ticketValue != null) ticketValueEl.value = stored.ticketValue;
   ticketsEl.addEventListener("input", save);
   catfoodEl.addEventListener("input", save);
   wishlistEl.addEventListener("change", save);
+  preferEl.addEventListener("change", save);
+  ticketValueEl.addEventListener("input", save);
 
   for (const pk of stored.targets || []) {
     const chip = picker.querySelector(`.chip[data-pk="${pk}"]`);

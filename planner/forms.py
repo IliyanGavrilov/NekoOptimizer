@@ -1,5 +1,6 @@
 from django import forms
 
+from neko.models import CATFOOD_PER_DRAW
 from planner.models import Cat
 
 
@@ -19,6 +20,24 @@ class PlannerForm(forms.Form):
     use_wishlist = forms.BooleanField(
         required=False, label="Also search my wishlist (unowned cats I marked wanted)"
     )
+    prefer = forms.ChoiceField(
+        choices=[("tickets", "Spend rare tickets first"), ("catfood", "Spend catfood first")],
+        initial="tickets",
+        required=False,
+        label="When the cost is a tie",
+    )
+    ticket_value = forms.IntegerField(
+        min_value=1,
+        initial=CATFOOD_PER_DRAW,
+        required=False,
+        label="Value of one rare ticket, in catfood (advanced)",
+    )
+
+    def clean_prefer(self):
+        return self.cleaned_data.get("prefer") or "tickets"
+
+    def clean_ticket_value(self):
+        return self.cleaned_data.get("ticket_value") or CATFOOD_PER_DRAW
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

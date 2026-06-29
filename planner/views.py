@@ -40,6 +40,8 @@ def planner(request):
                 form.cleaned_data["catfood"],
                 guaranteed_pulls=guaranteed_pulls,
                 multis=result.multis,
+                ticket_value=form.cleaned_data["ticket_value"],
+                prefer=form.cleaned_data["prefer"],
             )
     else:
         form = PlannerForm(initial={"seed": Seed.current()})
