@@ -155,6 +155,14 @@ def test_explore_mode_scrapes_to_the_horizon(client, monkeypatch):
 
 
 @pytest.mark.django_db
+def test_apply_plan_owns_cats_and_clears_wishlist(client):
+    cat = Cat.objects.create(name="Bahamut", owned=False, wanted=True)
+    client.post("/apply/", {"cats": ["Bahamut"]})
+    cat.refresh_from_db()
+    assert (cat.owned, cat.wanted) == (True, False)
+
+
+@pytest.mark.django_db
 def test_requires_targets_or_wishlist(client):
     response = client.post("/", {"seed": 7, "tickets": 1, "catfood": 0})
     assert response.context["plans"] is None
