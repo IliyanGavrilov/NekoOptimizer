@@ -1,5 +1,5 @@
 import re
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import date
 
 from bs4 import BeautifulSoup
@@ -9,6 +9,7 @@ from neko.models import Rarity
 _PAW = "\U0001f43e"  # godfat appends a paw glyph to every cat name
 _PICK = re.compile(r"pick\('(\d+)([AB])'\)")
 _PICK_GUARANTEED = re.compile(r"pick\('(\d+)([AB])G'\)")
+_PICK_REROLL = re.compile(r"pick\('(\d+)([AB])R'\)")
 _ARROW = re.compile(r"(<-|->)\s*\d+[AB]")  # godfat's "-> 11B" landing hint
 _RARITY_BY_CLASS = {
     "rare": Rarity.RARE,
@@ -31,10 +32,11 @@ class TrackPull:
 
 @dataclass(frozen=True, slots=True)
 class BannerRolls:
-    """A banner's normal pulls plus its guaranteed-uber column."""
+    """A banner's normal pulls, its guaranteed-uber column, and its rare-dupe rerolls."""
 
     pulls: list[TrackPull]
     guaranteed: list[TrackPull]
+    rerolls: list[TrackPull] = field(default_factory=list)
 
 
 def _rarity_from_classes(classes: list[str]) -> Rarity | None:
@@ -55,6 +57,22 @@ def parse_rolls(html: str) -> list[TrackPull]:
         if match is None or rarity is None:
             continue
         cat = cell.get_text(strip=True).replace(_PAW, "").strip()
+        pulls.append(TrackPull(int(match.group(1)), match.group(2), cat, rarity))
+    pulls.sort(key=lambda pull: (pull.position, pull.track))
+    return pulls
+
+
+def parse_rerolls(html: str) -> list[TrackPull]:
+    """Extract the rare-dupe reroll cells: the cat you actually get when a position's
+    nominal roll is a consecutive rare duplicate (godfat's `pick('7AR')` "-> 8B" cells)."""
+    soup = BeautifulSoup(html, "html.parser")
+    pulls = []
+    for cell in soup.select("td.cat.pick"):
+        match = _PICK_REROLL.search(cell.get("onclick", ""))
+        rarity = _rarity_from_classes(cell.get("class", []))
+        if match is None or rarity is None:
+            continue
+        cat = _ARROW.sub("", cell.get_text(strip=True)).replace(_PAW, "").strip()
         pulls.append(TrackPull(int(match.group(1)), match.group(2), cat, rarity))
     pulls.sort(key=lambda pull: (pull.position, pull.track))
     return pulls

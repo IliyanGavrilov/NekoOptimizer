@@ -17,6 +17,7 @@ def plan(
     ticket_value: int = CATFOOD_PER_DRAW,
     prefer: str = "tickets",
     banner_limits: Mapping[str, int] | None = None,
+    rerolls: Mapping[str, Iterable[TrackPull]] | None = None,
 ) -> list[SubsetPlan]:
     """Best plan for the wishlist. Returns the single full plan if reachable,
     else the per-subset fallback breakdown (biggest-then-cheapest).
@@ -26,7 +27,7 @@ def plan(
     a rare ticket in catfood and prefer ("tickets"/"catfood") breaks remaining ties."""
     targets = frozenset(targets)
     start = State(0, tickets, catfood // CATFOOD_PER_DRAW, frozenset())
-    graphs = build_graphs(pulls_by_banner, guaranteed_pulls)
+    graphs = build_graphs(pulls_by_banner, guaranteed_pulls, rerolls)
     full = astar(
         graphs,
         targets,

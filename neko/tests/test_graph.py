@@ -35,6 +35,23 @@ def test_duplicate_non_rare_does_not_switch():
     )
 
 
+def test_rare_dupe_uses_the_rerolled_cat():
+    g = BannerGraph(
+        "b",
+        [TrackPull(1, "A", "Cat", R), TrackPull(2, "A", "Cat", R)],
+        rerolls=[TrackPull(2, "A", "Dog", R)],
+    )
+    assert g.outcome(2) == Outcome("Dog", R, 5, True)
+
+
+def test_build_graphs_wires_rerolls():
+    graphs = build_graphs(
+        {"x": [TrackPull(1, "A", "Cat", R), TrackPull(2, "A", "Cat", R)]},
+        rerolls={"x": [TrackPull(2, "A", "Dog", R)]},
+    )
+    assert graphs[0].outcome(2).cat == "Dog"
+
+
 def test_outcome_missing_position_is_none():
     assert graph((1, "A", "Cat", R)).outcome(99) is None
 
