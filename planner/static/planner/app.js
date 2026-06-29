@@ -68,7 +68,7 @@ if (picker) {
   });
 
   // Banner "session" selection: tapping + on a banner includes it and every
-  // banner whose run overlaps it (what you'd see live at that time).
+  // banner live on its opening day (what you'd roll together at that time).
   const browser = document.getElementById("targetBrowser");
   const bannerInputs = document.getElementById("bannerInputs");
   const bannerCount = document.getElementById("bannerCount");
@@ -77,9 +77,10 @@ if (picker) {
     const d = btn.closest(".banner-group");
     return [d.dataset.start, d.dataset.end];
   };
-  // Banners switch at the changeover day, so one ending on day X and another
-  // starting on day X are consecutive, not concurrent — compare strictly.
-  const overlaps = (a, b) => a[0] && b[0] && a[0] < b[1] && a[1] > b[0]; // ISO dates sort lexically
+  // A banner is live on a given day when start <= day < end. Banners switch at
+  // the changeover day, so one ending on day X and another starting on X are
+  // consecutive, not concurrent (end is exclusive). ISO dates sort lexically.
+  const liveOn = (range, day) => !!range[0] && range[0] <= day && day < range[1];
 
   function setIncluded(btn, on) {
     btn.setAttribute("aria-pressed", on ? "true" : "false");
@@ -101,11 +102,17 @@ if (picker) {
       ? `Rolling ${n} banner${n === 1 ? "" : "s"}.`
       : "Rolling current banners.";
   }
+  // A "session" is a moment in time: clicking a banner selects every banner
+  // live on its opening day — the rotation you'd roll together right then —
+  // not everything its run overlaps. A whole-period event banner (or the
+  // months-long Platinum/Legend capsules) overlaps dozens of distinct 3-day
+  // rotations; anchoring on a single day keeps the session to ~the 3 featured
+  // banners plus the always-on capsules instead of every overlapping banner.
   function toggleSession(btn) {
     const on = btn.getAttribute("aria-pressed") !== "true";
-    const range = rangeOf(btn);
+    const [day] = rangeOf(btn);
     for (const other of includes) {
-      if (overlaps(rangeOf(other), range)) setIncluded(other, on);
+      if (liveOn(rangeOf(other), day)) setIncluded(other, on);
     }
     syncBanners();
   }
@@ -119,8 +126,7 @@ if (picker) {
   // Default to the session live today.
   const today = new Date().toISOString().slice(0, 10);
   for (const btn of includes) {
-    const [start, end] = rangeOf(btn);
-    if (start && start <= today && today <= end) setIncluded(btn, true);
+    if (liveOn(rangeOf(btn), today)) setIncluded(btn, true);
   }
   syncBanners();
 
