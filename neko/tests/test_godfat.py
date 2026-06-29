@@ -3,7 +3,7 @@ from pathlib import Path
 
 import pytest
 
-from neko.godfat import parse_events, parse_guaranteed, parse_rolls
+from neko.godfat import parse_events, parse_guaranteed, parse_rerolls, parse_rolls
 from neko.models import Rarity
 
 FIXTURES = Path(__file__).parent / "fixtures"
@@ -75,3 +75,17 @@ def test_parse_guaranteed_marks_results_uber():
 def test_parse_guaranteed_reads_legend_rarity_from_cell_class():
     html = '<table><td class="cat pick legend" onclick="pick(\'1AG\')">Wonder MOMOCO</td></table>'
     assert parse_guaranteed(html)[0].rarity == Rarity.LEGEND_RARE
+
+
+def test_parse_rerolls_extracts_the_rerolled_cat_stripping_the_arrow():
+    html = (
+        '<table><td class="cat pick rare" onclick="pick(\'7AR\')">'
+        "Jurassic Cat \U0001f43e -&gt; 8B</td></table>"
+    )
+    pull = parse_rerolls(html)[0]
+    assert (pull.position, pull.track, pull.cat) == (7, "A", "Jurassic Cat")
+
+
+def test_parse_rolls_ignores_reroll_cells():
+    html = '<table><td class="cat pick rare" onclick="pick(\'7AR\')">Jurassic Cat</td></table>'
+    assert parse_rolls(html) == []

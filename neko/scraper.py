@@ -8,7 +8,14 @@ import aiohttp
 
 from neko.cache import RollCache
 from neko.gacha import multi_configs
-from neko.godfat import BannerRolls, GachaEvent, parse_events, parse_guaranteed, parse_rolls
+from neko.godfat import (
+    BannerRolls,
+    GachaEvent,
+    parse_events,
+    parse_guaranteed,
+    parse_rerolls,
+    parse_rolls,
+)
 from neko.search import Multi
 
 BASE_URL = "https://bc.godfat.org/"
@@ -81,7 +88,7 @@ class GodfatScraper:
             if hit is not None:
                 return hit
         html = await self._fetch(roll_url(seed, event, self._count, guaranteed=True))
-        rolls = BannerRolls(parse_rolls(html), parse_guaranteed(html))
+        rolls = BannerRolls(parse_rolls(html), parse_guaranteed(html), parse_rerolls(html))
         if self._cache is not None:
             self._cache.save(seed, event, self._count, rolls)
         return rolls
