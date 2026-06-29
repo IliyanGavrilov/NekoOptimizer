@@ -24,7 +24,7 @@ class PlannerForm(forms.Form):
         choices=[("tickets", "Rare tickets"), ("catfood", "Catfood")],
         initial="tickets",
         required=False,
-        label="On a tie, spend",
+        label="Prefer",
     )
     ticket_value = forms.IntegerField(
         min_value=1,
@@ -41,6 +41,7 @@ class PlannerForm(forms.Form):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.label_suffix = ""  # no trailing colons; required fields are marked with *
         self.fields["targets"].queryset = Cat.objects.unowned()
 
     def clean(self):
