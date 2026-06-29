@@ -121,7 +121,7 @@ input[type="search"] { width: 100%; }
 input[type="number"] { appearance: textfield; -moz-appearance: textfield; }
 input[type="number"]::-webkit-outer-spin-button,
 input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
-input[type="number"]:not(:focus) { cursor: ew-resize; }
+input[type="number"]:not(:focus) { cursor: ns-resize; }
 
 /* Themed scrollbars: dark track, neon-amber thumb, on the page and any scroll box. */
 html, .picker-scroll { scrollbar-width: thin; scrollbar-color: var(--accent) var(--bg-2); }
