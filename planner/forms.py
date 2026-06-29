@@ -42,7 +42,8 @@ class PlannerForm(forms.Form):
     )
     explore = forms.BooleanField(
         required=False,
-        label="Explore mode (ignore my budget; show the cheapest way to reach a target)",
+        initial=True,
+        label="Explore mode — cheapest path to a target, ignoring your budget",
     )
     horizon = forms.IntegerField(
         min_value=1,

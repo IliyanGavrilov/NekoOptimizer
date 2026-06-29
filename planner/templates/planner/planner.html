@@ -9,12 +9,14 @@
 
     <div class="field-grid">
       <label><span class="label-row">{{ form.seed.label_tag }} <span class="req" title="required">*</span></span>{{ form.seed }}</label>
-      <label>{{ form.tickets.label_tag }} {{ form.tickets }}</label>
-      <label>{{ form.catfood.label_tag }} {{ form.catfood }}</label>
+      <div class="budget-fields">
+        <label>{{ form.tickets.label_tag }} {{ form.tickets }}</label>
+        <label>{{ form.catfood.label_tag }} {{ form.catfood }}</label>
+      </div>
     </div>
     <label class="check-row">{{ form.use_wishlist }} {{ form.use_wishlist.label_tag }}</label>
     <label class="check-row">{{ form.explore }} {{ form.explore.label_tag }}</label>
-    <label class="opt inline explore-horizon" hidden>{{ form.horizon.label_tag }} {{ form.horizon }}</label>
+    <label class="opt inline explore-horizon">{{ form.horizon.label_tag }} {{ form.horizon }}</label>
 
     <div class="roll-options">
       <details class="advanced">
