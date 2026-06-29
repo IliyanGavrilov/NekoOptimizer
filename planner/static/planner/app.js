@@ -142,7 +142,7 @@ if (picker) {
     save();
   }
   // A "session" is a moment in time: clicking a banner selects every banner
-  // live on its opening day — the rotation you'd roll together right then —
+  // live on its opening day - the rotation you'd roll together right then -
   // not everything its run overlaps. A whole-period event banner (or the
   // months-long Platinum/Legend capsules) overlaps dozens of distinct 3-day
   // rotations; anchoring on a single day keeps the session to ~the 3 featured
@@ -222,16 +222,6 @@ if (picker) {
   }
   ready = true;
   syncBanners();
-}
-
-// ---- Planner: advanced options popup ---------------------------------
-const advancedToggle = document.getElementById("advancedToggle");
-const advancedDialog = document.getElementById("advancedDialog");
-if (advancedToggle && advancedDialog) {
-  advancedToggle.addEventListener("click", () => advancedDialog.showModal());
-  document
-    .getElementById("advancedDone")
-    .addEventListener("click", () => advancedDialog.close());
 }
 
 // ---- Collection: instant owned / wishlist toggles --------------------
