@@ -15,12 +15,14 @@
       </div>
     </div>
     <label class="check-row">{{ form.use_wishlist }} {{ form.use_wishlist.label_tag }}</label>
-    <label class="check-row">{{ form.explore }} {{ form.explore.label_tag }}</label>
-    <label class="opt inline explore-horizon">{{ form.horizon.label_tag }} {{ form.horizon }}</label>
 
     <div class="roll-options">
       <details class="advanced">
         <summary>Advanced</summary>
+        <div class="opt-group">
+          <label class="check-row">{{ form.explore }} {{ form.explore.label_tag }}</label>
+          <label class="opt inline explore-horizon">{{ form.horizon.label_tag }} {{ form.horizon }}</label>
+        </div>
         <div class="opt-group">
           <label class="opt">{{ form.prefer.label_tag }} {{ form.prefer }}</label>
           <label class="opt inline">1 rare ticket is worth {{ form.ticket_value }} catfood</label>

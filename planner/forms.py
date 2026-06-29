@@ -43,13 +43,13 @@ class PlannerForm(forms.Form):
     explore = forms.BooleanField(
         required=False,
         initial=True,
-        label="Explore mode — cheapest path to a target, ignoring your budget",
+        label="Explore mode - no budget",
     )
     horizon = forms.IntegerField(
         min_value=1,
         initial=EXPLORE_HORIZON,
         required=False,
-        label="Rolls to look ahead",
+        label="Max depth (rolls)",
     )
 
     def clean_horizon(self):
