@@ -15,13 +15,17 @@
     <label class="check-row">{{ form.use_wishlist }} {{ form.use_wishlist.label_tag }}</label>
 
     <div class="roll-options">
-      <label class="opt">{{ form.prefer.label_tag }} {{ form.prefer }}</label>
       <details class="advanced">
         <summary>Advanced</summary>
-        <label class="opt">{{ form.ticket_value.label_tag }} {{ form.ticket_value }}</label>
-        <p class="muted">Change this only if a rare ticket isn&rsquo;t worth one draw to you. A higher value makes the planner save tickets and may pick a different plan.</p>
-        <label class="opt">{{ form.platinum_legend_cap.label_tag }} {{ form.platinum_legend_cap }}</label>
-        <p class="muted">Platinum and Legend tickets are scarce, so the planner skips those banners by default. Raise this to let it chase a unit there.</p>
+        <div class="opt-group">
+          <label class="opt">{{ form.prefer.label_tag }} {{ form.prefer }}</label>
+          <label class="opt">{{ form.ticket_value.label_tag }} {{ form.ticket_value }}</label>
+          <p class="muted">When two plans cost the same, keep the resource you pick. Change the ticket value only if a rare ticket isn&rsquo;t worth one draw (150 catfood) to you &mdash; a higher value makes the planner save tickets.</p>
+        </div>
+        <div class="opt-group">
+          <label class="opt">{{ form.platinum_legend_cap.label_tag }} {{ form.platinum_legend_cap }}</label>
+          <p class="muted">Platinum and Legend tickets are scarce, so the planner pulls those banners at most this many times. Set 0 to skip them entirely.</p>
+        </div>
       </details>
     </div>
 
