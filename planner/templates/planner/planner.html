@@ -8,7 +8,7 @@
     {% csrf_token %}
 
     <div class="field-grid">
-      <label>{{ form.seed.label_tag }} <span class="req" title="required">*</span> {{ form.seed }}</label>
+      <label><span class="label-row">{{ form.seed.label_tag }} <span class="req" title="required">*</span></span>{{ form.seed }}</label>
       <label>{{ form.tickets.label_tag }} {{ form.tickets }}</label>
       <label>{{ form.catfood.label_tag }} {{ form.catfood }}</label>
     </div>
