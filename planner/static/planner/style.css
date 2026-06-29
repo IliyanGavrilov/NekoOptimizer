@@ -364,6 +364,9 @@ li.target { font-weight: 700; color: var(--accent); }
 }
 .advanced[open] > summary { margin-bottom: 0.6rem; }
 .advanced p { margin: 0.4rem 0 0; font-size: 0.9rem; }
+.opt-group { display: flex; flex-wrap: wrap; gap: 1rem 1.5rem; align-items: flex-end; }
+.opt-group + .opt-group { margin-top: 0.9rem; padding-top: 0.9rem; border-top: 1px solid var(--line); }
+.opt-group p { flex-basis: 100%; }
 
 /* ---- Cat browser (chips + collapsible banners) ----------------------- */
 .cat-browser { margin-top: 0.75rem; }

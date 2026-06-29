@@ -101,18 +101,7 @@ def test_prefer_catfood_keeps_the_ticket(client, monkeypatch):
 
 
 @pytest.mark.django_db
-def test_platinum_legend_excluded_by_default(client, monkeypatch):
-    cat = Cat.objects.create(name="Bahamut")
-    result = ScrapeResult(
-        {"Platinum Capsules": BannerRolls([TrackPull(1, "A", "Bahamut", U)], [])}, {}
-    )
-    monkeypatch.setattr("planner.views.fetch_banners", lambda seed: result)
-    response = client.post("/", {"seed": 7, "tickets": 1, "catfood": 0, "targets": [cat.pk]})
-    assert response.context["plans"] == []
-
-
-@pytest.mark.django_db
-def test_platinum_legend_cap_allows_chasing(client, monkeypatch):
+def test_platinum_legend_cap_zero_excludes_the_banner(client, monkeypatch):
     cat = Cat.objects.create(name="Bahamut")
     result = ScrapeResult(
         {"Platinum Capsules": BannerRolls([TrackPull(1, "A", "Bahamut", U)], [])}, {}
@@ -120,8 +109,19 @@ def test_platinum_legend_cap_allows_chasing(client, monkeypatch):
     monkeypatch.setattr("planner.views.fetch_banners", lambda seed: result)
     response = client.post(
         "/",
-        {"seed": 7, "tickets": 1, "catfood": 0, "targets": [cat.pk], "platinum_legend_cap": 1},
+        {"seed": 7, "tickets": 1, "catfood": 0, "targets": [cat.pk], "platinum_legend_cap": 0},
     )
+    assert response.context["plans"] == []
+
+
+@pytest.mark.django_db
+def test_platinum_legend_allowed_by_default(client, monkeypatch):
+    cat = Cat.objects.create(name="Bahamut")
+    result = ScrapeResult(
+        {"Platinum Capsules": BannerRolls([TrackPull(1, "A", "Bahamut", U)], [])}, {}
+    )
+    monkeypatch.setattr("planner.views.fetch_banners", lambda seed: result)
+    response = client.post("/", {"seed": 7, "tickets": 1, "catfood": 0, "targets": [cat.pk]})
     assert response.context["plans"][0].targets == frozenset({"Bahamut"})
 
 
