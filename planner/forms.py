@@ -21,16 +21,16 @@ class PlannerForm(forms.Form):
         required=False, label="Also search my wishlist (unowned cats I marked wanted)"
     )
     prefer = forms.ChoiceField(
-        choices=[("tickets", "Spend rare tickets first"), ("catfood", "Spend catfood first")],
+        choices=[("tickets", "Rare tickets"), ("catfood", "Catfood")],
         initial="tickets",
         required=False,
-        label="When the cost is a tie",
+        label="On a tie, spend",
     )
     ticket_value = forms.IntegerField(
         min_value=1,
         initial=CATFOOD_PER_DRAW,
         required=False,
-        label="Value of one rare ticket, in catfood (advanced)",
+        label="1 rare ticket is worth (catfood)",
     )
 
     def clean_prefer(self):

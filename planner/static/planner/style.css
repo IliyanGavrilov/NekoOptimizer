@@ -345,6 +345,31 @@ li.target { font-weight: 700; color: var(--accent); }
 .field-grid input { width: 100%; }
 .check-row { display: inline-flex; align-items: center; gap: 0.5rem; color: var(--ink); margin: 0.5rem 0; }
 .error { color: var(--r-legend); }
+.req { color: var(--r-legend); font-weight: 700; }
+
+/* ---- Roll options + advanced popup ----------------------------------- */
+.roll-options { display: flex; align-items: flex-end; flex-wrap: wrap; gap: 1rem; margin: 0.75rem 0; }
+.roll-options .opt,
+.popup .opt { display: flex; flex-direction: column; gap: 0.2rem; color: var(--ink); }
+
+.ghost-btn {
+  background: transparent;
+  border: 1px solid var(--line);
+  color: var(--accent);
+}
+
+dialog.popup {
+  background: var(--panel);
+  color: var(--ink);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 1.25rem;
+  max-width: 22rem;
+}
+dialog.popup::backdrop { background: rgba(0, 0, 0, 0.55); }
+.popup h3 { margin: 0 0 0.75rem; }
+.popup .opt { margin-bottom: 0.6rem; }
+.popup p { margin: 0 0 1rem; font-size: 0.9rem; }
 
 /* ---- Cat browser (chips + collapsible banners) ----------------------- */
 .cat-browser { margin-top: 0.75rem; }
