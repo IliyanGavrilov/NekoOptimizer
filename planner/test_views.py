@@ -155,6 +155,18 @@ def test_explore_mode_scrapes_to_the_horizon(client, monkeypatch):
 
 
 @pytest.mark.django_db
+def test_owned_cats_are_still_targetable(client):
+    Cat.objects.create(name="Bahamut", owned=True).banners.add(Banner.objects.create(name="Epic"))
+    assert b"Bahamut" in client.get("/").content
+
+
+@pytest.mark.django_db
+def test_seed_field_starts_empty(client):
+    Seed.store(42)
+    assert b'name="seed" value="42"' not in client.get("/").content
+
+
+@pytest.mark.django_db
 def test_apply_plan_owns_cats_and_clears_wishlist(client):
     cat = Cat.objects.create(name="Bahamut", owned=False, wanted=True)
     client.post("/apply/", {"cats": ["Bahamut"]})

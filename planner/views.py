@@ -59,15 +59,16 @@ def planner(request):
                 banner_limits=banner_limits,
             )
     else:
-        form = PlannerForm(initial={"seed": Seed.current()})
-    unowned = list(Cat.objects.unowned().prefetch_related("banners"))
+        form = PlannerForm()
+    # Every cat is targetable, owned or not, so you can always look up a unit.
+    cats = list(Cat.objects.prefetch_related("banners"))
     owned_names = set(Cat.objects.filter(owned=True).values_list("name", flat=True))
     rank = {name: i for i, name in enumerate(RARITY_ORDER)}
-    target_flat = sorted(unowned, key=lambda cat: (-rank.get(cat.rarity, -1), cat.name))
+    target_flat = sorted(cats, key=lambda cat: (-rank.get(cat.rarity, -1), cat.name))
     context = {
         "form": form,
         "plans": plans,
-        "target_groups": dated_catalogue(unowned, reverse_rarity=True),
+        "target_groups": dated_catalogue(cats, reverse_rarity=True),
         "target_flat": target_flat,
         "owned_names": owned_names,
         "equivalents": equivalents,
