@@ -2,7 +2,9 @@ from django.http import HttpResponseBadRequest, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_POST
 
+from neko.models import CATFOOD_PER_DRAW
 from neko.planning import plan
+from neko.scraper import DEFAULT_COUNT
 from planner.forms import CatForm, PlannerForm
 from planner.models import Cat, Seed
 from planner.services import (
@@ -28,18 +30,28 @@ def planner(request):
             if form.cleaned_data["use_wishlist"]:
                 targets |= set(Cat.objects.wishlist().values_list("name", flat=True))
             chosen_banners = request.POST.getlist("banners")
+            # Explore mode looks deeper into the seed and ignores the player's
+            # budget, so the plan's cost shows the cheapest way to reach a target.
+            explore = form.cleaned_data["explore"]
+            count = form.cleaned_data["horizon"] if explore else DEFAULT_COUNT
             result = (
-                fetch_for_banners(seed, chosen_banners) if chosen_banners else fetch_banners(seed)
+                fetch_for_banners(seed, chosen_banners, count)
+                if chosen_banners
+                else fetch_banners(seed, count)
             )
             equivalents = equivalent_banners(result.banners)
             pulls = {name: rolls.pulls for name, rolls in result.banners.items()}
             guaranteed_pulls = {name: rolls.guaranteed for name, rolls in result.banners.items()}
             banner_limits = capped_banner_limits(pulls, form.cleaned_data["platinum_legend_cap"])
+            if explore:
+                tickets, catfood = 0, form.cleaned_data["horizon"] * CATFOOD_PER_DRAW
+            else:
+                tickets, catfood = form.cleaned_data["tickets"], form.cleaned_data["catfood"]
             plans = plan(
                 pulls,
                 targets,
-                form.cleaned_data["tickets"],
-                form.cleaned_data["catfood"],
+                tickets,
+                catfood,
                 guaranteed_pulls=guaranteed_pulls,
                 multis=result.multis,
                 ticket_value=form.cleaned_data["ticket_value"],
