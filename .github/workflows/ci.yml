@@ -1,0 +1,39 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.14"
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Lint
+        run: ruff check neko/ planner/
+
+      - name: Format
+        run: ruff format --check neko/ planner/
+
+      - name: Migration drift
+        run: python manage.py makemigrations --check --dry-run
+
+      - name: Django checks
+        run: python manage.py check
+
+      - name: Tests
+        run: pytest -q
