@@ -88,6 +88,19 @@ def test_selected_banners_use_chosen_scrape(client, monkeypatch):
 
 
 @pytest.mark.django_db
+def test_prefer_catfood_keeps_the_ticket(client, monkeypatch):
+    cat = Cat.objects.create(name="Bahamut")
+    monkeypatch.setattr(
+        "planner.views.fetch_banners", fixed_banners(TrackPull(1, "A", "Bahamut", U))
+    )
+    response = client.post(
+        "/",
+        {"seed": 7, "tickets": 1, "catfood": 150, "targets": [cat.pk], "prefer": "catfood"},
+    )
+    assert response.context["plans"][0].plan.tickets_used == 0
+
+
+@pytest.mark.django_db
 def test_requires_targets_or_wishlist(client):
     response = client.post("/", {"seed": 7, "tickets": 1, "catfood": 0})
     assert response.context["plans"] is None

@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from itertools import combinations
 
 from neko.graph import BannerGraph
-from neko.models import Path, State
+from neko.models import CATFOOD_PER_DRAW, Path, State
 from neko.search import Multi, astar
 
 
@@ -19,6 +19,8 @@ def solve_subsets(
     start: State,
     search: Callable[..., Path | None] = astar,
     multis: Mapping[str, Sequence[Multi]] | None = None,
+    ticket_value: int = CATFOOD_PER_DRAW,
+    prefer: str = "tickets",
 ) -> list[SubsetPlan]:
     """Best plan for every reachable non-empty target subset, biggest-then-cheapest.
 
@@ -29,7 +31,9 @@ def solve_subsets(
     plans = []
     for size in range(len(items), 0, -1):
         for combo in combinations(items, size):
-            plan = search(graphs, combo, start, multis=multis)
+            plan = search(
+                graphs, combo, start, multis=multis, ticket_value=ticket_value, prefer=prefer
+            )
             if plan is not None:
                 plans.append(SubsetPlan(frozenset(combo), plan))
     plans.sort(key=lambda result: (-len(result.targets), result.plan.cost))

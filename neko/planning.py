@@ -14,16 +14,21 @@ def plan(
     catfood: int,
     guaranteed_pulls: Mapping[str, Iterable[TrackPull]] | None = None,
     multis: Mapping[str, Sequence[Multi]] | None = None,
+    ticket_value: int = CATFOOD_PER_DRAW,
+    prefer: str = "tickets",
 ) -> list[SubsetPlan]:
     """Best plan for the wishlist. Returns the single full plan if reachable,
     else the per-subset fallback breakdown (biggest-then-cheapest).
 
     Pass guaranteed_pulls (the guaranteed-column outcomes per banner) and multis
-    (each banner's multi-roll options) to also consider multi-rolls."""
+    (each banner's multi-roll options) to also consider multi-rolls. ticket_value prices
+    a rare ticket in catfood and prefer ("tickets"/"catfood") breaks remaining ties."""
     targets = frozenset(targets)
     start = State(0, tickets, catfood // CATFOOD_PER_DRAW, frozenset())
     graphs = build_graphs(pulls_by_banner, guaranteed_pulls)
-    full = astar(graphs, targets, start, multis=multis)
+    full = astar(graphs, targets, start, multis=multis, ticket_value=ticket_value, prefer=prefer)
     if full is not None:
         return [SubsetPlan(targets, full)]
-    return solve_subsets(graphs, targets, start, multis=multis)
+    return solve_subsets(
+        graphs, targets, start, multis=multis, ticket_value=ticket_value, prefer=prefer
+    )
