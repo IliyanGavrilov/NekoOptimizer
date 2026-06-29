@@ -19,8 +19,8 @@
         <summary>Advanced</summary>
         <div class="opt-group">
           <label class="opt">{{ form.prefer.label_tag }} {{ form.prefer }}</label>
-          <label class="opt">{{ form.ticket_value.label_tag }} {{ form.ticket_value }}</label>
-          <p class="muted">When two plans cost the same, keep the resource you pick. Change the ticket value only if a rare ticket isn&rsquo;t worth one draw (150 catfood) to you &mdash; a higher value makes the planner save tickets.</p>
+          <label class="opt inline">1 rare ticket is worth {{ form.ticket_value }} catfood</label>
+          <p class="muted">When two plans cost the same, keep the resource you pick. One draw is 150 catfood; raise the ticket value above that only if rare tickets are precious to you &mdash; the planner will then spend catfood to save them.</p>
         </div>
         <div class="opt-group">
           <label class="opt">{{ form.platinum_legend_cap.label_tag }} {{ form.platinum_legend_cap }}</label>

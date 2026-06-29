@@ -258,3 +258,53 @@ if (collectionBrowser) {
       });
   });
 }
+
+// ---- Drag-to-scrub number inputs -------------------------------------
+// Click-drag left/right anywhere on a number field to step it down/up; a plain
+// click (no horizontal movement) still focuses the field for typing.
+const PX_PER_STEP = 7;
+document.querySelectorAll('input[type="number"]').forEach((input) => {
+  const step = Number(input.step) || 1;
+  const min = input.min === "" ? -Infinity : Number(input.min);
+  const max = input.max === "" ? Infinity : Number(input.max);
+  let dragging = false;
+  let moved = false;
+  let startX = 0;
+  let startVal = 0;
+
+  input.addEventListener("pointerdown", (e) => {
+    if (e.button !== 0) return;
+    dragging = true;
+    moved = false;
+    startX = e.clientX;
+    startVal = Number(input.value) || 0;
+    input.setPointerCapture(e.pointerId);
+  });
+
+  input.addEventListener("pointermove", (e) => {
+    if (!dragging) return;
+    const dx = e.clientX - startX;
+    if (!moved && Math.abs(dx) < 3) return;
+    moved = true;
+    e.preventDefault();
+    if (document.activeElement === input) input.blur();
+    let val = startVal + Math.round(dx / PX_PER_STEP) * step;
+    val = Math.min(max, Math.max(min, val));
+    if (String(val) !== input.value) {
+      input.value = val;
+      input.dispatchEvent(new Event("input", { bubbles: true }));
+    }
+  });
+
+  const end = (e) => {
+    if (!dragging) return;
+    dragging = false;
+    if (input.hasPointerCapture(e.pointerId)) input.releasePointerCapture(e.pointerId);
+  };
+  input.addEventListener("pointerup", end);
+  input.addEventListener("pointercancel", end);
+  // Swallow the click that ends a drag so it doesn't drop a caret mid-scrub.
+  input.addEventListener("click", (e) => {
+    if (moved) e.preventDefault();
+  });
+});
