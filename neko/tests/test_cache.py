@@ -5,6 +5,7 @@ from neko.models import Rarity
 ROLLS = BannerRolls(
     [TrackPull(1, "A", "Bahamut", Rarity.UBER_SUPER_RARE), TrackPull(1, "B", "Cat", Rarity.RARE)],
     [TrackPull(11, "A", "Kasli", Rarity.UBER_SUPER_RARE)],
+    [TrackPull(7, "A", "Jurassic Cat", Rarity.RARE)],
 )
 
 
@@ -22,6 +23,12 @@ def test_round_trip_preserves_guaranteed(tmp_path):
     cache = RollCache(tmp_path)
     cache.save(123, "ev", 30, ROLLS)
     assert cache.load(123, "ev", 30).guaranteed == ROLLS.guaranteed
+
+
+def test_round_trip_preserves_rerolls(tmp_path):
+    cache = RollCache(tmp_path)
+    cache.save(123, "ev", 30, ROLLS)
+    assert cache.load(123, "ev", 30).rerolls == ROLLS.rerolls
 
 
 def test_load_restores_rarity_enum(tmp_path):
