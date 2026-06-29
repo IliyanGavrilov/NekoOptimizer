@@ -68,7 +68,7 @@ class PlannerForm(forms.Form):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.label_suffix = ""  # no trailing colons; required fields are marked with *
-        self.fields["targets"].queryset = Cat.objects.unowned()
+        self.fields["targets"].queryset = Cat.objects.all()
 
     def clean(self):
         cleaned = super().clean()
