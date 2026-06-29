@@ -86,9 +86,14 @@
   {% if plans is not None %}
     <h2>Results</h2>
     {% if plans %}
+      <div id="planResults" data-apply-url="{% url 'apply_plan' %}">
       {% for option in plans %}
         <section>
           <h3>{{ option.targets|join:", " }} &mdash; {{ option.plan.cost }} catfood{% if option.plan.tickets_used %} &middot; {{ option.plan.tickets_used }} ticket{{ option.plan.tickets_used|pluralize }}{% endif %}</h3>
+          <button type="button" class="apply-plan"
+                  data-cats="{{ option.plan.cats|join:'|' }}"
+                  data-tickets="{{ option.plan.tickets_used }}"
+                  data-catfood="{{ option.plan.cost }}">Apply this plan</button>
           {% for leg in option.plan.legs %}
             {% ifchanged leg.banner_id %}
               {% with names=equivalents|lookup:leg.banner_id %}
@@ -109,8 +114,9 @@
           {% endfor %}
         </section>
       {% endfor %}
+      </div>
     {% else %}
-      <p class="muted">No reachable plan with these resources.</p>
+      <p class="muted">No reachable plan with given resources.</p>
     {% endif %}
   {% endif %}
 {% endblock %}

@@ -245,6 +245,32 @@ if (picker) {
   }
   ready = true;
   syncBanners();
+
+  // ---- Apply a plan: own its cats, drop them from the wishlist, and spend
+  // the plan's tickets/catfood from the saved budget.
+  const planResults = document.getElementById("planResults");
+  if (planResults) {
+    const token = document.querySelector("[name=csrfmiddlewaretoken]").value;
+    planResults.addEventListener("click", async (e) => {
+      const btn = e.target.closest(".apply-plan");
+      if (!btn || btn.disabled) return;
+      const body = new URLSearchParams({ csrfmiddlewaretoken: token });
+      (btn.dataset.cats ? btn.dataset.cats.split("|") : []).forEach((n) => body.append("cats", n));
+      const resp = await fetch(planResults.dataset.applyUrl, {
+        method: "POST",
+        headers: { "X-CSRFToken": token },
+        body,
+      });
+      if (!resp.ok) return;
+      const spend = (el, key) =>
+        (el.value = Math.max(0, (Number(el.value) || 0) - (Number(btn.dataset[key]) || 0)));
+      spend(ticketsEl, "tickets");
+      spend(catfoodEl, "catfood");
+      save();
+      btn.disabled = true;
+      btn.textContent = "Applied ✓";
+    });
+  }
 }
 
 // ---- Collection: instant owned / wishlist toggles --------------------
