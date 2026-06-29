@@ -34,7 +34,7 @@ class PlannerForm(forms.Form):
     )
     platinum_legend_cap = forms.IntegerField(
         min_value=0,
-        initial=0,
+        initial=1,
         required=False,
         label="Platinum/Legend pulls allowed",
     )
@@ -47,7 +47,7 @@ class PlannerForm(forms.Form):
 
     def clean_platinum_legend_cap(self):
         cap = self.cleaned_data.get("platinum_legend_cap")
-        return 0 if cap is None else cap
+        return 1 if cap is None else cap
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
