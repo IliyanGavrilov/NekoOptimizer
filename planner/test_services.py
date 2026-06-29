@@ -5,7 +5,17 @@ import pytest
 from neko.godfat import BannerRolls, TrackPull
 from neko.models import Rarity
 from planner.models import Banner, Cat
-from planner.services import catalogue, dated_catalogue, equivalent_banners
+from planner.services import (
+    capped_banner_limits,
+    catalogue,
+    dated_catalogue,
+    equivalent_banners,
+)
+
+
+def test_capped_banner_limits_matches_only_platinum_and_legend():
+    names = ["Platinum Capsules", "Legend Capsules", "Epicfest"]
+    assert capped_banner_limits(names, 0) == {"Platinum Capsules": 0, "Legend Capsules": 0}
 
 
 @pytest.mark.django_db
