@@ -43,6 +43,7 @@ if (picker) {
   const exploreEl = document.getElementById("id_explore");
   const horizonEl = document.getElementById("id_horizon");
   const horizonRow = document.querySelector(".explore-horizon");
+  const budgetFields = document.querySelector(".budget-fields");
   const stored = (() => {
     try {
       return JSON.parse(localStorage.getItem(STORE_KEY)) || {};
@@ -197,10 +198,12 @@ if (picker) {
   if (stored.prefer != null) preferEl.value = stored.prefer;
   if (stored.ticketValue != null) ticketValueEl.value = stored.ticketValue;
   if (stored.platLegendCap != null) platLegendCapEl.value = stored.platLegendCap;
-  exploreEl.checked = !!stored.explore;
+  if (stored.explore != null) exploreEl.checked = stored.explore; // else keep server default (on)
   if (stored.horizon != null) horizonEl.value = stored.horizon;
   const syncExplore = () => {
-    horizonRow.hidden = !exploreEl.checked;
+    const on = exploreEl.checked;
+    horizonRow.hidden = !on;
+    if (budgetFields) budgetFields.hidden = on; // explore ignores budget, so hide those fields
   };
   syncExplore();
   ticketsEl.addEventListener("input", save);
