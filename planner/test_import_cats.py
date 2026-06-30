@@ -4,7 +4,7 @@ from django.core.management import call_command
 from neko.godfat import BannerRolls, TrackPull
 from neko.models import Rarity
 from neko.scraper import ScrapeResult
-from planner.models import Banner, Cat
+from planner.models import Banner, Cat, Unit
 from planner.services import import_cats
 
 U = Rarity.UBER_SUPER_RARE
@@ -65,6 +65,19 @@ def test_import_stores_banner_dates():
     import_cats(banners(Epicfest=[TrackPull(1, "A", "Bahamut", U)]), {"Epicfest": run})
     banner = Banner.objects.get(name="Epicfest")
     assert (banner.start, banner.end) == run
+
+
+@pytest.mark.django_db
+def test_import_links_cat_to_its_unit():
+    Unit.objects.create(unit_id=25, name="Bahamut")
+    import_cats(banners(x=[TrackPull(1, "A", "Bahamut", U)]))
+    assert Cat.objects.get(name="Bahamut").unit.unit_id == 25
+
+
+@pytest.mark.django_db
+def test_import_leaves_an_uncatalogued_cat_unlinked():
+    import_cats(banners(x=[TrackPull(1, "A", "Nezuko Kamado", U)]))
+    assert Cat.objects.get(name="Nezuko Kamado").unit is None
 
 
 @pytest.mark.django_db
