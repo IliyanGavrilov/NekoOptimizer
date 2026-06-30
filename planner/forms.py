@@ -13,7 +13,7 @@ class CatForm(forms.ModelForm):
 
 
 class PlannerForm(forms.Form):
-    seed = forms.IntegerField(min_value=0)
+    seed = forms.IntegerField(min_value=0, initial=0)
     # Optional: explore mode hides the budget, and a blank field just means zero.
     tickets = forms.IntegerField(min_value=0, initial=0, required=False)
     catfood = forms.IntegerField(min_value=0, initial=0, required=False)
