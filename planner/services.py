@@ -156,7 +156,7 @@ def equivalent_banners(banners: Mapping[str, BannerRolls]) -> dict[str, list[str
     return {name: names for names in groups.values() for name in names}
 
 
-TRACK_ROW_CAP = 60  # A/B rows rendered by default, before a plan extends the window
+TRACK_ROW_CAP = 100  # A/B rows rendered by default, before a plan extends the window
 
 
 def cost_label(tickets, catfood):

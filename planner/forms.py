@@ -14,8 +14,9 @@ class CatForm(forms.ModelForm):
 
 class PlannerForm(forms.Form):
     seed = forms.IntegerField(min_value=0)
-    tickets = forms.IntegerField(min_value=0, initial=0)
-    catfood = forms.IntegerField(min_value=0, initial=0)
+    # Optional: explore mode hides the budget, and a blank field just means zero.
+    tickets = forms.IntegerField(min_value=0, initial=0, required=False)
+    catfood = forms.IntegerField(min_value=0, initial=0, required=False)
     targets = forms.ModelMultipleChoiceField(
         queryset=Cat.objects.none(), required=False, widget=forms.CheckboxSelectMultiple
     )
@@ -51,6 +52,12 @@ class PlannerForm(forms.Form):
         required=False,
         label="Max depth (rolls)",
     )
+
+    def clean_tickets(self):
+        return self.cleaned_data.get("tickets") or 0
+
+    def clean_catfood(self):
+        return self.cleaned_data.get("catfood") or 0
 
     def clean_horizon(self):
         return self.cleaned_data.get("horizon") or EXPLORE_HORIZON
