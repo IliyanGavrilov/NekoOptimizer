@@ -7,7 +7,12 @@
   <p class="muted">Click a cat to mark it <strong>owned</strong>; tap the star to add it to your <strong>wishlist</strong>. Saved instantly.</p>
 
   <input type="hidden" id="csrfToken" value="{{ csrf_token }}">
-  <input type="search" data-filter="collectionBrowser" placeholder="Search cats&hellip;">
+  <div class="collection-controls">
+    <input type="search" data-filter="collectionBrowser" placeholder="Search cats&hellip;">
+    <button type="button" id="wishlistAll" data-url="{% url 'wishlist_all_unowned' %}">
+      &#9733; Wishlist all I don't own
+    </button>
+  </div>
 
   <div class="cat-browser" id="collectionBrowser" data-toggle-url="{% url 'collection_toggle' %}">
     {% for banner, rarities in sections %}

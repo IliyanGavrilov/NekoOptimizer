@@ -371,6 +371,20 @@ def import_units(records: Iterable[Mapping]) -> int:
     return created
 
 
+PROVISIONAL_BASE = 1_000_000  # synthetic ids for cats not yet in the catalogue
+
+
+def unit_for_cat(name: str, rarity: str = "") -> Unit:
+    """The catalogue unit for a cat name, creating a provisional stand-in if it isn't in the
+    catalogue yet - so every cat has a stable home for its owned/wishlist flags."""
+    unit = Unit.objects.filter(name=name).first()
+    if unit is None:
+        last = Unit.objects.filter(unit_id__gte=PROVISIONAL_BASE).order_by("-unit_id").first()
+        next_id = (last.unit_id + 1) if last else PROVISIONAL_BASE
+        unit = Unit.objects.create(unit_id=next_id, name=name, rarity=rarity, canonical=False)
+    return unit
+
+
 def import_cats(
     banners: Mapping[str, BannerRolls],
     dates: Mapping[str, tuple[date, date]] | None = None,
@@ -393,9 +407,7 @@ def import_cats(
                 cat.rarity = pull.rarity.value
                 cat.save(update_fields=["rarity"])
             if cat.unit_id is None:
-                unit = Unit.objects.filter(name=pull.cat).first()
-                if unit is not None:
-                    cat.unit = unit
-                    cat.save(update_fields=["unit"])
+                cat.unit = unit_for_cat(pull.cat, pull.rarity.value)
+                cat.save(update_fields=["unit"])
             banner.cats.add(cat)
     return created

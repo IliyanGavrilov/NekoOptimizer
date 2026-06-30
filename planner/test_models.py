@@ -1,19 +1,28 @@
+from itertools import count
+
 import pytest
 
-from planner.models import Cat, Seed
+from planner.models import Cat, Seed, Unit
+
+_ids = count(1)
+
+
+def make_cat(name, owned=False, wanted=False):
+    unit = Unit.objects.create(unit_id=next(_ids), name=name, owned=owned, wanted=wanted)
+    return Cat.objects.create(name=name, unit=unit)
 
 
 @pytest.mark.django_db
 def test_wishlist_excludes_owned():
-    Cat.objects.create(name="Bahamut", wanted=True)
-    Cat.objects.create(name="Kasli", wanted=True, owned=True)
+    make_cat("Bahamut", wanted=True)
+    make_cat("Kasli", wanted=True, owned=True)
     assert list(Cat.objects.wishlist().values_list("name", flat=True)) == ["Bahamut"]
 
 
 @pytest.mark.django_db
 def test_unowned_excludes_owned():
-    Cat.objects.create(name="Cat")
-    Cat.objects.create(name="Bahamut", owned=True)
+    make_cat("Cat")
+    make_cat("Bahamut", owned=True)
     assert list(Cat.objects.unowned().values_list("name", flat=True)) == ["Cat"]
 
 
