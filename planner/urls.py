@@ -1,9 +1,18 @@
 from django.urls import path
 
-from planner.views import apply_plan, collection, collection_toggle, planner
+from planner.views import (
+    apply_plan,
+    collection,
+    collection_toggle,
+    find_plan,
+    planner,
+    tracks,
+)
 
 urlpatterns = [
     path("", planner, name="planner"),
+    path("tracks/", tracks, name="tracks"),
+    path("plan/", find_plan, name="find_plan"),
     path("apply/", apply_plan, name="apply_plan"),
     path("collection/", collection, name="collection"),
     path("collection/toggle/", collection_toggle, name="collection_toggle"),

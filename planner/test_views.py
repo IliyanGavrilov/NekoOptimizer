@@ -35,7 +35,7 @@ def test_post_renders_plan(client, monkeypatch):
     monkeypatch.setattr(
         "planner.views.fetch_banners", fixed_banners(TrackPull(1, "A", "Bahamut", U))
     )
-    response = client.post("/", {"seed": 7, "tickets": 1, "catfood": 0, "targets": [cat.pk]})
+    response = client.post("/plan/", {"seed": 7, "tickets": 1, "catfood": 0, "targets": [cat.pk]})
     assert b"Bahamut" in response.content
 
 
@@ -45,7 +45,7 @@ def test_post_persists_seed(client, monkeypatch):
     monkeypatch.setattr(
         "planner.views.fetch_banners", fixed_banners(TrackPull(1, "A", "Bahamut", U))
     )
-    client.post("/", {"seed": 7, "tickets": 1, "catfood": 0, "targets": [cat.pk]})
+    client.post("/plan/", {"seed": 7, "tickets": 1, "catfood": 0, "targets": [cat.pk]})
     assert Seed.current() == 7
 
 
@@ -55,7 +55,7 @@ def test_use_wishlist_searches_wanted_cats(client, monkeypatch):
     monkeypatch.setattr(
         "planner.views.fetch_banners", fixed_banners(TrackPull(1, "A", "Bahamut", U))
     )
-    response = client.post("/", {"seed": 7, "tickets": 1, "catfood": 0, "use_wishlist": "on"})
+    response = client.post("/plan/", {"seed": 7, "tickets": 1, "catfood": 0, "use_wishlist": "on"})
     assert b"Bahamut" in response.content
 
 
@@ -67,8 +67,8 @@ def test_guaranteed_config_reaches_target(client, monkeypatch):
         {"x": [Multi(rolls=2, cost=300)]},
     )
     monkeypatch.setattr("planner.views.fetch_banners", lambda seed, count=100: result)
-    response = client.post("/", {"seed": 7, "tickets": 0, "catfood": 300, "targets": [cat.pk]})
-    assert response.context["plan_views"][0]["targets"] == ["Target"]
+    response = client.post("/plan/", {"seed": 7, "tickets": 0, "catfood": 300, "targets": [cat.pk]})
+    assert b"Target" in response.content
 
 
 @pytest.mark.django_db
@@ -83,7 +83,7 @@ def test_selected_banners_use_chosen_scrape(client, monkeypatch):
     monkeypatch.setattr("planner.views.fetch_for_banners", fake_for_banners)
     monkeypatch.setattr("planner.views.fetch_banners", fixed_banners())
     client.post(
-        "/", {"seed": 7, "tickets": 1, "catfood": 0, "targets": [cat.pk], "banners": ["Pick"]}
+        "/plan/", {"seed": 7, "tickets": 1, "catfood": 0, "targets": [cat.pk], "banners": ["Pick"]}
     )
     assert called["names"] == ["Pick"]
 
@@ -95,10 +95,11 @@ def test_prefer_catfood_keeps_the_ticket(client, monkeypatch):
         "planner.views.fetch_banners", fixed_banners(TrackPull(1, "A", "Bahamut", U))
     )
     response = client.post(
-        "/",
+        "/plan/",
         {"seed": 7, "tickets": 1, "catfood": 150, "targets": [cat.pk], "prefer": "catfood"},
     )
-    assert response.context["plan_views"][0]["tickets_used"] == 0
+    # prefer=catfood spends the draw, not the ticket: cost shows catfood, no ticket.
+    assert b"150 catfood" in response.content
 
 
 @pytest.mark.django_db
@@ -109,10 +110,10 @@ def test_platinum_legend_cap_zero_excludes_the_banner(client, monkeypatch):
     )
     monkeypatch.setattr("planner.views.fetch_banners", lambda seed, count=100: result)
     response = client.post(
-        "/",
+        "/plan/",
         {"seed": 7, "tickets": 1, "catfood": 0, "targets": [cat.pk], "platinum_legend_cap": 0},
     )
-    assert response.context["plan_views"] == []
+    assert b"No reachable plan" in response.content
 
 
 @pytest.mark.django_db
@@ -122,21 +123,22 @@ def test_platinum_legend_allowed_by_default(client, monkeypatch):
         {"Platinum Capsules": BannerRolls([TrackPull(1, "A", "Bahamut", U)], [])}, {}
     )
     monkeypatch.setattr("planner.views.fetch_banners", lambda seed, count=100: result)
-    response = client.post("/", {"seed": 7, "tickets": 1, "catfood": 0, "targets": [cat.pk]})
-    assert response.context["plan_views"][0]["targets"] == ["Bahamut"]
+    response = client.post("/plan/", {"seed": 7, "tickets": 1, "catfood": 0, "targets": [cat.pk]})
+    assert b"Bahamut" in response.content
 
 
 @pytest.mark.django_db
-def test_explore_mode_reaches_target_beyond_budget(client, monkeypatch):
+def test_explore_mode_funds_single_pulls_with_tickets(client, monkeypatch):
     cat = Cat.objects.create(name="Bahamut")
     monkeypatch.setattr(
         "planner.views.fetch_banners",
         fixed_banners(TrackPull(1, "A", "Filler", R), TrackPull(2, "A", "Bahamut", U)),
     )
+    # Two single pulls reach Bahamut: explore must bill them as tickets, not catfood.
     response = client.post(
-        "/", {"seed": 7, "tickets": 0, "catfood": 0, "targets": [cat.pk], "explore": "on"}
+        "/plan/", {"seed": 7, "tickets": 0, "catfood": 0, "targets": [cat.pk], "explore": "on"}
     )
-    assert response.context["plan_views"][0]["cost"] == 300
+    assert b"2 tickets" in response.content
 
 
 @pytest.mark.django_db
@@ -150,7 +152,7 @@ def test_explore_mode_scrapes_to_the_horizon(client, monkeypatch):
 
     monkeypatch.setattr("planner.views.fetch_banners", fake)
     data = {"seed": 7, "tickets": 0, "catfood": 0, "targets": [cat.pk]}
-    client.post("/", {**data, "explore": "on", "horizon": 500})
+    client.post("/plan/", {**data, "explore": "on", "horizon": 500})
     assert seen["count"] == 500
 
 
@@ -176,12 +178,26 @@ def test_apply_plan_owns_cats_and_clears_wishlist(client):
 
 @pytest.mark.django_db
 def test_requires_targets_or_wishlist(client):
-    response = client.post("/", {"seed": 7, "tickets": 1, "catfood": 0})
-    assert response.context["plan_views"] is None
+    response = client.post("/plan/", {"seed": 7, "tickets": 1, "catfood": 0})
+    assert response.status_code == 400
 
 
 @pytest.mark.django_db
 def test_negative_resources_rejected(client):
     cat = Cat.objects.create(name="Bahamut")
-    response = client.post("/", {"seed": 7, "tickets": -1, "catfood": 0, "targets": [cat.pk]})
-    assert response.context["plan_views"] is None
+    response = client.post("/plan/", {"seed": 7, "tickets": -1, "catfood": 0, "targets": [cat.pk]})
+    assert response.status_code == 400
+
+
+@pytest.mark.django_db
+def test_tracks_endpoint_lists_the_rolls(client, monkeypatch):
+    monkeypatch.setattr(
+        "planner.views.fetch_banners", fixed_banners(TrackPull(1, "A", "Bahamut", U))
+    )
+    response = client.post("/tracks/", {"seed": 7})
+    assert b"Bahamut" in response.content
+
+
+@pytest.mark.django_db
+def test_tracks_endpoint_blank_seed_renders_nothing(client):
+    assert client.post("/tracks/", {}).content == b""
