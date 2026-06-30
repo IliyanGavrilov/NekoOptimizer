@@ -745,8 +745,8 @@
     "forms": [
       "Windy",
       "Windy, type \u03b1",
-      "Divine Windy",
-      "Ultimate Windy"
+      "Divine Windy \u03b1",
+      "Ultimate Windy \u03b1"
     ]
   },
   {
@@ -756,8 +756,8 @@
     "forms": [
       "Thundia",
       "Thundia, type \u03b2",
-      "Divine Thundia",
-      "Ultimate Thundia"
+      "Divine Thundia \u03b2",
+      "Ultimate Thundia \u03b2"
     ]
   },
   {
@@ -1007,7 +1007,7 @@
     "forms": [
       "Kuu",
       "Kuu, type \u03b3",
-      "Divine Kuu"
+      "Divine Kuu \u03b3"
     ]
   },
   {
@@ -1017,7 +1017,7 @@
     "forms": [
       "Kai",
       "Kai, type \u03bc",
-      "Divine Kai"
+      "Divine Kai \u03bc"
     ]
   },
   {
@@ -1027,7 +1027,7 @@
     "forms": [
       "Coppermine",
       "Coppermine, type \u03ba",
-      "Divine Coppermine"
+      "Divine Coppermine \u03ba"
     ]
   },
   {
@@ -1318,7 +1318,8 @@
     "forms": [
       "Kasa Jizo",
       "Jizo's Moving Castle",
-      "Jizo's Mega-Castle"
+      "Jizo's Mega-Castle",
+      "Ultra Kasa Jizo"
     ]
   },
   {
@@ -1490,7 +1491,7 @@
     "forms": [
       "Kalisa",
       "Kalisa, type \u03c7",
-      "Divine Kalisa"
+      "Divine Kalisa \u03c7"
     ]
   },
   {
@@ -2050,6 +2051,7 @@
     "rarity": "Uber Super Rare",
     "forms": [
       "Spooky Thundia",
+      "Spooky Thundia, type \u03b2",
       "Spooky Thundia, type \u03b2"
     ]
   },
@@ -2299,8 +2301,8 @@
     "rarity": "Uber Super Rare",
     "forms": [
       "Tropical Kalisa",
-      "Tropical Kalisa, type X",
-      "Tropical Kalisa, type X"
+      "Tropical Kalisa, type \u03c7",
+      "Tropical Kalisa, type \u03c7"
     ]
   },
   {
@@ -2752,7 +2754,7 @@
     "rarity": "Rare",
     "forms": [
       "Curling Cat",
-      "Zamboney Cat",
+      "Cleanerbot Cat",
       "Green Shell Cat"
     ]
   },
@@ -2973,7 +2975,7 @@
     "forms": [
       "Twinstars",
       "Twinstars, type \u03a6",
-      "Divine Twinstars"
+      "Divine Twinstars \u03a6"
     ]
   },
   {
@@ -2992,6 +2994,7 @@
     "rarity": "Uber Super Rare",
     "forms": [
       "Seashore Kai",
+      "Seashore Kai, type \u03bc",
       "Seashore Kai, type \u03bc"
     ]
   },
@@ -3666,7 +3669,8 @@
     "forms": [
       "Cat Clan Heroes",
       "Cat Guild Heroes",
-      "Cat Quest Heroes"
+      "Cat Quest Heroes",
+      "Heavenly Cat Heroes"
     ]
   },
   {
@@ -3862,12 +3866,12 @@
   },
   {
     "id": 449,
-    "name": "Headmistress Jeanne",
+    "name": "Jeanne",
     "rarity": "Legend Rare",
     "forms": [
-      "Headmistress Jeanne",
-      "Headmistress Jeanne \u03c8",
-      "Headmistress Jeanne \u03c8"
+      "Jeanne",
+      "Jeanne, type \u03c8",
+      "Divine Jeanne \u03c8"
     ]
   },
   {
@@ -4275,7 +4279,8 @@
     "forms": [
       "Narita Kaihime",
       "Wargod Kaihime",
-      "Immortal Kaihime"
+      "Immortal Kaihime",
+      "Cleansing Flame Kaihime"
     ]
   },
   {
@@ -4335,7 +4340,7 @@
     "forms": [
       "Myrcia",
       "Myrcia, type \u03be",
-      "Divine Myrcia"
+      "Divine Myrcia \u03be"
     ]
   },
   {
@@ -4465,7 +4470,7 @@
     "forms": [
       "Ken",
       "Ken CC",
-      "Ken CC"
+      "Crimson King of Battle Ken"
     ]
   },
   {
@@ -5410,10 +5415,10 @@
   },
   {
     "id": 618,
-    "name": "Shiro Amakusa",
+    "name": "Amakusa Shiro",
     "rarity": "Uber Super Rare",
     "forms": [
-      "Shiro Amakusa",
+      "Amakusa Shiro",
       "Wargod Amakusa",
       "Immortal Amakusa"
     ]
@@ -5424,7 +5429,7 @@
     "rarity": "Uber Super Rare",
     "forms": [
       "Lilin",
-      "Lilin \u03c0",
+      "Lilin, type \u03c0",
       "Divine Lilin \u03c0"
     ]
   },
@@ -5630,12 +5635,12 @@
   },
   {
     "id": 647,
-    "name": "Huntress Terun",
+    "name": "Terun",
     "rarity": "Uber Super Rare",
     "forms": [
-      "Huntress Terun",
-      "Huntress Terun \u03b6",
-      "Divine Huntress Terun \u03b6"
+      "Terun",
+      "Terun, type \u03b6",
+      "Divine Terun \u03b6"
     ]
   },
   {
@@ -5794,7 +5799,7 @@
     "rarity": "Rare",
     "forms": [
       "Ancient Egg: N103",
-      "Black Egg: N103",
+      "Dark Egg: N103",
       "Gas Mask Cat"
     ]
   },
@@ -6244,8 +6249,8 @@
     "rarity": "Uber Super Rare",
     "forms": [
       "Kaoluga",
-      "Kaoluga Pasalan",
-      "Kaoluga Pasalan"
+      "Kaolan Pasalan",
+      "Kaolan Tatalan"
     ]
   },
   {
@@ -6315,7 +6320,7 @@
     "forms": [
       "Tekachi",
       "Tetsukachi",
-      "Tetsukachi"
+      "Adamankachi"
     ]
   },
   {
@@ -6450,8 +6455,8 @@
     "rarity": "Uber Super Rare",
     "forms": [
       "Pegasa",
-      "Pegasa \u03bd",
-      "Uninterested in the plots and schemes of adults,"
+      "Pegasa, type \u03bd",
+      "Pegasa, type \u03bd"
     ]
   },
   {
@@ -6488,8 +6493,8 @@
     "rarity": "Uber Super Rare",
     "forms": [
       "Floral Kalisa",
-      "Floral Kalisa, type X",
-      "Floral Kalisa, type X"
+      "Floral Kalisa, type \u03c7",
+      "Floral Kalisa, type \u03c7"
     ]
   },
   {
@@ -6734,6 +6739,14 @@
       "Dynasaurus Cat",
       "Mecha Dynasaurus Cat",
       "Mecha Dynasaurus Cat"
+    ]
+  },
+  {
+    "id": 764,
+    "name": "765_1",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "765_1"
     ]
   },
   {
@@ -7302,6 +7315,348 @@
     "rarity": "Uber Super Rare",
     "forms": [
       "826-1"
+    ]
+  },
+  {
+    "id": 826,
+    "name": "Cammy",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Cammy",
+      "Cammy CC",
+      "Cammy CC"
+    ]
+  },
+  {
+    "id": 827,
+    "name": "Juri",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Juri",
+      "Juri CC",
+      "Juri CC"
+    ]
+  },
+  {
+    "id": 828,
+    "name": "Zangief Cat",
+    "rarity": "Super Rare",
+    "forms": [
+      "Zangief Cat",
+      "Zangief Cat CC",
+      "Zangief Cat CC"
+    ]
+  },
+  {
+    "id": 829,
+    "name": "Jamie Cat",
+    "rarity": "Super Rare",
+    "forms": [
+      "Jamie Cat",
+      "Jamie Cat CC",
+      "Jamie Cat CC"
+    ]
+  },
+  {
+    "id": 830,
+    "name": "Raclesa",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Raclesa",
+      "Raclesa, type \u03a3",
+      "Raclesa, type \u03a3"
+    ]
+  },
+  {
+    "id": 831,
+    "name": "Scarf Cat",
+    "rarity": "Special",
+    "forms": [
+      "Scarf Cat",
+      "Red Nyanko Ranger",
+      "Red Nyanko Ranger"
+    ]
+  },
+  {
+    "id": 832,
+    "name": "Fedora Cat",
+    "rarity": "Special",
+    "forms": [
+      "Fedora Cat",
+      "Blue Nyanko Ranger",
+      "Blue Nyanko Ranger"
+    ]
+  },
+  {
+    "id": 833,
+    "name": "Helmet Cat",
+    "rarity": "Special",
+    "forms": [
+      "Helmet Cat",
+      "Yellow Nyanko Ranger",
+      "Yellow Nyanko Ranger"
+    ]
+  },
+  {
+    "id": 834,
+    "name": "Goggles Cat",
+    "rarity": "Special",
+    "forms": [
+      "Goggles Cat",
+      "Green Nyanko Ranger",
+      "Green Nyanko Ranger"
+    ]
+  },
+  {
+    "id": 835,
+    "name": "Ribbon Cat",
+    "rarity": "Special",
+    "forms": [
+      "Ribbon Cat",
+      "Pink Nyanko Ranger",
+      "Pink Nyanko Ranger"
+    ]
+  },
+  {
+    "id": 836,
+    "name": "Giga-Nyan Rex",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Giga-Nyan Rex",
+      "Giga-Nyan Prime DX",
+      "Giga-Nyan Prime DX"
+    ]
+  },
+  {
+    "id": 837,
+    "name": "Squire Luno",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Squire Luno",
+      "Lunos the Luminous",
+      "Lunos the Luminous"
+    ]
+  },
+  {
+    "id": 838,
+    "name": "839-1",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "839-1"
+    ]
+  },
+  {
+    "id": 839,
+    "name": "840-1",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "840-1"
+    ]
+  },
+  {
+    "id": 840,
+    "name": "Tanjiro Kamado",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Tanjiro Kamado",
+      "Tanjiro Kamado CC",
+      "Tanjiro Kamado CC"
+    ]
+  },
+  {
+    "id": 841,
+    "name": "Nezuko Kamado",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Nezuko Kamado",
+      "Nezuko Kamado CC",
+      "Nezuko Kamado CC"
+    ]
+  },
+  {
+    "id": 842,
+    "name": "Zenitsu Agatsuma",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Zenitsu Agatsuma",
+      "Zenitsu Agatsuma CC",
+      "Zenitsu Agatsuma CC"
+    ]
+  },
+  {
+    "id": 843,
+    "name": "Inosuke Hashibira",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Inosuke Hashibira",
+      "Inosuke Hashibira CC",
+      "Inosuke Hashibira CC"
+    ]
+  },
+  {
+    "id": 844,
+    "name": "Giyu Tomioka",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Giyu Tomioka",
+      "Giyu Tomioka CC",
+      "Giyu Tomioka CC"
+    ]
+  },
+  {
+    "id": 845,
+    "name": "Shinobu Kocho",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Shinobu Kocho",
+      "Shinobu Kocho CC",
+      "Shinobu Kocho CC"
+    ]
+  },
+  {
+    "id": 846,
+    "name": "Kyojuro Rengoku",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Kyojuro Rengoku",
+      "Kyojuro Rengoku CC",
+      "Kyojuro Rengoku CC"
+    ]
+  },
+  {
+    "id": 847,
+    "name": "Li'l Sakonji Urokodaki",
+    "rarity": "Super Rare",
+    "forms": [
+      "Li'l Sakonji Urokodaki",
+      "Li'l Sakonji Urokodaki CC",
+      "Li'l Sakonji Urokodaki CC"
+    ]
+  },
+  {
+    "id": 848,
+    "name": "Tanjiro Cat",
+    "rarity": "Rare",
+    "forms": [
+      "Tanjiro Cat",
+      "Tanjiro Cat CC",
+      "Tanjiro Cat CC"
+    ]
+  },
+  {
+    "id": 849,
+    "name": "Nezuko Cat",
+    "rarity": "Special",
+    "forms": [
+      "Nezuko Cat",
+      "Nezuko Cat CC",
+      "Nezuko Cat CC"
+    ]
+  },
+  {
+    "id": 850,
+    "name": "Fuma Kotaro",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Fuma Kotaro",
+      "Wargod Kotaro",
+      "Wargod Kotaro"
+    ]
+  },
+  {
+    "id": 851,
+    "name": "Paperboy Cat",
+    "rarity": "Rare",
+    "forms": [
+      "Paperboy Cat",
+      "Bargain Cat",
+      "Bargain Cat"
+    ]
+  },
+  {
+    "id": 852,
+    "name": "Killer Cowbird Cat",
+    "rarity": "Rare",
+    "forms": [
+      "Killer Cowbird Cat",
+      "True Killer Cowbird Cat",
+      "True Killer Cowbird Cat"
+    ]
+  },
+  {
+    "id": 853,
+    "name": "Occultist Cat",
+    "rarity": "Special",
+    "forms": [
+      "Occultist Cat",
+      "Gyaru Cat",
+      "Gyaru Cat"
+    ]
+  },
+  {
+    "id": 854,
+    "name": "Master of Selection Darvin",
+    "rarity": "Special",
+    "forms": [
+      "Master of Selection Darvin",
+      "Master of Selection Clawvin",
+      "Master of Selection Clawvin"
+    ]
+  },
+  {
+    "id": 855,
+    "name": "856_1",
+    "rarity": "Special",
+    "forms": [
+      "856_1"
+    ]
+  },
+  {
+    "id": 859,
+    "name": "Lone Moon Lunos",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Lone Moon Lunos",
+      "Lunos the Eclipsed",
+      "Lunos the Eclipsed"
+    ]
+  },
+  {
+    "id": 860,
+    "name": "861_1",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "861_1"
+    ]
+  },
+  {
+    "id": 861,
+    "name": "Vornado",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Vornado",
+      "Tempest King Vornado",
+      "Tempest King Vornado"
+    ]
+  },
+  {
+    "id": 862,
+    "name": "Hanzo the Betrothed",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Hanzo the Betrothed",
+      "Hanzo the Groom",
+      "Hanzo the Groom"
+    ]
+  },
+  {
+    "id": 863,
+    "name": "The Invisible Cat",
+    "rarity": "Special",
+    "forms": [
+      "The Invisible Cat",
+      "Groom Cat",
+      "Groom Cat"
     ]
   }
 ]
