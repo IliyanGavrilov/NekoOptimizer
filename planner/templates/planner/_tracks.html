@@ -1,0 +1,21 @@
+{% for table in tables %}
+  <section class="track-section">
+    <h4 class="banner">
+      {{ table.names|join:" · " }}{% if table.names|length > 1 %} <span class="equiv-note">same rolls</span>{% endif %}
+    </h4>
+    <table class="track">
+      <thead><tr><th class="pos">#</th><th>Track A</th><th>Track B</th></tr></thead>
+      <tbody>
+        {% for row in table.rows %}
+          <tr>
+            <th scope="row" class="pos">{{ row.pos }}</th>
+            {% include "planner/_track_cell.html" with cell=row.a %}
+            {% include "planner/_track_cell.html" with cell=row.b %}
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </section>
+{% empty %}
+  <p class="muted">No rolls for this seed and banner selection.</p>
+{% endfor %}

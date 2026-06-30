@@ -87,45 +87,8 @@
     <p>Finding your plan&hellip;</p>
   </div>
 
-  {% if plan_views is not None %}
-    <h2>Results</h2>
-    {% if plan_views %}
-      <div id="planResults" data-apply-url="{% url 'apply_plan' %}">
-      {% for view in plan_views %}
-        <section>
-          <h3>{{ view.targets|join:", " }} &mdash; {{ view.cost_label }}</h3>
-          <button type="button" class="apply-plan"
-                  data-cats="{{ view.cats }}"
-                  data-tickets="{{ view.tickets_used }}"
-                  data-catfood="{{ view.cost }}">Apply this plan</button>
-          {% for seg in view.segments %}
-            {% if seg.new_banner %}
-              <h4 class="banner">
-                {{ seg.names|join:" · " }}{% if seg.names|length > 1 %} <span class="equiv-note">same rolls</span>{% endif %}
-              </h4>
-            {% endif %}
-            <p class="leg">
-              {% if seg.kind == "Single pull" %}{{ seg.pulls }} single pull{{ seg.pulls|pluralize }}{% else %}{{ seg.kind }}{% endif %}
-              {% if seg.cost %}&middot; {{ seg.cost }} catfood{% else %}&middot; free (tickets){% endif %}
-            </p>
-            <table class="track">
-              <thead><tr><th class="pos">#</th><th>Track A</th><th>Track B</th></tr></thead>
-              <tbody>
-                {% for row in seg.rows %}
-                  <tr>
-                    <th scope="row" class="pos">{{ row.pos }}</th>
-                    {% include "planner/_track_cell.html" with cell=row.a %}
-                    {% include "planner/_track_cell.html" with cell=row.b %}
-                  </tr>
-                {% endfor %}
-              </tbody>
-            </table>
-          {% endfor %}
-        </section>
-      {% endfor %}
-      </div>
-    {% else %}
-      <p class="muted">No reachable plan with given resources.</p>
-    {% endif %}
-  {% endif %}
+  <div id="planSummary" aria-live="polite"></div>
+
+  <h2 id="tracksHeading" hidden>Rolls</h2>
+  <div id="trackHost" data-tracks-url="{% url 'tracks' %}" data-plan-url="{% url 'find_plan' %}"></div>
 {% endblock %}

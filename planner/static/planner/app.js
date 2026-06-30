@@ -246,46 +246,81 @@ if (picker) {
   ready = true;
   syncBanners();
 
-  // ---- Apply a plan: own its cats, drop them from the wishlist, and spend
-  // the plan's tickets/catfood from the saved budget.
-  const planResults = document.getElementById("planResults");
-  if (planResults) {
-    const token = document.querySelector("[name=csrfmiddlewaretoken]").value;
-    planResults.addEventListener("click", async (e) => {
-      const btn = e.target.closest(".apply-plan");
-      if (!btn || btn.disabled) return;
-      const body = new URLSearchParams({ csrfmiddlewaretoken: token });
-      (btn.dataset.cats ? btn.dataset.cats.split("|") : []).forEach((n) => body.append("cats", n));
-      const resp = await fetch(planResults.dataset.applyUrl, {
-        method: "POST",
-        headers: { "X-CSRFToken": token },
-        body,
-      });
-      if (!resp.ok) return;
-      const spend = (el, key) =>
-        (el.value = Math.max(0, (Number(el.value) || 0) - (Number(btn.dataset[key]) || 0)));
-      spend(ticketsEl, "tickets");
-      spend(catfoodEl, "catfood");
-      save();
-      btn.disabled = true;
-      btn.textContent = "Applied ✓";
-    });
-  }
-}
+  const token = document.querySelector("[name=csrfmiddlewaretoken]").value;
+  const plannerForm = document.getElementById("plannerForm");
+  const planSummary = document.getElementById("planSummary");
+  const trackHost = document.getElementById("trackHost");
+  const tracksHeading = document.getElementById("tracksHeading");
+  const planLoading = document.getElementById("planLoading");
+  const seedEl = document.getElementById("id_seed");
+  const post = (url) =>
+    fetch(url, { method: "POST", body: new FormData(plannerForm), headers: { "X-CSRFToken": token } });
 
-// ---- Planner: loading overlay ----------------------------------------
-// The form is a blocking full-page POST; show a spinner from submit until the
-// results page renders. Hide it on bfcache restore so the back button never
-// lands on a stuck overlay.
-const plannerForm = document.getElementById("plannerForm");
-const planLoading = document.getElementById("planLoading");
-if (plannerForm && planLoading) {
-  plannerForm.addEventListener("submit", () => {
+  // ---- Apply a plan (delegated; the summary is injected by AJAX) -------
+  // Own its cats, drop them from the wishlist, and spend its tickets/catfood.
+  planSummary.addEventListener("click", async (e) => {
+    const btn = e.target.closest(".apply-plan");
+    if (!btn || btn.disabled) return;
+    const results = btn.closest("#planResults");
+    const body = new URLSearchParams({ csrfmiddlewaretoken: token });
+    (btn.dataset.cats ? btn.dataset.cats.split("|") : []).forEach((n) => body.append("cats", n));
+    const resp = await fetch(results.dataset.applyUrl, {
+      method: "POST",
+      headers: { "X-CSRFToken": token },
+      body,
+    });
+    if (!resp.ok) return;
+    const spend = (el, key) =>
+      (el.value = Math.max(0, (Number(el.value) || 0) - (Number(btn.dataset[key]) || 0)));
+    spend(ticketsEl, "tickets");
+    spend(catfoodEl, "catfood");
+    save();
+    btn.disabled = true;
+    btn.textContent = "Applied ✓";
+  });
+
+  // ---- Live A/B tracks: reload whenever the seed or banner set changes -
+  let trackTimer;
+  async function requestTracks() {
+    if (!seedEl.value.trim()) {
+      trackHost.innerHTML = "";
+      tracksHeading.hidden = true;
+      return;
+    }
+    const resp = await post(trackHost.dataset.tracksUrl);
+    if (!resp.ok) return;
+    trackHost.innerHTML = await resp.text();
+    tracksHeading.hidden = !trackHost.firstElementChild;
+  }
+  const scheduleTracks = () => {
+    clearTimeout(trackTimer);
+    trackTimer = setTimeout(requestTracks, 400);
+  };
+  seedEl.addEventListener("input", scheduleTracks);
+  browser.addEventListener("click", (e) => {
+    if (e.target.closest(".banner-include")) scheduleTracks();
+  });
+
+  // ---- Find plan: overlay the highlighted path + summary, no page reload
+  plannerForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
     planLoading.hidden = false;
+    try {
+      const resp = await post(trackHost.dataset.planUrl);
+      if (resp.ok) {
+        const data = await resp.json();
+        trackHost.innerHTML = data.tracks_html;
+        planSummary.innerHTML = data.summary_html;
+        tracksHeading.hidden = !trackHost.firstElementChild;
+      } else {
+        planSummary.innerHTML = '<p class="error">Check the form and try again.</p>';
+      }
+    } finally {
+      planLoading.hidden = true;
+    }
   });
-  window.addEventListener("pageshow", () => {
-    planLoading.hidden = true;
-  });
+
+  if (seedEl.value.trim()) requestTracks();
 }
 
 // ---- Collection: instant owned / wishlist toggles --------------------

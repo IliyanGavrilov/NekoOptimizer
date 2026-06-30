@@ -3,19 +3,22 @@ from datetime import date, timedelta
 import pytest
 
 from neko.godfat import BannerRolls, TrackPull
-from neko.graph import stream_index
 from neko.models import Leg, Path, Pull, Rarity
 from neko.subsets import SubsetPlan
 from planner.models import Banner, Cat
 from planner.services import (
+    build_tracks,
     capped_banner_limits,
     catalogue,
     cost_label,
     dated_catalogue,
     equivalent_banners,
-    plan_views,
-    track_rows,
+    plan_highlight,
+    plan_summary,
 )
+
+U = Rarity.UBER_SUPER_RARE
+R = Rarity.RARE
 
 
 def test_capped_banner_limits_matches_only_platinum_and_legend():
@@ -112,53 +115,6 @@ def test_equivalent_banners_groups_identical_roll_sequences():
     assert equivalent["C"] == ["C"]
 
 
-def _grid(*track_pulls):
-    return {stream_index(p.position, p.track): p for p in track_pulls}
-
-
-def test_track_rows_window_spans_only_the_positions_the_path_touches():
-    grid = _grid(
-        TrackPull(1, "A", "A1", Rarity.RARE),
-        TrackPull(2, "A", "A2", Rarity.SUPER_RARE),
-        TrackPull(3, "A", "A3", Rarity.RARE),
-    )
-    pulls = [Pull(0, "bn", "A1", Rarity.RARE), Pull(2, "bn", "A2", Rarity.SUPER_RARE)]
-    assert [row["pos"] for row in track_rows(pulls, grid, set(), set())] == [1, 2]
-
-
-def test_track_rows_marks_path_cells_on_their_track():
-    grid = _grid(TrackPull(1, "A", "A1", Rarity.RARE), TrackPull(1, "B", "B1", Rarity.RARE))
-    rows = track_rows([Pull(0, "bn", "A1", Rarity.RARE)], grid, set(), set())
-    assert (rows[0]["a"]["on_path"], rows[0]["b"]["on_path"]) == (True, False)
-
-
-def test_track_rows_flags_a_track_switch_on_the_landing_cell():
-    grid = _grid(
-        TrackPull(1, "A", "A1", Rarity.RARE), TrackPull(2, "B", "B2", Rarity.UBER_SUPER_RARE)
-    )
-    # 1A (index 0, even) -> 2B (index 3, odd): the track flips, so 2B is a switch.
-    pulls = [Pull(0, "bn", "A1", Rarity.RARE), Pull(3, "bn", "B2", Rarity.UBER_SUPER_RARE)]
-    assert track_rows(pulls, grid, set(), set())[1]["b"]["switch"] is True
-
-
-def test_track_rows_marks_target_cats():
-    grid = _grid(TrackPull(1, "A", "Bahamut", Rarity.UBER_SUPER_RARE))
-    rows = track_rows([Pull(0, "bn", "Bahamut", Rarity.UBER_SUPER_RARE)], grid, {"Bahamut"}, set())
-    assert rows[0]["a"]["target"] is True
-
-
-def test_track_rows_marks_unowned_path_cats():
-    grid = _grid(TrackPull(1, "A", "Bahamut", Rarity.UBER_SUPER_RARE))
-    rows = track_rows([Pull(0, "bn", "Bahamut", Rarity.UBER_SUPER_RARE)], grid, set(), {"Kasli"})
-    assert rows[0]["a"]["unowned"] is True
-
-
-def test_track_rows_yields_none_for_an_empty_off_path_slot():
-    grid = _grid(TrackPull(1, "A", "A1", Rarity.RARE))  # no 1B cell
-    rows = track_rows([Pull(0, "bn", "A1", Rarity.RARE)], grid, set(), set())
-    assert rows[0]["b"] is None
-
-
 @pytest.mark.parametrize(
     "tickets,catfood,expected",
     [
@@ -173,17 +129,52 @@ def test_cost_label_spells_out_both_currencies(tickets, catfood, expected):
     assert cost_label(tickets, catfood) == expected
 
 
-def test_plan_views_flags_the_first_leg_of_each_banner():
-    def leg(banner, kind):
-        return Leg(banner, kind, 0, (Pull(0, banner, "Cat", Rarity.RARE),))
+def test_build_tracks_merges_equivalent_banners_into_one_table():
+    pulls = [TrackPull(1, "A", "Bahamut", U)]
+    tables = build_tracks({"X": pulls, "Y": pulls}, {}, {"X": ["X", "Y"], "Y": ["X", "Y"]})
+    assert len(tables) == 1
 
-    # Two Y legs of different kinds stay separate (Path.legs only merges single pulls).
-    moves = (leg("X", "Single pull"), leg("Y", "11-roll"), leg("Y", "Single pull"))
-    path = Path(moves[0].pulls, tickets_used=3, catfood_draws_used=0, moves=moves)
-    option = SubsetPlan(frozenset({"Cat"}), path)
-    grids = {
-        "X": [TrackPull(1, "A", "Cat", Rarity.RARE)],
-        "Y": [TrackPull(1, "A", "Cat", Rarity.RARE)],
-    }
-    views = plan_views([option], grids, {"X": ["X"], "Y": ["Y"]}, set())
-    assert [seg["new_banner"] for seg in views[0]["segments"]] == [True, True, False]
+
+def test_build_tracks_places_each_roll_on_its_track():
+    banner_pulls = {"X": [TrackPull(1, "A", "Bahamut", U), TrackPull(1, "B", "Kasli", U)]}
+    row = build_tracks(banner_pulls, {}, {})[0]["rows"][0]
+    assert (row["a"]["cat"], row["b"]["cat"]) == ("Bahamut", "Kasli")
+
+
+def test_build_tracks_flags_a_rare_dupe_switch():
+    # 1A and 2A are the same rare cat -> godfat rerolls 2A and jumps tracks.
+    banner_pulls = {"X": [TrackPull(1, "A", "Pogo", R), TrackPull(2, "A", "Pogo", R)]}
+    rerolls = {"X": [TrackPull(2, "A", "Jurassic Cat", R)]}
+    assert build_tracks(banner_pulls, rerolls, {})[0]["rows"][1]["a"]["switch"] is True
+
+
+def test_build_tracks_arrow_shows_the_reroll_cat_and_landing():
+    banner_pulls = {"X": [TrackPull(1, "A", "Pogo", R), TrackPull(2, "A", "Pogo", R)]}
+    rerolls = {"X": [TrackPull(2, "A", "Jurassic Cat", R)]}
+    arrow = build_tracks(banner_pulls, rerolls, {})[0]["rows"][1]["a"]["arrow"]
+    assert (arrow["cat"], arrow["to"]) == ("Jurassic Cat", "3B")
+
+
+def test_build_tracks_highlights_the_path_and_target():
+    banner_pulls = {"X": [TrackPull(1, "A", "Bahamut", U)]}
+    tables = build_tracks(banner_pulls, {}, {}, path={"X": {0}}, targets={"X": {0}})
+    cell = tables[0]["rows"][0]["a"]
+    assert (cell["on_path"], cell["target"]) == (True, True)
+
+
+def test_plan_highlight_keys_indices_by_representative_banner():
+    option = SubsetPlan(frozenset({"Bahamut"}), Path((Pull(0, "Y", "Bahamut", U),), 1, 0))
+    path, targets = plan_highlight(option, {"X": ["X", "Y"], "Y": ["X", "Y"]})
+    assert (path, targets) == ({"X": {0}}, {"X": {0}})
+
+
+def test_plan_summary_reports_cost_label_for_a_ticket_plan():
+    leg = Leg("X", "Single pull", 0, (Pull(0, "X", "Bahamut", U),))
+    option = SubsetPlan(frozenset({"Bahamut"}), Path(leg.pulls, 1, 0, (leg,)))
+    assert plan_summary([option], {"X": ["X"]})[0]["cost_label"] == "1 ticket"
+
+
+def test_plan_summary_lists_the_pulled_cats_per_leg():
+    leg = Leg("X", "Single pull", 0, (Pull(0, "X", "Bahamut", U),))
+    option = SubsetPlan(frozenset({"Bahamut"}), Path(leg.pulls, 1, 0, (leg,)))
+    assert plan_summary([option], {"X": ["X"]})[0]["legs"][0]["cats"] == ["Bahamut"]
