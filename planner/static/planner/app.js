@@ -273,6 +273,21 @@ if (picker) {
   }
 }
 
+// ---- Planner: loading overlay ----------------------------------------
+// The form is a blocking full-page POST; show a spinner from submit until the
+// results page renders. Hide it on bfcache restore so the back button never
+// lands on a stuck overlay.
+const plannerForm = document.getElementById("plannerForm");
+const planLoading = document.getElementById("planLoading");
+if (plannerForm && planLoading) {
+  plannerForm.addEventListener("submit", () => {
+    planLoading.hidden = false;
+  });
+  window.addEventListener("pageshow", () => {
+    planLoading.hidden = true;
+  });
+}
+
 // ---- Collection: instant owned / wishlist toggles --------------------
 const collectionBrowser = document.getElementById("collectionBrowser");
 if (collectionBrowser) {

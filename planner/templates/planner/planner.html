@@ -83,6 +83,11 @@
     <button type="submit">Find plan</button>
   </form>
 
+  <div id="planLoading" class="loading-overlay" hidden role="status" aria-live="polite">
+    <div class="spinner" aria-hidden="true"></div>
+    <p>Finding your plan&hellip;</p>
+  </div>
+
   {% if plans is not None %}
     <h2>Results</h2>
     {% if plans %}
