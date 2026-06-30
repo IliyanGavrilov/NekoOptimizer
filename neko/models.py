@@ -6,8 +6,11 @@ CATFOOD_PER_DRAW = 150  # one paid pull = 150 catfood
 
 
 class Rarity(StrEnum):
-    """Gacha rarities, ordered cheapest to rarest."""
+    """Unit rarities, ordered cheapest to rarest. Normal/Special are non-gacha units
+    (never rolled), present only so the canonical catalogue can hold every unit."""
 
+    NORMAL = "Normal"
+    SPECIAL = "Special"
     RARE = "Rare"
     SUPER_RARE = "Super Rare"
     UBER_SUPER_RARE = "Uber Super Rare"
