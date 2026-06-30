@@ -79,7 +79,6 @@ if (picker) {
         platLegendCap: platLegendCapEl.value,
         explore: exploreEl.checked,
         horizon: horizonEl.value,
-        search: search.value,
       }),
     );
   }
@@ -279,11 +278,6 @@ if (picker) {
   horizonEl.addEventListener("input", save);
 
   render();
-
-  if (stored.search) {
-    search.value = stored.search;
-    applySearch();
-  }
 
   // Targets and banner selection aren't persisted: every visit starts from the
   // banners live today (capsules excluded - they're opt-in) and no targets.
