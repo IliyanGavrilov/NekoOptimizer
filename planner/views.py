@@ -15,11 +15,13 @@ from planner.services import (
     equivalent_banners,
     fetch_banners,
     fetch_for_banners,
+    plan_views,
 )
 
 
 def planner(request):
     plans = None
+    pulls: dict = {}
     equivalents: dict[str, list[str]] = {}
     if request.method == "POST":
         form = PlannerForm(request.POST)
@@ -65,15 +67,14 @@ def planner(request):
     # Every cat is targetable, owned or not, so you can always look up a unit.
     cats = list(Cat.objects.prefetch_related("banners"))
     owned_names = set(Cat.objects.filter(owned=True).values_list("name", flat=True))
+    views = plan_views(plans, pulls, equivalents, owned_names) if plans is not None else None
     rank = {name: i for i, name in enumerate(RARITY_ORDER)}
     target_flat = sorted(cats, key=lambda cat: (-rank.get(cat.rarity, -1), cat.name))
     context = {
         "form": form,
-        "plans": plans,
+        "plan_views": views,
         "target_groups": dated_catalogue(cats, reverse_rarity=True),
         "target_flat": target_flat,
-        "owned_names": owned_names,
-        "equivalents": equivalents,
     }
     return render(request, "planner/planner.html", context)
 

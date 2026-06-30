@@ -68,7 +68,7 @@ def test_guaranteed_config_reaches_target(client, monkeypatch):
     )
     monkeypatch.setattr("planner.views.fetch_banners", lambda seed, count=100: result)
     response = client.post("/", {"seed": 7, "tickets": 0, "catfood": 300, "targets": [cat.pk]})
-    assert response.context["plans"][0].targets == frozenset({"Target"})
+    assert response.context["plan_views"][0]["targets"] == ["Target"]
 
 
 @pytest.mark.django_db
@@ -98,7 +98,7 @@ def test_prefer_catfood_keeps_the_ticket(client, monkeypatch):
         "/",
         {"seed": 7, "tickets": 1, "catfood": 150, "targets": [cat.pk], "prefer": "catfood"},
     )
-    assert response.context["plans"][0].plan.tickets_used == 0
+    assert response.context["plan_views"][0]["tickets_used"] == 0
 
 
 @pytest.mark.django_db
@@ -112,7 +112,7 @@ def test_platinum_legend_cap_zero_excludes_the_banner(client, monkeypatch):
         "/",
         {"seed": 7, "tickets": 1, "catfood": 0, "targets": [cat.pk], "platinum_legend_cap": 0},
     )
-    assert response.context["plans"] == []
+    assert response.context["plan_views"] == []
 
 
 @pytest.mark.django_db
@@ -123,7 +123,7 @@ def test_platinum_legend_allowed_by_default(client, monkeypatch):
     )
     monkeypatch.setattr("planner.views.fetch_banners", lambda seed, count=100: result)
     response = client.post("/", {"seed": 7, "tickets": 1, "catfood": 0, "targets": [cat.pk]})
-    assert response.context["plans"][0].targets == frozenset({"Bahamut"})
+    assert response.context["plan_views"][0]["targets"] == ["Bahamut"]
 
 
 @pytest.mark.django_db
@@ -136,7 +136,7 @@ def test_explore_mode_reaches_target_beyond_budget(client, monkeypatch):
     response = client.post(
         "/", {"seed": 7, "tickets": 0, "catfood": 0, "targets": [cat.pk], "explore": "on"}
     )
-    assert response.context["plans"][0].plan.cost == 300
+    assert response.context["plan_views"][0]["cost"] == 300
 
 
 @pytest.mark.django_db
@@ -177,11 +177,11 @@ def test_apply_plan_owns_cats_and_clears_wishlist(client):
 @pytest.mark.django_db
 def test_requires_targets_or_wishlist(client):
     response = client.post("/", {"seed": 7, "tickets": 1, "catfood": 0})
-    assert response.context["plans"] is None
+    assert response.context["plan_views"] is None
 
 
 @pytest.mark.django_db
 def test_negative_resources_rejected(client):
     cat = Cat.objects.create(name="Bahamut")
     response = client.post("/", {"seed": 7, "tickets": -1, "catfood": 0, "targets": [cat.pk]})
-    assert response.context["plans"] is None
+    assert response.context["plan_views"] is None
