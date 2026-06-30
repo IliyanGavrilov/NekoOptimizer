@@ -1,4 +1,5 @@
 import asyncio
+import json
 from collections.abc import Awaitable, Callable, Mapping
 from pathlib import Path
 
@@ -69,3 +70,8 @@ async def download_catalogue(limit: int = 20) -> dict[int, Unit]:
     """Fetch the catalogue straight from BCData over the network."""
     async with aiohttp.ClientSession() as session:
         return await fetch_catalogue(make_fetcher(session, limit))
+
+
+def load_records(path: Path = UNITS_PATH) -> list[dict]:
+    """The catalogue records previously written to units.json."""
+    return json.loads(path.read_text(encoding="utf-8"))

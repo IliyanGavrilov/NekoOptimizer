@@ -16,7 +16,7 @@ from neko.scraper import (
     scrape_selected,
 )
 from neko.subsets import solve_subsets
-from planner.models import Banner, Cat
+from planner.models import Banner, Cat, Unit
 
 _CACHE = RollCache(Path("rollcache"))
 
@@ -346,6 +346,22 @@ def subset_solutions(
             if frozenset(combo) not in found_keys:
                 solutions.append({"targets": sorted(combo), "found": False})
     return solutions
+
+
+def import_units(records: Iterable[Mapping]) -> int:
+    """Upsert the canonical catalogue from units.json records; return the new-unit count."""
+    created = 0
+    for record in records:
+        _, was_created = Unit.objects.update_or_create(
+            unit_id=record["id"],
+            defaults={
+                "name": record["name"],
+                "rarity": record.get("rarity", ""),
+                "forms": record.get("forms", []),
+            },
+        )
+        created += int(was_created)
+    return created
 
 
 def import_cats(

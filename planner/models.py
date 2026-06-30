@@ -9,6 +9,21 @@ class CatQuerySet(models.QuerySet):
         return self.filter(wanted=True, owned=False)
 
 
+class Unit(models.Model):
+    """A canonical Battle Cats unit from the game-data catalogue, keyed by its PONOS id."""
+
+    unit_id = models.PositiveIntegerField(unique=True)
+    name = models.CharField(max_length=200)
+    rarity = models.CharField(max_length=20, blank=True)
+    forms = models.JSONField(default=list)
+
+    class Meta:
+        ordering = ["unit_id"]
+
+    def __str__(self) -> str:
+        return self.name
+
+
 class Banner(models.Model):
     """A gacha banner, identified by its recurring name; cats accumulate across re-runs."""
 
