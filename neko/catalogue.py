@@ -1,5 +1,5 @@
 import csv
-from collections.abc import Mapping
+from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 
 from neko.models import Rarity
@@ -87,3 +87,21 @@ def build_catalogue(
         if rarity is not None and names:
             catalogue[unit_id] = Unit(unit_id, tuple(names), rarity)
     return catalogue
+
+
+def name_index(units: Iterable) -> dict[str, int]:
+    """Map base-form name -> unit id, for joining godfat's roll-names to the catalogue.
+    Works on anything with .name/.unit_id (catalogue Units or DB rows)."""
+    return {unit.name: unit.unit_id for unit in units}
+
+
+def match_names(names: Iterable[str], index: Mapping[str, int]) -> tuple[dict[str, int], list[str]]:
+    """Split roll-names into {name: unit_id} matches and the sorted names with no unit."""
+    matches: dict[str, int] = {}
+    unmatched: set[str] = set()
+    for name in names:
+        if name in index:
+            matches[name] = index[name]
+        else:
+            unmatched.add(name)
+    return matches, sorted(unmatched)
