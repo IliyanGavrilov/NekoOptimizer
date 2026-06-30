@@ -1,0 +1,10 @@
+# Groups the auto-generated release notes. The catch-all "*" category keeps PRs
+# in the notes even without a labelling convention, so nothing is dropped.
+changelog:
+  categories:
+    - title: Features
+      labels: [feature, enhancement]
+    - title: Fixes
+      labels: [bug, fix]
+    - title: Other changes
+      labels: ["*"]

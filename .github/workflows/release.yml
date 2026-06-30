@@ -1,0 +1,24 @@
+name: Release
+
+# Cut a version by pushing a SemVer tag, e.g. `git tag v1.2.0 && git push origin v1.2.0`.
+# This drafts a GitHub Release with notes auto-built from the PRs merged since the
+# last tag; review and publish it by hand. Tags are manual - you choose when to release.
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  draft:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0 # full history so the notes can diff against the previous tag
+
+      - name: Draft the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "$GITHUB_REF_NAME" --draft --generate-notes --title "$GITHUB_REF_NAME"
