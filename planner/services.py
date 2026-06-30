@@ -275,13 +275,18 @@ def plan_summary(plans, equivalents):
         legs = []
         last_banner = None
         for leg in option.plan.legs:
+            rolls = len(leg.pulls)
+            # Single pulls are paid per draw with a ticket (free) or 150 catfood;
+            # leg.cost only counts the catfood ones, so the rest are ticket-funded.
+            tickets = rolls - leg.cost // CATFOOD_PER_DRAW if leg.kind == "Single pull" else 0
             legs.append(
                 {
                     "names": sorted(equivalents.get(leg.banner_id, [leg.banner_id])),
                     "new_banner": leg.banner_id != last_banner,
                     "kind": leg.kind,
                     "cost": leg.cost,
-                    "rolls": len(leg.pulls),
+                    "tickets": tickets,
+                    "rolls": rolls,
                     "cats": [pull.cat for pull in leg.pulls],
                 }
             )

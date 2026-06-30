@@ -187,3 +187,24 @@ def test_plan_summary_lists_the_pulled_cats_per_leg():
     leg = Leg("X", "Single pull", 0, (Pull(0, "X", "Bahamut", U),))
     option = SubsetPlan(frozenset({"Bahamut"}), Path(leg.pulls, 1, 0, (leg,)))
     assert plan_summary([option], {"X": ["X"]})[0]["legs"][0]["cats"] == ["Bahamut"]
+
+
+def test_plan_summary_counts_ticket_funded_single_pulls():
+    pulls = tuple(Pull(i, "X", "Bahamut", U) for i in range(3))
+    leg = Leg("X", "Single pull", 0, pulls)
+    option = SubsetPlan(frozenset({"Bahamut"}), Path(pulls, 3, 0, (leg,)))
+    assert plan_summary([option], {"X": ["X"]})[0]["legs"][0]["tickets"] == 3
+
+
+def test_plan_summary_splits_a_mixed_single_pull_leg_into_tickets_and_catfood():
+    pulls = tuple(Pull(i, "X", "Bahamut", U) for i in range(3))
+    leg = Leg("X", "Single pull", 150, pulls)  # two ticket draws + one catfood draw
+    option = SubsetPlan(frozenset({"Bahamut"}), Path(pulls, 2, 1, (leg,)))
+    assert plan_summary([option], {"X": ["X"]})[0]["legs"][0]["tickets"] == 2
+
+
+def test_plan_summary_never_reads_a_catfood_multi_roll_as_tickets():
+    pulls = tuple(Pull(i, "X", "Bahamut", U) for i in range(11))
+    leg = Leg("X", "11-roll (guaranteed)", 1500, pulls)
+    option = SubsetPlan(frozenset({"Bahamut"}), Path(pulls, 0, 10, (leg,)))
+    assert plan_summary([option], {"X": ["X"]})[0]["legs"][0]["tickets"] == 0
