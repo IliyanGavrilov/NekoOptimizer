@@ -190,6 +190,19 @@ def test_negative_resources_rejected(client):
 
 
 @pytest.mark.django_db
+def test_blank_budget_is_treated_as_zero(client, monkeypatch):
+    # Explore hides the budget fields, so they submit blank; that must not 400.
+    cat = Cat.objects.create(name="Bahamut")
+    monkeypatch.setattr(
+        "planner.views.fetch_banners", fixed_banners(TrackPull(1, "A", "Bahamut", U))
+    )
+    response = client.post(
+        "/plan/", {"seed": 7, "tickets": "", "catfood": "", "targets": [cat.pk], "explore": "on"}
+    )
+    assert response.status_code == 200
+
+
+@pytest.mark.django_db
 def test_tracks_endpoint_lists_the_rolls(client, monkeypatch):
     monkeypatch.setattr(
         "planner.views.fetch_banners", fixed_banners(TrackPull(1, "A", "Bahamut", U))

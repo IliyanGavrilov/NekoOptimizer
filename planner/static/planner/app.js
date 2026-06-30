@@ -149,18 +149,11 @@ if (picker) {
       : "Rolling current banners.";
     save();
   }
-  // A "session" is a moment in time: clicking a banner selects every banner
-  // live on its opening day - the rotation you'd roll together right then -
-  // not everything its run overlaps. A whole-period event banner (or the
-  // months-long Platinum/Legend capsules) overlaps dozens of distinct 3-day
-  // rotations; anchoring on a single day keeps the session to ~the 3 featured
-  // banners plus the always-on capsules instead of every overlapping banner.
-  function toggleSession(btn) {
-    const on = btn.getAttribute("aria-pressed") !== "true";
-    const [day] = rangeOf(btn);
-    for (const other of includes) {
-      if (liveOn(rangeOf(other), day)) setIncluded(other, on);
-    }
+  // Each banner toggles on its own, so you can roll one at a time or unselect any
+  // single one. The page still defaults to the banners live today (below), but
+  // from there every + / ✓ is independent.
+  function toggleBanner(btn) {
+    setIncluded(btn, btn.getAttribute("aria-pressed") !== "true");
     syncBanners();
   }
   browser.addEventListener("click", (e) => {
@@ -168,7 +161,7 @@ if (picker) {
     if (!btn) return;
     e.preventDefault(); // don't toggle the <details>
     e.stopPropagation();
-    toggleSession(btn);
+    toggleBanner(btn);
   });
   // Searching shows a flat, undivided list of matching cats; clearing it
   // restores the banner/rarity grouping.
