@@ -412,6 +412,18 @@ table.track .arrow { display: block; color: var(--accent); font-size: 0.78rem; f
 .field-grid input { width: 100%; }
 .check-row { display: inline-flex; align-items: center; gap: 0.5rem; color: var(--ink); margin: 0.5rem 0; }
 .error { color: var(--r-legend); }
+
+/* Inline validation note next to a field; collapses out of the layout when empty. */
+.field-error { color: var(--r-legend); font-size: 0.8rem; font-weight: 600; }
+.field-error:not(:empty) { display: block; margin-top: 0.25rem; }
+.field-error:empty { display: none; }
+
+/* Themed validation feedback: flash the offending field instead of the browser popup. */
+@keyframes flash-error {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(255, 96, 96, 0); }
+  15% { box-shadow: 0 0 0 3px var(--r-legend); }
+}
+.flash-error { animation: flash-error 1s ease-out; }
 .req { color: #ff2d2d; font-weight: 700; }
 .label-row { display: inline-flex; align-items: baseline; gap: 0.25rem; }
 

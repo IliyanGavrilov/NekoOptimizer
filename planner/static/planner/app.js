@@ -31,9 +31,10 @@ if (picker) {
   const selected = new Map(); // pk -> name
 
   // ---- Persist the form to localStorage (no accounts, so this is the only
-  // memory of catfood/tickets/targets/banners between visits). Seed and the
-  // owned/wishlist collection persist server-side instead.
+  // memory of seed/catfood/tickets/options between visits). Targets and banner
+  // selection are NOT persisted; the collection persists server-side.
   const STORE_KEY = "nekoPlanner";
+  const seedEl = document.getElementById("id_seed");
   const ticketsEl = document.getElementById("id_tickets");
   const catfoodEl = document.getElementById("id_catfood");
   const wishlistEl = document.getElementById("id_use_wishlist");
@@ -52,14 +53,24 @@ if (picker) {
     }
   })();
   let ready = false; // don't persist until the restore below has run
+  // Inline validation messages live next to their field; clear them all as soon
+  // as the user changes anything.
+  const ERROR_SLOTS = ["seedError", "targetsError", "submitError"];
+  function clearError() {
+    for (const id of ERROR_SLOTS) {
+      const el = document.getElementById(id);
+      if (el) el.textContent = "";
+    }
+  }
   function save() {
     if (!ready) return;
-    const banners = includes
-      .filter((b) => b.getAttribute("aria-pressed") === "true")
-      .map((b) => b.dataset.banner);
+    clearError();
+    // Targets and banner selection are deliberately NOT persisted - each visit
+    // starts fresh from today's banners and no targets.
     localStorage.setItem(
       STORE_KEY,
       JSON.stringify({
+        seed: seedEl.value,
         tickets: ticketsEl.value,
         catfood: catfoodEl.value,
         useWishlist: wishlistEl.checked,
@@ -69,8 +80,6 @@ if (picker) {
         explore: exploreEl.checked,
         horizon: horizonEl.value,
         search: search.value,
-        targets: [...selected.keys()],
-        banners,
       }),
     );
   }
@@ -146,19 +155,26 @@ if (picker) {
     const n = bannerInputs.childElementCount;
     bannerCount.textContent = n
       ? `Rolling ${n} banner${n === 1 ? "" : "s"}.`
-      : "Rolling current banners.";
+      : "No banners selected.";
     save();
   }
-  // Selecting a banner grabs the whole session - every banner live on its opening
-  // day, the rotation you'd roll together right then. Deselecting only drops the one
-  // you clicked, so you can start from the session and pare it down to a single banner.
-  function toggleBanner(btn) {
+  // Platinum/Legend capsules run on scarce tickets, so they're opt-in: never part
+  // of a session, and each toggles on its own.
+  const CAPPED = /platinum|legend/i;
+  const today = () => new Date().toISOString().slice(0, 10);
+  // Click an unselected banner -> select that banner's time period (every other
+  // non-capsule banner live on its opening day), replacing whatever period was
+  // selected before. Click a selected banner -> unselect just that one. Capsules
+  // are opt-in, toggled individually and left alone when a period is selected.
+  function toggleSession(btn) {
     if (btn.getAttribute("aria-pressed") === "true") {
       setIncluded(btn, false);
+    } else if (CAPPED.test(btn.dataset.banner)) {
+      setIncluded(btn, true);
     } else {
       const [day] = rangeOf(btn);
       for (const other of includes) {
-        if (liveOn(rangeOf(other), day)) setIncluded(other, true);
+        if (!CAPPED.test(other.dataset.banner)) setIncluded(other, liveOn(rangeOf(other), day));
       }
     }
     syncBanners();
@@ -168,7 +184,7 @@ if (picker) {
     if (!btn) return;
     e.preventDefault(); // don't toggle the <details>
     e.stopPropagation();
-    toggleBanner(btn);
+    toggleSession(btn);
   });
   // Searching shows a flat, undivided list of matching cats; clearing it
   // restores the banner/rarity grouping.
@@ -192,6 +208,7 @@ if (picker) {
   });
 
   // Restore the saved form, then default whatever was never saved.
+  if (stored.seed != null && stored.seed !== "") seedEl.value = stored.seed;
   if (stored.tickets != null) ticketsEl.value = stored.tickets;
   if (stored.catfood != null) catfoodEl.value = stored.catfood;
   wishlistEl.checked = !!stored.useWishlist;
@@ -218,13 +235,6 @@ if (picker) {
   });
   horizonEl.addEventListener("input", save);
 
-  for (const pk of stored.targets || []) {
-    const chip = picker.querySelector(`.chip[data-pk="${pk}"]`);
-    if (chip && !selected.has(pk)) {
-      selected.set(pk, chip.dataset.name);
-      chipsFor(pk).forEach((c) => c.classList.add("selected"));
-    }
-  }
   render();
 
   if (stored.search) {
@@ -232,16 +242,10 @@ if (picker) {
     applySearch();
   }
 
-  // An empty list means "I cleared every banner"; only a never-saved session
-  // falls back to whatever is live today.
-  if (stored.banners) {
-    const wanted = new Set(stored.banners);
-    for (const btn of includes) setIncluded(btn, wanted.has(btn.dataset.banner));
-  } else {
-    const today = new Date().toISOString().slice(0, 10);
-    for (const btn of includes) {
-      if (liveOn(rangeOf(btn), today)) setIncluded(btn, true);
-    }
+  // Targets and banner selection aren't persisted: every visit starts from the
+  // banners live today (capsules excluded - they're opt-in) and no targets.
+  for (const btn of includes) {
+    if (!CAPPED.test(btn.dataset.banner) && liveOn(rangeOf(btn), today())) setIncluded(btn, true);
   }
   ready = true;
   syncBanners();
@@ -252,7 +256,6 @@ if (picker) {
   const trackHost = document.getElementById("trackHost");
   const tracksHeading = document.getElementById("tracksHeading");
   const planLoading = document.getElementById("planLoading");
-  const seedEl = document.getElementById("id_seed");
   const post = (url) =>
     fetch(url, { method: "POST", body: new FormData(plannerForm), headers: { "X-CSRFToken": token } });
 
@@ -279,10 +282,13 @@ if (picker) {
     btn.textContent = "Applied ✓";
   });
 
-  // ---- Live A/B tracks: reload whenever the seed or banner set changes -
+  // ---- Live A/B tracks: reload whenever the seed or banner set changes ----
+  // Needs a seed AND at least one selected banner; nothing selected => no track
+  // (no implicit "current banners" fallback).
   let trackTimer;
+  const anyBanner = () => includes.some((b) => b.getAttribute("aria-pressed") === "true");
   async function requestTracks() {
-    if (!seedEl.value.trim()) {
+    if (!seedEl.value.trim() || !anyBanner()) {
       trackHost.innerHTML = "";
       tracksHeading.hidden = true;
       return;
@@ -296,14 +302,54 @@ if (picker) {
     clearTimeout(trackTimer);
     trackTimer = setTimeout(requestTracks, 400);
   };
-  seedEl.addEventListener("input", scheduleTracks);
+  seedEl.addEventListener("input", () => {
+    save();
+    scheduleTracks();
+  });
   browser.addEventListener("click", (e) => {
     if (e.target.closest(".banner-include")) scheduleTracks();
   });
 
-  // ---- Find plan: overlay the highlighted path + summary, no page reload
+  // ---- Find plan: inline validation next to each field, then overlay the plan
+  const flash = (el) => {
+    el.scrollIntoView({ behavior: "smooth", block: "center" });
+    el.classList.remove("flash-error");
+    void el.offsetWidth; // restart the animation if it's already mid-play
+    el.classList.add("flash-error");
+  };
+  const targetsSection = document.getElementById("targetsSection");
+  // Show a message in the inline slot beside the offending field, and flash it.
+  const setError = (slotId, msg, flashEl) => {
+    clearError();
+    const slot = document.getElementById(slotId);
+    if (slot) slot.textContent = msg;
+    if (flashEl) flash(flashEl);
+  };
+  // Maps a server-side field error to its inline slot + the element to flash.
+  const fieldSlot = {
+    seed: ["seedError", seedEl],
+    tickets: ["submitError", ticketsEl],
+    catfood: ["submitError", catfoodEl],
+    horizon: ["submitError", horizonEl],
+    ticket_value: ["submitError", ticketValueEl],
+    platinum_legend_cap: ["submitError", platLegendCapEl],
+  };
+
   plannerForm.addEventListener("submit", async (e) => {
     e.preventDefault();
+    // Client-side checks first, with an inline note + flash instead of the
+    // browser's "Please fill out this field" popup.
+    if (!seedEl.value.trim()) return setError("seedError", "Enter a seed to roll.", seedEl);
+    if (!anyBanner()) {
+      return setError("targetsError", "Select at least one banner to roll.", targetsSection);
+    }
+    if (inputs.childElementCount === 0 && !wishlistEl.checked) {
+      return setError(
+        "targetsError",
+        "Pick a target cat, or tick “search my wishlist”.",
+        targetsSection,
+      );
+    }
     planLoading.hidden = false;
     try {
       const resp = await post(trackHost.dataset.planUrl);
@@ -313,7 +359,14 @@ if (picker) {
         planSummary.innerHTML = data.summary_html;
         tracksHeading.hidden = !trackHost.firstElementChild;
       } else {
-        planSummary.innerHTML = '<p class="error">Check the form and try again.</p>';
+        const { errors = {} } = await resp.json().catch(() => ({}));
+        const field = Object.keys(errors).find((k) => k in fieldSlot);
+        if (field) {
+          setError(fieldSlot[field][0], errors[field][0], fieldSlot[field][1]);
+        } else {
+          const msg = (errors.__all__ || ["Check the form and try again."])[0];
+          setError("targetsError", msg, targetsSection);
+        }
       }
     } finally {
       planLoading.hidden = true;
