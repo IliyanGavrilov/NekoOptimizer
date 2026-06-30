@@ -7,6 +7,7 @@
   --muted: #a89e8f;
   --accent: #f4a93b;
   --accent-ink: #2a1c08;
+  --warn: #ff9f43;
   --line: #3d372e;
   --radius: 14px;
 
@@ -116,6 +117,25 @@ input[type="number"], input[type="search"], input[type="text"], select {
 }
 
 input[type="search"] { width: 100%; }
+input[type="search"]::-webkit-search-cancel-button { appearance: none; -webkit-appearance: none; }
+
+/* Cat search: an explicit clear (x) + hint so it's obvious how to get back to the
+   banner menu, without forcing you to delete the query (selections stay put). */
+.search-wrap { display: flex; flex-wrap: wrap; align-items: center; gap: 0.4rem; }
+.search-wrap input[type="search"] { flex: 1 1 auto; width: auto; }
+.search-clear {
+  font: inherit;
+  font-size: 1.05rem;
+  line-height: 1;
+  color: var(--muted);
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 0.35rem 0.6rem;
+  margin: 0;
+}
+.search-clear:hover { color: var(--accent); border-color: var(--accent); filter: none; }
+.search-hint { flex-basis: 100%; font-size: 0.78rem; color: var(--muted); }
 
 /* Number fields are drag-to-scrub (see app.js); drop the dated native arrows. */
 input[type="number"] { appearance: textfield; -moz-appearance: textfield; }
@@ -333,7 +353,65 @@ tbody tr:hover, table tr:hover { background: var(--panel-2); }
 /* ---- Misc ------------------------------------------------------------ */
 .muted, label { color: var(--muted); }
 
-h4.banner { margin: 1rem 0 0.1rem; color: var(--accent); font-size: 0.95rem; }
+/* Plan results: an accordion of target subsets; each opens to a full-width
+   Track/Steps view you flip between (no squeezing). */
+.results-region { margin-top: 0.75rem; }
+.results-h { font-size: 1rem; margin: 0 0 0.3rem; }
+
+.solution {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--panel);
+  margin-bottom: 0.5rem;
+}
+.solution > summary {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  padding: 0.55rem 0.8rem;
+  font-family: var(--head-font);
+  list-style: none;
+}
+.solution > summary::-webkit-details-marker { display: none; }
+.solution > summary::before { content: "\25B8"; color: var(--muted); font-size: 0.8rem; }
+.solution[open] > summary::before { content: "\25BE"; }
+.solution[open] > summary { border-bottom: 1px solid var(--line); }
+.sol-cats { color: var(--ink); }
+.sol-cost { margin-left: auto; color: var(--accent); font-size: 0.85rem; font-weight: 600; }
+.sol-cost.not-found { color: var(--muted); font-weight: 400; }
+.solution-body { padding: 0.7rem 0.8rem; }
+.solution-body .apply-plan { margin-top: 0; }
+.view-toggle {
+  display: inline-flex;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  overflow: hidden;
+  margin-bottom: 0.6rem;
+}
+.view-btn {
+  font: inherit;
+  font-size: 0.85rem;
+  color: var(--muted);
+  background: transparent;
+  border: 0;
+  padding: 0.3rem 1.1rem;
+  cursor: pointer;
+}
+.view-btn + .view-btn { border-left: 1px solid var(--line); }
+.view-btn.is-active { background: rgba(244, 169, 59, 0.16); color: var(--accent); font-weight: 700; }
+
+.plan-card {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 0.75rem 0.85rem;
+}
+.plan-card + .plan-card { margin-top: 0.75rem; }
+.plan-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 0.5rem; }
+.plan-head h3 { margin: 0; font-size: 0.95rem; }
+.plan-cost { color: var(--accent); font-size: 0.82rem; font-weight: 600; }
+
 .equiv-note {
   font-family: var(--body-font);
   font-size: 0.7rem;
@@ -344,10 +422,27 @@ h4.banner { margin: 1rem 0 0.1rem; color: var(--accent); font-size: 0.95rem; }
   padding: 0 0.4rem;
   vertical-align: middle;
 }
-p.leg { margin: 0.1rem 0 0.2rem; color: var(--muted); font-size: 0.85rem; }
-
-/* The plan summary's pulled-cat sequence under each leg. */
-p.seq { margin: 0 0 0.5rem; color: var(--ink); font-size: 0.85rem; }
+/* Step-by-step breakdown: which banner, what kind of pull, and the cats it yields. */
+.steps { display: flex; flex-direction: column; margin-top: 0.5rem; }
+.step-banner {
+  margin: 0.65rem 0 0.2rem;
+  color: var(--accent);
+  font-family: var(--head-font);
+  font-size: 0.9rem;
+}
+.step-banner:first-child { margin-top: 0; }
+.step { border-left: 2px solid var(--line); margin-left: 0.2rem; padding: 0.15rem 0 0.3rem 0.6rem; }
+.step-meta { display: flex; flex-wrap: wrap; gap: 0.5rem; font-size: 0.8rem; color: var(--muted); }
+.step-kind { color: var(--ink); }
+.step-cats { display: flex; flex-wrap: wrap; gap: 0.25rem; margin-top: 0.2rem; }
+.cat-pill {
+  font-size: 0.78rem;
+  color: var(--ink);
+  background: var(--panel-2);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 0.05rem 0.5rem;
+}
 
 /* A/B track viewer: one merged table; each cell stacks every banner's cat at that
    shared position (à la ubercarry), with the plan's path lit up. */
@@ -386,9 +481,26 @@ table.track th, table.track td {
 }
 table.track thead th { color: var(--muted); font-family: var(--head-font); font-weight: 600; }
 table.track .pos { color: var(--muted); text-align: right; width: 2.5rem; font-weight: 400; }
-/* Each banner's cat is its own line in the cell; off-path lines stay dim. */
-table.track .entry { color: var(--muted); padding: 0.05rem 0; }
-table.track .entry.on-path { color: var(--ink); background: var(--panel-2); font-weight: 600; }
+/* Each banner's cat is its own line in the cell; off-path lines stay dim.
+   Entries span the full cell (negative margin cancels the td padding) with their
+   own inner padding, so the gold highlight ring frames the line edge-to-edge
+   instead of cutting across the tag box or crowding the switch arrow. */
+table.track .entry {
+  color: var(--muted);
+  padding: 0.1rem 0.5rem;
+  margin: 0 -0.5rem;
+  border-radius: 2px;
+}
+/* Two-level highlight: the whole on-path cell greys out, and inside it the exact
+   banner+unit you pull lights up gold (target units, below, glow brightest). */
+table.track td.cell:has(.entry.on-path) { background: var(--panel-2); }
+table.track .entry.on-path {
+  color: var(--ink);
+  background: rgba(244, 169, 59, 0.12);
+  box-shadow: inset 3px 0 0 var(--accent);
+  font-weight: 600;
+  border-radius: 2px;
+}
 table.track .entry.target {
   background: rgba(244, 169, 59, 0.18);
   box-shadow: inset 0 0 0 2px var(--accent);
@@ -418,6 +530,16 @@ table.track .arrow { display: block; color: var(--accent); font-size: 0.78rem; f
 .field-error:not(:empty) { display: block; margin-top: 0.25rem; }
 .field-error:empty { display: none; }
 
+/* Advisory (not a hard error): a chosen target that no selected banner can drop. */
+.field-warning { color: var(--warn); font-size: 0.8rem; font-weight: 600; margin: 0.45rem 0 0; }
+.chip.selected.unreachable {
+  background: rgba(255, 159, 67, 0.12);
+  border-color: var(--warn);
+  border-style: dashed;
+  color: var(--warn);
+  box-shadow: 0 0 0 1px var(--warn) inset;
+}
+
 /* Themed validation feedback: flash the offending field instead of the browser popup. */
 @keyframes flash-error {
   0%, 100% { box-shadow: 0 0 0 0 rgba(255, 96, 96, 0); }
@@ -445,6 +567,10 @@ table.track .arrow { display: block; color: var(--accent); font-size: 0.78rem; f
 .advanced p { margin: 0.4rem 0 0; font-size: 0.9rem; }
 .apply-plan { margin: 0.1rem 0 0.6rem; font-size: 0.9rem; padding: 0.4rem 0.85rem; }
 .apply-plan:disabled { opacity: 0.6; cursor: default; }
+.apply-cost { font-weight: 600; opacity: 0.85; }
+/* The highlighted plan's total price, shown above the track. */
+.track-cost { margin: 0 0 0.5rem; font-size: 0.88rem; color: var(--muted); }
+.track-cost strong { color: var(--accent); }
 .budget-fields { display: contents; }
 .opt.inline { flex-direction: row; align-items: baseline; gap: 0.45rem; flex-wrap: wrap; }
 .opt.inline input[type="number"] { width: 5.5rem; }
