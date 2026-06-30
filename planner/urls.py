@@ -7,6 +7,7 @@ from planner.views import (
     find_plan,
     planner,
     tracks,
+    wishlist_all_unowned,
 )
 
 urlpatterns = [
@@ -16,4 +17,5 @@ urlpatterns = [
     path("apply/", apply_plan, name="apply_plan"),
     path("collection/", collection, name="collection"),
     path("collection/toggle/", collection_toggle, name="collection_toggle"),
+    path("collection/wishlist-all/", wishlist_all_unowned, name="wishlist_all_unowned"),
 ]

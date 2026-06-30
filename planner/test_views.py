@@ -1,13 +1,22 @@
+from itertools import count
+
 import pytest
 
 from neko.godfat import BannerRolls, TrackPull
 from neko.models import Rarity
 from neko.scraper import ScrapeResult
 from neko.search import Multi
-from planner.models import Banner, Cat, Seed
+from planner.models import Banner, Cat, Seed, Unit
 
 R = Rarity.RARE
 U = Rarity.UBER_SUPER_RARE
+
+_ids = count(1)
+
+
+def cat_with_unit(name, owned=False, wanted=False):
+    unit = Unit.objects.create(unit_id=next(_ids), name=name, owned=owned, wanted=wanted)
+    return Cat.objects.create(name=name, unit=unit)
 
 
 def fixed_banners(*pulls):
@@ -51,7 +60,7 @@ def test_post_persists_seed(client, monkeypatch):
 
 @pytest.mark.django_db
 def test_use_wishlist_searches_wanted_cats(client, monkeypatch):
-    Cat.objects.create(name="Bahamut", wanted=True)
+    cat_with_unit("Bahamut", wanted=True)
     monkeypatch.setattr(
         "planner.views.fetch_banners", fixed_banners(TrackPull(1, "A", "Bahamut", U))
     )
@@ -189,7 +198,7 @@ def test_explore_mode_scrapes_to_the_horizon(client, monkeypatch):
 
 @pytest.mark.django_db
 def test_owned_cats_are_still_targetable(client):
-    Cat.objects.create(name="Bahamut", owned=True).banners.add(Banner.objects.create(name="Epic"))
+    cat_with_unit("Bahamut", owned=True).banners.add(Banner.objects.create(name="Epic"))
     assert b"Bahamut" in client.get("/").content
 
 
@@ -201,7 +210,7 @@ def test_seed_field_starts_empty(client):
 
 @pytest.mark.django_db
 def test_apply_plan_owns_cats_and_clears_wishlist(client):
-    cat = Cat.objects.create(name="Bahamut", owned=False, wanted=True)
+    cat = cat_with_unit("Bahamut", owned=False, wanted=True)
     client.post("/apply/", {"cats": ["Bahamut"]})
     cat.refresh_from_db()
     assert (cat.owned, cat.wanted) == (True, False)

@@ -119,6 +119,10 @@ input[type="number"], input[type="search"], input[type="text"], select {
 input[type="search"] { width: 100%; }
 input[type="search"]::-webkit-search-cancel-button { appearance: none; -webkit-appearance: none; }
 
+.collection-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem; margin-bottom: 0.75rem; }
+.collection-controls input[type="search"] { flex: 1 1 240px; width: auto; }
+.collection-controls button { margin: 0; white-space: nowrap; }
+
 /* Cat search: an explicit clear (x) + hint so it's obvious how to get back to the
    banner menu, without forcing you to delete the query (selections stay put). */
 .search-wrap { display: flex; flex-wrap: wrap; align-items: center; gap: 0.4rem; }

@@ -3,19 +3,31 @@ from django.db import models
 
 class CatQuerySet(models.QuerySet):
     def unowned(self) -> CatQuerySet:
-        return self.filter(owned=False)
+        return self.filter(unit__owned=False)
 
     def wishlist(self) -> CatQuerySet:
+        return self.filter(unit__wanted=True, unit__owned=False)
+
+
+class UnitQuerySet(models.QuerySet):
+    def wishlist(self) -> UnitQuerySet:
         return self.filter(wanted=True, owned=False)
 
 
 class Unit(models.Model):
-    """A canonical Battle Cats unit from the game-data catalogue, keyed by its PONOS id."""
+    """A Battle Cats unit and the player's ownership of it. Canonical units come from the
+    game-data catalogue (keyed by PONOS id); provisional ones stand in for cats not yet in
+    the catalogue, so ownership has a stable home that survives re-imports."""
 
     unit_id = models.PositiveIntegerField(unique=True)
     name = models.CharField(max_length=200)
     rarity = models.CharField(max_length=20, blank=True)
     forms = models.JSONField(default=list)
+    owned = models.BooleanField(default=False)
+    wanted = models.BooleanField(default=False)
+    canonical = models.BooleanField(default=True)
+
+    objects = UnitQuerySet.as_manager()
 
     class Meta:
         ordering = ["unit_id"]
@@ -43,8 +55,6 @@ class Cat(models.Model):
 
     name = models.CharField(max_length=200, unique=True)
     rarity = models.CharField(max_length=20, blank=True)
-    owned = models.BooleanField(default=False)
-    wanted = models.BooleanField(default=False)
     unit = models.ForeignKey(
         "Unit", null=True, blank=True, on_delete=models.SET_NULL, related_name="cats"
     )
@@ -57,6 +67,14 @@ class Cat(models.Model):
 
     def __str__(self) -> str:
         return self.name
+
+    @property
+    def owned(self) -> bool:
+        return bool(self.unit and self.unit.owned)
+
+    @property
+    def wanted(self) -> bool:
+        return bool(self.unit and self.unit.wanted)
 
 
 class Seed(models.Model):

@@ -1,6 +1,15 @@
+from itertools import count
+
 import pytest
 
-from planner.models import Banner, Cat
+from planner.models import Banner, Cat, Unit
+
+_ids = count(1)
+
+
+def cat_with_unit(name, owned=False, wanted=False):
+    unit = Unit.objects.create(unit_id=next(_ids), name=name, owned=owned, wanted=wanted)
+    return Cat.objects.create(name=name, unit=unit)
 
 
 @pytest.mark.django_db
@@ -49,3 +58,19 @@ def test_toggle_wanted_twice_returns_to_false(client):
 def test_toggle_rejects_unknown_field(client):
     cat = Cat.objects.create(name="Bahamut")
     assert client.post("/collection/toggle/", {"pk": cat.pk, "field": "rarity"}).status_code == 400
+
+
+@pytest.mark.django_db
+def test_wishlist_all_skips_owned_cats(client):
+    owned = cat_with_unit("Bahamut", owned=True)
+    client.post("/collection/wishlist-all/")
+    owned.refresh_from_db()
+    assert owned.wanted is False
+
+
+@pytest.mark.django_db
+def test_wishlist_all_wants_the_unowned(client):
+    missing = cat_with_unit("Kasli")
+    client.post("/collection/wishlist-all/")
+    missing.refresh_from_db()
+    assert missing.wanted is True

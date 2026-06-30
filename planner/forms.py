@@ -11,6 +11,15 @@ class CatForm(forms.ModelForm):
         model = Cat
         fields = ["name", "rarity"]
 
+    def save(self, commit=True):
+        from planner.services import unit_for_cat
+
+        cat = super().save(commit=False)
+        cat.unit = unit_for_cat(cat.name, cat.rarity)
+        if commit:
+            cat.save()
+        return cat
+
 
 class PlannerForm(forms.Form):
     seed = forms.IntegerField(min_value=0, initial=0)
