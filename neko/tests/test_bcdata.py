@@ -1,6 +1,8 @@
+import io
+import tarfile
 from pathlib import Path
 
-from neko.bcdata import catalogue_records, fetch_catalogue, names_url, unitbuy_url
+from neko.bcdata import catalogue_from_tarball, catalogue_records, latest_version, release_url
 from neko.catalogue import Unit
 from neko.models import Rarity
 
@@ -8,30 +10,41 @@ FIXTURES = Path(__file__).parent / "fixtures" / "bcdata"
 UNITBUY = (FIXTURES / "unitbuy_head.csv").read_text(encoding="utf-8")
 CAT_NAMES = (FIXTURES / "Unit_Explanation1_en.csv").read_text(encoding="utf-8")
 
-
-def fetcher_from(pages):
-    async def fetch(url):
-        if url not in pages:
-            raise FileNotFoundError(url)
-        return pages[url]
-
-    return fetch
+METADATA = {
+    "base_url": "http://host/",
+    "versions": {"en": {"15.0.0": "a.tar.xz", "15.4.0": "b.tar.xz", "14.7.1": "c.tar.xz"}},
+}
 
 
-def test_names_file_is_one_based():
-    assert names_url(0).endswith("Unit_Explanation1_en.csv")
+def make_tarball(files):
+    buffer = io.BytesIO()
+    with tarfile.open(fileobj=buffer, mode="w:xz") as tar:
+        for name, text in files.items():
+            blob = text.encode("utf-8")
+            info = tarfile.TarInfo(name)
+            info.size = len(blob)
+            tar.addfile(info, io.BytesIO(blob))
+    return buffer.getvalue()
 
 
-async def test_fetch_builds_a_unit_from_both_files():
-    fetch = fetcher_from({unitbuy_url(): UNITBUY, names_url(0): CAT_NAMES})
-    catalogue = await fetch_catalogue(fetch)
-    assert catalogue[0].name == "Cat"
+def test_latest_version_is_the_highest():
+    assert latest_version(METADATA) == "15.4.0"
 
 
-async def test_unit_with_no_name_file_is_dropped():
-    fetch = fetcher_from({unitbuy_url(): UNITBUY, names_url(0): CAT_NAMES})
-    catalogue = await fetch_catalogue(fetch)
-    assert set(catalogue) == {0}
+def test_release_url_joins_base_and_path():
+    assert release_url(METADATA, "15.4.0") == "http://host/b.tar.xz"
+
+
+def test_tarball_builds_a_unit():
+    raw = make_tarball(
+        {"./DataLocal/unitbuy.csv": UNITBUY, "./resLocal/Unit_Explanation1_en.csv": CAT_NAMES}
+    )
+    assert catalogue_from_tarball(raw)[0].name == "Cat"
+
+
+def test_tarball_drops_units_with_no_name_file():
+    raw = make_tarball({"./DataLocal/unitbuy.csv": UNITBUY})
+    assert catalogue_from_tarball(raw) == {}
 
 
 def test_records_are_sorted_by_id():

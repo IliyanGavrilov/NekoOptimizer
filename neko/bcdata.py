@@ -1,44 +1,57 @@
-import asyncio
+import io
 import json
-from collections.abc import Awaitable, Callable, Mapping
+import tarfile
+import urllib.request
+from collections.abc import Mapping
 from pathlib import Path
-
-import aiohttp
 
 from neko.catalogue import Unit, build_catalogue, parse_forms, parse_rarities
 
-# fieryhenry/BCData is archived, frozen at this version: our bootstrap catalogue source
-# until a live pull (tbcml) replaces the fetch.
-BCDATA_BASE = "https://raw.githubusercontent.com/fieryhenry/BCData/main/14.7.0en"
+# fieryhenry's maintained game-data mirror. The old GitHub BCData repo is archived and
+# frozen at 14.7.0; this Forgejo keeps publishing each new game version as a tarball.
+BCDATA_BASE = "https://git.battlecatsmodding.org/fieryhenry/BCData"
+METADATA_URL = f"{BCDATA_BASE}/raw/metadata.json"
 
 UNITS_PATH = Path(__file__).parent / "data" / "units.json"
 
-Fetcher = Callable[[str], Awaitable[str]]
+
+def _version_key(version: str) -> tuple[int, ...]:
+    return tuple(int(part) for part in version.split("."))
 
 
-def unitbuy_url() -> str:
-    return f"{BCDATA_BASE}/DataLocal/unitbuy.csv"
+def latest_version(metadata: Mapping, country: str = "en") -> str:
+    """The newest published version for a country, from metadata.json."""
+    return max(metadata["versions"][country], key=_version_key)
 
 
-def names_url(unit_id: int) -> str:
-    """The unit's name file - 1-based, so unit 0 lives in Unit_Explanation1_en.csv."""
-    return f"{BCDATA_BASE}/resLocal/Unit_Explanation{unit_id + 1}_en.csv"
+def release_url(metadata: Mapping, version: str, country: str = "en") -> str:
+    """The download URL of one version's data tarball."""
+    return metadata["base_url"] + metadata["versions"][country][version]
 
 
-async def fetch_catalogue(fetch: Fetcher) -> dict[int, Unit]:
-    """Fetch unitbuy plus every unit's name file and consolidate the catalogue. Units
-    whose name file is missing (a 404 raises) are dropped."""
-    rarities = parse_rarities(await fetch(unitbuy_url()))
-    ids = sorted(rarities)
-    texts = await asyncio.gather(
-        *(fetch(names_url(unit_id)) for unit_id in ids), return_exceptions=True
-    )
-    forms = {
-        unit_id: parse_forms(text)
-        for unit_id, text in zip(ids, texts, strict=True)
-        if isinstance(text, str)
-    }
+def catalogue_from_tarball(raw: bytes) -> dict[int, Unit]:
+    """Build the unit catalogue from a BCData version tarball (xz-compressed)."""
+    with tarfile.open(fileobj=io.BytesIO(raw), mode="r:xz") as tar:
+        rarities = parse_rarities(_member(tar, "DataLocal/unitbuy.csv"))
+        forms = {}
+        for unit_id in rarities:
+            text = _member(tar, f"resLocal/Unit_Explanation{unit_id + 1}_en.csv", optional=True)
+            if text is not None:
+                forms[unit_id] = parse_forms(text)
     return build_catalogue(rarities, forms)
+
+
+def _member(tar: tarfile.TarFile, path: str, optional: bool = False) -> str | None:
+    """Read one file out of the tarball; tarball entries are rooted at ``./``."""
+    try:
+        handle = tar.extractfile(f"./{path}")
+    except KeyError:
+        handle = None
+    if handle is None:
+        if optional:
+            return None
+        raise KeyError(path)
+    return handle.read().decode("utf-8", "replace")
 
 
 def catalogue_records(catalogue: Mapping[int, Unit]) -> list[dict]:
@@ -54,22 +67,18 @@ def catalogue_records(catalogue: Mapping[int, Unit]) -> list[dict]:
     ]
 
 
-def make_fetcher(session: aiohttp.ClientSession, limit: int = 20) -> Fetcher:
-    """A fetcher that caps concurrency, so the ~1000 name-file pulls stay polite."""
-    semaphore = asyncio.Semaphore(limit)
-
-    async def fetch(url: str) -> str:
-        async with semaphore, session.get(url) as response:
-            response.raise_for_status()
-            return await response.text()
-
-    return fetch
+def _get(url: str) -> bytes:
+    request = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
+    with urllib.request.urlopen(request, timeout=60) as response:
+        return response.read()
 
 
-async def download_catalogue(limit: int = 20) -> dict[int, Unit]:
-    """Fetch the catalogue straight from BCData over the network."""
-    async with aiohttp.ClientSession() as session:
-        return await fetch_catalogue(make_fetcher(session, limit))
+def download_catalogue(country: str = "en") -> tuple[str, dict[int, Unit]]:
+    """Fetch the newest catalogue from the live mirror; returns its version and the units."""
+    metadata = json.loads(_get(METADATA_URL))
+    version = latest_version(metadata, country)
+    raw = _get(release_url(metadata, version, country))
+    return version, catalogue_from_tarball(raw)
 
 
 def load_records(path: Path = UNITS_PATH) -> list[dict]:
