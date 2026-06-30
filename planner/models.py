@@ -45,6 +45,9 @@ class Cat(models.Model):
     rarity = models.CharField(max_length=20, blank=True)
     owned = models.BooleanField(default=False)
     wanted = models.BooleanField(default=False)
+    unit = models.ForeignKey(
+        "Unit", null=True, blank=True, on_delete=models.SET_NULL, related_name="cats"
+    )
     banners = models.ManyToManyField(Banner, related_name="cats", blank=True)
 
     objects = CatQuerySet.as_manager()
