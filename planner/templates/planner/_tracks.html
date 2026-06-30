@@ -1,5 +1,4 @@
 {% if track.rows %}
-  {% if cost %}<p class="track-cost">Total: <strong>{{ cost }}</strong></p>{% endif %}
   {% if track.legend|length > 1 %}
     <ul class="track-legend">
       {% for b in track.legend %}

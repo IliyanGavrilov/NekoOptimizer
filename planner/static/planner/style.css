@@ -381,13 +381,21 @@ tbody tr:hover, table tr:hover { background: var(--panel-2); }
 .sol-cost { margin-left: auto; color: var(--accent); font-size: 0.85rem; font-weight: 600; }
 .sol-cost.not-found { color: var(--muted); font-weight: 400; }
 .solution-body { padding: 0.7rem 0.8rem; }
-.solution-body .apply-plan { margin-top: 0; }
+/* Toggle pinned left, Apply pinned right, on one row above the views. */
+.view-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.6rem;
+}
+.view-bar .apply-plan { margin: 0; }
 .view-toggle {
   display: inline-flex;
   border: 1px solid var(--line);
   border-radius: 999px;
   overflow: hidden;
-  margin-bottom: 0.6rem;
 }
 .view-btn {
   font: inherit;
@@ -395,11 +403,17 @@ tbody tr:hover, table tr:hover { background: var(--panel-2); }
   color: var(--muted);
   background: transparent;
   border: 0;
+  /* Reset the global button margin so the buttons fill the pill instead of
+     floating inside it (the active highlight must reach the oval's edges). */
+  margin: 0;
   padding: 0.3rem 1.1rem;
   cursor: pointer;
 }
 .view-btn + .view-btn { border-left: 1px solid var(--line); }
 .view-btn.is-active { background: rgba(244, 169, 59, 0.16); color: var(--accent); font-weight: 700; }
+/* Inset the focus ring; the pill's overflow:hidden would clip an outset one into
+   a stray line at the divider. */
+.view-btn:focus-visible { outline-offset: -2px; }
 
 .plan-card {
   background: var(--panel);
@@ -568,9 +582,6 @@ table.track .arrow { display: block; color: var(--accent); font-size: 0.78rem; f
 .apply-plan { margin: 0.1rem 0 0.6rem; font-size: 0.9rem; padding: 0.4rem 0.85rem; }
 .apply-plan:disabled { opacity: 0.6; cursor: default; }
 .apply-cost { font-weight: 600; opacity: 0.85; }
-/* The highlighted plan's total price, shown above the track. */
-.track-cost { margin: 0 0 0.5rem; font-size: 0.88rem; color: var(--muted); }
-.track-cost strong { color: var(--accent); }
 .budget-fields { display: contents; }
 .opt.inline { flex-direction: row; align-items: baseline; gap: 0.45rem; flex-wrap: wrap; }
 .opt.inline input[type="number"] { width: 5.5rem; }
