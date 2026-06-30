@@ -439,6 +439,22 @@ if (collectionBrowser) {
   const url = collectionBrowser.dataset.toggleUrl;
   const token = document.getElementById("csrfToken").value;
 
+  // One tap to wishlist every cat you don't own (completion play); the server marks
+  // them, then we star every not-owned chip to match.
+  const wishlistAll = document.getElementById("wishlistAll");
+  if (wishlistAll) {
+    wishlistAll.addEventListener("click", async () => {
+      const resp = await fetch(wishlistAll.dataset.url, {
+        method: "POST",
+        headers: { "X-CSRFToken": token },
+      });
+      if (!resp.ok) return;
+      collectionBrowser
+        .querySelectorAll(".own-chip:not(.owned)")
+        .forEach((chip) => chip.classList.add("wanted"));
+    });
+  }
+
   collectionBrowser.addEventListener("click", async (e) => {
     const own = e.target.closest(".chip-own");
     const star = e.target.closest(".chip-star");

@@ -75,9 +75,9 @@ def test_import_links_cat_to_its_unit():
 
 
 @pytest.mark.django_db
-def test_import_leaves_an_uncatalogued_cat_unlinked():
+def test_import_gives_an_uncatalogued_cat_a_provisional_unit():
     import_cats(banners(x=[TrackPull(1, "A", "Nezuko Kamado", U)]))
-    assert Cat.objects.get(name="Nezuko Kamado").unit is None
+    assert Cat.objects.get(name="Nezuko Kamado").unit.canonical is False
 
 
 @pytest.mark.django_db

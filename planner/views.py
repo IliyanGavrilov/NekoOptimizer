@@ -6,7 +6,7 @@ from django.views.decorators.http import require_POST
 from neko.models import CATFOOD_PER_DRAW
 from neko.scraper import DEFAULT_COUNT
 from planner.forms import CatForm, PlannerForm
-from planner.models import Cat, Seed
+from planner.models import Cat, Seed, Unit
 from planner.services import (
     RARITY_ORDER,
     build_tracks,
@@ -17,6 +17,7 @@ from planner.services import (
     fetch_banners,
     fetch_for_banners,
     subset_solutions,
+    unit_for_cat,
 )
 
 
@@ -120,8 +121,16 @@ def collection(request):
 def apply_plan(request):
     """Mark a plan's obtained cats as owned and drop them from the wishlist."""
     names = request.POST.getlist("cats")
-    applied = Cat.objects.filter(name__in=names).update(owned=True, wanted=False)
+    applied = Unit.objects.filter(cats__name__in=names).update(owned=True, wanted=False)
     return JsonResponse({"applied": applied})
+
+
+@require_POST
+def wishlist_all_unowned(request):
+    """Add every cat you don't own yet to the wishlist - one tap for completion play."""
+    units = Cat.objects.filter(unit__owned=False).values_list("unit", flat=True)
+    wanted = Unit.objects.filter(pk__in=units, owned=False).update(wanted=True)
+    return JsonResponse({"wanted": wanted})
 
 
 @require_POST
@@ -131,6 +140,10 @@ def collection_toggle(request):
     if field not in {"owned", "wanted"}:
         return HttpResponseBadRequest("field must be 'owned' or 'wanted'")
     cat = get_object_or_404(Cat, pk=request.POST.get("pk"))
-    setattr(cat, field, not getattr(cat, field))
-    cat.save(update_fields=[field])
-    return JsonResponse({"owned": cat.owned, "wanted": cat.wanted})
+    unit = cat.unit or unit_for_cat(cat.name, cat.rarity)
+    setattr(unit, field, not getattr(unit, field))
+    unit.save(update_fields=[field])
+    if cat.unit_id is None:
+        cat.unit = unit
+        cat.save(update_fields=["unit"])
+    return JsonResponse({"owned": unit.owned, "wanted": unit.wanted})
