@@ -42,9 +42,14 @@
       <div class="selected-panel" id="selectedPanel" hidden>
         <div class="selected-head">Selected <span class="count" id="selectedCount">0</span></div>
         <div class="chips" id="selectedChips"></div>
+        <p class="field-warning" id="targetsWarn" role="alert" aria-live="polite" hidden></p>
       </div>
 
-      <input type="search" id="targetSearch" placeholder="Search cats&hellip;">
+      <div class="search-wrap">
+        <input type="search" id="targetSearch" placeholder="Search cats&hellip;">
+        <button type="button" id="targetSearchClear" class="search-clear" hidden aria-label="Clear search and browse banners">&times;</button>
+        <span class="search-hint" id="targetSearchHint" hidden>Searching all cats &middot; clear to pick by banner</span>
+      </div>
 
       <div id="targetPicker" class="picker-scroll">
         <div id="targetFlat" class="chips flat" hidden>
@@ -88,8 +93,11 @@
     <p>Finding your plan&hellip;</p>
   </div>
 
-  <div id="planSummary" aria-live="polite"></div>
-
-  <h2 id="tracksHeading" hidden>Rolls</h2>
-  <div id="trackHost" data-tracks-url="{% url 'tracks' %}" data-plan-url="{% url 'find_plan' %}"></div>
+  <div id="resultsRegion" class="results-region" hidden>
+    <div id="browseTrack">
+      <h2 class="results-h">Rolls</h2>
+      <div id="trackHost" data-tracks-url="{% url 'tracks' %}" data-plan-url="{% url 'find_plan' %}"></div>
+    </div>
+    <div id="solutions" aria-live="polite"></div>
+  </div>
 {% endblock %}

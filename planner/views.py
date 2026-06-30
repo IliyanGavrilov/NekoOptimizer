@@ -4,7 +4,6 @@ from django.template.loader import render_to_string
 from django.views.decorators.http import require_POST
 
 from neko.models import CATFOOD_PER_DRAW
-from neko.planning import plan
 from neko.scraper import DEFAULT_COUNT
 from planner.forms import CatForm, PlannerForm
 from planner.models import Cat, Seed
@@ -17,8 +16,7 @@ from planner.services import (
     equivalent_banners,
     fetch_banners,
     fetch_for_banners,
-    plan_highlight,
-    plan_summary,
+    subset_solutions,
 )
 
 
@@ -58,7 +56,7 @@ def tracks(request):
 
 @require_POST
 def find_plan(request):
-    """Compute a plan; return the highlighted tracks and the summary as HTML fragments."""
+    """Solve every target subset; return the accordion of solutions as an HTML fragment."""
     form = PlannerForm(request.POST)
     if not form.is_valid():
         return JsonResponse({"errors": form.errors}, status=400)
@@ -82,26 +80,25 @@ def find_plan(request):
         tickets, catfood = horizon, horizon * CATFOOD_PER_DRAW
     else:
         tickets, catfood = form.cleaned_data["tickets"], form.cleaned_data["catfood"]
-    plans = plan(
+    # One accordion row per target subset: each reachable one carries its own
+    # highlighted track + steps; the rest are listed as "Not found".
+    solutions = subset_solutions(
         pulls,
+        rerolls,
+        equivalents,
         targets,
-        tickets,
-        catfood,
+        tickets=tickets,
+        catfood=catfood,
         guaranteed_pulls=guaranteed_pulls,
         multis=result.multis,
         ticket_value=form.cleaned_data["ticket_value"],
         prefer=form.cleaned_data["prefer"],
         banner_limits=banner_limits,
-        rerolls=rerolls,
     )
-    # Highlight the best plan's path on the tracks; the summary lists every option.
-    path, target_idx = plan_highlight(plans[0], equivalents) if plans else ({}, {})
-    track = build_tracks(pulls, rerolls, equivalents, path, target_idx)
     return JsonResponse(
         {
-            "tracks_html": render_to_string("planner/_tracks.html", {"track": track}, request),
-            "summary_html": render_to_string(
-                "planner/_summary.html", {"summaries": plan_summary(plans, equivalents)}, request
+            "solutions_html": render_to_string(
+                "planner/_solutions.html", {"solutions": solutions}, request
             ),
         }
     )

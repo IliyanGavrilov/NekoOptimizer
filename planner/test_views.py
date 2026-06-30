@@ -113,7 +113,8 @@ def test_platinum_legend_cap_zero_excludes_the_banner(client, monkeypatch):
         "/plan/",
         {"seed": 7, "tickets": 1, "catfood": 0, "targets": [cat.pk], "platinum_legend_cap": 0},
     )
-    assert b"No reachable plan" in response.content
+    # Capped out, the only target is unreachable: it shows as a "Not found" subset row.
+    assert b"Not found" in response.content
 
 
 @pytest.mark.django_db
@@ -139,6 +140,36 @@ def test_explore_mode_funds_single_pulls_with_tickets(client, monkeypatch):
         "/plan/", {"seed": 7, "tickets": 0, "catfood": 0, "targets": [cat.pk], "explore": "on"}
     )
     assert b"2 tickets" in response.content
+
+
+@pytest.mark.django_db
+def test_multiple_targets_list_every_subset(client, monkeypatch):
+    a = Cat.objects.create(name="Aaa")
+    b = Cat.objects.create(name="Bbb")
+    monkeypatch.setattr(
+        "planner.views.fetch_banners",
+        fixed_banners(TrackPull(1, "A", "Aaa", U), TrackPull(2, "A", "Bbb", U)),
+    )
+    response = client.post(
+        "/plan/", {"seed": 7, "tickets": 5, "catfood": 0, "targets": [a.pk, b.pk]}
+    )
+    html = response.json()["solutions_html"]
+    # Powerset of two reachable targets: {Aaa}, {Bbb}, {Aaa, Bbb}.
+    assert html.count("<details") == 3
+    assert "Aaa, Bbb" in html
+
+
+@pytest.mark.django_db
+def test_unreachable_subset_is_listed_not_found(client, monkeypatch):
+    a = Cat.objects.create(name="Aaa")
+    b = Cat.objects.create(name="Bbb")
+    # Only Aaa is on the banner; Bbb (and the pair) can't be reached.
+    monkeypatch.setattr("planner.views.fetch_banners", fixed_banners(TrackPull(1, "A", "Aaa", U)))
+    response = client.post(
+        "/plan/", {"seed": 7, "tickets": 5, "catfood": 0, "targets": [a.pk, b.pk]}
+    )
+    html = response.json()["solutions_html"]
+    assert "Not found" in html
 
 
 @pytest.mark.django_db

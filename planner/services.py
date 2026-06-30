@@ -1,11 +1,13 @@
 import asyncio
 from collections.abc import Iterable, Mapping
 from datetime import date
+from itertools import combinations
 from pathlib import Path
 
 from neko.cache import RollCache
 from neko.godfat import BannerRolls
-from neko.graph import BannerGraph, stream_index
+from neko.graph import BannerGraph, build_graphs, stream_index
+from neko.models import CATFOOD_PER_DRAW, State
 from neko.scraper import (
     DEFAULT_COUNT,
     ScrapeResult,
@@ -13,6 +15,7 @@ from neko.scraper import (
     scrape_catalogue,
     scrape_selected,
 )
+from neko.subsets import solve_subsets
 from planner.models import Banner, Cat
 
 _CACHE = RollCache(Path("rollcache"))
@@ -294,6 +297,50 @@ def plan_summary(plans, equivalents):
             }
         )
     return summaries
+
+
+def subset_solutions(
+    pulls,
+    rerolls,
+    equivalents,
+    targets,
+    *,
+    tickets,
+    catfood,
+    guaranteed_pulls=None,
+    multis=None,
+    ticket_value=CATFOOD_PER_DRAW,
+    prefer="tickets",
+    banner_limits=None,
+):
+    """Every non-empty target subset and its best plan, biggest-then-cheapest, with the
+    unreachable subsets listed after. Reachable ones carry the steps + highlighted track
+    to render on demand; unreachable ones are flagged so the UI can say "Not found"."""
+    graphs = build_graphs(pulls, guaranteed_pulls, rerolls)
+    start = State(0, tickets, catfood // CATFOOD_PER_DRAW, frozenset())
+    found = solve_subsets(
+        graphs,
+        targets,
+        start,
+        multis=multis,
+        ticket_value=ticket_value,
+        prefer=prefer,
+        banner_limits=banner_limits,
+    )
+    found_keys = {sp.targets for sp in found}
+    solutions = []
+    for sp in found:
+        path, target_idx = plan_highlight(sp, equivalents)
+        solution = plan_summary([sp], equivalents)[0]
+        solution["found"] = True
+        solution["track"] = build_tracks(pulls, rerolls, equivalents, path, target_idx)
+        solutions.append(solution)
+    items = sorted(set(targets))
+    for size in range(len(items), 0, -1):
+        for combo in combinations(items, size):
+            if frozenset(combo) not in found_keys:
+                solutions.append({"targets": sorted(combo), "found": False})
+    return solutions
 
 
 def import_cats(

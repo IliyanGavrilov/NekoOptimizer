@@ -1,0 +1,28 @@
+{% if solutions %}
+  <div id="planResults" data-apply-url="{% url 'apply_plan' %}">
+  {% for s in solutions %}
+    <details class="solution"{% if forloop.first and s.found %} open{% endif %}>
+      <summary>
+        <span class="sol-cats">{{ s.targets|join:", " }}</span>
+        <span class="sol-cost{% if not s.found %} not-found{% endif %}">{% if s.found %}{{ s.cost_label }}{% else %}Not found{% endif %}</span>
+      </summary>
+      {% if s.found %}
+        <div class="solution-body">
+          <button type="button" class="apply-plan"
+                  data-cats="{{ s.cats }}"
+                  data-tickets="{{ s.tickets_used }}"
+                  data-catfood="{{ s.cost }}">Apply this plan <span class="apply-cost">{{ s.cost_label }}</span></button>
+          <div class="view-toggle" role="tablist">
+            <button type="button" class="view-btn is-active" data-view="track" aria-selected="true">Track</button>
+            <button type="button" class="view-btn" data-view="steps" aria-selected="false">Steps</button>
+          </div>
+          <div class="view" data-view="track">{% include "planner/_tracks.html" with track=s.track cost=s.cost_label %}</div>
+          <div class="view" data-view="steps" hidden>{% include "planner/_steps.html" with legs=s.legs %}</div>
+        </div>
+      {% endif %}
+    </details>
+  {% endfor %}
+  </div>
+{% else %}
+  <p class="muted">No reachable plan with given resources.</p>
+{% endif %}

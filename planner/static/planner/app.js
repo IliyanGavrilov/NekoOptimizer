@@ -106,6 +106,7 @@ if (picker) {
       hidden.value = pk;
       inputs.appendChild(hidden);
     }
+    updateWarnings();
   }
 
   function toggle(pk, name) {
@@ -128,6 +129,34 @@ if (picker) {
   const bannerInputs = document.getElementById("bannerInputs");
   const bannerCount = document.getElementById("bannerCount");
   const includes = [...browser.querySelectorAll(".banner-include")];
+
+  // A target can only drop on a banner that carries it, so a target picked while
+  // its banner isn't in the selected session can never come out. Flag those
+  // (dashed chip + a note) live, recomputed whenever targets or banners change.
+  const warnSlot = document.getElementById("targetsWarn");
+  function reachablePks() {
+    const pks = new Set();
+    for (const btn of includes) {
+      if (btn.getAttribute("aria-pressed") !== "true") continue;
+      btn.closest(".banner-group").querySelectorAll(".chip[data-pk]").forEach((c) => pks.add(c.dataset.pk));
+    }
+    return pks;
+  }
+  function updateWarnings() {
+    if (!warnSlot) return;
+    const reach = reachablePks();
+    const stranded = [];
+    for (const [pk, name] of selected) if (!reach.has(pk)) stranded.push(name);
+    panelChips.querySelectorAll(".chip[data-pk]").forEach((c) => {
+      c.classList.toggle("unreachable", !reach.has(c.dataset.pk));
+    });
+    const it = stranded.length === 1 ? "it" : "them";
+    warnSlot.hidden = stranded.length === 0;
+    warnSlot.textContent = stranded.length
+      ? `Won't drop on the selected banners: ${stranded.join(", ")}. Add a banner that carries ${it}, or remove ${it}.`
+      : "";
+  }
+
   const rangeOf = (btn) => {
     const d = btn.closest(".banner-group");
     return [d.dataset.start, d.dataset.end];
@@ -156,6 +185,7 @@ if (picker) {
     bannerCount.textContent = n
       ? `Rolling ${n} banner${n === 1 ? "" : "s"}.`
       : "No banners selected.";
+    updateWarnings();
     save();
   }
   // Platinum/Legend capsules run on scarce tickets, so they're opt-in: never part
@@ -189,6 +219,8 @@ if (picker) {
   // Searching shows a flat, undivided list of matching cats; clearing it
   // restores the banner/rarity grouping.
   const search = document.getElementById("targetSearch");
+  const searchClear = document.getElementById("targetSearchClear");
+  const searchHint = document.getElementById("targetSearchHint");
   const grouped = browser;
   const flat = document.getElementById("targetFlat");
   function applySearch() {
@@ -196,6 +228,10 @@ if (picker) {
     const searching = query !== "";
     grouped.hidden = searching;
     flat.hidden = !searching;
+    // While searching, surface a clear (x) button + hint so it's obvious how to
+    // get back to the banner menu without manually deleting the query.
+    searchClear.hidden = !searching;
+    searchHint.hidden = !searching;
     if (searching) {
       flat.querySelectorAll("[data-name]").forEach((chip) => {
         chip.hidden = !chip.dataset.name.toLowerCase().includes(query);
@@ -205,6 +241,13 @@ if (picker) {
   search.addEventListener("input", () => {
     applySearch();
     save();
+  });
+  // Selecting cats keeps the search open (multi-pick); this is the explicit way back.
+  searchClear.addEventListener("click", () => {
+    search.value = "";
+    applySearch();
+    save();
+    search.focus();
   });
 
   // Restore the saved form, then default whatever was never saved.
@@ -252,16 +295,32 @@ if (picker) {
 
   const token = document.querySelector("[name=csrfmiddlewaretoken]").value;
   const plannerForm = document.getElementById("plannerForm");
-  const planSummary = document.getElementById("planSummary");
+  const solutions = document.getElementById("solutions");
+  const browseTrack = document.getElementById("browseTrack");
   const trackHost = document.getElementById("trackHost");
-  const tracksHeading = document.getElementById("tracksHeading");
+  const resultsRegion = document.getElementById("resultsRegion");
   const planLoading = document.getElementById("planLoading");
+
+  // ---- Track / Steps view switch, scoped to the opened subset solution -----
+  solutions.addEventListener("click", (e) => {
+    const btn = e.target.closest(".view-btn");
+    if (!btn) return;
+    const body = btn.closest(".solution-body");
+    body.querySelectorAll(".view-btn").forEach((b) => {
+      const on = b === btn;
+      b.classList.toggle("is-active", on);
+      b.setAttribute("aria-selected", on);
+    });
+    body.querySelectorAll(".view").forEach((v) => {
+      v.hidden = v.dataset.view !== btn.dataset.view;
+    });
+  });
   const post = (url) =>
     fetch(url, { method: "POST", body: new FormData(plannerForm), headers: { "X-CSRFToken": token } });
 
-  // ---- Apply a plan (delegated; the summary is injected by AJAX) -------
+  // ---- Apply a plan (delegated; solutions are injected by AJAX) --------
   // Own its cats, drop them from the wishlist, and spend its tickets/catfood.
-  planSummary.addEventListener("click", async (e) => {
+  solutions.addEventListener("click", async (e) => {
     const btn = e.target.closest(".apply-plan");
     if (!btn || btn.disabled) return;
     const results = btn.closest("#planResults");
@@ -288,15 +347,18 @@ if (picker) {
   let trackTimer;
   const anyBanner = () => includes.some((b) => b.getAttribute("aria-pressed") === "true");
   async function requestTracks() {
+    // Changing the seed/banners invalidates any plan: drop back to browsing the rolls.
+    solutions.innerHTML = "";
+    browseTrack.hidden = false;
     if (!seedEl.value.trim() || !anyBanner()) {
       trackHost.innerHTML = "";
-      tracksHeading.hidden = true;
+      resultsRegion.hidden = true;
       return;
     }
     const resp = await post(trackHost.dataset.tracksUrl);
     if (!resp.ok) return;
     trackHost.innerHTML = await resp.text();
-    tracksHeading.hidden = !trackHost.firstElementChild;
+    resultsRegion.hidden = !trackHost.firstElementChild;
   }
   const scheduleTracks = () => {
     clearTimeout(trackTimer);
@@ -346,7 +408,7 @@ if (picker) {
     if (inputs.childElementCount === 0 && !wishlistEl.checked) {
       return setError(
         "targetsError",
-        "Pick a target cat, or tick “search my wishlist”.",
+        "Pick a target cat, or tick \"search my wishlist\".",
         targetsSection,
       );
     }
@@ -355,9 +417,10 @@ if (picker) {
       const resp = await post(trackHost.dataset.planUrl);
       if (resp.ok) {
         const data = await resp.json();
-        trackHost.innerHTML = data.tracks_html;
-        planSummary.innerHTML = data.summary_html;
-        tracksHeading.hidden = !trackHost.firstElementChild;
+        // Swap the browse track for the subset-solution accordion.
+        solutions.innerHTML = data.solutions_html;
+        browseTrack.hidden = true;
+        resultsRegion.hidden = !solutions.firstElementChild;
       } else {
         const { errors = {} } = await resp.json().catch(() => ({}));
         const field = Object.keys(errors).find((k) => k in fieldSlot);
