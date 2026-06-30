@@ -149,11 +149,18 @@ if (picker) {
       : "Rolling current banners.";
     save();
   }
-  // Each banner toggles on its own, so you can roll one at a time or unselect any
-  // single one. The page still defaults to the banners live today (below), but
-  // from there every + / ✓ is independent.
+  // Selecting a banner grabs the whole session - every banner live on its opening
+  // day, the rotation you'd roll together right then. Deselecting only drops the one
+  // you clicked, so you can start from the session and pare it down to a single banner.
   function toggleBanner(btn) {
-    setIncluded(btn, btn.getAttribute("aria-pressed") !== "true");
+    if (btn.getAttribute("aria-pressed") === "true") {
+      setIncluded(btn, false);
+    } else {
+      const [day] = rangeOf(btn);
+      for (const other of includes) {
+        if (liveOn(rangeOf(other), day)) setIncluded(other, true);
+      }
+    }
     syncBanners();
   }
   browser.addEventListener("click", (e) => {
