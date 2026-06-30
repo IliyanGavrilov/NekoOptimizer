@@ -346,7 +346,11 @@ h4.banner { margin: 1rem 0 0.1rem; color: var(--accent); font-size: 0.95rem; }
 }
 p.leg { margin: 0.1rem 0 0.2rem; color: var(--muted); font-size: 0.85rem; }
 
-/* Results: both seed tracks side by side, the chosen path lit up. */
+/* The plan summary's pulled-cat sequence under each leg. */
+p.seq { margin: 0 0 0.5rem; color: var(--ink); font-size: 0.85rem; }
+
+/* A/B track viewer: both seed tracks side by side, the chosen path lit up. */
+.track-section + .track-section { margin-top: 0.8rem; }
 table.track {
   width: 100%;
   border-collapse: collapse;
@@ -357,19 +361,20 @@ table.track th, table.track td {
   border: 1px solid var(--line);
   padding: 0.28rem 0.5rem;
   text-align: left;
+  vertical-align: top;
 }
 table.track thead th { color: var(--muted); font-family: var(--head-font); font-weight: 600; }
 table.track .pos { color: var(--muted); text-align: right; width: 2.5rem; font-weight: 400; }
 table.track td.cell { color: var(--muted); }            /* off-path slots stay dim */
 table.track td.on-path { color: var(--ink); background: var(--panel-2); font-weight: 600; }
-table.track td.unowned { outline: 1px solid var(--accent); outline-offset: -2px; }
 table.track td.target {
   background: rgba(244, 169, 59, 0.18);
   box-shadow: inset 0 0 0 2px var(--accent);
   color: var(--ink);
   font-weight: 700;
 }
-table.track td.switch::after { content: " ⤵"; color: var(--accent); }
+/* Rare-dupe reroll: show where the slot jumps (to the other track) on its own line. */
+table.track .arrow { display: block; color: var(--accent); font-size: 0.78rem; font-weight: 400; }
 
 .banner-group + .banner-group { margin-top: 0.9rem; }
 

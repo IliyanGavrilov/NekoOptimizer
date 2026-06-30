@@ -1,0 +1,27 @@
+{% if summaries %}
+  <div id="planResults" data-apply-url="{% url 'apply_plan' %}">
+  {% for s in summaries %}
+    <section>
+      <h3>{{ s.targets|join:", " }} &mdash; {{ s.cost_label }}</h3>
+      <button type="button" class="apply-plan"
+              data-cats="{{ s.cats }}"
+              data-tickets="{{ s.tickets_used }}"
+              data-catfood="{{ s.cost }}">Apply this plan</button>
+      {% for leg in s.legs %}
+        {% if leg.new_banner %}
+          <h4 class="banner">
+            {{ leg.names|join:" · " }}{% if leg.names|length > 1 %} <span class="equiv-note">same rolls</span>{% endif %}
+          </h4>
+        {% endif %}
+        <p class="leg">
+          {% if leg.kind == "Single pull" %}{{ leg.rolls }} single pull{{ leg.rolls|pluralize }}{% else %}{{ leg.kind }}{% endif %}
+          {% if leg.cost %}&middot; {{ leg.cost }} catfood{% else %}&middot; free (tickets){% endif %}
+        </p>
+        <p class="seq">{{ leg.cats|join:" &rarr; " }}</p>
+      {% endfor %}
+    </section>
+  {% endfor %}
+  </div>
+{% else %}
+  <p class="muted">No reachable plan with given resources.</p>
+{% endif %}
