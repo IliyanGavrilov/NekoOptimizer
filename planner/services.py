@@ -392,5 +392,10 @@ def import_cats(
             if not was_created and pull.rarity.value and cat.rarity != pull.rarity.value:
                 cat.rarity = pull.rarity.value
                 cat.save(update_fields=["rarity"])
+            if cat.unit_id is None:
+                unit = Unit.objects.filter(name=pull.cat).first()
+                if unit is not None:
+                    cat.unit = unit
+                    cat.save(update_fields=["unit"])
             banner.cats.add(cat)
     return created
