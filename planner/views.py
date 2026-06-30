@@ -52,8 +52,8 @@ def tracks(request):
     equivalents = equivalent_banners(result.banners)
     pulls = {name: rolls.pulls for name, rolls in result.banners.items()}
     rerolls = {name: rolls.rerolls for name, rolls in result.banners.items()}
-    tables = build_tracks(pulls, rerolls, equivalents)
-    return render(request, "planner/_tracks.html", {"tables": tables})
+    track = build_tracks(pulls, rerolls, equivalents)
+    return render(request, "planner/_tracks.html", {"track": track})
 
 
 @require_POST
@@ -96,10 +96,10 @@ def find_plan(request):
     )
     # Highlight the best plan's path on the tracks; the summary lists every option.
     path, target_idx = plan_highlight(plans[0], equivalents) if plans else ({}, {})
-    tables = build_tracks(pulls, rerolls, equivalents, path, target_idx)
+    track = build_tracks(pulls, rerolls, equivalents, path, target_idx)
     return JsonResponse(
         {
-            "tracks_html": render_to_string("planner/_tracks.html", {"tables": tables}, request),
+            "tracks_html": render_to_string("planner/_tracks.html", {"track": track}, request),
             "summary_html": render_to_string(
                 "planner/_summary.html", {"summaries": plan_summary(plans, equivalents)}, request
             ),

@@ -129,37 +129,46 @@ def test_cost_label_spells_out_both_currencies(tickets, catfood, expected):
     assert cost_label(tickets, catfood) == expected
 
 
-def test_build_tracks_merges_equivalent_banners_into_one_table():
+def test_build_tracks_merges_equivalent_banners_into_one_legend_entry():
     pulls = [TrackPull(1, "A", "Bahamut", U)]
-    tables = build_tracks({"X": pulls, "Y": pulls}, {}, {"X": ["X", "Y"], "Y": ["X", "Y"]})
-    assert len(tables) == 1
+    track = build_tracks({"X": pulls, "Y": pulls}, {}, {"X": ["X", "Y"], "Y": ["X", "Y"]})
+    assert len(track["legend"]) == 1
+
+
+def test_build_tracks_stacks_each_banners_cat_in_one_cell():
+    banner_pulls = {
+        "X": [TrackPull(1, "A", "Bahamut", U)],
+        "Y": [TrackPull(1, "A", "Kasli", U)],
+    }
+    cell = build_tracks(banner_pulls, {}, {})["rows"][0]["a"]
+    assert [e["cat"] for e in cell] == ["Bahamut", "Kasli"]
 
 
 def test_build_tracks_places_each_roll_on_its_track():
     banner_pulls = {"X": [TrackPull(1, "A", "Bahamut", U), TrackPull(1, "B", "Kasli", U)]}
-    row = build_tracks(banner_pulls, {}, {})[0]["rows"][0]
-    assert (row["a"]["cat"], row["b"]["cat"]) == ("Bahamut", "Kasli")
+    row = build_tracks(banner_pulls, {}, {})["rows"][0]
+    assert (row["a"][0]["cat"], row["b"][0]["cat"]) == ("Bahamut", "Kasli")
 
 
 def test_build_tracks_flags_a_rare_dupe_switch():
     # 1A and 2A are the same rare cat -> godfat rerolls 2A and jumps tracks.
     banner_pulls = {"X": [TrackPull(1, "A", "Pogo", R), TrackPull(2, "A", "Pogo", R)]}
     rerolls = {"X": [TrackPull(2, "A", "Jurassic Cat", R)]}
-    assert build_tracks(banner_pulls, rerolls, {})[0]["rows"][1]["a"]["switch"] is True
+    assert build_tracks(banner_pulls, rerolls, {})["rows"][1]["a"][0]["switch"] is True
 
 
 def test_build_tracks_arrow_shows_the_reroll_cat_and_landing():
     banner_pulls = {"X": [TrackPull(1, "A", "Pogo", R), TrackPull(2, "A", "Pogo", R)]}
     rerolls = {"X": [TrackPull(2, "A", "Jurassic Cat", R)]}
-    arrow = build_tracks(banner_pulls, rerolls, {})[0]["rows"][1]["a"]["arrow"]
+    arrow = build_tracks(banner_pulls, rerolls, {})["rows"][1]["a"][0]["arrow"]
     assert (arrow["cat"], arrow["to"]) == ("Jurassic Cat", "3B")
 
 
 def test_build_tracks_highlights_the_path_and_target():
     banner_pulls = {"X": [TrackPull(1, "A", "Bahamut", U)]}
-    tables = build_tracks(banner_pulls, {}, {}, path={"X": {0}}, targets={"X": {0}})
-    cell = tables[0]["rows"][0]["a"]
-    assert (cell["on_path"], cell["target"]) == (True, True)
+    track = build_tracks(banner_pulls, {}, {}, path={"X": {0}}, targets={"X": {0}})
+    entry = track["rows"][0]["a"][0]
+    assert (entry["on_path"], entry["target"]) == (True, True)
 
 
 def test_plan_highlight_keys_indices_by_representative_banner():

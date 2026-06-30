@@ -180,48 +180,10 @@ def _representative(name, equivalents):
     return sorted(equivalents.get(name, [name]))[0]
 
 
-def _track_rows(grid, graph, max_pos, path_idx, target_idx):
-    """A/B rows 1..max_pos for one banner. Each cell carries its rare-dupe switch
-    arrow (the cat godfat rerolls to and the slot it lands on) and whether it sits on
-    the highlighted plan path."""
-    rows = []
-    for pos in range(1, max_pos + 1):
-        cells = []
-        for index in (2 * (pos - 1), 2 * (pos - 1) + 1):
-            tp = grid.get(index)
-            if tp is None:
-                cells.append(None)
-                continue
-            outcome = graph.outcome(index)
-            switched = bool(outcome and outcome.switched)
-            cells.append(
-                {
-                    "index": index,
-                    "cat": tp.cat,
-                    "rarity": str(tp.rarity),
-                    "switch": switched,
-                    "arrow": (
-                        {"cat": outcome.cat, "to": _pos_label(outcome.next_position)}
-                        if switched
-                        else None
-                    ),
-                    "on_path": index in path_idx,
-                    "target": index in target_idx,
-                }
-            )
-        rows.append({"pos": pos, "a": cells[0], "b": cells[1]})
-    return rows
-
-
-def build_tracks(banner_pulls, rerolls, equivalents, path=None, targets=None):
-    """A/B track tables, one per banner (equivalent banners merged), each with its
-    rolls, rare-dupe switch arrows, and any highlighted plan path.
-
-    ``path``/``targets`` map a representative banner to the stream indices to light up.
-    """
-    path = path or {}
-    targets = targets or {}
-    tables = []
+def _banner_groups(banner_pulls, rerolls, equivalents):
+    """Distinct selected banners (equivalent ones merged), each tagged 1, 2, 3...
+    with its stream grid and outcome graph."""
+    groups = []
     seen = set()
     for name, pulls in banner_pulls.items():
         names = sorted(equivalents.get(name, [name]))
@@ -231,15 +193,64 @@ def build_tracks(banner_pulls, rerolls, equivalents, path=None, targets=None):
         seen.add(rep)
         grid = {stream_index(p.position, p.track): p for p in pulls}
         graph = BannerGraph(rep, pulls, rerolls=rerolls.get(name, ()))
-        path_idx = path.get(rep, set())
-        target_idx = targets.get(rep, set())
-        avail = max(grid) // 2 + 1 if grid else 0
-        needed = max((index // 2 + 1 for index in path_idx), default=0)
-        max_pos = min(avail, max(TRACK_ROW_CAP, needed))
-        tables.append(
-            {"names": names, "rows": _track_rows(grid, graph, max_pos, path_idx, target_idx)}
+        groups.append(
+            {
+                "tag": str(len(groups) + 1),
+                "names": names,
+                "rep": rep,
+                "grid": grid,
+                "graph": graph,
+            }
         )
-    return tables
+    return groups
+
+
+def build_tracks(banner_pulls, rerolls, equivalents, path=None, targets=None):
+    """One merged A/B table over every selected banner: each cell stacks each banner's
+    cat at that shared stream position (à la ubercarry), with rare-dupe switch arrows
+    and the plan's path highlighted. Returns ``{"legend": [...], "rows": [...]}``.
+
+    ``path``/``targets`` map a representative banner to the stream indices to light up.
+    """
+    path = path or {}
+    targets = targets or {}
+    groups = _banner_groups(banner_pulls, rerolls, equivalents)
+
+    avail = max((max(g["grid"]) for g in groups if g["grid"]), default=-1) // 2 + 1
+    needed = max((index // 2 + 1 for indices in path.values() for index in indices), default=0)
+    max_pos = max(min(avail, max(TRACK_ROW_CAP, needed)), 0)
+
+    def entries(index):
+        cells = []
+        for group in groups:
+            tp = group["grid"].get(index)
+            if tp is None:
+                continue
+            outcome = group["graph"].outcome(index)
+            switched = bool(outcome and outcome.switched)
+            cells.append(
+                {
+                    "tag": group["tag"],
+                    "cat": tp.cat,
+                    "rarity": str(tp.rarity),
+                    "switch": switched,
+                    "arrow": (
+                        {"cat": outcome.cat, "to": _pos_label(outcome.next_position)}
+                        if switched
+                        else None
+                    ),
+                    "on_path": index in path.get(group["rep"], ()),
+                    "target": index in targets.get(group["rep"], ()),
+                }
+            )
+        return cells
+
+    rows = [
+        {"pos": pos, "a": entries(2 * (pos - 1)), "b": entries(2 * (pos - 1) + 1)}
+        for pos in range(1, max_pos + 1)
+    ]
+    legend = [{"tag": g["tag"], "names": g["names"]} for g in groups]
+    return {"legend": legend, "rows": rows}
 
 
 def plan_highlight(option, equivalents):

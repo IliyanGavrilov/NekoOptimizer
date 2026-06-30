@@ -349,8 +349,29 @@ p.leg { margin: 0.1rem 0 0.2rem; color: var(--muted); font-size: 0.85rem; }
 /* The plan summary's pulled-cat sequence under each leg. */
 p.seq { margin: 0 0 0.5rem; color: var(--ink); font-size: 0.85rem; }
 
-/* A/B track viewer: both seed tracks side by side, the chosen path lit up. */
-.track-section + .track-section { margin-top: 0.8rem; }
+/* A/B track viewer: one merged table; each cell stacks every banner's cat at that
+   shared position (à la ubercarry), with the plan's path lit up. */
+.track-legend {
+  list-style: none;
+  margin: 0.2rem 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem 0.9rem;
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+.tag {
+  display: inline-block;
+  min-width: 1.1rem;
+  text-align: center;
+  border-radius: 4px;
+  background: var(--panel-2);
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 0 0.2rem;
+}
 table.track {
   width: 100%;
   border-collapse: collapse;
@@ -365,9 +386,10 @@ table.track th, table.track td {
 }
 table.track thead th { color: var(--muted); font-family: var(--head-font); font-weight: 600; }
 table.track .pos { color: var(--muted); text-align: right; width: 2.5rem; font-weight: 400; }
-table.track td.cell { color: var(--muted); }            /* off-path slots stay dim */
-table.track td.on-path { color: var(--ink); background: var(--panel-2); font-weight: 600; }
-table.track td.target {
+/* Each banner's cat is its own line in the cell; off-path lines stay dim. */
+table.track .entry { color: var(--muted); padding: 0.05rem 0; }
+table.track .entry.on-path { color: var(--ink); background: var(--panel-2); font-weight: 600; }
+table.track .entry.target {
   background: rgba(244, 169, 59, 0.18);
   box-shadow: inset 0 0 0 2px var(--accent);
   color: var(--ink);
