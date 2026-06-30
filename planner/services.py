@@ -5,6 +5,7 @@ from itertools import combinations
 from pathlib import Path
 
 from neko.cache import RollCache
+from neko.catalogue import match_names, name_index
 from neko.godfat import BannerRolls
 from neko.graph import BannerGraph, build_graphs, stream_index
 from neko.models import CATFOOD_PER_DRAW, State
@@ -346,6 +347,12 @@ def subset_solutions(
             if frozenset(combo) not in found_keys:
                 solutions.append({"targets": sorted(combo), "found": False})
     return solutions
+
+
+def unit_match_report() -> tuple[dict[str, int], list[str]]:
+    """Match every scraped cat name against the canonical catalogue; return the
+    {name: unit_id} matches and the names with no canonical unit (gaps to chase)."""
+    return match_names(Cat.objects.values_list("name", flat=True), name_index(Unit.objects.all()))
 
 
 def import_units(records: Iterable[Mapping]) -> int:
