@@ -1,0 +1,7307 @@
+[
+  {
+    "id": 0,
+    "name": "Cat",
+    "rarity": "Normal",
+    "forms": [
+      "Cat",
+      "Macho Cat",
+      "Mohawk Cat"
+    ]
+  },
+  {
+    "id": 1,
+    "name": "Tank Cat",
+    "rarity": "Normal",
+    "forms": [
+      "Tank Cat",
+      "Wall Cat",
+      "Eraser Cat"
+    ]
+  },
+  {
+    "id": 2,
+    "name": "Axe Cat",
+    "rarity": "Normal",
+    "forms": [
+      "Axe Cat",
+      "Brave Cat",
+      "Dark Cat"
+    ]
+  },
+  {
+    "id": 3,
+    "name": "Gross Cat",
+    "rarity": "Normal",
+    "forms": [
+      "Gross Cat",
+      "Sexy Legs Cat",
+      "Macho Leg Cat"
+    ]
+  },
+  {
+    "id": 4,
+    "name": "Cow Cat",
+    "rarity": "Normal",
+    "forms": [
+      "Cow Cat",
+      "Giraffe Cat",
+      "Lion Cat"
+    ]
+  },
+  {
+    "id": 5,
+    "name": "Bird Cat",
+    "rarity": "Normal",
+    "forms": [
+      "Bird Cat",
+      "UFO Cat",
+      "The Flying Cat"
+    ]
+  },
+  {
+    "id": 6,
+    "name": "Fish Cat",
+    "rarity": "Normal",
+    "forms": [
+      "Fish Cat",
+      "Whale Cat",
+      "Island Cat"
+    ]
+  },
+  {
+    "id": 7,
+    "name": "Lizard Cat",
+    "rarity": "Normal",
+    "forms": [
+      "Lizard Cat",
+      "Dragon Cat",
+      "King Dragon Cat"
+    ]
+  },
+  {
+    "id": 8,
+    "name": "Titan Cat",
+    "rarity": "Normal",
+    "forms": [
+      "Titan Cat",
+      "Mythical Titan Cat",
+      "Jamiera Cat"
+    ]
+  },
+  {
+    "id": 9,
+    "name": "Actress Cat",
+    "rarity": "Special",
+    "forms": [
+      "Actress Cat",
+      "Mother Cat",
+      "Beefcake Cat"
+    ]
+  },
+  {
+    "id": 10,
+    "name": "Kung Fu Cat",
+    "rarity": "Special",
+    "forms": [
+      "Kung Fu Cat",
+      "Drunken Master Cat",
+      "Dancer Cat"
+    ]
+  },
+  {
+    "id": 11,
+    "name": "Mr.",
+    "rarity": "Special",
+    "forms": [
+      "Mr.",
+      "Super Mr.",
+      "Hyper Mr."
+    ]
+  },
+  {
+    "id": 12,
+    "name": "Bondage Cat",
+    "rarity": "Special",
+    "forms": [
+      "Bondage Cat",
+      "Bondage CatNEO",
+      "Ultimate Bondage Cat"
+    ]
+  },
+  {
+    "id": 13,
+    "name": "Dom Cat",
+    "rarity": "Special",
+    "forms": [
+      "Dom Cat",
+      "Executioner",
+      "Dark Lazer"
+    ]
+  },
+  {
+    "id": 14,
+    "name": "Cats in a Box",
+    "rarity": "Special",
+    "forms": [
+      "Cats in a Box",
+      "Cat Gang",
+      "Heavy Assault C.A.T."
+    ]
+  },
+  {
+    "id": 15,
+    "name": "Panties Cat",
+    "rarity": "Special",
+    "forms": [
+      "Panties Cat",
+      "Leaf Cat",
+      "Lollycat"
+    ]
+  },
+  {
+    "id": 16,
+    "name": "Moneko",
+    "rarity": "Special",
+    "forms": [
+      "Moneko",
+      "Miss MONEKO",
+      "Superstar MONEKO"
+    ]
+  },
+  {
+    "id": 17,
+    "name": "Tricycle Cat",
+    "rarity": "Special",
+    "forms": [
+      "Tricycle Cat",
+      "Biker Cat",
+      "Unicycle Cat"
+    ]
+  },
+  {
+    "id": 18,
+    "name": "Ninja Cat",
+    "rarity": "Special",
+    "forms": [
+      "Ninja Cat",
+      "Ninja Frog Cat",
+      "Flying Ninja Cat"
+    ]
+  },
+  {
+    "id": 19,
+    "name": "Zombie Cat",
+    "rarity": "Special",
+    "forms": [
+      "Zombie Cat",
+      "Devil Cat",
+      "Skelecat"
+    ]
+  },
+  {
+    "id": 20,
+    "name": "Samurai Cat",
+    "rarity": "Special",
+    "forms": [
+      "Samurai Cat",
+      "Knight Cat",
+      "Pastry Cat"
+    ]
+  },
+  {
+    "id": 21,
+    "name": "Sumo Cat",
+    "rarity": "Special",
+    "forms": [
+      "Sumo Cat",
+      "Madame Sumo",
+      "Riceball Cat"
+    ]
+  },
+  {
+    "id": 22,
+    "name": "Boogie Cat",
+    "rarity": "Special",
+    "forms": [
+      "Boogie Cat",
+      "Samba Cat",
+      "Gato Amigo"
+    ]
+  },
+  {
+    "id": 23,
+    "name": "Skirt Cat",
+    "rarity": "Special",
+    "forms": [
+      "Skirt Cat",
+      "Tights Cat",
+      "Loincloth Cat"
+    ]
+  },
+  {
+    "id": 24,
+    "name": "Valkyrie Cat",
+    "rarity": "Special",
+    "forms": [
+      "Valkyrie Cat",
+      "True Valkyrie Cat",
+      "Holy Valkyrie Cat"
+    ]
+  },
+  {
+    "id": 25,
+    "name": "Bahamut Cat",
+    "rarity": "Special",
+    "forms": [
+      "Bahamut Cat",
+      "Crazed Bahamut Cat",
+      "Awakened Bahamut Cat"
+    ]
+  },
+  {
+    "id": 26,
+    "name": "Kerihime",
+    "rarity": "Special",
+    "forms": [
+      "Kerihime",
+      "Full color Kerihime",
+      "Bridal Princess Punt"
+    ]
+  },
+  {
+    "id": 27,
+    "name": "Cat Princess",
+    "rarity": "Special",
+    "forms": [
+      "Cat Princess",
+      "Cat Princess beauty"
+    ]
+  },
+  {
+    "id": 28,
+    "name": "Capsule Cat",
+    "rarity": "Special",
+    "forms": [
+      "Capsule Cat",
+      "Cramped Cats"
+    ]
+  },
+  {
+    "id": 29,
+    "name": "Masked Cat",
+    "rarity": "Special",
+    "forms": [
+      "Masked Cat",
+      "Luchador Cat",
+      "Luchador Cat"
+    ]
+  },
+  {
+    "id": 30,
+    "name": "Bodhisattva Cat",
+    "rarity": "Super Rare",
+    "forms": [
+      "Bodhisattva Cat",
+      "Avalokitesvara Cat",
+      "Tathagata Cat"
+    ]
+  },
+  {
+    "id": 31,
+    "name": "Delinquent Cat",
+    "rarity": "Super Rare",
+    "forms": [
+      "Delinquent Cat",
+      "Angry Delinquent Cat",
+      "Ultra Delinquent Cat"
+    ]
+  },
+  {
+    "id": 32,
+    "name": "Hip Hop Cat",
+    "rarity": "Super Rare",
+    "forms": [
+      "Hip Hop Cat",
+      "Dancing Flasher Cat",
+      "Can Can Cat"
+    ]
+  },
+  {
+    "id": 33,
+    "name": "Kotatsu Cat",
+    "rarity": "Super Rare",
+    "forms": [
+      "Kotatsu Cat",
+      "Sadako Cat",
+      "Octopus Cat"
+    ]
+  },
+  {
+    "id": 34,
+    "name": "Nekoluga",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Nekoluga",
+      "Unknown Cat",
+      "Ultralan Pasalan"
+    ]
+  },
+  {
+    "id": 35,
+    "name": "Nerd Cat",
+    "rarity": "Super Rare",
+    "forms": [
+      "Nerd Cat",
+      "Hacker Cat",
+      "Cyberpunk Cat"
+    ]
+  },
+  {
+    "id": 36,
+    "name": "Swimmer Cat",
+    "rarity": "Super Rare",
+    "forms": [
+      "Swimmer Cat",
+      "Butterfly Cat",
+      "Fishman Cat"
+    ]
+  },
+  {
+    "id": 37,
+    "name": "Pogo Cat",
+    "rarity": "Rare",
+    "forms": [
+      "Pogo Cat",
+      "Masai Cat",
+      "Jiangshi Cat"
+    ]
+  },
+  {
+    "id": 38,
+    "name": "Wheel Cat",
+    "rarity": "Rare",
+    "forms": [
+      "Wheel Cat",
+      "Solar Cat",
+      "Chill Cat"
+    ]
+  },
+  {
+    "id": 39,
+    "name": "Apple Cat",
+    "rarity": "Super Rare",
+    "forms": [
+      "Apple Cat",
+      "Face Cat",
+      "iCat"
+    ]
+  },
+  {
+    "id": 40,
+    "name": "Bath Cat",
+    "rarity": "Super Rare",
+    "forms": [
+      "Bath Cat",
+      "Sexy Bathtub Cat",
+      "Luxury Bath Cat"
+    ]
+  },
+  {
+    "id": 41,
+    "name": "Salon Cat",
+    "rarity": "Rare",
+    "forms": [
+      "Salon Cat",
+      "Paris Cat",
+      "Cyborg Cat"
+    ]
+  },
+  {
+    "id": 42,
+    "name": "Ice Cat",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Ice Cat",
+      "Ice Queen Cat",
+      "Ice Crystal Cat"
+    ]
+  },
+  {
+    "id": 43,
+    "name": "Cat Machine",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Cat Machine",
+      "Cat Machine Mk 2",
+      "Cat Machine Mk 3"
+    ]
+  },
+  {
+    "id": 44,
+    "name": "Lesser Demon Cat",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Lesser Demon Cat",
+      "Greater Demon Cat",
+      "Greater Balrog Cat"
+    ]
+  },
+  {
+    "id": 45,
+    "name": "Maiko Cat",
+    "rarity": "Special",
+    "forms": [
+      "Maiko Cat",
+      "Geisha Cat"
+    ]
+  },
+  {
+    "id": 46,
+    "name": "Jurassic Cat",
+    "rarity": "Rare",
+    "forms": [
+      "Jurassic Cat",
+      "Jurassic Cat Sitter",
+      "Catasaurus"
+    ]
+  },
+  {
+    "id": 47,
+    "name": "Viking Cat",
+    "rarity": "Rare",
+    "forms": [
+      "Viking Cat",
+      "Thor Cat",
+      "Maximum the Fighter"
+    ]
+  },
+  {
+    "id": 48,
+    "name": "Pirate Cat",
+    "rarity": "Rare",
+    "forms": [
+      "Pirate Cat",
+      "Captain Cat",
+      "Dread Pirate Catley"
+    ]
+  },
+  {
+    "id": 49,
+    "name": "Thief Cat",
+    "rarity": "Rare",
+    "forms": [
+      "Thief Cat",
+      "Phantom Thief Cat",
+      "Goemon Cat"
+    ]
+  },
+  {
+    "id": 50,
+    "name": "Bishop Cat",
+    "rarity": "Rare",
+    "forms": [
+      "Bishop Cat",
+      "Monk Cat",
+      "Sanzo Cat"
+    ]
+  },
+  {
+    "id": 51,
+    "name": "Fortune Teller Cat",
+    "rarity": "Rare",
+    "forms": [
+      "Fortune Teller Cat",
+      "Fisherman Cat",
+      "Doctor Cat"
+    ]
+  },
+  {
+    "id": 52,
+    "name": "Shaman Cat",
+    "rarity": "Rare",
+    "forms": [
+      "Shaman Cat",
+      "Necromancer Cat",
+      "Necro-Dancer Cat"
+    ]
+  },
+  {
+    "id": 53,
+    "name": "Evangelist Cat",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Evangelist Cat",
+      "Filibuster Cat",
+      "Filibuster Cat"
+    ]
+  },
+  {
+    "id": 55,
+    "name": "Witch Cat",
+    "rarity": "Rare",
+    "forms": [
+      "Witch Cat",
+      "Sorceress Cat",
+      "Enchantress Cat"
+    ]
+  },
+  {
+    "id": 56,
+    "name": "Archer Cat",
+    "rarity": "Rare",
+    "forms": [
+      "Archer Cat",
+      "Cupid Cat",
+      "Cataur"
+    ]
+  },
+  {
+    "id": 57,
+    "name": "Marauder Cat",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Marauder Cat",
+      "Berserker Cat",
+      "Paladin Cat"
+    ]
+  },
+  {
+    "id": 58,
+    "name": "Swordsman Cat",
+    "rarity": "Rare",
+    "forms": [
+      "Swordsman Cat",
+      "Sword Master Cat",
+      "Elemental Duelist Cat"
+    ]
+  },
+  {
+    "id": 59,
+    "name": "Baby Cat",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Baby Cat",
+      "Baby Cats",
+      "Cats in the Cradle",
+      "Cats in the Stroller"
+    ]
+  },
+  {
+    "id": 60,
+    "name": "Bronze Cat",
+    "rarity": "Rare",
+    "forms": [
+      "Bronze Cat",
+      "Michelangelo Cat",
+      "Quizmaster Cat"
+    ]
+  },
+  {
+    "id": 61,
+    "name": "Sushi Cat",
+    "rarity": "Super Rare",
+    "forms": [
+      "Sushi Cat",
+      "Fried Shrimp Cat",
+      "Roe Cat"
+    ]
+  },
+  {
+    "id": 62,
+    "name": "Toy Machine Cat",
+    "rarity": "Special",
+    "forms": [
+      "Toy Machine Cat",
+      "Vendor Cat",
+      "Vendor Cat"
+    ]
+  },
+  {
+    "id": 63,
+    "name": "Sports Day Cat",
+    "rarity": "Rare",
+    "forms": [
+      "Sports Day Cat",
+      "Kidnapper Cats",
+      "Rampage Cats"
+    ]
+  },
+  {
+    "id": 64,
+    "name": "Swordsman",
+    "rarity": "Rare",
+    "forms": [
+      "Swordsman",
+      "Swordsman Johnny",
+      "Swordsman Johnny"
+    ]
+  },
+  {
+    "id": 65,
+    "name": "Cow Princess",
+    "rarity": "Rare",
+    "forms": [
+      "Cow Princess",
+      "Giraffe Princess",
+      "Giraffe Princess"
+    ]
+  },
+  {
+    "id": 66,
+    "name": "PPT48",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "PPT48",
+      "Dark PPT48",
+      "PPT46"
+    ]
+  },
+  {
+    "id": 67,
+    "name": "Li'l Gau",
+    "rarity": "Rare",
+    "forms": [
+      "Li'l Gau",
+      "Li'l Gau Gau",
+      "Crystal Li'l Gau Gau"
+    ]
+  },
+  {
+    "id": 68,
+    "name": "Reaper",
+    "rarity": "Super Rare",
+    "forms": [
+      "Reaper",
+      "Reaper 999",
+      "Judgment"
+    ]
+  },
+  {
+    "id": 69,
+    "name": "Sleeping Beauty Punt",
+    "rarity": "Super Rare",
+    "forms": [
+      "Sleeping Beauty Punt",
+      "Sleeping Beauty Punt II",
+      "Oversleeping Beauty Punt"
+    ]
+  },
+  {
+    "id": 70,
+    "name": "Salaryman Cat",
+    "rarity": "Rare",
+    "forms": [
+      "Salaryman Cat",
+      "Grudge Cat",
+      "Ritual Cat"
+    ]
+  },
+  {
+    "id": 71,
+    "name": "Sanada Yukimura",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Sanada Yukimura",
+      "Wargod Yukimura",
+      "Immortal Yukimura"
+    ]
+  },
+  {
+    "id": 72,
+    "name": "Maeda Keiji",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Maeda Keiji",
+      "Wargod Keiji",
+      "Immortal Keiji"
+    ]
+  },
+  {
+    "id": 73,
+    "name": "Oda Nobunaga",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Oda Nobunaga",
+      "Wargod Nobunaga",
+      "Immortal Nobunaga",
+      "Phantasmal Nobunaga"
+    ]
+  },
+  {
+    "id": 74,
+    "name": "Reindeer Fish Cat",
+    "rarity": "Rare",
+    "forms": [
+      "Reindeer Fish Cat",
+      "Sashimi Cat",
+      "Xmas Pudding Cat"
+    ]
+  },
+  {
+    "id": 75,
+    "name": "Windy",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Windy",
+      "Windy, type \u03b1",
+      "Divine Windy",
+      "Ultimate Windy"
+    ]
+  },
+  {
+    "id": 76,
+    "name": "Thundia",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Thundia",
+      "Thundia, type \u03b2",
+      "Divine Thundia",
+      "Ultimate Thundia"
+    ]
+  },
+  {
+    "id": 77,
+    "name": "Droid Cat",
+    "rarity": "Rare",
+    "forms": [
+      "Droid Cat",
+      "Droid Cat Mk 2",
+      "SpringDroid"
+    ]
+  },
+  {
+    "id": 78,
+    "name": "Space Cat",
+    "rarity": "Rare",
+    "forms": [
+      "Space Cat",
+      "Major Space Cat",
+      "Space Marine Cat"
+    ]
+  },
+  {
+    "id": 79,
+    "name": "Adult Cat",
+    "rarity": "Rare",
+    "forms": [
+      "Adult Cat",
+      "Sick Cat",
+      "Prisoner Cat"
+    ]
+  },
+  {
+    "id": 80,
+    "name": "Evil Cat",
+    "rarity": "Rare",
+    "forms": [
+      "Evil Cat",
+      "Gentleman Cat",
+      "Gentleman Bros."
+    ]
+  },
+  {
+    "id": 81,
+    "name": "Doll Cats",
+    "rarity": "Rare",
+    "forms": [
+      "Doll Cats",
+      "Cat-o-tron",
+      "Nyalladin"
+    ]
+  },
+  {
+    "id": 82,
+    "name": "Blue Shinobi",
+    "rarity": "Special",
+    "forms": [
+      "Blue Shinobi",
+      "Orange Shinobi",
+      "Orange Shinobi"
+    ]
+  },
+  {
+    "id": 83,
+    "name": "Sodom",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Sodom",
+      "Earth King Sodom",
+      "God-Emperor Sodom"
+    ]
+  },
+  {
+    "id": 84,
+    "name": "Megidora",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Megidora",
+      "Holy Dragon Megidora",
+      "God-Emperor Megidora"
+    ]
+  },
+  {
+    "id": 85,
+    "name": "Vars",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Vars",
+      "Dragon King Vars",
+      "God-Emperor Vars"
+    ]
+  },
+  {
+    "id": 86,
+    "name": "Kamukura",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Kamukura",
+      "God Dragon Kamukura",
+      "God-Emperor Kamukura"
+    ]
+  },
+  {
+    "id": 87,
+    "name": "Raiden",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Raiden",
+      "Dragonslayer Raiden",
+      "God-Emperor Raiden"
+    ]
+  },
+  {
+    "id": 88,
+    "name": "Rope Jump Cat",
+    "rarity": "Rare",
+    "forms": [
+      "Rope Jump Cat",
+      "Pair Rope Jump Cat",
+      "Noodle Cats"
+    ]
+  },
+  {
+    "id": 91,
+    "name": "Crazed Cat",
+    "rarity": "Super Rare",
+    "forms": [
+      "Crazed Cat",
+      "Crazed Macho Cat",
+      "Manic Mohawk Cat"
+    ]
+  },
+  {
+    "id": 92,
+    "name": "Crazed Tank Cat",
+    "rarity": "Super Rare",
+    "forms": [
+      "Crazed Tank Cat",
+      "Crazed Wall Cat",
+      "Manic Eraser Cat"
+    ]
+  },
+  {
+    "id": 93,
+    "name": "Crazed Axe Cat",
+    "rarity": "Super Rare",
+    "forms": [
+      "Crazed Axe Cat",
+      "Crazed Brave Cat",
+      "Manic Dark Cat"
+    ]
+  },
+  {
+    "id": 94,
+    "name": "Crazed Gross Cat",
+    "rarity": "Super Rare",
+    "forms": [
+      "Crazed Gross Cat",
+      "Crazed Sexy Legs Cat",
+      "Manic Macho Legs"
+    ]
+  },
+  {
+    "id": 95,
+    "name": "Crazed Cow Cat",
+    "rarity": "Super Rare",
+    "forms": [
+      "Crazed Cow Cat",
+      "Crazed Giraffe Cat",
+      "Manic Lion Cat"
+    ]
+  },
+  {
+    "id": 96,
+    "name": "Crazed Bird Cat",
+    "rarity": "Super Rare",
+    "forms": [
+      "Crazed Bird Cat",
+      "Crazed UFO Cat",
+      "Manic Flying Cat"
+    ]
+  },
+  {
+    "id": 97,
+    "name": "Crazed Fish Cat",
+    "rarity": "Super Rare",
+    "forms": [
+      "Crazed Fish Cat",
+      "Crazed Whale Cat",
+      "Manic Island Cat"
+    ]
+  },
+  {
+    "id": 98,
+    "name": "Crazed Lizard Cat",
+    "rarity": "Super Rare",
+    "forms": [
+      "Crazed Lizard Cat",
+      "Crazed Dragon Cat",
+      "Manic King Dragon"
+    ]
+  },
+  {
+    "id": 99,
+    "name": "Crazed Titan Cat",
+    "rarity": "Super Rare",
+    "forms": [
+      "Crazed Titan Cat",
+      "Crazed M. Titan Cat",
+      "Manic Jamiera Cat"
+    ]
+  },
+  {
+    "id": 100,
+    "name": "Maiden Cat",
+    "rarity": "Rare",
+    "forms": [
+      "Maiden Cat",
+      "Sportsgirl Cat",
+      "Wrestling Cat"
+    ]
+  },
+  {
+    "id": 103,
+    "name": "Cabaret Cat",
+    "rarity": "Special",
+    "forms": [
+      "Cabaret Cat",
+      "Mega Cat",
+      "Mega Cat EX"
+    ]
+  },
+  {
+    "id": 104,
+    "name": "Koi Cat",
+    "rarity": "Rare",
+    "forms": [
+      "Koi Cat",
+      "Gross Koi Cat",
+      "Kiss and Koi"
+    ]
+  },
+  {
+    "id": 105,
+    "name": "Kuu",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Kuu",
+      "Kuu, type \u03b3",
+      "Divine Kuu"
+    ]
+  },
+  {
+    "id": 106,
+    "name": "Kai",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Kai",
+      "Kai, type \u03bc",
+      "Divine Kai"
+    ]
+  },
+  {
+    "id": 107,
+    "name": "Coppermine",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Coppermine",
+      "Coppermine, type \u03ba",
+      "Divine Coppermine"
+    ]
+  },
+  {
+    "id": 108,
+    "name": "Cat Bros",
+    "rarity": "Special",
+    "forms": [
+      "Cat Bros",
+      "Secret Base",
+      "Secret Base"
+    ]
+  },
+  {
+    "id": 109,
+    "name": "Madam Bride",
+    "rarity": "Rare",
+    "forms": [
+      "Madam Bride",
+      "Madam King",
+      "Madam the Savannah"
+    ]
+  },
+  {
+    "id": 110,
+    "name": "Celesse",
+    "rarity": "Rare",
+    "forms": [
+      "Celesse",
+      "Celesse CC",
+      "Celesse CC"
+    ]
+  },
+  {
+    "id": 111,
+    "name": "Nono",
+    "rarity": "Rare",
+    "forms": [
+      "Nono",
+      "Nono CC",
+      "Frolicking Nono CC"
+    ]
+  },
+  {
+    "id": 112,
+    "name": "Olga",
+    "rarity": "Rare",
+    "forms": [
+      "Olga",
+      "Olga CC",
+      "Olga CC"
+    ]
+  },
+  {
+    "id": 113,
+    "name": "Norn",
+    "rarity": "Rare",
+    "forms": [
+      "Norn",
+      "Norn CC",
+      "Norn CC"
+    ]
+  },
+  {
+    "id": 114,
+    "name": "Yoichi",
+    "rarity": "Rare",
+    "forms": [
+      "Yoichi",
+      "Yoichi CC",
+      "Yoichi CC"
+    ]
+  },
+  {
+    "id": 115,
+    "name": "Serum",
+    "rarity": "Rare",
+    "forms": [
+      "Serum",
+      "Serum CC",
+      "Serum CC"
+    ]
+  },
+  {
+    "id": 116,
+    "name": "Fuu",
+    "rarity": "Rare",
+    "forms": [
+      "Fuu",
+      "Fuu CC",
+      "Fuu CC"
+    ]
+  },
+  {
+    "id": 117,
+    "name": "Aura",
+    "rarity": "Super Rare",
+    "forms": [
+      "Aura",
+      "Aura CC",
+      "Aura CC"
+    ]
+  },
+  {
+    "id": 118,
+    "name": "Rei",
+    "rarity": "Super Rare",
+    "forms": [
+      "Rei",
+      "Rei CC",
+      "Rei CC"
+    ]
+  },
+  {
+    "id": 119,
+    "name": "Wyvern",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Wyvern",
+      "Wyvern Cat",
+      "Wyvern and Alec"
+    ]
+  },
+  {
+    "id": 120,
+    "name": "Healer",
+    "rarity": "Special",
+    "forms": [
+      "Healer",
+      "Healer CC",
+      "Healer Cat CC"
+    ]
+  },
+  {
+    "id": 121,
+    "name": "Merc",
+    "rarity": "Special",
+    "forms": [
+      "Merc",
+      "Merc CC",
+      "Merc & Cat CC"
+    ]
+  },
+  {
+    "id": 122,
+    "name": "Vacation Queen",
+    "rarity": "Rare",
+    "forms": [
+      "Vacation Queen",
+      "Office Lady Cat",
+      "Call Center Cat"
+    ]
+  },
+  {
+    "id": 123,
+    "name": "Bean Cats",
+    "rarity": "Special",
+    "forms": [
+      "Bean Cats",
+      "Brah Cats",
+      "Val Val Cat"
+    ]
+  },
+  {
+    "id": 124,
+    "name": "Date Masamune",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Date Masamune",
+      "Wargod Masamune",
+      "Immortal Masamune"
+    ]
+  },
+  {
+    "id": 125,
+    "name": "Takeda Shingen",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Takeda Shingen",
+      "Wargod Shingen",
+      "Immortal Shingen"
+    ]
+  },
+  {
+    "id": 126,
+    "name": "Clockwork Cat",
+    "rarity": "Rare",
+    "forms": [
+      "Clockwork Cat",
+      "Puppetmaster Cat",
+      "Puppetmaster & Charley"
+    ]
+  },
+  {
+    "id": 127,
+    "name": "Flower Cat",
+    "rarity": "Special",
+    "forms": [
+      "Flower Cat",
+      "Cooldown Cat",
+      "Bombercat"
+    ]
+  },
+  {
+    "id": 128,
+    "name": "Vengeful Cat",
+    "rarity": "Rare",
+    "forms": [
+      "Vengeful Cat",
+      "Groucho Cat",
+      "Kite Cat"
+    ]
+  },
+  {
+    "id": 129,
+    "name": "Gold Cat",
+    "rarity": "Super Rare",
+    "forms": [
+      "Gold Cat",
+      "Gold Macho Cat",
+      "Glittering Macho Cat"
+    ]
+  },
+  {
+    "id": 130,
+    "name": "Ururun Wolf",
+    "rarity": "Special",
+    "forms": [
+      "Ururun Wolf",
+      "Ururun Cat",
+      "Awakened Ururun"
+    ]
+  },
+  {
+    "id": 131,
+    "name": "Neneko",
+    "rarity": "Super Rare",
+    "forms": [
+      "Neneko",
+      "Miss NENEKO",
+      "Miss NENEKO"
+    ]
+  },
+  {
+    "id": 132,
+    "name": "Kung Fu Cat X",
+    "rarity": "Rare",
+    "forms": [
+      "Kung Fu Cat X",
+      "Drunken Master Cat X",
+      "Iron Claw X"
+    ]
+  },
+  {
+    "id": 134,
+    "name": "Urashima Taro",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Urashima Taro",
+      "Guardian Gamereon",
+      "King Gamereon"
+    ]
+  },
+  {
+    "id": 135,
+    "name": "The Grateful Crane",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "The Grateful Crane",
+      "Super Galaxy Cosmo",
+      "Ultima Galaxy Cosmo",
+      "Supernova Cosmo"
+    ]
+  },
+  {
+    "id": 136,
+    "name": "Momotaro",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Momotaro",
+      "The Peach Angels",
+      "The Peach Devils"
+    ]
+  },
+  {
+    "id": 137,
+    "name": "Kasa Jizo",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Kasa Jizo",
+      "Jizo's Moving Castle",
+      "Jizo's Mega-Castle"
+    ]
+  },
+  {
+    "id": 138,
+    "name": "Princess Kaguya",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Princess Kaguya",
+      "The Death Moon",
+      "The Chaos Moon",
+      "Ultra Kaguya"
+    ]
+  },
+  {
+    "id": 140,
+    "name": "Squish Ball Cat",
+    "rarity": "Special",
+    "forms": [
+      "Squish Ball Cat",
+      "Muscleman Cat",
+      "Muscleman Cat"
+    ]
+  },
+  {
+    "id": 141,
+    "name": "God",
+    "rarity": "Special",
+    "forms": [
+      "God",
+      "Secret God",
+      "Secret God"
+    ]
+  },
+  {
+    "id": 143,
+    "name": "Nurse Cat",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Nurse Cat",
+      "Heartful Nurse Cat",
+      "Joyful Nurse Cat"
+    ]
+  },
+  {
+    "id": 144,
+    "name": "Cat Base Mini",
+    "rarity": "Super Rare",
+    "forms": [
+      "Cat Base Mini",
+      "Cat Base Jr.",
+      "Cat Base Ultra"
+    ]
+  },
+  {
+    "id": 145,
+    "name": "Cat Gunslinger",
+    "rarity": "Rare",
+    "forms": [
+      "Cat Gunslinger",
+      "Cat Eastwood",
+      "Rodeo Cat"
+    ]
+  },
+  {
+    "id": 146,
+    "name": "Stilts Cat",
+    "rarity": "Rare",
+    "forms": [
+      "Stilts Cat",
+      "Totem Cat",
+      "Acrobat Cats"
+    ]
+  },
+  {
+    "id": 147,
+    "name": "Tin Cat",
+    "rarity": "Rare",
+    "forms": [
+      "Tin Cat",
+      "Plane Cat",
+      "Robocat"
+    ]
+  },
+  {
+    "id": 148,
+    "name": "Rocker Cat",
+    "rarity": "Rare",
+    "forms": [
+      "Rocker Cat",
+      "Artist Cat",
+      "Ramen Cat"
+    ]
+  },
+  {
+    "id": 149,
+    "name": "Mer-Cat",
+    "rarity": "Rare",
+    "forms": [
+      "Mer-Cat",
+      "Commando Cat",
+      "Cameraman Cat"
+    ]
+  },
+  {
+    "id": 150,
+    "name": "Juliet Cat",
+    "rarity": "Super Rare",
+    "forms": [
+      "Juliet Cat",
+      "Princess Juliet Cat",
+      "Juliet the Maiko"
+    ]
+  },
+  {
+    "id": 151,
+    "name": "Weightlifter Cat",
+    "rarity": "Super Rare",
+    "forms": [
+      "Weightlifter Cat",
+      "Ring Girl Cat",
+      "Pizza Cat"
+    ]
+  },
+  {
+    "id": 152,
+    "name": "Figure Skating Cats",
+    "rarity": "Super Rare",
+    "forms": [
+      "Figure Skating Cats",
+      "Drama Cats",
+      "Slapstick Cats"
+    ]
+  },
+  {
+    "id": 153,
+    "name": "Cat Toaster",
+    "rarity": "Super Rare",
+    "forms": [
+      "Cat Toaster",
+      "Cat Projector",
+      "Catophone"
+    ]
+  },
+  {
+    "id": 154,
+    "name": "Hoop Cat",
+    "rarity": "Rare",
+    "forms": [
+      "Hoop Cat",
+      "Showoff Cat",
+      "Hoopmaster Cat"
+    ]
+  },
+  {
+    "id": 158,
+    "name": "Uesugi Kenshin",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Uesugi Kenshin",
+      "Wargod Kenshin",
+      "Immortal Kenshin",
+      "Hellrider Kenshin"
+    ]
+  },
+  {
+    "id": 159,
+    "name": "Kalisa",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Kalisa",
+      "Kalisa, type \u03c7",
+      "Divine Kalisa"
+    ]
+  },
+  {
+    "id": 160,
+    "name": "Yurinchi",
+    "rarity": "Super Rare",
+    "forms": [
+      "Yurinchi",
+      "Phoenix Yurinchi",
+      "Gekirinchi"
+    ]
+  },
+  {
+    "id": 161,
+    "name": "Crazed Princess Punt",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Crazed Princess Punt",
+      "Crazed Princess Punt CC",
+      "Manic Princess Punt"
+    ]
+  },
+  {
+    "id": 168,
+    "name": "Asiluga",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Asiluga",
+      "Asilan Pasalan",
+      "Assassinlan Pasalan"
+    ]
+  },
+  {
+    "id": 169,
+    "name": "Kubiluga",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Kubiluga",
+      "Kubilan Pasalan",
+      "E. Kubilan Pasalan"
+    ]
+  },
+  {
+    "id": 170,
+    "name": "Tecoluga",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Tecoluga",
+      "Tesalan Pasalan",
+      "Lufalan Pasalan"
+    ]
+  },
+  {
+    "id": 171,
+    "name": "Balaluga",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Balaluga",
+      "Balalan Pasalan",
+      "Piccolan Pasalan"
+    ]
+  },
+  {
+    "id": 172,
+    "name": "Li'l Nyandam",
+    "rarity": "Special",
+    "forms": [
+      "Li'l Nyandam",
+      "Dark Emperor Catdam",
+      "Schoolbus Nyandam"
+    ]
+  },
+  {
+    "id": 173,
+    "name": "Baby Mola",
+    "rarity": "Super Rare",
+    "forms": [
+      "Baby Mola",
+      "Young Man Mola",
+      "Citizen Mola"
+    ]
+  },
+  {
+    "id": 174,
+    "name": "Mola King",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Mola King",
+      "Living Legend",
+      "Master of the Pacific"
+    ]
+  },
+  {
+    "id": 175,
+    "name": "Meowla Meowla",
+    "rarity": "Special",
+    "forms": [
+      "Meowla Meowla",
+      "Catorpedo",
+      "Catorpedo"
+    ]
+  },
+  {
+    "id": 176,
+    "name": "Marshmallow Cat",
+    "rarity": "Rare",
+    "forms": [
+      "Marshmallow Cat",
+      "Creepmallow",
+      "Creepmallow"
+    ]
+  },
+  {
+    "id": 177,
+    "name": "Dioramos",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Dioramos",
+      "Archdragon Dioramos",
+      "God-Emperor Dioramos",
+      "Ascendant Dioramos"
+    ]
+  },
+  {
+    "id": 179,
+    "name": "Takuya \uff06 Yuki",
+    "rarity": "Rare",
+    "forms": [
+      "Takuya \uff06 Yuki",
+      "Takuya, Yuki \uff06 Cat",
+      "Takuya\uff06 Lovely Yuki"
+    ]
+  },
+  {
+    "id": 180,
+    "name": "Mystery Girl Yuki",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Mystery Girl Yuki",
+      "Mystery Yuki \uff06 Cat",
+      "Mystery Catgirl Yuki"
+    ]
+  },
+  {
+    "id": 181,
+    "name": "Yuki Cat",
+    "rarity": "Special",
+    "forms": [
+      "Yuki Cat",
+      "Lovely Yuki Cat",
+      "Lovely Yuki Cat"
+    ]
+  },
+  {
+    "id": 183,
+    "name": "Cat Kart R",
+    "rarity": "Rare",
+    "forms": [
+      "Cat Kart R",
+      "Cat Kart G",
+      "Cat Kart P"
+    ]
+  },
+  {
+    "id": 184,
+    "name": "Mr. Ninja",
+    "rarity": "Special",
+    "forms": [
+      "Mr. Ninja",
+      "Mint",
+      "Mint"
+    ]
+  },
+  {
+    "id": 185,
+    "name": "Hearscht",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Hearscht",
+      "Hearscht CC",
+      "Revolutionary Hearscht CC"
+    ]
+  },
+  {
+    "id": 186,
+    "name": "Cornelia",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Cornelia",
+      "Cornelia CC",
+      "Cornelia CC"
+    ]
+  },
+  {
+    "id": 187,
+    "name": "Juvens",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Juvens",
+      "Juvens CC",
+      "Holiday Juvens CC"
+    ]
+  },
+  {
+    "id": 188,
+    "name": "Mystica",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Mystica",
+      "Mystica CC",
+      "Savior Mystica CC"
+    ]
+  },
+  {
+    "id": 189,
+    "name": "Alois",
+    "rarity": "Super Rare",
+    "forms": [
+      "Alois",
+      "Alois CC",
+      "Alois CC"
+    ]
+  },
+  {
+    "id": 190,
+    "name": "Citrouille",
+    "rarity": "Super Rare",
+    "forms": [
+      "Citrouille",
+      "Citrouille CC",
+      "Citrouille CC"
+    ]
+  },
+  {
+    "id": 191,
+    "name": "Titi",
+    "rarity": "Special",
+    "forms": [
+      "Titi",
+      "Titi CC",
+      "Titi Cat CC"
+    ]
+  },
+  {
+    "id": 194,
+    "name": "Akira",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Akira",
+      "Shadow Akira",
+      "Inferno Akira"
+    ]
+  },
+  {
+    "id": 195,
+    "name": "Mekako Saionji",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Mekako Saionji",
+      "Dr. Mekako",
+      "Mission Control Mekako"
+    ]
+  },
+  {
+    "id": 196,
+    "name": "Catman",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Catman",
+      "Dark Catman",
+      "Ultimate Catman"
+    ]
+  },
+  {
+    "id": 197,
+    "name": "Psychocat",
+    "rarity": "Rare",
+    "forms": [
+      "Psychocat",
+      "Neo Psychocat",
+      "Corrupted Psychocat"
+    ]
+  },
+  {
+    "id": 198,
+    "name": "Onmyoji Cat",
+    "rarity": "Rare",
+    "forms": [
+      "Onmyoji Cat",
+      "Magica Cat",
+      "Thaumaturge Cat"
+    ]
+  },
+  {
+    "id": 199,
+    "name": "Surfer Cat",
+    "rarity": "Super Rare",
+    "forms": [
+      "Surfer Cat",
+      "Castaway Cat",
+      "Seafarer Cat"
+    ]
+  },
+  {
+    "id": 200,
+    "name": "Metal Cat",
+    "rarity": "Super Rare",
+    "forms": [
+      "Metal Cat",
+      "Metal Macho",
+      "Metal Macho"
+    ]
+  },
+  {
+    "id": 201,
+    "name": "Drumcorps Cat",
+    "rarity": "Rare",
+    "forms": [
+      "Drumcorps Cat",
+      "Banner Cat",
+      "Mochi Cat"
+    ]
+  },
+  {
+    "id": 202,
+    "name": "Baozi Cat",
+    "rarity": "Special",
+    "forms": [
+      "Baozi Cat",
+      "Big Baozi",
+      "Big Baozi"
+    ]
+  },
+  {
+    "id": 203,
+    "name": "Kachi-Kachi",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Kachi-Kachi",
+      "Fire Squad Kachiyama",
+      "Kachiyama Assault Brigade"
+    ]
+  },
+  {
+    "id": 209,
+    "name": "Li'l Cat",
+    "rarity": "Special",
+    "forms": [
+      "Li'l Cat",
+      "Li'l Macho Cat",
+      "Li'l Mohawk Cat"
+    ]
+  },
+  {
+    "id": 210,
+    "name": "Li'l Tank Cat",
+    "rarity": "Special",
+    "forms": [
+      "Li'l Tank Cat",
+      "Li'l Wall Cat",
+      "Li'l Eraser Cat"
+    ]
+  },
+  {
+    "id": 211,
+    "name": "Li'l Axe Cat",
+    "rarity": "Special",
+    "forms": [
+      "Li'l Axe Cat",
+      "Li'l Brave Cat",
+      "Li'l Dark Cat"
+    ]
+  },
+  {
+    "id": 212,
+    "name": "The White Rabbit",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "The White Rabbit",
+      "The Black Cat",
+      "The Grey Fox",
+      "The Spectral Cat"
+    ]
+  },
+  {
+    "id": 213,
+    "name": "Catburger",
+    "rarity": "Special",
+    "forms": [
+      "Catburger",
+      "Cat Royale",
+      "Value Meal Cat"
+    ]
+  },
+  {
+    "id": 214,
+    "name": "HYAKUTARO",
+    "rarity": "Rare",
+    "forms": [
+      "HYAKUTARO",
+      "HYAKUTARO CC",
+      "HYAKUTARO CC"
+    ]
+  },
+  {
+    "id": 215,
+    "name": "MARCO",
+    "rarity": "Rare",
+    "forms": [
+      "MARCO",
+      "MARCO CC",
+      "MARCO CC"
+    ]
+  },
+  {
+    "id": 216,
+    "name": "TARMA",
+    "rarity": "Rare",
+    "forms": [
+      "TARMA",
+      "TARMA CC",
+      "TARMA CC"
+    ]
+  },
+  {
+    "id": 217,
+    "name": "ERI",
+    "rarity": "Rare",
+    "forms": [
+      "ERI",
+      "ERI CC",
+      "ERI CC"
+    ]
+  },
+  {
+    "id": 218,
+    "name": "FIO",
+    "rarity": "Rare",
+    "forms": [
+      "FIO",
+      "FIO CC",
+      "FIO CC"
+    ]
+  },
+  {
+    "id": 219,
+    "name": "SV-001",
+    "rarity": "Super Rare",
+    "forms": [
+      "SV-001",
+      "SV-001 CC",
+      "SV-001 CC"
+    ]
+  },
+  {
+    "id": 220,
+    "name": "ALLEN O'NEIL",
+    "rarity": "Super Rare",
+    "forms": [
+      "ALLEN O'NEIL",
+      "ALLEN O'NEIL CC",
+      "ALLEN O'NEIL CC"
+    ]
+  },
+  {
+    "id": 221,
+    "name": "MARS PEOPLE",
+    "rarity": "Rare",
+    "forms": [
+      "MARS PEOPLE",
+      "MARS PEOPLE CC",
+      "MARS PEOPLE CC"
+    ]
+  },
+  {
+    "id": 222,
+    "name": "HUGE HERMIT",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "HUGE HERMIT",
+      "HUGE HERMIT CC",
+      "GOLDEN HUGE HERMIT CC"
+    ]
+  },
+  {
+    "id": 223,
+    "name": "JUPITER KING",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "JUPITER KING",
+      "JUPITER KING CC",
+      "GOLDEN JUPITER CC"
+    ]
+  },
+  {
+    "id": 224,
+    "name": "DONALD MORDEN",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "DONALD MORDEN",
+      "GENERAL MORDEN",
+      "GOLDEN MORDEN CC"
+    ]
+  },
+  {
+    "id": 225,
+    "name": "HI-DO",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "HI-DO",
+      "HI-DO CC",
+      "HI-DO MK III"
+    ]
+  },
+  {
+    "id": 226,
+    "name": "Warlock and Pierre",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Warlock and Pierre",
+      "Dark Merchant Babil",
+      "Mad Doctor Klay"
+    ]
+  },
+  {
+    "id": 227,
+    "name": "Pumpcat",
+    "rarity": "Rare",
+    "forms": [
+      "Pumpcat",
+      "Cat O'Lantern",
+      "Harbinger Cat"
+    ]
+  },
+  {
+    "id": 228,
+    "name": "Gloomy Neneko",
+    "rarity": "Super Rare",
+    "forms": [
+      "Gloomy Neneko",
+      "Witchy Neneko",
+      "Costumed Witchy Neneko"
+    ]
+  },
+  {
+    "id": 229,
+    "name": "Hallowindy",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Hallowindy",
+      "Hallowindy, type \u03b1"
+    ]
+  },
+  {
+    "id": 230,
+    "name": "Spooky Thundia",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Spooky Thundia",
+      "Spooky Thundia, type \u03b2"
+    ]
+  },
+  {
+    "id": 237,
+    "name": "Freshman Cat Jobs",
+    "rarity": "Super Rare",
+    "forms": [
+      "Freshman Cat Jobs",
+      "Prof. Cat Jobs",
+      "Headmaster Cat Jobs"
+    ]
+  },
+  {
+    "id": 238,
+    "name": "Rich Cat III",
+    "rarity": "Super Rare",
+    "forms": [
+      "Rich Cat III",
+      "Rich Cat Sr.",
+      "Richest Cat"
+    ]
+  },
+  {
+    "id": 239,
+    "name": "Sniper the Recruit",
+    "rarity": "Super Rare",
+    "forms": [
+      "Sniper the Recruit",
+      "Sniper the Heavy",
+      "Sniper the Deadeye"
+    ]
+  },
+  {
+    "id": 240,
+    "name": "Togeluga",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Togeluga",
+      "Togelan Pasalan",
+      "Shishilan Pasalan"
+    ]
+  },
+  {
+    "id": 241,
+    "name": "Frosty Kai",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Frosty Kai",
+      "Frosty Kai, type \u03bc",
+      "Frostspirit Kai, type \u03bc"
+    ]
+  },
+  {
+    "id": 242,
+    "name": "Santa Kuu",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Santa Kuu",
+      "Santa Kuu, type \u03b3",
+      "Santa Kuu, type \u03b3"
+    ]
+  },
+  {
+    "id": 243,
+    "name": "Holy Coppermine",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Holy Coppermine",
+      "Holy Coppermine, type \u03ba",
+      "Holy Coppermine, type \u03ba"
+    ]
+  },
+  {
+    "id": 244,
+    "name": "A Gift of Cats",
+    "rarity": "Rare",
+    "forms": [
+      "A Gift of Cats",
+      "Cat's Gift",
+      "Cat's Gift"
+    ]
+  },
+  {
+    "id": 245,
+    "name": "Li'l Gross Cat",
+    "rarity": "Special",
+    "forms": [
+      "Li'l Gross Cat",
+      "Li'l Sexy Legs Cat",
+      "Li'l Macho Legs Cat"
+    ]
+  },
+  {
+    "id": 246,
+    "name": "Li'l Cow Cat",
+    "rarity": "Special",
+    "forms": [
+      "Li'l Cow Cat",
+      "Li'l Giraffe Cat",
+      "Li'l Lion Cat"
+    ]
+  },
+  {
+    "id": 247,
+    "name": "Li'l Bird Cat",
+    "rarity": "Special",
+    "forms": [
+      "Li'l Bird Cat",
+      "Li'l UFO Cat",
+      "Li'l Flying Cat"
+    ]
+  },
+  {
+    "id": 248,
+    "name": "Undead Cat",
+    "rarity": "Special",
+    "forms": [
+      "Undead Cat",
+      "Bake-Nyanko",
+      "Extra-Life Cat"
+    ]
+  },
+  {
+    "id": 257,
+    "name": "Thunder God Zeus",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Thunder God Zeus",
+      "The Majestic Zeus",
+      "Almighty Zeus"
+    ]
+  },
+  {
+    "id": 258,
+    "name": "Anubis the Protector",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Anubis the Protector",
+      "Anubis the Unblemished",
+      "Almighty Anubis"
+    ]
+  },
+  {
+    "id": 259,
+    "name": "Radiant Aphrodite",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Radiant Aphrodite",
+      "Megaphrodite",
+      "Almighty Aphrodite"
+    ]
+  },
+  {
+    "id": 260,
+    "name": "Catway",
+    "rarity": "Super Rare",
+    "forms": [
+      "Catway",
+      "Drone Cat",
+      "Time Traveller Cat"
+    ]
+  },
+  {
+    "id": 261,
+    "name": "Hayabusa",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Hayabusa",
+      "Oni Hayabusa",
+      "Akuma Hayabusa"
+    ]
+  },
+  {
+    "id": 267,
+    "name": "Catornado",
+    "rarity": "Super Rare",
+    "forms": [
+      "Catornado",
+      "Hurricat",
+      "Catyphoon"
+    ]
+  },
+  {
+    "id": 268,
+    "name": "Red Riding Mina",
+    "rarity": "Special",
+    "forms": [
+      "Red Riding Mina",
+      "Crimson Mina",
+      "Awakened Mina"
+    ]
+  },
+  {
+    "id": 269,
+    "name": "Baby Gao",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Baby Gao",
+      "Mighty Lord Gao",
+      "Mighty Lord Gao"
+    ]
+  },
+  {
+    "id": 270,
+    "name": "Crazed Yuki",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Crazed Yuki",
+      "Crazed Yuki & Cat",
+      "Crazed Catgirl Yuki"
+    ]
+  },
+  {
+    "id": 271,
+    "name": "Shining Amaterasu",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Shining Amaterasu",
+      "Glorious Amaterasu",
+      "Almighty Amaterasu"
+    ]
+  },
+  {
+    "id": 272,
+    "name": "Splendid Ganesha",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Splendid Ganesha",
+      "Exalted Ganesha",
+      "Almighty Ganesha"
+    ]
+  },
+  {
+    "id": 273,
+    "name": "Cheerleader Cat",
+    "rarity": "Super Rare",
+    "forms": [
+      "Cheerleader Cat",
+      "Waitress Cat",
+      "Soba Cat"
+    ]
+  },
+  {
+    "id": 274,
+    "name": "Tropical Kalisa",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Tropical Kalisa",
+      "Tropical Kalisa, type X",
+      "Tropical Kalisa, type X"
+    ]
+  },
+  {
+    "id": 275,
+    "name": "Midsummer Rabbit",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Midsummer Rabbit",
+      "Midsummer Cat",
+      "Brightsummer Cat"
+    ]
+  },
+  {
+    "id": 276,
+    "name": "Sunny Neneko",
+    "rarity": "Super Rare",
+    "forms": [
+      "Sunny Neneko",
+      "Seaside Neneko",
+      "Early Summer Neneko"
+    ]
+  },
+  {
+    "id": 277,
+    "name": "Funghi",
+    "rarity": "Rare",
+    "forms": [
+      "Funghi",
+      "Funghi 'n' Cat",
+      "Funghi 'n' Cat"
+    ]
+  },
+  {
+    "id": 278,
+    "name": "Tanky",
+    "rarity": "Special",
+    "forms": [
+      "Tanky",
+      "Tanky 'n' Cat",
+      "Tanky 'n' Cat"
+    ]
+  },
+  {
+    "id": 279,
+    "name": "White Cat",
+    "rarity": "Special",
+    "forms": [
+      "White Cat",
+      "Gross White Cat",
+      "Gross White Cat"
+    ]
+  },
+  {
+    "id": 280,
+    "name": "Fortressy",
+    "rarity": "Special",
+    "forms": [
+      "Fortressy",
+      "Castley",
+      "Castley"
+    ]
+  },
+  {
+    "id": 282,
+    "name": "Awa-Odori Cat",
+    "rarity": "Rare",
+    "forms": [
+      "Awa-Odori Cat",
+      "So-Ran Cat",
+      "Gorgeous Groovin' Cat"
+    ]
+  },
+  {
+    "id": 283,
+    "name": "Pai-Pai",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Pai-Pai",
+      "Pai-Pai Z",
+      "Pai-Pai DX"
+    ]
+  },
+  {
+    "id": 284,
+    "name": "Express Cat",
+    "rarity": "Super Rare",
+    "forms": [
+      "Express Cat",
+      "Maglev Cat",
+      "Bullet Train Cat"
+    ]
+  },
+  {
+    "id": 286,
+    "name": "Strike Unit R.E.I.",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Strike Unit R.E.I.",
+      "Assault Unit R.E.I.",
+      "Flight Unit R.E.I."
+    ]
+  },
+  {
+    "id": 287,
+    "name": "Little Leaguer Cat",
+    "rarity": "Super Rare",
+    "forms": [
+      "Little Leaguer Cat",
+      "Major Leaguer Cat",
+      "Golfer Cat"
+    ]
+  },
+  {
+    "id": 288,
+    "name": "Madoka Kaname",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Madoka Kaname",
+      "Madoka & Cat",
+      "Ultimate Madoka"
+    ]
+  },
+  {
+    "id": 289,
+    "name": "Homura Akemi",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Homura Akemi",
+      "Homura & Cat",
+      "Devil Homura"
+    ]
+  },
+  {
+    "id": 290,
+    "name": "Sayaka Miki",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Sayaka Miki",
+      "Sayaka & Cat",
+      "Sayaka & Cat"
+    ]
+  },
+  {
+    "id": 291,
+    "name": "Mami Tomoe",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Mami Tomoe",
+      "Mami & Cat",
+      "Mami & Cat"
+    ]
+  },
+  {
+    "id": 292,
+    "name": "Kyoko Sakura",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Kyoko Sakura",
+      "Kyoko & Cat",
+      "Kyoko & Cat"
+    ]
+  },
+  {
+    "id": 293,
+    "name": "Kyubey",
+    "rarity": "Super Rare",
+    "forms": [
+      "Kyubey",
+      "Kyubey & Cat",
+      "Kyubey & Cat"
+    ]
+  },
+  {
+    "id": 294,
+    "name": "Madoka Cat",
+    "rarity": "Rare",
+    "forms": [
+      "Madoka Cat",
+      "Magical Girl Madoka Cat",
+      "Magical Girl Madoka Cat"
+    ]
+  },
+  {
+    "id": 295,
+    "name": "Homura Cat",
+    "rarity": "Rare",
+    "forms": [
+      "Homura Cat",
+      "Magical Girl Homura Cat",
+      "Magical Girl Homura Cat"
+    ]
+  },
+  {
+    "id": 296,
+    "name": "Sayaka Cat",
+    "rarity": "Rare",
+    "forms": [
+      "Sayaka Cat",
+      "Magical Girl Sayaka Cat",
+      "Magical Girl Sayaka Cat"
+    ]
+  },
+  {
+    "id": 297,
+    "name": "Mami Cat",
+    "rarity": "Rare",
+    "forms": [
+      "Mami Cat",
+      "Magical Girl Mami Cat",
+      "Magical Girl Mami Cat"
+    ]
+  },
+  {
+    "id": 298,
+    "name": "Kyoko Cat",
+    "rarity": "Rare",
+    "forms": [
+      "Kyoko Cat",
+      "Magical Girl Kyoko Cat",
+      "Magical Girl Kyoko Cat"
+    ]
+  },
+  {
+    "id": 299,
+    "name": "Li'l Madoka",
+    "rarity": "Rare",
+    "forms": [
+      "Li'l Madoka",
+      "Li'l Magical Girl Madoka",
+      "Li'l Ultimate Madoka"
+    ]
+  },
+  {
+    "id": 300,
+    "name": "Li'l Homura",
+    "rarity": "Special",
+    "forms": [
+      "Li'l Homura",
+      "Li'l Magical Girl Homura",
+      "Li'l Devil Homura"
+    ]
+  },
+  {
+    "id": 301,
+    "name": "Kyubey Cat",
+    "rarity": "Rare",
+    "forms": [
+      "Kyubey Cat",
+      "Tank Kyubey Cat",
+      "Tank Kyubey Cat"
+    ]
+  },
+  {
+    "id": 302,
+    "name": "Lilith Cat",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Lilith Cat",
+      "Succubus Cat",
+      "Queen Succubus Cat"
+    ]
+  },
+  {
+    "id": 303,
+    "name": "Food Stall Cat",
+    "rarity": "Rare",
+    "forms": [
+      "Food Stall Cat",
+      "Delivery Cat",
+      "Cafeteria Cat"
+    ]
+  },
+  {
+    "id": 304,
+    "name": "Mighty Kat-A-Pult",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Mighty Kat-A-Pult",
+      "CAT-6 Siege Engine",
+      "CAT-8 Behemoth",
+      "CAT-10 Gigapult"
+    ]
+  },
+  {
+    "id": 305,
+    "name": "Mighty Drednot",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Mighty Drednot",
+      "B.C.S. Lionheart",
+      "B.C.S. Tigerclaw",
+      "B.C.S. Beartooth"
+    ]
+  },
+  {
+    "id": 306,
+    "name": "Mighty Bomburr",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Mighty Bomburr",
+      "NEK-0 Sky Fortress",
+      "NEK-02 Air Citadel",
+      "NEK-03 Cloud Emperor"
+    ]
+  },
+  {
+    "id": 307,
+    "name": "Vaulter Cat",
+    "rarity": "Super Rare",
+    "forms": [
+      "Vaulter Cat",
+      "Polevaulter Cat",
+      "Housewife Cat"
+    ]
+  },
+  {
+    "id": 308,
+    "name": "Gardener Cat",
+    "rarity": "Rare",
+    "forms": [
+      "Gardener Cat",
+      "Lumbercat",
+      "Weedwacker Cat"
+    ]
+  },
+  {
+    "id": 310,
+    "name": "Yuletide Nurse",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Yuletide Nurse",
+      "Yule Knight Nurse",
+      "Xmas Spirit Nurse"
+    ]
+  },
+  {
+    "id": 311,
+    "name": "Li'l Fish Cat",
+    "rarity": "Special",
+    "forms": [
+      "Li'l Fish Cat",
+      "Li'l Whale Cat",
+      "Li'l Island Cat"
+    ]
+  },
+  {
+    "id": 312,
+    "name": "Li'l Lizard Cat",
+    "rarity": "Special",
+    "forms": [
+      "Li'l Lizard Cat",
+      "Li'l Dragon Cat",
+      "Li'l King Dragon Cat"
+    ]
+  },
+  {
+    "id": 313,
+    "name": "Li'l Titan Cat",
+    "rarity": "Special",
+    "forms": [
+      "Li'l Titan Cat",
+      "Li'l Mythical Titan",
+      "Li'l Jamiera Cat"
+    ]
+  },
+  {
+    "id": 314,
+    "name": "Years-End Neneko",
+    "rarity": "Super Rare",
+    "forms": [
+      "Years-End Neneko",
+      "New Year Neneko",
+      "Festive New Year Neneko"
+    ]
+  },
+  {
+    "id": 315,
+    "name": "PIKOTARO",
+    "rarity": "Rare",
+    "forms": [
+      "PIKOTARO",
+      "NEKOTARO",
+      "NEKOTARO"
+    ]
+  },
+  {
+    "id": 316,
+    "name": "Wrathful Poseidon",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Wrathful Poseidon",
+      "Valiant Poseidon",
+      "Almighty Poseidon"
+    ]
+  },
+  {
+    "id": 317,
+    "name": "CPAC",
+    "rarity": "Special",
+    "forms": [
+      "CPAC",
+      "PPAP",
+      "PPAP"
+    ]
+  },
+  {
+    "id": 318,
+    "name": "Miko Mitama",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Miko Mitama",
+      "Mitama the Oracle",
+      "Mitama the Oracle"
+    ]
+  },
+  {
+    "id": 319,
+    "name": "Killer Cat",
+    "rarity": "Rare",
+    "forms": [
+      "Killer Cat",
+      "True Killer Cat",
+      "Radical Cat"
+    ]
+  },
+  {
+    "id": 322,
+    "name": "Sarukani",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Sarukani",
+      "Rock Revengers",
+      "The One-Hit Wonders"
+    ]
+  },
+  {
+    "id": 323,
+    "name": "Miyamoku Musashi",
+    "rarity": "Special",
+    "forms": [
+      "Miyamoku Musashi",
+      "Heroic Musashi",
+      "Awakened Musashi"
+    ]
+  },
+  {
+    "id": 324,
+    "name": "Curling Cat",
+    "rarity": "Rare",
+    "forms": [
+      "Curling Cat",
+      "Zamboney Cat",
+      "Green Shell Cat"
+    ]
+  },
+  {
+    "id": 325,
+    "name": "Welterweight Cat",
+    "rarity": "Rare",
+    "forms": [
+      "Welterweight Cat",
+      "Heavyweight Cat",
+      "Ectoweight Cat"
+    ]
+  },
+  {
+    "id": 326,
+    "name": "Mobius",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Mobius",
+      "Miraculous Mobius",
+      "Miraculous Mobius"
+    ]
+  },
+  {
+    "id": 327,
+    "name": "Belial",
+    "rarity": "Super Rare",
+    "forms": [
+      "Belial",
+      "Reckless Belial",
+      "Reckless Belial"
+    ]
+  },
+  {
+    "id": 328,
+    "name": "Happy 100",
+    "rarity": "Special",
+    "forms": [
+      "Happy 100",
+      "Heartful Happy 100",
+      "Heartful Happy 100"
+    ]
+  },
+  {
+    "id": 329,
+    "name": "Eggy Cat",
+    "rarity": "Rare",
+    "forms": [
+      "Eggy Cat",
+      "Easter Cat",
+      "Easter Egg Cat"
+    ]
+  },
+  {
+    "id": 330,
+    "name": "Springtime Kenshin",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Springtime Kenshin",
+      "Full-Bloom Kenshin",
+      "Spring Breeze Kenshin"
+    ]
+  },
+  {
+    "id": 331,
+    "name": "Bunny & Canard",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Bunny & Canard",
+      "Disciple Psychoduck",
+      "Malevolent Mad-Duck"
+    ]
+  },
+  {
+    "id": 332,
+    "name": "Easter Neneko",
+    "rarity": "Super Rare",
+    "forms": [
+      "Easter Neneko",
+      "Hoppity Neneko",
+      "Blossoming Neneko"
+    ]
+  },
+  {
+    "id": 333,
+    "name": "Shadow Gao",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Shadow Gao",
+      "Diabolic Gao",
+      "Diabolic Gao"
+    ]
+  },
+  {
+    "id": 334,
+    "name": "Trickster Himeyuri",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Trickster Himeyuri",
+      "Himeyuri Ninetails",
+      "Fox Queen Himeyuri"
+    ]
+  },
+  {
+    "id": 335,
+    "name": "Sea Maiden Ruri",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Sea Maiden Ruri",
+      "Sea Mistress Ruri",
+      "Mer-Queen Ruri"
+    ]
+  },
+  {
+    "id": 336,
+    "name": "Queen Reika",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Queen Reika",
+      "Pharaoh Reika",
+      "Eternal Reika"
+    ]
+  },
+  {
+    "id": 337,
+    "name": "HMS Princess",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "HMS Princess",
+      "HMS Princess CC",
+      "HMS Princess II CC"
+    ]
+  },
+  {
+    "id": 338,
+    "name": "Imagawa Yoshimoto",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Imagawa Yoshimoto",
+      "Wargod Yoshimoto",
+      "Immortal Yoshimoto"
+    ]
+  },
+  {
+    "id": 340,
+    "name": "Redhead Yuki Cat",
+    "rarity": "Rare",
+    "forms": [
+      "Redhead Yuki Cat",
+      "Redhead Lovely Yuki Cat",
+      "Redhead Muscled Yuki Cat"
+    ]
+  },
+  {
+    "id": 341,
+    "name": "Lost World Yuki",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Lost World Yuki",
+      "Lost World Yuki \uff06 Cat",
+      "Lost World Catgirl Yuki"
+    ]
+  },
+  {
+    "id": 342,
+    "name": "Maneki Cat",
+    "rarity": "Special",
+    "forms": [
+      "Maneki Cat",
+      "Neo Maneki Cat",
+      "Neo Maneki Cat"
+    ]
+  },
+  {
+    "id": 343,
+    "name": "Slug Jockey Cat",
+    "rarity": "Rare",
+    "forms": [
+      "Slug Jockey Cat",
+      "Slugcat",
+      "Slugcat"
+    ]
+  },
+  {
+    "id": 344,
+    "name": "Orthos",
+    "rarity": "Super Rare",
+    "forms": [
+      "Orthos",
+      "Orthos CC",
+      "Artist Orthos CC"
+    ]
+  },
+  {
+    "id": 345,
+    "name": "Michelia",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Michelia",
+      "Michelia CC",
+      "Naptime Michelia CC"
+    ]
+  },
+  {
+    "id": 346,
+    "name": "Todomeki",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Todomeki",
+      "Todomeki CC",
+      "Todomeki CC"
+    ]
+  },
+  {
+    "id": 351,
+    "name": "Twinstars",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Twinstars",
+      "Twinstars, type \u03a6",
+      "Divine Twinstars"
+    ]
+  },
+  {
+    "id": 352,
+    "name": "Hermit Cat",
+    "rarity": "Special",
+    "forms": [
+      "Hermit Cat",
+      "Grandmaster Cat",
+      "Masked Grandmaster Cat"
+    ]
+  },
+  {
+    "id": 354,
+    "name": "Seashore Kai",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Seashore Kai",
+      "Seashore Kai, type \u03bc"
+    ]
+  },
+  {
+    "id": 355,
+    "name": "Mighty Rekon Korps",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Mighty Rekon Korps",
+      "Orbital Platform Armageddon",
+      "Orbital Annihilator Ragnarok"
+    ]
+  },
+  {
+    "id": 357,
+    "name": "Wolfchild Deale",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Wolfchild Deale",
+      "Wolf Princess Deale",
+      "Jester Queen Deale"
+    ]
+  },
+  {
+    "id": 358,
+    "name": "Graveflower Verbena",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Graveflower Verbena",
+      "Verbena the Bride",
+      "Opulent Verbena"
+    ]
+  },
+  {
+    "id": 359,
+    "name": "Bora",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Bora",
+      "Bazibon",
+      "Bazibastra",
+      "Bazifenix"
+    ]
+  },
+  {
+    "id": 360,
+    "name": "Mizli",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Mizli",
+      "Marinmizu",
+      "Mizuririn",
+      "Mizunade"
+    ]
+  },
+  {
+    "id": 361,
+    "name": "Aer",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Aer",
+      "Erphuan",
+      "Aervanta",
+      "Aervantex"
+    ]
+  },
+  {
+    "id": 362,
+    "name": "Saber",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Saber",
+      "Saber CC",
+      "Saber Alter CC"
+    ]
+  },
+  {
+    "id": 363,
+    "name": "Rin Tohsaka",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Rin Tohsaka",
+      "Rin Tohsaka CC",
+      "Rin Tohsaka CC"
+    ]
+  },
+  {
+    "id": 364,
+    "name": "Illyasviel",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Illyasviel",
+      "Illyasviel CC",
+      "Illyasviel CC"
+    ]
+  },
+  {
+    "id": 365,
+    "name": "Archer",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Archer",
+      "Archer CC",
+      "Archer CC"
+    ]
+  },
+  {
+    "id": 366,
+    "name": "Lancer",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Lancer",
+      "Lancer CC",
+      "Lancer CC"
+    ]
+  },
+  {
+    "id": 367,
+    "name": "Rider",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Rider",
+      "Rider CC",
+      "Rider CC"
+    ]
+  },
+  {
+    "id": 368,
+    "name": "Gilgamesh",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Gilgamesh",
+      "Gilgamesh CC",
+      "Gilgamesh CC"
+    ]
+  },
+  {
+    "id": 369,
+    "name": "Saber the Cat",
+    "rarity": "Special",
+    "forms": [
+      "Saber the Cat",
+      "Heroic Spirit Saber Cat",
+      "Saber Alter Cat"
+    ]
+  },
+  {
+    "id": 370,
+    "name": "Sakura the Cat",
+    "rarity": "Rare",
+    "forms": [
+      "Sakura the Cat",
+      "Apron Sakura Cat",
+      "Dreaming Sakura Cat"
+    ]
+  },
+  {
+    "id": 371,
+    "name": "Rin the Cat",
+    "rarity": "Rare",
+    "forms": [
+      "Rin the Cat",
+      "Mage Rin Cat",
+      "Mage Rin Cat"
+    ]
+  },
+  {
+    "id": 372,
+    "name": "Illya the Cat",
+    "rarity": "Rare",
+    "forms": [
+      "Illya the Cat",
+      "Snow Faerie Illya",
+      "Snow Faerie Illya"
+    ]
+  },
+  {
+    "id": 373,
+    "name": "Li'l Shirou",
+    "rarity": "Rare",
+    "forms": [
+      "Li'l Shirou",
+      "Li'l Shirou CC",
+      "Li'l Shirou CC"
+    ]
+  },
+  {
+    "id": 374,
+    "name": "Li'l Sakura",
+    "rarity": "Special",
+    "forms": [
+      "Li'l Sakura",
+      "Li'l Sakura CC",
+      "Li'l Sakura CC"
+    ]
+  },
+  {
+    "id": 375,
+    "name": "Coin Cat",
+    "rarity": "Special",
+    "forms": [
+      "Coin Cat",
+      "Macho Coin Cat",
+      "Macho Coin Cat"
+    ]
+  },
+  {
+    "id": 376,
+    "name": "Rover Cat",
+    "rarity": "Rare",
+    "forms": [
+      "Rover Cat",
+      "Rover Cat Mk II",
+      "Catellite"
+    ]
+  },
+  {
+    "id": 377,
+    "name": "Fencer Cat",
+    "rarity": "Super Rare",
+    "forms": [
+      "Fencer Cat",
+      "Kendo Cat",
+      "The Kitty of Liberty"
+    ]
+  },
+  {
+    "id": 378,
+    "name": "Dark Mitama",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Dark Mitama",
+      "Gothic Mitama",
+      "Gothic Mitama"
+    ]
+  },
+  {
+    "id": 379,
+    "name": "Volley Cat",
+    "rarity": "Rare",
+    "forms": [
+      "Volley Cat",
+      "Ballet Cat",
+      "Curry Cat"
+    ]
+  },
+  {
+    "id": 380,
+    "name": "D'artanyan",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "D'artanyan",
+      "Meow-sketeer",
+      "Meow-sketeer"
+    ]
+  },
+  {
+    "id": 381,
+    "name": "Farmer Cat",
+    "rarity": "Special",
+    "forms": [
+      "Farmer Cat",
+      "Harvest Cat",
+      "Harvest Cat"
+    ]
+  },
+  {
+    "id": 382,
+    "name": "Glass Cat",
+    "rarity": "Rare",
+    "forms": [
+      "Glass Cat",
+      "Macho Glass Cat",
+      "Macho Crystal Cat"
+    ]
+  },
+  {
+    "id": 383,
+    "name": "Masked Yulala",
+    "rarity": "Special",
+    "forms": [
+      "Masked Yulala",
+      "Mystic Yulala",
+      "Spiritual Yulala"
+    ]
+  },
+  {
+    "id": 384,
+    "name": "Satori Hikami & Cat",
+    "rarity": "Special",
+    "forms": [
+      "Satori Hikami & Cat",
+      "Satori Hikami & Cat CC",
+      "Satori Hikami & Cat CC"
+    ]
+  },
+  {
+    "id": 385,
+    "name": "Akio Yabe",
+    "rarity": "Rare",
+    "forms": [
+      "Akio Yabe",
+      "Akio Yabe CC",
+      "Akio & Gunder CC"
+    ]
+  },
+  {
+    "id": 386,
+    "name": "Sairi Nijitani",
+    "rarity": "Rare",
+    "forms": [
+      "Sairi Nijitani",
+      "Sairi Nijitani CC",
+      "Sairi Nijitani CC"
+    ]
+  },
+  {
+    "id": 387,
+    "name": "Misaki Konno",
+    "rarity": "Rare",
+    "forms": [
+      "Misaki Konno",
+      "Misaki Konno CC",
+      "Misaki Konno CC"
+    ]
+  },
+  {
+    "id": 388,
+    "name": "Ren Katagiri",
+    "rarity": "Rare",
+    "forms": [
+      "Ren Katagiri",
+      "Ren Katagiri CC",
+      "Ren Katagiri CC"
+    ]
+  },
+  {
+    "id": 389,
+    "name": "Karin Nekozuka",
+    "rarity": "Rare",
+    "forms": [
+      "Karin Nekozuka",
+      "Karin Nekozuka CC",
+      "Karin Nekozuka CC"
+    ]
+  },
+  {
+    "id": 390,
+    "name": "Aoi Hayakawa",
+    "rarity": "Super Rare",
+    "forms": [
+      "Aoi Hayakawa",
+      "Aoi Hayakawa CC",
+      "Baseball Mask \u03b1"
+    ]
+  },
+  {
+    "id": 391,
+    "name": "Mizuki Tachibana",
+    "rarity": "Super Rare",
+    "forms": [
+      "Mizuki Tachibana",
+      "Mizuki Tachibana CC",
+      "Baseball Mask \u03b2"
+    ]
+  },
+  {
+    "id": 392,
+    "name": "Hijiri Rokudo",
+    "rarity": "Super Rare",
+    "forms": [
+      "Hijiri Rokudo",
+      "Hijiri Rokudo CC",
+      "Baseball Mask \u03b3"
+    ]
+  },
+  {
+    "id": 393,
+    "name": "Saki Nijima",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Saki Nijima",
+      "Saki Nijima CC",
+      "Samba Saki CC"
+    ]
+  },
+  {
+    "id": 394,
+    "name": "Subaru Hoshi",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Subaru Hoshi",
+      "Subaru Hoshi CC",
+      "Dark Subaru CC"
+    ]
+  },
+  {
+    "id": 395,
+    "name": "Miyabi Oyama",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Miyabi Oyama",
+      "Miyabi Oyama CC",
+      "Baseball Mask \u03b4"
+    ]
+  },
+  {
+    "id": 396,
+    "name": "Ganglion",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Ganglion",
+      "Ganglion the Ancient",
+      "Ganglion the Unleashed"
+    ]
+  },
+  {
+    "id": 397,
+    "name": "Sakura Sonic",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Sakura Sonic",
+      "Afterschool Sakura",
+      "Sacred Blade Sakura",
+      "Sacred Blade Sakura Z"
+    ]
+  },
+  {
+    "id": 399,
+    "name": "Mentori",
+    "rarity": "Rare",
+    "forms": [
+      "Mentori",
+      "Mentori CC",
+      "Mentori CC"
+    ]
+  },
+  {
+    "id": 400,
+    "name": "Imoto",
+    "rarity": "Special",
+    "forms": [
+      "Imoto",
+      "Imoto CC",
+      "Imoto CC"
+    ]
+  },
+  {
+    "id": 401,
+    "name": "Voli",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Voli",
+      "Volta",
+      "Gigavolta"
+    ]
+  },
+  {
+    "id": 402,
+    "name": "Shinji & Cat",
+    "rarity": "Rare",
+    "forms": [
+      "Shinji & Cat",
+      "Plug Suit Shinji",
+      "Plug Suit Shinji Black"
+    ]
+  },
+  {
+    "id": 403,
+    "name": "Gendo & Fuyutsuki Cats",
+    "rarity": "Special",
+    "forms": [
+      "Gendo & Fuyutsuki Cats",
+      "Moon Gendo & Fuyutsuki Cats",
+      "Moon Gendo & Fuyutsuki Cats"
+    ]
+  },
+  {
+    "id": 404,
+    "name": "Giraffe Unit-01",
+    "rarity": "Rare",
+    "forms": [
+      "Giraffe Unit-01",
+      "Giraffe Unit-02",
+      "Giraffe Unit-02"
+    ]
+  },
+  {
+    "id": 405,
+    "name": "Kaworu & Cat",
+    "rarity": "Special",
+    "forms": [
+      "Kaworu & Cat",
+      "Plug Suit Kaworu",
+      "Moon Kaworu"
+    ]
+  },
+  {
+    "id": 406,
+    "name": "Rei Cat",
+    "rarity": "Rare",
+    "forms": [
+      "Rei Cat",
+      "Ayanami Cat (TBC)",
+      "Ayanami Cat (TBC)"
+    ]
+  },
+  {
+    "id": 407,
+    "name": "Asuka Cat",
+    "rarity": "Rare",
+    "forms": [
+      "Asuka Cat",
+      "Apron Asuka",
+      "Apron Asuka"
+    ]
+  },
+  {
+    "id": 408,
+    "name": "Mari Cat",
+    "rarity": "Rare",
+    "forms": [
+      "Mari Cat",
+      "Special Ops Mari",
+      "Special Ops Mari"
+    ]
+  },
+  {
+    "id": 409,
+    "name": "Rei Ayanami",
+    "rarity": "Super Rare",
+    "forms": [
+      "Rei Ayanami",
+      "Plug Suit Rei",
+      "Reunion Li'l Rei"
+    ]
+  },
+  {
+    "id": 410,
+    "name": "Asuka Langley",
+    "rarity": "Super Rare",
+    "forms": [
+      "Asuka Langley",
+      "Plug Suit Asuka",
+      "Eyepatch Li'l Asuka"
+    ]
+  },
+  {
+    "id": 411,
+    "name": "Mari Illustrious",
+    "rarity": "Super Rare",
+    "forms": [
+      "Mari Illustrious",
+      "Plug Suit Mari",
+      "Plug Suit Mari"
+    ]
+  },
+  {
+    "id": 412,
+    "name": "EVA Unit-00",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "EVA Unit-00",
+      "EVA Unit-00 & Cat",
+      "EVA Unit-00 & Cat"
+    ]
+  },
+  {
+    "id": 413,
+    "name": "EVA Unit-01",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "EVA Unit-01",
+      "EVA Unit-01 & Cat",
+      "Determined Unit-01 & Cat"
+    ]
+  },
+  {
+    "id": 414,
+    "name": "EVA Unit-02",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "EVA Unit-02",
+      "EVA Unit-02 & Cat",
+      "Unit-02, Code 777"
+    ]
+  },
+  {
+    "id": 415,
+    "name": "Shinji Cat",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Shinji Cat",
+      "Toji & Kensuke Cats",
+      "Toji & Kensuke Cats"
+    ]
+  },
+  {
+    "id": 416,
+    "name": "Moon Operators",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Moon Operators",
+      "NERV Moon",
+      "NERV Moon"
+    ]
+  },
+  {
+    "id": 417,
+    "name": "Mighty Thermae D-Lux",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Mighty Thermae D-Lux",
+      "Subterra Guardians",
+      "Subterra Sentinels"
+    ]
+  },
+  {
+    "id": 418,
+    "name": "Crazed Moneko",
+    "rarity": "Special",
+    "forms": [
+      "Crazed Moneko",
+      "Corrupted Moneko",
+      "Corrupted Moneko"
+    ]
+  },
+  {
+    "id": 419,
+    "name": "Pokota",
+    "rarity": "Rare",
+    "forms": [
+      "Pokota",
+      "Pokota CC",
+      "Pokota CC"
+    ]
+  },
+  {
+    "id": 420,
+    "name": "Ovis",
+    "rarity": "Rare",
+    "forms": [
+      "Ovis",
+      "Ovis CC",
+      "Ovis CC"
+    ]
+  },
+  {
+    "id": 421,
+    "name": "Coco",
+    "rarity": "Rare",
+    "forms": [
+      "Coco",
+      "Coco CC",
+      "Coco CC"
+    ]
+  },
+  {
+    "id": 426,
+    "name": "Mecha-Bun",
+    "rarity": "Special",
+    "forms": [
+      "Mecha-Bun",
+      "Mecha-Bun Mk II",
+      "Ultimate Mecha-Bun"
+    ]
+  },
+  {
+    "id": 427,
+    "name": "Cat Clan Heroes",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Cat Clan Heroes",
+      "Cat Guild Heroes",
+      "Cat Quest Heroes"
+    ]
+  },
+  {
+    "id": 428,
+    "name": "Souma Cat",
+    "rarity": "Rare",
+    "forms": [
+      "Souma Cat",
+      "Stylish Souma Cat",
+      "Stylish Souma Cat"
+    ]
+  },
+  {
+    "id": 429,
+    "name": "Otaku Geek Cat",
+    "rarity": "Super Rare",
+    "forms": [
+      "Otaku Geek Cat",
+      "Hacker Geek Cat",
+      "Hacker Geek Cat"
+    ]
+  },
+  {
+    "id": 431,
+    "name": "Detective Vigler",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Detective Vigler",
+      "Inspector Gabriel",
+      "Section Chief Gravicci",
+      "Arcane Commissioner Gravicci"
+    ]
+  },
+  {
+    "id": 432,
+    "name": "Betakkuma",
+    "rarity": "Rare",
+    "forms": [
+      "Betakkuma",
+      "Black Betakkuma",
+      "Black Betakkuma"
+    ]
+  },
+  {
+    "id": 433,
+    "name": "Nekokkuma",
+    "rarity": "Special",
+    "forms": [
+      "Nekokkuma",
+      "Killer Nekokkuma",
+      "Killer Nekokkuma"
+    ]
+  },
+  {
+    "id": 435,
+    "name": "Li'l Valkyrie",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Li'l Valkyrie",
+      "Wind Dancer Valkyrie",
+      "Wind Dancer Valkyrie"
+    ]
+  },
+  {
+    "id": 436,
+    "name": "Nobiluga",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Nobiluga",
+      "Nobilan Pasalan",
+      "Mystican Pasalan"
+    ]
+  },
+  {
+    "id": 437,
+    "name": "Cat God the Great",
+    "rarity": "Special",
+    "forms": [
+      "Cat God the Great",
+      "Cat God the Awesome",
+      "Cat God the Golden"
+    ]
+  },
+  {
+    "id": 438,
+    "name": "Waverider Kuu",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Waverider Kuu",
+      "Waverider Kuu, type \u03b3",
+      "Waverider Kuu, type \u03b3"
+    ]
+  },
+  {
+    "id": 439,
+    "name": "Empress Chronos",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Empress Chronos",
+      "Chronos the Infinite",
+      "Almighty Chronos"
+    ]
+  },
+  {
+    "id": 440,
+    "name": "Bebe",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Bebe",
+      "Nagisa & Cat",
+      "Law of Cycles Nagisa"
+    ]
+  },
+  {
+    "id": 441,
+    "name": "D'arktanyan",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "D'arktanyan",
+      "Valiant D'arktanyan",
+      "Valiant D'arktanyan"
+    ]
+  },
+  {
+    "id": 442,
+    "name": "Lone Cat and Kitten",
+    "rarity": "Rare",
+    "forms": [
+      "Lone Cat and Kitten",
+      "Vendor Cat and Kitten",
+      "Tourist Cat"
+    ]
+  },
+  {
+    "id": 443,
+    "name": "Driller Cat",
+    "rarity": "Super Rare",
+    "forms": [
+      "Driller Cat",
+      "Power Driller Cat",
+      "Neo Driller Cat"
+    ]
+  },
+  {
+    "id": 444,
+    "name": "Piledriver Cat",
+    "rarity": "Super Rare",
+    "forms": [
+      "Piledriver Cat",
+      "Power Piledriver Cat",
+      "Neo Piledriver Cat"
+    ]
+  },
+  {
+    "id": 445,
+    "name": "Cutter Cat",
+    "rarity": "Super Rare",
+    "forms": [
+      "Cutter Cat",
+      "Power Cutter Cat",
+      "Neo Cutter Cat"
+    ]
+  },
+  {
+    "id": 446,
+    "name": "Backhoe Cat",
+    "rarity": "Super Rare",
+    "forms": [
+      "Backhoe Cat",
+      "Power Backhoe Cat",
+      "Neo Backhoe Cat"
+    ]
+  },
+  {
+    "id": 447,
+    "name": "Miter Saw Cat",
+    "rarity": "Super Rare",
+    "forms": [
+      "Miter Saw Cat",
+      "Power Saw Cat",
+      "Neo Saw Cat"
+    ]
+  },
+  {
+    "id": 448,
+    "name": "Musashi Miyamoto",
+    "rarity": "Legend Rare",
+    "forms": [
+      "Musashi Miyamoto",
+      "Wargod Miyamoto",
+      "Immortal Miyamoto"
+    ]
+  },
+  {
+    "id": 449,
+    "name": "Headmistress Jeanne",
+    "rarity": "Legend Rare",
+    "forms": [
+      "Headmistress Jeanne",
+      "Headmistress Jeanne \u03c8",
+      "Headmistress Jeanne \u03c8"
+    ]
+  },
+  {
+    "id": 450,
+    "name": "High Lord Babel",
+    "rarity": "Legend Rare",
+    "forms": [
+      "High Lord Babel",
+      "Babel the Darkflame",
+      "God-Emperor Babel"
+    ]
+  },
+  {
+    "id": 451,
+    "name": "Ushiwakamaru",
+    "rarity": "Legend Rare",
+    "forms": [
+      "Ushiwakamaru",
+      "Colossal Benkei",
+      "Colossal Benkei"
+    ]
+  },
+  {
+    "id": 452,
+    "name": "Primordial Cat",
+    "rarity": "Rare",
+    "forms": [
+      "Primordial Cat",
+      "Modern Cat",
+      "Future Cat"
+    ]
+  },
+  {
+    "id": 455,
+    "name": "Wonder MOMOCO",
+    "rarity": "Legend Rare",
+    "forms": [
+      "Wonder MOMOCO",
+      "Cutie MOMOCO",
+      "Cutie MOMOCO"
+    ]
+  },
+  {
+    "id": 456,
+    "name": "Sakura Matou",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Sakura Matou",
+      "Sakura Matou CC",
+      "Dark Sakura CC"
+    ]
+  },
+  {
+    "id": 457,
+    "name": "Shirou the Cat",
+    "rarity": "Special",
+    "forms": [
+      "Shirou the Cat",
+      "Novice Mage Shirou Cat",
+      "Novice Mage Shirou Cat"
+    ]
+  },
+  {
+    "id": 458,
+    "name": "Archer the Cat",
+    "rarity": "Rare",
+    "forms": [
+      "Archer the Cat",
+      "Heroic Spirit Archer Cat",
+      "Heroic Spirit Archer Cat"
+    ]
+  },
+  {
+    "id": 459,
+    "name": "Rider the Cat",
+    "rarity": "Rare",
+    "forms": [
+      "Rider the Cat",
+      "Heroic Spirit Rider Cat",
+      "Heroic Spirit Rider Cat"
+    ]
+  },
+  {
+    "id": 460,
+    "name": "Kotomine & Gilgamesh Cats",
+    "rarity": "Super Rare",
+    "forms": [
+      "Kotomine & Gilgamesh Cats",
+      "Gilgamesh & Kotomine Cats",
+      "Gilgamesh & Kotomine Cats"
+    ]
+  },
+  {
+    "id": 461,
+    "name": "Legeluga",
+    "rarity": "Legend Rare",
+    "forms": [
+      "Legeluga",
+      "Legelan Pasalan",
+      "Legelan Pasalan"
+    ]
+  },
+  {
+    "id": 462,
+    "name": "Filibuster Cat X",
+    "rarity": "Special",
+    "forms": [
+      "Filibuster Cat X",
+      "Filibuster Cat Y",
+      "Metafilibuster"
+    ]
+  },
+  {
+    "id": 463,
+    "name": "Mighty Kristul Muu",
+    "rarity": "Legend Rare",
+    "forms": [
+      "Mighty Kristul Muu",
+      "Doom Engine Pandora",
+      "Doom Engine Pandora"
+    ]
+  },
+  {
+    "id": 464,
+    "name": "Dogumaru",
+    "rarity": "Special",
+    "forms": [
+      "Dogumaru",
+      "Doguemon",
+      "Reborn Warrior Doguemon"
+    ]
+  },
+  {
+    "id": 466,
+    "name": "Black Zeus",
+    "rarity": "Legend Rare",
+    "forms": [
+      "Black Zeus",
+      "Dark Lord Zeus",
+      "Dark Lord Zeus"
+    ]
+  },
+  {
+    "id": 467,
+    "name": "Super Zeus",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Super Zeus",
+      "All-Powerful Super Zeus",
+      "Super S-Zeus"
+    ]
+  },
+  {
+    "id": 468,
+    "name": "Holy Phoenix",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Holy Phoenix",
+      "Holy Warrior Phoenix",
+      "Head Rococo"
+    ]
+  },
+  {
+    "id": 469,
+    "name": "Super Devil",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Super Devil",
+      "Imposter Super Devil",
+      "Super D-Devil"
+    ]
+  },
+  {
+    "id": 470,
+    "name": "Satanmaria",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Satanmaria",
+      "Wondermaria",
+      "Wondermaria"
+    ]
+  },
+  {
+    "id": 471,
+    "name": "Heracrist",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Heracrist",
+      "Perfect Heracrist"
+    ]
+  },
+  {
+    "id": 472,
+    "name": "Fiendish Nero",
+    "rarity": "Super Rare",
+    "forms": [
+      "Fiendish Nero",
+      "Beastly Nero",
+      "Beastly Nero"
+    ]
+  },
+  {
+    "id": 473,
+    "name": "Prince Yamato",
+    "rarity": "Rare",
+    "forms": [
+      "Prince Yamato",
+      "Holy Yamato",
+      "Rampaging Yamato"
+    ]
+  },
+  {
+    "id": 474,
+    "name": "Rosary Angel",
+    "rarity": "Special",
+    "forms": [
+      "Rosary Angel",
+      "Cross Angel",
+      "Strike Angel"
+    ]
+  },
+  {
+    "id": 475,
+    "name": "Wakamiko Cat",
+    "rarity": "Special",
+    "forms": [
+      "Wakamiko Cat",
+      "Warrior King Cat",
+      "Warrior King Cat"
+    ]
+  },
+  {
+    "id": 476,
+    "name": "Cat Devil",
+    "rarity": "Special",
+    "forms": [
+      "Cat Devil",
+      "Infernal Cat",
+      "Infernal Cat"
+    ]
+  },
+  {
+    "id": 477,
+    "name": "Nekonosuke",
+    "rarity": "Special",
+    "forms": [
+      "Nekonosuke",
+      "Old Guardian Cat",
+      "Old Guardian Cat"
+    ]
+  },
+  {
+    "id": 478,
+    "name": "Lumina",
+    "rarity": "Legend Rare",
+    "forms": [
+      "Lumina",
+      "Luminalia"
+    ]
+  },
+  {
+    "id": 481,
+    "name": "Doktor Heaven",
+    "rarity": "Legend Rare",
+    "forms": [
+      "Doktor Heaven",
+      "Professor Abyss",
+      "Professor Abyss"
+    ]
+  },
+  {
+    "id": 482,
+    "name": "Benevolent Souma",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Benevolent Souma",
+      "Souma \uff06 Cat",
+      "Cat-Eared Souma"
+    ]
+  },
+  {
+    "id": 483,
+    "name": "Kano \uff06 Souma",
+    "rarity": "Rare",
+    "forms": [
+      "Kano \uff06 Souma",
+      "Kano \uff06 Souma \uff06 Cat",
+      "Kano \uff06 Souma \uff06 Cat"
+    ]
+  },
+  {
+    "id": 484,
+    "name": "Li'l Valkyrie Dark",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Li'l Valkyrie Dark",
+      "Dark Rider Valkyrie",
+      "Dark Rider Valkyrie"
+    ]
+  },
+  {
+    "id": 485,
+    "name": "Calette",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Calette",
+      "Calette CC",
+      "Calette CC"
+    ]
+  },
+  {
+    "id": 486,
+    "name": "Hina",
+    "rarity": "Super Rare",
+    "forms": [
+      "Hina",
+      "Swordswoman Hina",
+      "Swordswoman Hina"
+    ]
+  },
+  {
+    "id": 487,
+    "name": "EVA Unit-08",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "EVA Unit-08",
+      "EVA Unit-08 & Cat",
+      "EVA Unit-08 & Cat"
+    ]
+  },
+  {
+    "id": 488,
+    "name": "AAA Wunder",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "AAA Wunder",
+      "NNN Wunder",
+      "Vanished NNN Wunder"
+    ]
+  },
+  {
+    "id": 489,
+    "name": "Misato Katsuragi",
+    "rarity": "Super Rare",
+    "forms": [
+      "Misato Katsuragi",
+      "Captain Misato",
+      "Captain Misato"
+    ]
+  },
+  {
+    "id": 490,
+    "name": "Ritsuko Akagi",
+    "rarity": "Super Rare",
+    "forms": [
+      "Ritsuko Akagi",
+      "First Officer Ritsuko",
+      "First Officer Ritsuko"
+    ]
+  },
+  {
+    "id": 491,
+    "name": "Rei Ayanami (???)",
+    "rarity": "Super Rare",
+    "forms": [
+      "Rei Ayanami (???)",
+      "Awakened Ayanami",
+      "Awakened Ayanami"
+    ]
+  },
+  {
+    "id": 493,
+    "name": "Gaia the Creator",
+    "rarity": "Legend Rare",
+    "forms": [
+      "Gaia the Creator",
+      "Gaia the Supreme",
+      "Gaia the Supreme"
+    ]
+  },
+  {
+    "id": 494,
+    "name": "Seabreeze Coppermine",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Seabreeze Coppermine",
+      "Seabreeze Coppermine, type \u03ba",
+      "Seabreeze Coppermine, type \u03ba"
+    ]
+  },
+  {
+    "id": 495,
+    "name": "Matador Cat",
+    "rarity": "Rare",
+    "forms": [
+      "Matador Cat",
+      "Flamenco Cat",
+      "Bellydance Cat"
+    ]
+  },
+  {
+    "id": 496,
+    "name": "Narita Kaihime",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Narita Kaihime",
+      "Wargod Kaihime",
+      "Immortal Kaihime"
+    ]
+  },
+  {
+    "id": 497,
+    "name": "Shakurel Cat",
+    "rarity": "Special",
+    "forms": [
+      "Shakurel Cat",
+      "Shakurel Macho Cat",
+      "Shakurel Macho Cat"
+    ]
+  },
+  {
+    "id": 498,
+    "name": "Shakurel Lion",
+    "rarity": "Special",
+    "forms": [
+      "Shakurel Lion",
+      "Shakurel Lion CC",
+      "Shakurel Lion CC"
+    ]
+  },
+  {
+    "id": 499,
+    "name": "Shakurel Tiger",
+    "rarity": "Special",
+    "forms": [
+      "Shakurel Tiger",
+      "Shakurel Tiger CC",
+      "Shakurel Tiger CC"
+    ]
+  },
+  {
+    "id": 500,
+    "name": "Shakurel Panda",
+    "rarity": "Special",
+    "forms": [
+      "Shakurel Panda",
+      "Shakurel Panda CC",
+      "Shakurel Panda CC"
+    ]
+  },
+  {
+    "id": 501,
+    "name": "Cat Bros",
+    "rarity": "Rare",
+    "forms": [
+      "Cat Bros",
+      "Baka Cat Bros",
+      "Baka Cat Bros"
+    ]
+  },
+  {
+    "id": 502,
+    "name": "Myrcia",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Myrcia",
+      "Myrcia, type \u03be",
+      "Divine Myrcia"
+    ]
+  },
+  {
+    "id": 505,
+    "name": "Relentless Gladios",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Relentless Gladios",
+      "Gladios the Annihilator",
+      "God-Emperor Gladios"
+    ]
+  },
+  {
+    "id": 506,
+    "name": "Eyewaltz",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Eyewaltz",
+      "Eyewaltz CC",
+      "Nameless Eyewaltz CC"
+    ]
+  },
+  {
+    "id": 507,
+    "name": "Mightycat",
+    "rarity": "Rare",
+    "forms": [
+      "Mightycat",
+      "Supercat",
+      "Supercat"
+    ]
+  },
+  {
+    "id": 508,
+    "name": "Ryu Cat",
+    "rarity": "Rare",
+    "forms": [
+      "Ryu Cat",
+      "Ryu Cat CC",
+      "Ryu Cat CC"
+    ]
+  },
+  {
+    "id": 509,
+    "name": "Chun-Li Cat",
+    "rarity": "Special",
+    "forms": [
+      "Chun-Li Cat",
+      "Chun-Li Cat CC",
+      "Chun-Li Cat CC"
+    ]
+  },
+  {
+    "id": 510,
+    "name": "Akuma",
+    "rarity": "Legend Rare",
+    "forms": [
+      "Akuma",
+      "Akuma CC",
+      "Akuma CC"
+    ]
+  },
+  {
+    "id": 511,
+    "name": "Ryu",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Ryu",
+      "Ryu CC",
+      "Kage"
+    ]
+  },
+  {
+    "id": 512,
+    "name": "Chun-Li",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Chun-Li",
+      "Chun-Li CC",
+      "Chun-Li CC"
+    ]
+  },
+  {
+    "id": 513,
+    "name": "Guile",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Guile",
+      "Guile CC",
+      "Guile CC"
+    ]
+  },
+  {
+    "id": 514,
+    "name": "Zangief",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Zangief",
+      "Zangief CC",
+      "Zangief CC"
+    ]
+  },
+  {
+    "id": 515,
+    "name": "Blanka",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Blanka",
+      "Blanka CC",
+      "Blanka CC"
+    ]
+  },
+  {
+    "id": 516,
+    "name": "Dhalsim",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Dhalsim",
+      "Dhalsim CC",
+      "Dhalsim CC"
+    ]
+  },
+  {
+    "id": 517,
+    "name": "Ken",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Ken",
+      "Ken CC",
+      "Ken CC"
+    ]
+  },
+  {
+    "id": 518,
+    "name": "Akuma Giraffe",
+    "rarity": "Rare",
+    "forms": [
+      "Akuma Giraffe",
+      "Akuma Lion",
+      "Akuma Lion"
+    ]
+  },
+  {
+    "id": 519,
+    "name": "Lasvoss",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Lasvoss",
+      "Ultimate Lasvoss",
+      "Lasvoss Reborn"
+    ]
+  },
+  {
+    "id": 520,
+    "name": "Good-Luck Ebisu",
+    "rarity": "Super Rare",
+    "forms": [
+      "Good-Luck Ebisu",
+      "Bad-Luck Ebisu",
+      "Bad-Luck Ebisu"
+    ]
+  },
+  {
+    "id": 521,
+    "name": "Medusa Cat",
+    "rarity": "Rare",
+    "forms": [
+      "Medusa Cat",
+      "Twintail Medusa Cat",
+      "Naga Cat"
+    ]
+  },
+  {
+    "id": 522,
+    "name": "Nymph Cat",
+    "rarity": "Super Rare",
+    "forms": [
+      "Nymph Cat",
+      "Medalist Cat",
+      "Fiend Cat"
+    ]
+  },
+  {
+    "id": 523,
+    "name": "Wushu Cat",
+    "rarity": "Rare",
+    "forms": [
+      "Wushu Cat",
+      "Sifu Cat",
+      "Shigong Cat"
+    ]
+  },
+  {
+    "id": 525,
+    "name": "Kintaro",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Kintaro",
+      "Kinrangers RoboForce",
+      "Kinrangers GigaForce"
+    ]
+  },
+  {
+    "id": 526,
+    "name": "Snow Angel Twinstars",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Snow Angel Twinstars",
+      "Snow Angel Twinstars, type \u03a6",
+      "Snow Angel Twinstars, type \u03a6"
+    ]
+  },
+  {
+    "id": 527,
+    "name": "Slime Cat",
+    "rarity": "Rare",
+    "forms": [
+      "Slime Cat",
+      "Jellycat",
+      "Jelly Dumpling Cat"
+    ]
+  },
+  {
+    "id": 528,
+    "name": "Cossack Cat",
+    "rarity": "Rare",
+    "forms": [
+      "Cossack Cat",
+      "Vodka Cat",
+      "Royal Guard Cat"
+    ]
+  },
+  {
+    "id": 529,
+    "name": "Kasli the Scourge",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Kasli the Scourge",
+      "Ritual Saint Kasli",
+      "Ritual Saint Kasli"
+    ]
+  },
+  {
+    "id": 530,
+    "name": "Herme",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Herme",
+      "Herme CC",
+      "Herme CC"
+    ]
+  },
+  {
+    "id": 531,
+    "name": "Teacher BearCat",
+    "rarity": "Rare",
+    "forms": [
+      "Teacher BearCat",
+      "Assassin BearCat",
+      "Cadaver BearCat"
+    ]
+  },
+  {
+    "id": 532,
+    "name": "Urs & Fenrir",
+    "rarity": "Special",
+    "forms": [
+      "Urs & Fenrir",
+      "Urs & Minka",
+      "Awakened Urs"
+    ]
+  },
+  {
+    "id": 533,
+    "name": "Sharpshooter Saki",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Sharpshooter Saki",
+      "Nighthunter Saki",
+      "Bad Blaster Saki"
+    ]
+  },
+  {
+    "id": 534,
+    "name": "Hades the Punisher",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Hades the Punisher",
+      "Hades the Deathdealer",
+      "Almighty Hades"
+    ]
+  },
+  {
+    "id": 535,
+    "name": "Hatsune Miku",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Hatsune Miku",
+      "Hatsune Miku CC",
+      "Hatsune Miku CC"
+    ]
+  },
+  {
+    "id": 536,
+    "name": "Sakura Miku",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Sakura Miku",
+      "Sakura Miku CC",
+      "Sakura Miku CC"
+    ]
+  },
+  {
+    "id": 537,
+    "name": "Kagamine Rin & Len",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Kagamine Rin & Len",
+      "Kagamine Rin & Len CC",
+      "Kagamine Rin & Len CC"
+    ]
+  },
+  {
+    "id": 538,
+    "name": "Miku Cat",
+    "rarity": "Rare",
+    "forms": [
+      "Miku Cat",
+      "Miku Cat CC",
+      "Miku Cat CC"
+    ]
+  },
+  {
+    "id": 539,
+    "name": "Rugby Cat",
+    "rarity": "Rare",
+    "forms": [
+      "Rugby Cat",
+      "Quarterback Cat",
+      "Gridiron Cat"
+    ]
+  },
+  {
+    "id": 543,
+    "name": "Kasli the Bane",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Kasli the Bane",
+      "Kasli, Daughter of Chaos",
+      "Kasli, Daughter of Chaos"
+    ]
+  },
+  {
+    "id": 544,
+    "name": "Kyosaka Nanaho",
+    "rarity": "Legend Rare",
+    "forms": [
+      "Kyosaka Nanaho",
+      "True Kyosaka Nanaho",
+      "True Kyosaka Nanaho"
+    ]
+  },
+  {
+    "id": 545,
+    "name": "Phantom Cat",
+    "rarity": "Rare",
+    "forms": [
+      "Phantom Cat",
+      "Miasma Cat",
+      "Bubble Cat"
+    ]
+  },
+  {
+    "id": 546,
+    "name": "Papaluga",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Papaluga",
+      "Papalan Pasalan",
+      "Sukelan Kakulan"
+    ]
+  },
+  {
+    "id": 547,
+    "name": "Night Oracle Rei",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Night Oracle Rei",
+      "Heavenly Herald Rei",
+      "Heavenly Herald Rei"
+    ]
+  },
+  {
+    "id": 548,
+    "name": "The 4th Angel",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "The 4th Angel",
+      "4th Angel Cat",
+      "4th Angel Cat"
+    ]
+  },
+  {
+    "id": 549,
+    "name": "The 6th Angel",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "The 6th Angel",
+      "6th Angel Cat",
+      "6th Angel Cat"
+    ]
+  },
+  {
+    "id": 550,
+    "name": "The 10th Angel",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "The 10th Angel",
+      "10th Angel Cat",
+      "10th Angel Cat"
+    ]
+  },
+  {
+    "id": 551,
+    "name": "The 9th Angel",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "The 9th Angel",
+      "9th Angel Cat",
+      "9th Angel Cat"
+    ]
+  },
+  {
+    "id": 552,
+    "name": "Kaworu Cat",
+    "rarity": "Rare",
+    "forms": [
+      "Kaworu Cat",
+      "Moon Kaworu Cat",
+      "Moon Kaworu Cat"
+    ]
+  },
+  {
+    "id": 553,
+    "name": "Bakery Cat",
+    "rarity": "Rare",
+    "forms": [
+      "Bakery Cat",
+      "Boomerang Cat",
+      "Fried Chicken Cat"
+    ]
+  },
+  {
+    "id": 554,
+    "name": "Master Uril",
+    "rarity": "Special",
+    "forms": [
+      "Master Uril",
+      "Mystic Uril",
+      "Esoteric Uril"
+    ]
+  },
+  {
+    "id": 555,
+    "name": "Shaman Khan",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Shaman Khan",
+      "All-Loving Shaman Khan",
+      "All-Loving Shaman Khan"
+    ]
+  },
+  {
+    "id": 556,
+    "name": "Holy Knight Alibaba",
+    "rarity": "Super Rare",
+    "forms": [
+      "Holy Knight Alibaba",
+      "Holy King Alibaba",
+      "Ghost Alibaba"
+    ]
+  },
+  {
+    "id": 557,
+    "name": "Heavenly Jack",
+    "rarity": "Special",
+    "forms": [
+      "Heavenly Jack",
+      "Heavenly Lord Jack",
+      "Heavenly Lord Jack"
+    ]
+  },
+  {
+    "id": 558,
+    "name": "Gacha Cat",
+    "rarity": "Special",
+    "forms": [
+      "Gacha Cat",
+      "Lucky Gacha Cat",
+      "Lucky Gacha Cat"
+    ]
+  },
+  {
+    "id": 559,
+    "name": "Hell Warden Emma",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Hell Warden Emma",
+      "Hell Sentinel Emma",
+      "Hell Commissioner Emma"
+    ]
+  },
+  {
+    "id": 560,
+    "name": "Megurine Luka",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Megurine Luka",
+      "Megurine Luka CC",
+      "Megurine Luka CC"
+    ]
+  },
+  {
+    "id": 561,
+    "name": "MEIKO & Cat",
+    "rarity": "Super Rare",
+    "forms": [
+      "MEIKO & Cat",
+      "MEIKO & Cat CC",
+      "MEIKO & Cat CC"
+    ]
+  },
+  {
+    "id": 562,
+    "name": "Luka Cat",
+    "rarity": "Rare",
+    "forms": [
+      "Luka Cat",
+      "Luka Cat CC",
+      "Luka Cat CC"
+    ]
+  },
+  {
+    "id": 563,
+    "name": "Squirtgun Saki",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Squirtgun Saki",
+      "Aquabuster Saki",
+      "Aquablaster Saki"
+    ]
+  },
+  {
+    "id": 564,
+    "name": "Summerluga",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Summerluga",
+      "Bikinilan Pasalan",
+      "Fabulous Pasalan"
+    ]
+  },
+  {
+    "id": 565,
+    "name": "Suntan Cat",
+    "rarity": "Super Rare",
+    "forms": [
+      "Suntan Cat",
+      "Macho Suntan Cat",
+      "Permed Suntan Cat"
+    ]
+  },
+  {
+    "id": 566,
+    "name": "Lifeguard Cats",
+    "rarity": "Super Rare",
+    "forms": [
+      "Lifeguard Cats",
+      "Sweet Bro Cats",
+      "Gelato Bro Cats"
+    ]
+  },
+  {
+    "id": 568,
+    "name": "Idi:N",
+    "rarity": "Special",
+    "forms": [
+      "Idi:N",
+      "Idi:N2",
+      "Idi:NX"
+    ]
+  },
+  {
+    "id": 569,
+    "name": "Gravi",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Gravi",
+      "Gravolo",
+      "Gravolodon"
+    ]
+  },
+  {
+    "id": 570,
+    "name": "Skull Rider Vars",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Skull Rider Vars",
+      "Nightmare King Vars",
+      "Halloween Knight Vars"
+    ]
+  },
+  {
+    "id": 571,
+    "name": "E. Honda",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "E. Honda",
+      "E. Honda CC",
+      "E. Honda CC"
+    ]
+  },
+  {
+    "id": 572,
+    "name": "Balrog",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Balrog",
+      "Balrog CC",
+      "Balrog CC"
+    ]
+  },
+  {
+    "id": 573,
+    "name": "Vega",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Vega",
+      "Vega CC",
+      "Vega CC"
+    ]
+  },
+  {
+    "id": 574,
+    "name": "Sagat",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Sagat",
+      "Sagat CC",
+      "Sagat CC"
+    ]
+  },
+  {
+    "id": 575,
+    "name": "M. Bison",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "M. Bison",
+      "M. Bison CC",
+      "M. Bison CC"
+    ]
+  },
+  {
+    "id": 576,
+    "name": "C. Honda",
+    "rarity": "Super Rare",
+    "forms": [
+      "C. Honda",
+      "C. Honda CC",
+      "C. Honda CC"
+    ]
+  },
+  {
+    "id": 577,
+    "name": "Balrog Cat",
+    "rarity": "Rare",
+    "forms": [
+      "Balrog Cat",
+      "Balrog Cat CC",
+      "Balrog Cat CC"
+    ]
+  },
+  {
+    "id": 578,
+    "name": "Vega Cat",
+    "rarity": "Rare",
+    "forms": [
+      "Vega Cat",
+      "Vega Cat CC",
+      "Vega Cat CC"
+    ]
+  },
+  {
+    "id": 579,
+    "name": "Sagat Cat",
+    "rarity": "Rare",
+    "forms": [
+      "Sagat Cat",
+      "Sagat Cat CC",
+      "Sagat Cat CC"
+    ]
+  },
+  {
+    "id": 580,
+    "name": "M. Bison Cat",
+    "rarity": "Rare",
+    "forms": [
+      "M. Bison Cat",
+      "M. Bison Cat CC",
+      "M. Bison Cat CC"
+    ]
+  },
+  {
+    "id": 581,
+    "name": "Stone Cat",
+    "rarity": "Rare",
+    "forms": [
+      "Stone Cat",
+      "Boulder Cat",
+      "Boulder Cat"
+    ]
+  },
+  {
+    "id": 582,
+    "name": "Hatsune Miku: MM2020 Osaka",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Hatsune Miku: MM2020 Osaka",
+      "Hatsune Miku CC: MM2020 Osaka",
+      "Hatsune Miku CC: MM2020 Osaka"
+    ]
+  },
+  {
+    "id": 583,
+    "name": "Hatsune Miku: MM2020 Tokyo",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Hatsune Miku: MM2020 Tokyo",
+      "Hatsune Miku CC: MM2020 Tokyo",
+      "Hatsune Miku CC: MM2020 Tokyo"
+    ]
+  },
+  {
+    "id": 584,
+    "name": "Keiji Claus",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Keiji Claus",
+      "Maeda Christmas",
+      "Maeda Christmas DX"
+    ]
+  },
+  {
+    "id": 585,
+    "name": "Baby Garu",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Baby Garu",
+      "Mighty Aegis Garu",
+      "Mighty Aegis Garu"
+    ]
+  },
+  {
+    "id": 586,
+    "name": "Emperor Cat",
+    "rarity": "Legend Rare",
+    "forms": [
+      "Emperor Cat",
+      "Tyrant Cat",
+      "Tyrant Cat"
+    ]
+  },
+  {
+    "id": 587,
+    "name": "Sweet Aphrodite",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Sweet Aphrodite",
+      "Chocoladite",
+      "Chocoladite"
+    ]
+  },
+  {
+    "id": 588,
+    "name": "First-Love Myrcia",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "First-Love Myrcia",
+      "First-Love Myrcia \u03be",
+      "First-Love Myrcia \u03be"
+    ]
+  },
+  {
+    "id": 589,
+    "name": "Valentine's Neneko",
+    "rarity": "Super Rare",
+    "forms": [
+      "Valentine's Neneko",
+      "Sweetheart Neneko",
+      "True Love Neneko"
+    ]
+  },
+  {
+    "id": 590,
+    "name": "Snow Miku 2021",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Snow Miku 2021",
+      "Snow Miku CC 2021",
+      "Snow Miku CC 2021"
+    ]
+  },
+  {
+    "id": 591,
+    "name": "KAITO & Cat",
+    "rarity": "Super Rare",
+    "forms": [
+      "KAITO & Cat",
+      "KAITO & Cat CC",
+      "KAITO & Cat CC"
+    ]
+  },
+  {
+    "id": 592,
+    "name": "Neko Rin",
+    "rarity": "Rare",
+    "forms": [
+      "Neko Rin",
+      "Neko Rin CC",
+      "Neko Rin CC"
+    ]
+  },
+  {
+    "id": 593,
+    "name": "Neko Len",
+    "rarity": "Rare",
+    "forms": [
+      "Neko Len",
+      "Neko Len CC",
+      "Neko Len CC"
+    ]
+  },
+  {
+    "id": 594,
+    "name": "Mighty Aethur Ltd.",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Mighty Aethur Ltd.",
+      "Atlantis Logistix",
+      "Ultra Atlantis Logistix"
+    ]
+  },
+  {
+    "id": 595,
+    "name": "Blooming Kamukura",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Blooming Kamukura",
+      "Everbloom Kamukura",
+      "Everbloom Lord Kamukura"
+    ]
+  },
+  {
+    "id": 596,
+    "name": "Ranma Saotome (M)",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Ranma Saotome (M)",
+      "Ranma Saotome (F)",
+      "Ranma Saotome (F)"
+    ]
+  },
+  {
+    "id": 597,
+    "name": "Akane Tendo",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Akane Tendo",
+      "Akane Tendo (Gi)",
+      "Akane Tendo (Gi)"
+    ]
+  },
+  {
+    "id": 598,
+    "name": "Ryoga Hibiki (Pig)",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Ryoga Hibiki (Pig)",
+      "Ryoga Hibiki",
+      "Ryoga Hibiki"
+    ]
+  },
+  {
+    "id": 599,
+    "name": "Shampoo (Cat)",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Shampoo (Cat)",
+      "Shampoo",
+      "Shampoo"
+    ]
+  },
+  {
+    "id": 600,
+    "name": "Mousse (Duck)",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Mousse (Duck)",
+      "Mousse",
+      "Mousse"
+    ]
+  },
+  {
+    "id": 601,
+    "name": "Happosai",
+    "rarity": "Super Rare",
+    "forms": [
+      "Happosai",
+      "Happosai (Lewd)",
+      "Happosai (Lewd)"
+    ]
+  },
+  {
+    "id": 602,
+    "name": "Ukyo Kuonji (GR)",
+    "rarity": "Super Rare",
+    "forms": [
+      "Ukyo Kuonji (GR)",
+      "Ukyo Kuonji",
+      "Ukyo Kuonji"
+    ]
+  },
+  {
+    "id": 603,
+    "name": "Tatewaki Kuno (Gi)",
+    "rarity": "Super Rare",
+    "forms": [
+      "Tatewaki Kuno (Gi)",
+      "Tatewaki Kuno",
+      "Tatewaki Kuno"
+    ]
+  },
+  {
+    "id": 604,
+    "name": "Ranma Cat (M)",
+    "rarity": "Rare",
+    "forms": [
+      "Ranma Cat (M)",
+      "Ranma Cat (F)",
+      "Ranma Cat (F)"
+    ]
+  },
+  {
+    "id": 605,
+    "name": "Akane Cat",
+    "rarity": "Rare",
+    "forms": [
+      "Akane Cat",
+      "Akane Cat (Gi)",
+      "Akane Cat (Gi)"
+    ]
+  },
+  {
+    "id": 606,
+    "name": "Panda Cat",
+    "rarity": "Special",
+    "forms": [
+      "Panda Cat",
+      "Genma Cat",
+      "Genma Cat"
+    ]
+  },
+  {
+    "id": 607,
+    "name": "Adventurer Kanna",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Adventurer Kanna",
+      "Swashbuckler Kanna",
+      "Fabled Adventure Girl Kanna"
+    ]
+  },
+  {
+    "id": 609,
+    "name": "Dark Aegis Garu",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Dark Aegis Garu",
+      "Dark Beastlord Garu",
+      "Dark Beastlord Garu"
+    ]
+  },
+  {
+    "id": 610,
+    "name": "Gold Brick Cat",
+    "rarity": "Special",
+    "forms": [
+      "Gold Brick Cat",
+      "King Ingot Cat",
+      "King Nekokhamen"
+    ]
+  },
+  {
+    "id": 611,
+    "name": "Godzilla Cat",
+    "rarity": "Rare",
+    "forms": [
+      "Godzilla Cat",
+      "Shin Godzilla Cat",
+      "Shin Godzilla Cat"
+    ]
+  },
+  {
+    "id": 612,
+    "name": "Princess Cat",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Princess Cat",
+      "Empress Cat",
+      "Empress Cat"
+    ]
+  },
+  {
+    "id": 613,
+    "name": "Elder Mask Doron",
+    "rarity": "Special",
+    "forms": [
+      "Elder Mask Doron",
+      "Cat Mask Doron",
+      "Awakened Doron"
+    ]
+  },
+  {
+    "id": 614,
+    "name": "Kaguya of the Coast",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Kaguya of the Coast",
+      "The Southern Sun",
+      "The Southern Sunflare"
+    ]
+  },
+  {
+    "id": 615,
+    "name": "Kabuto Cat",
+    "rarity": "Special",
+    "forms": [
+      "Kabuto Cat",
+      "Golden Kabuto Cat",
+      "Golden Kabuto Cat"
+    ]
+  },
+  {
+    "id": 616,
+    "name": "Kuwagata Cat",
+    "rarity": "Special",
+    "forms": [
+      "Kuwagata Cat",
+      "King Kuwagata Cat",
+      "King Kuwagata Cat"
+    ]
+  },
+  {
+    "id": 617,
+    "name": "Summoner Satoru",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Summoner Satoru",
+      "Dark Summoner Satoru",
+      "Devil Hunter Satoru"
+    ]
+  },
+  {
+    "id": 618,
+    "name": "Shiro Amakusa",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Shiro Amakusa",
+      "Wargod Amakusa",
+      "Immortal Amakusa"
+    ]
+  },
+  {
+    "id": 619,
+    "name": "Lilin",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Lilin",
+      "Lilin \u03c0",
+      "Divine Lilin \u03c0"
+    ]
+  },
+  {
+    "id": 620,
+    "name": "Hevijak the Wicked",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Hevijak the Wicked",
+      "Wicked King Hevijak",
+      "God-Emperor Hevijak"
+    ]
+  },
+  {
+    "id": 621,
+    "name": "Aku Researcher",
+    "rarity": "Rare",
+    "forms": [
+      "Aku Researcher",
+      "Evil Aku Researcher",
+      "Cat Researcher"
+    ]
+  },
+  {
+    "id": 622,
+    "name": "Jagando Jr.",
+    "rarity": "Special",
+    "forms": [
+      "Jagando Jr.",
+      "Lord of Ruin Jagando Jr.",
+      "Lord of Ruin Jagando Jr."
+    ]
+  },
+  {
+    "id": 623,
+    "name": "Pied Piper Cat",
+    "rarity": "Rare",
+    "forms": [
+      "Pied Piper Cat",
+      "Komuso Cat",
+      "Brass Cat"
+    ]
+  },
+  {
+    "id": 624,
+    "name": "Kunio-kun",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Kunio-kun",
+      "Dodgeball Kunio-kun",
+      "Dodgeball Kunio-kun"
+    ]
+  },
+  {
+    "id": 625,
+    "name": "Furiluga",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Furiluga",
+      "Furilan Pasalan",
+      "Ragelan Pasalan"
+    ]
+  },
+  {
+    "id": 629,
+    "name": "Brainwashed Cat",
+    "rarity": "Super Rare",
+    "forms": [
+      "Brainwashed Cat",
+      "Brainwashed Macho Cat",
+      "Brainwashed Mohawk Cat"
+    ]
+  },
+  {
+    "id": 630,
+    "name": "Calligraphy Cat",
+    "rarity": "Rare",
+    "forms": [
+      "Calligraphy Cat",
+      "Tea Master Cat",
+      "Tea Master Cat"
+    ]
+  },
+  {
+    "id": 631,
+    "name": "Yamii",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Yamii",
+      "Yaminoir",
+      "Yaminora"
+    ]
+  },
+  {
+    "id": 632,
+    "name": "Mighty Deth-Troy-R",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Mighty Deth-Troy-R",
+      "Siege Walker Diabolosa",
+      "Obliterator Diabolosa"
+    ]
+  },
+  {
+    "id": 633,
+    "name": "Shitakiri Sparrow",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Shitakiri Sparrow",
+      "Chunchun Haunters",
+      "Grand Chunchun Haunters"
+    ]
+  },
+  {
+    "id": 634,
+    "name": "White Knight Cyclops",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "White Knight Cyclops",
+      "Black Knight Kyklops",
+      "Demon Knight Kyklops"
+    ]
+  },
+  {
+    "id": 635,
+    "name": "Million-Dollar Cat",
+    "rarity": "Special",
+    "forms": [
+      "Million-Dollar Cat",
+      "Hundred-Million-Dollar Cat",
+      "Hundred-Million-Dollar Cat"
+    ]
+  },
+  {
+    "id": 636,
+    "name": "Brainwashed Tank Cat",
+    "rarity": "Super Rare",
+    "forms": [
+      "Brainwashed Tank Cat",
+      "Brainwashed Wall Cat",
+      "Brainwashed Eraser Cat"
+    ]
+  },
+  {
+    "id": 641,
+    "name": "Iz the Dancer",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Iz the Dancer",
+      "Iz the Alluring Dancer",
+      "Iz the Alluring Dancer"
+    ]
+  },
+  {
+    "id": 642,
+    "name": "Lucifer the Fallen",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Lucifer the Fallen",
+      "Grand Lucifer",
+      "Almighty Lucifer"
+    ]
+  },
+  {
+    "id": 643,
+    "name": "Superfeline",
+    "rarity": "Normal",
+    "forms": [
+      "Superfeline",
+      "Superfeline II",
+      "True Superfeline"
+    ]
+  },
+  {
+    "id": 644,
+    "name": "Sweet Love Mekako",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Sweet Love Mekako",
+      "Bittersweet Mekako",
+      "Minty Love Mekako"
+    ]
+  },
+  {
+    "id": 645,
+    "name": "Brainwashed Axe Cat",
+    "rarity": "Super Rare",
+    "forms": [
+      "Brainwashed Axe Cat",
+      "Brainwashed Brave Cat",
+      "Brainwashed Dark Cat"
+    ]
+  },
+  {
+    "id": 646,
+    "name": "Firecracker Cat",
+    "rarity": "Special",
+    "forms": [
+      "Firecracker Cat",
+      "Macho Firecracker Cat",
+      "Macho Firecracker Cat"
+    ]
+  },
+  {
+    "id": 647,
+    "name": "Huntress Terun",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Huntress Terun",
+      "Huntress Terun \u03b6",
+      "Divine Huntress Terun \u03b6"
+    ]
+  },
+  {
+    "id": 648,
+    "name": "Lovestruck Lesser Demon",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Lovestruck Lesser Demon",
+      "Lovestruck Greater Demon",
+      "Lovestruck Greater Demon"
+    ]
+  },
+  {
+    "id": 649,
+    "name": "Hattori Hanzo",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Hattori Hanzo",
+      "Wargod Hanzo",
+      "Immortal Hanzo"
+    ]
+  },
+  {
+    "id": 650,
+    "name": "Secret Crush Cat",
+    "rarity": "Special",
+    "forms": [
+      "Secret Crush Cat",
+      "Girlfriend Cat",
+      "Girlfriend Cat"
+    ]
+  },
+  {
+    "id": 651,
+    "name": "Tomboy Lion Cat",
+    "rarity": "Special",
+    "forms": [
+      "Tomboy Lion Cat",
+      "Iron-Masked Lion Cat",
+      "Iron-Masked Lion Cat"
+    ]
+  },
+  {
+    "id": 652,
+    "name": "Chalkboard Eraser Cat",
+    "rarity": "Special",
+    "forms": [
+      "Chalkboard Eraser Cat",
+      "Chalkboard Punk Cat",
+      "Chalkboard Punk Cat"
+    ]
+  },
+  {
+    "id": 653,
+    "name": "Elder Beast Naala",
+    "rarity": "Special",
+    "forms": [
+      "Elder Beast Naala",
+      "Storm Beast Naala",
+      "Awakened Naala"
+    ]
+  },
+  {
+    "id": 654,
+    "name": "Brainwashed Gross Cat",
+    "rarity": "Super Rare",
+    "forms": [
+      "Brainwashed Gross Cat",
+      "Brainwashed Sexy Legs Cat",
+      "Brainwashed Macho Legs Cat"
+    ]
+  },
+  {
+    "id": 655,
+    "name": "Bliza",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Bliza",
+      "Blizana",
+      "Blizarena"
+    ]
+  },
+  {
+    "id": 656,
+    "name": "Ancient Egg: N001",
+    "rarity": "Special",
+    "forms": [
+      "Ancient Egg: N001",
+      "Mystic Egg: N001",
+      "Haniwa Cat"
+    ]
+  },
+  {
+    "id": 657,
+    "name": "Iz the Dancer of Grief",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Iz the Dancer of Grief",
+      "Iz the Lady of Mourning",
+      "Iz the Lady of Mourning"
+    ]
+  },
+  {
+    "id": 658,
+    "name": "Ancient Egg: N101",
+    "rarity": "Rare",
+    "forms": [
+      "Ancient Egg: N101",
+      "Cinnabar Egg: N101",
+      "Courier Cat"
+    ]
+  },
+  {
+    "id": 659,
+    "name": "Ancient Egg: N102",
+    "rarity": "Rare",
+    "forms": [
+      "Ancient Egg: N102",
+      "Teal Egg: N102",
+      "Catarzan"
+    ]
+  },
+  {
+    "id": 660,
+    "name": "Sea Serpent Daliasan",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Sea Serpent Daliasan",
+      "Sea King Daliasan",
+      "God-Emperor Daliasan"
+    ]
+  },
+  {
+    "id": 661,
+    "name": "Chronos the Bride",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Chronos the Bride",
+      "Wedding Chronos",
+      "Wedding Chronos"
+    ]
+  },
+  {
+    "id": 662,
+    "name": "Brainwashed Cow Cat",
+    "rarity": "Super Rare",
+    "forms": [
+      "Brainwashed Cow Cat",
+      "Brainwashed Giraffe Cat",
+      "Brainwashed Lion Cat"
+    ]
+  },
+  {
+    "id": 663,
+    "name": "Ancient Egg: N103",
+    "rarity": "Rare",
+    "forms": [
+      "Ancient Egg: N103",
+      "Black Egg: N103",
+      "Gas Mask Cat"
+    ]
+  },
+  {
+    "id": 664,
+    "name": "Ancient Egg: N104",
+    "rarity": "Rare",
+    "forms": [
+      "Ancient Egg: N104",
+      "Green Egg: N104",
+      "Surgeon Cat"
+    ]
+  },
+  {
+    "id": 665,
+    "name": "Ancient Egg: N201",
+    "rarity": "Special",
+    "forms": [
+      "Ancient Egg: N201",
+      "Dark Egg: N201",
+      "Exorcist Cat"
+    ]
+  },
+  {
+    "id": 666,
+    "name": "Night Beach Lilin",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Night Beach Lilin",
+      "Night Beach Lilin\u03c0",
+      "Night Beach Lilin\u03c0"
+    ]
+  },
+  {
+    "id": 667,
+    "name": "Brainwashed Bird Cat",
+    "rarity": "Super Rare",
+    "forms": [
+      "Brainwashed Bird Cat",
+      "Brainwashed UFO Cat",
+      "Brainwashed Flying Cat"
+    ]
+  },
+  {
+    "id": 668,
+    "name": "Cat Tengu",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Cat Tengu",
+      "Grand Yokai Tengu",
+      "Immortal Master Tengu"
+    ]
+  },
+  {
+    "id": 669,
+    "name": "Ancient Egg: N003",
+    "rarity": "Special",
+    "forms": [
+      "Ancient Egg: N003",
+      "Evil Egg: N003",
+      "Cat Cactus"
+    ]
+  },
+  {
+    "id": 670,
+    "name": "Ancient Egg: N202",
+    "rarity": "Special",
+    "forms": [
+      "Ancient Egg: N202",
+      "Cinnabar Egg: N202",
+      "Armored Firefly Cat"
+    ]
+  },
+  {
+    "id": 671,
+    "name": "Ranma Saotome (Leotard)",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Ranma Saotome (Leotard)",
+      "Ranma Saotome (Cheer)",
+      "Ranma Saotome (Cheer)"
+    ]
+  },
+  {
+    "id": 672,
+    "name": "Genma Saotome (Panda)",
+    "rarity": "Super Rare",
+    "forms": [
+      "Genma Saotome (Panda)",
+      "Genma Saotome",
+      "Genma Saotome"
+    ]
+  },
+  {
+    "id": 673,
+    "name": "\u30cd\u30b3\u30c1\u30fc\u30bf\u30fc",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "\u30cd\u30b3\u30c1\u30fc\u30bf\u30fc",
+      "\u30cd\u30b3\u30c1\u30fc\u30bf\u30fc",
+      "\u30cd\u30b3\u30c1\u30fc\u30bf\u30fc"
+    ]
+  },
+  {
+    "id": 674,
+    "name": "Mighty Carrowsell",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Mighty Carrowsell",
+      "Extraterrestrial Envanz",
+      "Extradimensional Envanz"
+    ]
+  },
+  {
+    "id": 675,
+    "name": "Ancient Egg: N105",
+    "rarity": "Rare",
+    "forms": [
+      "Ancient Egg: N105",
+      "Teal Egg: N105",
+      "Racquet Cat"
+    ]
+  },
+  {
+    "id": 676,
+    "name": "Ancient Egg: N106",
+    "rarity": "Rare",
+    "forms": [
+      "Ancient Egg: N106",
+      "Amber Egg: N106",
+      "Mushroom Cat"
+    ]
+  },
+  {
+    "id": 677,
+    "name": "Osamu Mikumo & Cat",
+    "rarity": "Rare",
+    "forms": [
+      "Osamu Mikumo & Cat",
+      "Osamu Mikumo & Cat CC",
+      "Osamu Mikumo & Cat CC"
+    ]
+  },
+  {
+    "id": 678,
+    "name": "Yuma Kuga & Cat",
+    "rarity": "Rare",
+    "forms": [
+      "Yuma Kuga & Cat",
+      "Yuma Kuga & Cat CC",
+      "Yuma Kuga & Cat CC"
+    ]
+  },
+  {
+    "id": 679,
+    "name": "Chika Amatori & Cat",
+    "rarity": "Special",
+    "forms": [
+      "Chika Amatori & Cat",
+      "Chika Amatori & Cat CC",
+      "Chika Amatori & Cat CC"
+    ]
+  },
+  {
+    "id": 680,
+    "name": "Sakura",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Sakura",
+      "Sakura CC",
+      "Sakura CC"
+    ]
+  },
+  {
+    "id": 681,
+    "name": "Luke",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Luke",
+      "Luke CC",
+      "Luke CC"
+    ]
+  },
+  {
+    "id": 682,
+    "name": "Spectral Goth Vega",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Spectral Goth Vega",
+      "Illusory Guardian Vega",
+      "Lady of Deception Vega"
+    ]
+  },
+  {
+    "id": 683,
+    "name": "Count Yukimura",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Count Yukimura",
+      "Nosferatu Yukimura",
+      "Vampiric Yukimura"
+    ]
+  },
+  {
+    "id": 684,
+    "name": "Brainwashed Fish Cat",
+    "rarity": "Super Rare",
+    "forms": [
+      "Brainwashed Fish Cat",
+      "Brainwashed Whale Cat",
+      "Brainwashed Island Cat"
+    ]
+  },
+  {
+    "id": 685,
+    "name": "Ancient Egg: N004",
+    "rarity": "Special",
+    "forms": [
+      "Ancient Egg: N004",
+      "Mystic Egg: N004",
+      "Supercar Cat"
+    ]
+  },
+  {
+    "id": 686,
+    "name": "Goddess of Light Sirius",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Goddess of Light Sirius",
+      "Goddess of Sunrise Sirius",
+      "Goddess of Sunrise Sirius"
+    ]
+  },
+  {
+    "id": 687,
+    "name": "Reindeer Terun",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Reindeer Terun",
+      "Reindeer Terun\u03b6",
+      "Reindeer Terun\u03b6"
+    ]
+  },
+  {
+    "id": 688,
+    "name": "Brainwashed Lizard Cat",
+    "rarity": "Super Rare",
+    "forms": [
+      "Brainwashed Lizard Cat",
+      "Brainwashed Dragon Cat",
+      "Brainwashed King Dragon Cat"
+    ]
+  },
+  {
+    "id": 689,
+    "name": "Meditation Cat",
+    "rarity": "Special",
+    "forms": [
+      "Meditation Cat",
+      "Paragon Cat",
+      "Paragon Cat"
+    ]
+  },
+  {
+    "id": 690,
+    "name": "Child of Destiny Phono",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Child of Destiny Phono",
+      "King of Destiny Phonoa",
+      "King of Destiny Phonoa"
+    ]
+  },
+  {
+    "id": 691,
+    "name": "Ancient Egg: N000",
+    "rarity": "Special",
+    "forms": [
+      "Ancient Egg: N000",
+      "Elder Egg: N000",
+      "Ape Lord Luza"
+    ]
+  },
+  {
+    "id": 692,
+    "name": "Issun Boshi",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Issun Boshi",
+      "Oni Landshaker Kozuchimaru",
+      "Oni Battlepod Kozuchimaru"
+    ]
+  },
+  {
+    "id": 693,
+    "name": "White Butler Vigler",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "White Butler Vigler",
+      "Black Butler Vigler",
+      "Black Butler Vigler"
+    ]
+  },
+  {
+    "id": 694,
+    "name": "Brainwashed Titan Cat",
+    "rarity": "Super Rare",
+    "forms": [
+      "Brainwashed Titan Cat",
+      "Brainwashed Mythic Titan",
+      "Brainwashed Jamiera Cat"
+    ]
+  },
+  {
+    "id": 695,
+    "name": "Killer Tank Cat",
+    "rarity": "Rare",
+    "forms": [
+      "Killer Tank Cat",
+      "True Killer Tank Cat",
+      "True Killer Tank Cat"
+    ]
+  },
+  {
+    "id": 696,
+    "name": "Class Rep Cat",
+    "rarity": "Special",
+    "forms": [
+      "Class Rep Cat",
+      "Stealth Class Rep Cat",
+      "Stealth Class Rep Cat"
+    ]
+  },
+  {
+    "id": 697,
+    "name": "Ancient Egg: N107",
+    "rarity": "Rare",
+    "forms": [
+      "Ancient Egg: N107",
+      "Violet Egg: N107",
+      "Cat Chief"
+    ]
+  },
+  {
+    "id": 698,
+    "name": "Thunder Jack",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Thunder Jack",
+      "Bloody Jack",
+      "Lightning Jack"
+    ]
+  },
+  {
+    "id": 699,
+    "name": "Rabbit Satoru",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Rabbit Satoru",
+      "Rabbit Champion Satoru",
+      "Rabbit Champion Satoru"
+    ]
+  },
+  {
+    "id": 700,
+    "name": "Ancient Egg: N005",
+    "rarity": "Special",
+    "forms": [
+      "Ancient Egg: N005",
+      "Mystic Egg: N005",
+      "Hitman Cat"
+    ]
+  },
+  {
+    "id": 705,
+    "name": "King of Doom Phono",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "King of Doom Phono",
+      "King of Extinction Phono",
+      "King of Extinction Phono"
+    ]
+  },
+  {
+    "id": 706,
+    "name": "Ancient Egg: N108",
+    "rarity": "Super Rare",
+    "forms": [
+      "Ancient Egg: N108",
+      "Teal Egg: N108",
+      "Soap Cat"
+    ]
+  },
+  {
+    "id": 707,
+    "name": "Ancient Egg: N109",
+    "rarity": "Rare",
+    "forms": [
+      "Ancient Egg: N109",
+      "Dark Egg: N109",
+      "Barrel Cat"
+    ]
+  },
+  {
+    "id": 708,
+    "name": "Jetpack Cat",
+    "rarity": "Rare",
+    "forms": [
+      "Jetpack Cat",
+      "Kinjirou Cat",
+      "Kinjirou Cat"
+    ]
+  },
+  {
+    "id": 709,
+    "name": "One-Eyed Asuka",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "One-Eyed Asuka",
+      "Blue-Eyed Asuka",
+      "Blue-Eyed Asuka"
+    ]
+  },
+  {
+    "id": 710,
+    "name": "EVA Unit-13",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "EVA Unit-13",
+      "EVA Unit-13 & Cat",
+      "EVA Unit-13 & Cat"
+    ]
+  },
+  {
+    "id": 711,
+    "name": "Betrothed Balaluga",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Betrothed Balaluga",
+      "Betrothed Pasalan",
+      "Betrothed Pasalan"
+    ]
+  },
+  {
+    "id": 712,
+    "name": "Kaoluga",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Kaoluga",
+      "Kaoluga Pasalan",
+      "Kaoluga Pasalan"
+    ]
+  },
+  {
+    "id": 713,
+    "name": "Ancient Egg: N203",
+    "rarity": "Special",
+    "forms": [
+      "Ancient Egg: N203",
+      "Violet Egg: N203",
+      "Clown Cat"
+    ]
+  },
+  {
+    "id": 714,
+    "name": "Coastal Explorer Kanna",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Coastal Explorer Kanna",
+      "Deep-Diver Kanna",
+      "Great Deep-Diver Kanna"
+    ]
+  },
+  {
+    "id": 715,
+    "name": "Mighty Sphinx Korps",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Mighty Sphinx Korps",
+      "Attack Battalion Convoys",
+      "Hyper Battalion Convoys"
+    ]
+  },
+  {
+    "id": 716,
+    "name": "Ancient Egg: N111",
+    "rarity": "Super Rare",
+    "forms": [
+      "Ancient Egg: N111",
+      "Mystic Egg: N111",
+      "Cop Cat"
+    ]
+  },
+  {
+    "id": 717,
+    "name": "Ancient Egg: N110",
+    "rarity": "Rare",
+    "forms": [
+      "Ancient Egg: N110",
+      "Amber Egg: N110",
+      "Farmboy Cat"
+    ]
+  },
+  {
+    "id": 718,
+    "name": "Maize Cat",
+    "rarity": "Rare",
+    "forms": [
+      "Maize Cat",
+      "Cone Cat",
+      "Cone Cat"
+    ]
+  },
+  {
+    "id": 719,
+    "name": "Tekachi",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Tekachi",
+      "Tetsukachi",
+      "Tetsukachi"
+    ]
+  },
+  {
+    "id": 720,
+    "name": "Ancient Egg: N006",
+    "rarity": "Special",
+    "forms": [
+      "Ancient Egg: N006",
+      "Devil Egg: N006",
+      "Fallen Bear Cat"
+    ]
+  },
+  {
+    "id": 721,
+    "name": "High School Kingpin Riki",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "High School Kingpin Riki",
+      "Dodgeball Riki",
+      "Dodgeball Riki"
+    ]
+  },
+  {
+    "id": 722,
+    "name": "Hatsune Miku XVI",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Hatsune Miku XVI",
+      "Hatsune Miku XVI CC",
+      "Hatsune Miku XVI CC"
+    ]
+  },
+  {
+    "id": 723,
+    "name": "Lightmother Aset",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Lightmother Aset",
+      "Nefer Aset",
+      "Almighty Aset"
+    ]
+  },
+  {
+    "id": 724,
+    "name": "Ancient Egg: N112",
+    "rarity": "Rare",
+    "forms": [
+      "Ancient Egg: N112",
+      "Mystic Egg: N112",
+      "Cat Egg Pod"
+    ]
+  },
+  {
+    "id": 725,
+    "name": "Ninja Girl Tomoe",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Ninja Girl Tomoe",
+      "Gourmand Ninja Girl Tomoe",
+      "Gourmand Ninja Girl Tomoe"
+    ]
+  },
+  {
+    "id": 726,
+    "name": "Medal King",
+    "rarity": "Special",
+    "forms": [
+      "Medal King",
+      "Medal Emperor",
+      "Medal Emperor"
+    ]
+  },
+  {
+    "id": 727,
+    "name": "SOL DAE ROKKER",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "SOL DAE ROKKER",
+      "SOL DAE ROKKER CC",
+      "SOL DAE ROKKER CC"
+    ]
+  },
+  {
+    "id": 728,
+    "name": "Master of Mind Soractes",
+    "rarity": "Special",
+    "forms": [
+      "Master of Mind Soractes",
+      "Master of Mind Catcrates",
+      "Master of Mind Catcrates"
+    ]
+  },
+  {
+    "id": 729,
+    "name": "730_1",
+    "rarity": "Special",
+    "forms": [
+      "730_1"
+    ]
+  },
+  {
+    "id": 730,
+    "name": "Ancient Egg: N204",
+    "rarity": "Special",
+    "forms": [
+      "Ancient Egg: N204",
+      "Cinnabar Egg: N204",
+      "Lion Dancer Cat"
+    ]
+  },
+  {
+    "id": 731,
+    "name": "Daybreaker Izanagi",
+    "rarity": "Legend Rare",
+    "forms": [
+      "Daybreaker Izanagi",
+      "Dawnbringer Izanagi",
+      "Dawnbringer Izanagi"
+    ]
+  },
+  {
+    "id": 732,
+    "name": "733_1",
+    "rarity": "Legend Rare",
+    "forms": [
+      "733_1"
+    ]
+  },
+  {
+    "id": 733,
+    "name": "Pegasa",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Pegasa",
+      "Pegasa \u03bd",
+      "Uninterested in the plots and schemes of adults,"
+    ]
+  },
+  {
+    "id": 734,
+    "name": "735_1",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "735_1"
+    ]
+  },
+  {
+    "id": 735,
+    "name": "Principal Cat",
+    "rarity": "Special",
+    "forms": [
+      "Principal Cat",
+      "Midlife Crisis Cat",
+      "Midlife Crisis Cat"
+    ]
+  },
+  {
+    "id": 736,
+    "name": "Frozen Rose Cat",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Frozen Rose Cat",
+      "Arctic Bloom Cat",
+      "Arctic Bloom Cat"
+    ]
+  },
+  {
+    "id": 737,
+    "name": "Floral Kalisa",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Floral Kalisa",
+      "Floral Kalisa, type X",
+      "Floral Kalisa, type X"
+    ]
+  },
+  {
+    "id": 738,
+    "name": "Izanami of Dusk",
+    "rarity": "Legend Rare",
+    "forms": [
+      "Izanami of Dusk",
+      "Izanami of Eventide",
+      "Izanami of Eventide"
+    ]
+  },
+  {
+    "id": 739,
+    "name": "740_1",
+    "rarity": "Legend Rare",
+    "forms": [
+      "740_1"
+    ]
+  },
+  {
+    "id": 740,
+    "name": "Trash Cat",
+    "rarity": "Special",
+    "forms": [
+      "Trash Cat",
+      "Mimic Cat",
+      "Mimic Cat"
+    ]
+  },
+  {
+    "id": 741,
+    "name": "Voluptuous Peony - Daji",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Voluptuous Peony - Daji",
+      "Daji & Cat",
+      "Daji & Cat"
+    ]
+  },
+  {
+    "id": 742,
+    "name": "Mollyanna Cat",
+    "rarity": "Rare",
+    "forms": [
+      "Mollyanna Cat",
+      "Mesmerizing Tune - Mollyanna",
+      "Mesmerizing Tune - Mollyanna"
+    ]
+  },
+  {
+    "id": 743,
+    "name": "Madhead",
+    "rarity": "Rare",
+    "forms": [
+      "Madhead",
+      "Madhead Cat",
+      "Madhead Cat"
+    ]
+  },
+  {
+    "id": 744,
+    "name": "Felix the Cat Duke Cat",
+    "rarity": "Special",
+    "forms": [
+      "Felix the Cat Duke Cat",
+      "Mercenary Leader Felix Cat",
+      "Mercenary Leader Felix Cat"
+    ]
+  },
+  {
+    "id": 745,
+    "name": "Dotty Cat",
+    "rarity": "Special",
+    "forms": [
+      "Dotty Cat",
+      "Birthday Dotty Cat",
+      "Birthday Dotty Cat"
+    ]
+  },
+  {
+    "id": 746,
+    "name": "Kenshin Himura",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Kenshin Himura",
+      "Kenshin Himura CC",
+      "Kenshin Himura CC"
+    ]
+  },
+  {
+    "id": 747,
+    "name": "Sanosuke Sagara",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Sanosuke Sagara",
+      "Sanosuke Sagara CC",
+      "Sanosuke Sagara CC"
+    ]
+  },
+  {
+    "id": 748,
+    "name": "Aoshi Shinomori",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Aoshi Shinomori",
+      "Aoshi Shinomori CC",
+      "Aoshi Shinomori CC"
+    ]
+  },
+  {
+    "id": 749,
+    "name": "Hajime Saito",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Hajime Saito",
+      "Hajime Saito CC",
+      "Hajime Saito CC"
+    ]
+  },
+  {
+    "id": 750,
+    "name": "Li'l Kaoru",
+    "rarity": "Super Rare",
+    "forms": [
+      "Li'l Kaoru",
+      "Li'l Kaoru CC",
+      "Li'l Kaoru CC"
+    ]
+  },
+  {
+    "id": 751,
+    "name": "Li'l Yahiko",
+    "rarity": "Super Rare",
+    "forms": [
+      "Li'l Yahiko",
+      "Li'l Yahiko CC",
+      "Li'l Yahiko CC"
+    ]
+  },
+  {
+    "id": 752,
+    "name": "Kenshin Cat",
+    "rarity": "Rare",
+    "forms": [
+      "Kenshin Cat",
+      "Battosai Cat",
+      "Battosai Cat"
+    ]
+  },
+  {
+    "id": 753,
+    "name": "Kaoru Cat",
+    "rarity": "Special",
+    "forms": [
+      "Kaoru Cat",
+      "Swordscat Kaoru",
+      "Swordscat Kaoru"
+    ]
+  },
+  {
+    "id": 754,
+    "name": "Akechi Mitsuhide",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Akechi Mitsuhide",
+      "Wargod Mitsuhide",
+      "Wargod Mitsuhide"
+    ]
+  },
+  {
+    "id": 755,
+    "name": "756_1",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "756_1"
+    ]
+  },
+  {
+    "id": 756,
+    "name": "Cake Machine",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Cake Machine",
+      "Wedding Cake Machine",
+      "Wedding Cake Machine"
+    ]
+  },
+  {
+    "id": 757,
+    "name": "Ancient Egg: N205",
+    "rarity": "Special",
+    "forms": [
+      "Ancient Egg: N205",
+      "Violet Egg: N205",
+      "Bride Cat"
+    ]
+  },
+  {
+    "id": 758,
+    "name": "Trixi the Merc",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Trixi the Merc",
+      "Trixi the Revenant",
+      "Trixi the Revenant"
+    ]
+  },
+  {
+    "id": 759,
+    "name": "Music Fest Thundia",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Music Fest Thundia",
+      "Music Fest Thundia \u03b2",
+      "Music Fest Thundia \u03b2"
+    ]
+  },
+  {
+    "id": 760,
+    "name": "Gunduros",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Gunduros",
+      "Ballistic Dragon Gunduros",
+      "Ballistic Dragon Gunduros"
+    ]
+  },
+  {
+    "id": 761,
+    "name": "762_1",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "762_1"
+    ]
+  },
+  {
+    "id": 763,
+    "name": "Dynasaurus Cat",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Dynasaurus Cat",
+      "Mecha Dynasaurus Cat",
+      "Mecha Dynasaurus Cat"
+    ]
+  },
+  {
+    "id": 765,
+    "name": "Ancient Egg: N206",
+    "rarity": "Special",
+    "forms": [
+      "Ancient Egg: N206",
+      "Cinnabar Egg: N206",
+      "Clam Cat"
+    ]
+  },
+  {
+    "id": 766,
+    "name": "Sardine",
+    "rarity": "Special",
+    "forms": [
+      "Sardine",
+      "Sardine CC",
+      "Dropping in from \"Survive! Mola Mola!\" Tiny bones"
+    ]
+  },
+  {
+    "id": 767,
+    "name": "Squid",
+    "rarity": "Special",
+    "forms": [
+      "Squid",
+      "Squid CC",
+      "Squid CC"
+    ]
+  },
+  {
+    "id": 768,
+    "name": "Taitenki",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Taitenki",
+      "Taitenki CC",
+      "Taitenki CC"
+    ]
+  },
+  {
+    "id": 769,
+    "name": "Hanasaka Cat",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Hanasaka Cat",
+      "Ravenous Cherry",
+      "Ravenous Cherry"
+    ]
+  },
+  {
+    "id": 770,
+    "name": "771-1",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "771-1"
+    ]
+  },
+  {
+    "id": 771,
+    "name": "Master of Life Dr. Nova",
+    "rarity": "Special",
+    "forms": [
+      "Master of Life Dr. Nova",
+      "Master of Life Catnova",
+      "Master of Life Catnova"
+    ]
+  },
+  {
+    "id": 772,
+    "name": "Pumpkin Sodom",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Pumpkin Sodom",
+      "Sodom-o'-Lantern",
+      "Sodom-o'-Lantern"
+    ]
+  },
+  {
+    "id": 773,
+    "name": "Mummy Sumo",
+    "rarity": "Super Rare",
+    "forms": [
+      "Mummy Sumo",
+      "Mama Mummy Sumo",
+      "Mama Mummy Sumo"
+    ]
+  },
+  {
+    "id": 774,
+    "name": "Mech Patrol Axel",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Mech Patrol Axel",
+      "Steel Sergeant Axel",
+      "Steel Sergeant Axel"
+    ]
+  },
+  {
+    "id": 775,
+    "name": "776-1",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "776-1"
+    ]
+  },
+  {
+    "id": 776,
+    "name": "Lieutenant Cat",
+    "rarity": "Special",
+    "forms": [
+      "Lieutenant Cat",
+      "Commander Cat",
+      "Commander Cat"
+    ]
+  },
+  {
+    "id": 777,
+    "name": "Winter General Kaihime",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Winter General Kaihime",
+      "Winter Commander Kaihime",
+      "Winter Commander Kaihime"
+    ]
+  },
+  {
+    "id": 778,
+    "name": "Madoka Cat & Homura",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Madoka Cat & Homura",
+      "Magical Cat\u2606 Magica",
+      "Magical Cat\u2606 Magica"
+    ]
+  },
+  {
+    "id": 779,
+    "name": "Celestial Child Luna",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Celestial Child Luna",
+      "Salvation's Daughter Lunacia",
+      "Salvation's Daughter Lunacia"
+    ]
+  },
+  {
+    "id": 780,
+    "name": "Bowler Cat",
+    "rarity": "Rare",
+    "forms": [
+      "Bowler Cat",
+      "Dodgeballer Cat",
+      "Dodgeballer Cat"
+    ]
+  },
+  {
+    "id": 781,
+    "name": "Mamoluga",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Mamoluga",
+      "Mamolan Pasalan",
+      "Mamolan Pasalan"
+    ]
+  },
+  {
+    "id": 782,
+    "name": "783-1",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "783-1"
+    ]
+  },
+  {
+    "id": 783,
+    "name": "Koneko",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Koneko",
+      "Superstar Koneko",
+      "Superstar Koneko"
+    ]
+  },
+  {
+    "id": 785,
+    "name": "Killer Gross Cat",
+    "rarity": "Rare",
+    "forms": [
+      "Killer Gross Cat",
+      "True Killer Gross Cat",
+      "True Killer Gross Cat"
+    ]
+  },
+  {
+    "id": 786,
+    "name": "The Amazing Catman",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "The Amazing Catman",
+      "Illusionist Catman",
+      "Illusionist Catman"
+    ]
+  },
+  {
+    "id": 787,
+    "name": "Netherworld Nymph Lunacia",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Netherworld Nymph Lunacia",
+      "Death's Daughter Lunacia",
+      "Death's Daughter Lunacia"
+    ]
+  },
+  {
+    "id": 788,
+    "name": "789-2",
+    "rarity": "Special",
+    "forms": [
+      "789-2"
+    ]
+  },
+  {
+    "id": 789,
+    "name": "Baki Hanma",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Baki Hanma",
+      "Baki Hanma CC",
+      "Baki Hanma CC"
+    ]
+  },
+  {
+    "id": 790,
+    "name": "Retsu Kaioh",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Retsu Kaioh",
+      "Retsu Kaioh CC",
+      "Retsu Kaioh CC"
+    ]
+  },
+  {
+    "id": 791,
+    "name": "Kaoru Hanayama",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Kaoru Hanayama",
+      "Kaoru Hanayama CC",
+      "Kaoru Hanayama CC"
+    ]
+  },
+  {
+    "id": 792,
+    "name": "Katsumi Orochi",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Katsumi Orochi",
+      "Katsumi Orochi CC",
+      "Katsumi Orochi CC"
+    ]
+  },
+  {
+    "id": 793,
+    "name": "Jack Hammer",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Jack Hammer",
+      "Jack Hammer CC",
+      "Jack Hammer CC"
+    ]
+  },
+  {
+    "id": 794,
+    "name": "Ogre Cat",
+    "rarity": "Super Rare",
+    "forms": [
+      "Ogre Cat",
+      "Ogre Cat Face",
+      "Ogre Cat Face"
+    ]
+  },
+  {
+    "id": 795,
+    "name": "Li'l Baki",
+    "rarity": "Special",
+    "forms": [
+      "Li'l Baki",
+      "Li'l Baki CC",
+      "Li'l Baki CC"
+    ]
+  },
+  {
+    "id": 796,
+    "name": "Baki Cat",
+    "rarity": "Special",
+    "forms": [
+      "Baki Cat",
+      "Baki Cat CC",
+      "Baki Cat CC"
+    ]
+  },
+  {
+    "id": 797,
+    "name": "Kaioh Cat",
+    "rarity": "Special",
+    "forms": [
+      "Kaioh Cat",
+      "Kaioh Cat CC",
+      "Kaioh Cat CC"
+    ]
+  },
+  {
+    "id": 798,
+    "name": "Doppo Cat",
+    "rarity": "Special",
+    "forms": [
+      "Doppo Cat",
+      "Doppo Cat CC",
+      "Doppo Cat CC"
+    ]
+  },
+  {
+    "id": 799,
+    "name": "Mighty Morta-Loncha",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Mighty Morta-Loncha",
+      "Grandiose Gunhauzer",
+      "Grandiose Gunhauzer"
+    ]
+  },
+  {
+    "id": 800,
+    "name": "801-1",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "801-1"
+    ]
+  },
+  {
+    "id": 801,
+    "name": "Master of Logic Newton",
+    "rarity": "Special",
+    "forms": [
+      "Master of Logic Newton",
+      "Master of Logic Mewton",
+      "Master of Logic Mewton"
+    ]
+  },
+  {
+    "id": 802,
+    "name": "802-1",
+    "rarity": "Special",
+    "forms": [
+      "802-1"
+    ]
+  },
+  {
+    "id": 803,
+    "name": "Sonic",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Sonic",
+      "Sonic & Cat",
+      "Sonic & Cat"
+    ]
+  },
+  {
+    "id": 804,
+    "name": "Tails",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Tails",
+      "Tails & Cat",
+      "Tails & Cat"
+    ]
+  },
+  {
+    "id": 805,
+    "name": "Knuckles",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Knuckles",
+      "Knuckles & Cat",
+      "Knuckles & Cat"
+    ]
+  },
+  {
+    "id": 806,
+    "name": "Shadow",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Shadow",
+      "Shadow & Cat",
+      "Shadow & Cat"
+    ]
+  },
+  {
+    "id": 807,
+    "name": "Sonic Cat",
+    "rarity": "Rare",
+    "forms": [
+      "Sonic Cat",
+      "Sonic Cat CC",
+      "Sonic Cat CC"
+    ]
+  },
+  {
+    "id": 808,
+    "name": "Tails Cat",
+    "rarity": "Special",
+    "forms": [
+      "Tails Cat",
+      "Tails Cat CC",
+      "Tails Cat CC"
+    ]
+  },
+  {
+    "id": 809,
+    "name": "Shadow Cat",
+    "rarity": "Rare",
+    "forms": [
+      "Shadow Cat",
+      "Shadow Cat CC",
+      "Shadow Cat CC"
+    ]
+  },
+  {
+    "id": 810,
+    "name": "Agent Staal",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Agent Staal",
+      "Edgemaster Staal",
+      "Edgemaster Staal"
+    ]
+  },
+  {
+    "id": 811,
+    "name": "Victorious Skanda",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Victorious Skanda",
+      "Zeta Skanda",
+      "Zeta Skanda"
+    ]
+  },
+  {
+    "id": 812,
+    "name": "812-1",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "812-1"
+    ]
+  },
+  {
+    "id": 813,
+    "name": "Tasmanian Giant Crab",
+    "rarity": "Special",
+    "forms": [
+      "Tasmanian Giant Crab",
+      "Tasmanian Giant Crab CC",
+      "Tasmanian Giant Crab CC"
+    ]
+  },
+  {
+    "id": 814,
+    "name": "Mass Production EVA",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Mass Production EVA",
+      "Mass Production EVA-Cat",
+      "Mass Production EVA-Cat"
+    ]
+  },
+  {
+    "id": 815,
+    "name": "Moonshade Kaworu",
+    "rarity": "Legend Rare",
+    "forms": [
+      "Moonshade Kaworu",
+      "Moon Disciple Kaworu",
+      "Moon Disciple Kaworu"
+    ]
+  },
+  {
+    "id": 816,
+    "name": "817-1",
+    "rarity": "Legend Rare",
+    "forms": [
+      "817-1"
+    ]
+  },
+  {
+    "id": 817,
+    "name": "Komori",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Komori",
+      "Moririn",
+      "Moririn"
+    ]
+  },
+  {
+    "id": 818,
+    "name": "819-1",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "819-1"
+    ]
+  },
+  {
+    "id": 819,
+    "name": "Carpenter Cat",
+    "rarity": "Rare",
+    "forms": [
+      "Carpenter Cat",
+      "Rapper Cat",
+      "Rapper Cat"
+    ]
+  },
+  {
+    "id": 820,
+    "name": "Seaside Pegasa",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Seaside Pegasa",
+      "Seaside Pegasa v",
+      "Seaside Pegasa v"
+    ]
+  },
+  {
+    "id": 821,
+    "name": "822_1",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "822_1"
+    ]
+  },
+  {
+    "id": 822,
+    "name": "Consultant Cat",
+    "rarity": "Special",
+    "forms": [
+      "Consultant Cat",
+      "Business Partner Cat",
+      "Business Partner Cat"
+    ]
+  },
+  {
+    "id": 824,
+    "name": "Sorceress Sidmi",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Sorceress Sidmi",
+      "Flame Mage Sidmi",
+      "Flame Mage Sidmi"
+    ]
+  },
+  {
+    "id": 825,
+    "name": "826-1",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "826-1"
+    ]
+  }
+]
