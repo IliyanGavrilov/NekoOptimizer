@@ -1,5 +1,4 @@
 {% extends "planner/base.html" %}
-{% load planner_extras %}
 
 {% block content %}
   <h1>Neko Optimizer</h1>
@@ -88,34 +87,39 @@
     <p>Finding your plan&hellip;</p>
   </div>
 
-  {% if plans is not None %}
+  {% if plan_views is not None %}
     <h2>Results</h2>
-    {% if plans %}
+    {% if plan_views %}
       <div id="planResults" data-apply-url="{% url 'apply_plan' %}">
-      {% for option in plans %}
+      {% for view in plan_views %}
         <section>
-          <h3>{{ option.targets|join:", " }} &mdash; {{ option.plan.cost }} catfood{% if option.plan.tickets_used %} &middot; {{ option.plan.tickets_used }} ticket{{ option.plan.tickets_used|pluralize }}{% endif %}</h3>
+          <h3>{{ view.targets|join:", " }} &mdash; {{ view.cost_label }}</h3>
           <button type="button" class="apply-plan"
-                  data-cats="{{ option.plan.cats|join:'|' }}"
-                  data-tickets="{{ option.plan.tickets_used }}"
-                  data-catfood="{{ option.plan.cost }}">Apply this plan</button>
-          {% for leg in option.plan.legs %}
-            {% ifchanged leg.banner_id %}
-              {% with names=equivalents|lookup:leg.banner_id %}
-                <h4 class="banner">
-                  {{ names|join:" · " }}{% if names|length > 1 %} <span class="equiv-note">same rolls</span>{% endif %}
-                </h4>
-              {% endwith %}
-            {% endifchanged %}
+                  data-cats="{{ view.cats }}"
+                  data-tickets="{{ view.tickets_used }}"
+                  data-catfood="{{ view.cost }}">Apply this plan</button>
+          {% for seg in view.segments %}
+            {% if seg.new_banner %}
+              <h4 class="banner">
+                {{ seg.names|join:" · " }}{% if seg.names|length > 1 %} <span class="equiv-note">same rolls</span>{% endif %}
+              </h4>
+            {% endif %}
             <p class="leg">
-              {% if leg.kind == "Single pull" %}{{ leg.pulls|length }} single pull{{ leg.pulls|length|pluralize }}{% else %}{{ leg.kind }}{% endif %}
-              {% if leg.cost %}&middot; {{ leg.cost }} catfood{% else %}&middot; free (tickets){% endif %}
+              {% if seg.kind == "Single pull" %}{{ seg.pulls }} single pull{{ seg.pulls|pluralize }}{% else %}{{ seg.kind }}{% endif %}
+              {% if seg.cost %}&middot; {{ seg.cost }} catfood{% else %}&middot; free (tickets){% endif %}
             </p>
-            <ol>
-              {% for pull in leg.pulls %}
-                <li class="{% if pull.cat in option.targets %}target {% endif %}{% if pull.cat not in owned_names %}unowned{% endif %}">{{ pull.cat }} <span class="rarity" data-rarity="{{ pull.rarity }}">{{ pull.rarity }}</span></li>
-              {% endfor %}
-            </ol>
+            <table class="track">
+              <thead><tr><th class="pos">#</th><th>Track A</th><th>Track B</th></tr></thead>
+              <tbody>
+                {% for row in seg.rows %}
+                  <tr>
+                    <th scope="row" class="pos">{{ row.pos }}</th>
+                    {% include "planner/_track_cell.html" with cell=row.a %}
+                    {% include "planner/_track_cell.html" with cell=row.b %}
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
           {% endfor %}
         </section>
       {% endfor %}

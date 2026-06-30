@@ -5,6 +5,7 @@ from pathlib import Path
 
 from neko.cache import RollCache
 from neko.godfat import BannerRolls
+from neko.graph import stream_index
 from neko.scraper import (
     DEFAULT_COUNT,
     ScrapeResult,
@@ -153,6 +154,91 @@ def equivalent_banners(banners: Mapping[str, BannerRolls]) -> dict[str, list[str
         key = (tuple(rolls.pulls), tuple(rolls.guaranteed))
         groups.setdefault(key, []).append(name)
     return {name: names for names in groups.values() for name in names}
+
+
+def track_rows(leg_pulls, grid, targets, owned):
+    """Two-track (A/B) rows over the window a leg's path covers.
+
+    ``leg_pulls`` are one leg's Pulls (``Pull.position`` is a shared-stream index);
+    ``grid`` maps stream index -> TrackPull for that banner. Returns
+    ``[{"pos", "a", "b"}, ...]`` where each cell is ``None`` (empty slot) or
+    ``{"cat", "rarity", "on_path", "target", "switch", "unowned"}``.
+    """
+    path = [pull.position for pull in leg_pulls]
+    pull_at = {pull.position: pull for pull in leg_pulls}
+    # A switch lands on an index whose track flips from the previous path step
+    # (godfat's +1 guaranteed / +3 rare-dupe half-steps cross tracks; +2 stays).
+    switched = {idx for prev, idx in zip(path, path[1:], strict=False) if prev % 2 != idx % 2}
+
+    def cell(index):
+        pull = pull_at.get(index)
+        base = grid.get(index)
+        if pull is None and base is None:
+            return None
+        cat = pull.cat if pull else base.cat
+        rarity = pull.rarity if pull else base.rarity
+        return {
+            "cat": cat,
+            "rarity": str(rarity),
+            "on_path": pull is not None,
+            "target": pull is not None and cat in targets,
+            "switch": index in switched,
+            "unowned": pull is not None and cat not in owned,
+        }
+
+    positions = [index // 2 + 1 for index in path]
+    return [
+        {"pos": pos, "a": cell(2 * (pos - 1)), "b": cell(2 * (pos - 1) + 1)}
+        for pos in range(min(positions), max(positions) + 1)
+    ]
+
+
+def cost_label(tickets, catfood):
+    """Spell out a plan's price in both currencies; pulls are ticket-funded first,
+    so a plan can be pure tickets, pure catfood, or a mix."""
+    parts = []
+    if tickets:
+        parts.append(f"{tickets} ticket{'s' if tickets != 1 else ''}")
+    if catfood:
+        parts.append(f"{catfood} catfood")
+    return " + ".join(parts) or "free"
+
+
+def plan_views(plans, banner_pulls, equivalents, owned):
+    """Render model: each plan option with per-leg A/B track tables."""
+    grids = {
+        name: {stream_index(pull.position, pull.track): pull for pull in pulls}
+        for name, pulls in banner_pulls.items()
+    }
+    views = []
+    for option in plans:
+        segments = []
+        last_banner = None
+        for leg in option.plan.legs:
+            segments.append(
+                {
+                    "names": equivalents.get(leg.banner_id, [leg.banner_id]),
+                    "new_banner": leg.banner_id != last_banner,
+                    "kind": leg.kind,
+                    "cost": leg.cost,
+                    "pulls": len(leg.pulls),
+                    "rows": track_rows(
+                        leg.pulls, grids.get(leg.banner_id, {}), option.targets, owned
+                    ),
+                }
+            )
+            last_banner = leg.banner_id
+        views.append(
+            {
+                "targets": sorted(option.targets),
+                "cost": option.plan.cost,
+                "tickets_used": option.plan.tickets_used,
+                "cost_label": cost_label(option.plan.tickets_used, option.plan.cost),
+                "cats": "|".join(option.plan.cats),
+                "segments": segments,
+            }
+        )
+    return views
 
 
 def import_cats(
