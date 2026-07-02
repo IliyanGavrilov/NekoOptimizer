@@ -14,6 +14,7 @@ from neko.scraper import (
     latest_events,
     roll_url,
 )
+from neko.search import Multi
 
 FIXTURES = Path(__file__).parent / "fixtures"
 FIXTURE = (FIXTURES / "godfat_sample.html").read_text(encoding="utf-8")
@@ -110,6 +111,15 @@ async def test_build_result_keys_by_banner_name():
     ]
     result = await build_result(scraper, 1, events)
     assert set(result.banners) == {"Epicfest", "Uberfest"}
+
+
+async def test_build_result_wires_each_banners_multi_options():
+    # The default gacha rule gives any banner an 11-roll guaranteed; without this wiring
+    # the optimizer never sees the guaranteed and can't plan one.
+    scraper = GodfatScraper(fetch_returning(FIXTURE))
+    events = [GachaEvent("ev1", "Epicfest", date(2026, 1, 1), date(2026, 1, 8))]
+    result = await build_result(scraper, 1, events)
+    assert result.multis["Epicfest"] == (Multi(11, 1500, guaranteed=True),)
 
 
 async def test_build_result_collapses_recurring_names():
