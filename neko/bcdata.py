@@ -68,8 +68,11 @@ def catalogue_records(catalogue: Mapping[int, Unit]) -> list[dict]:
 
 
 def _get(url: str) -> bytes:
+    if not url.startswith(("http://", "https://")):
+        raise ValueError(f"refusing to fetch non-HTTP URL: {url!r}")
     request = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
-    with urllib.request.urlopen(request, timeout=60) as response:
+    # Scheme guarded above; only http(s) reaches here.
+    with urllib.request.urlopen(request, timeout=60) as response:  # nosec B310
         return response.read()
 
 
