@@ -157,11 +157,20 @@ def test_build_tracks_flags_a_rare_dupe_switch():
     assert build_tracks(banner_pulls, rerolls, {})["rows"][1]["a"][0]["switch"] is True
 
 
-def test_build_tracks_arrow_shows_the_reroll_cat_and_landing():
+def test_build_tracks_cell_shows_the_rerolled_cat_not_the_dupe():
+    # On a rare-dupe reroll the cell must show the cat you actually obtain (Jurassic Cat),
+    # not the pre-reroll dupe (Pogo), so the target highlight lands on the right name.
     banner_pulls = {"X": [TrackPull(1, "A", "Pogo", R), TrackPull(2, "A", "Pogo", R)]}
     rerolls = {"X": [TrackPull(2, "A", "Jurassic Cat", R)]}
-    arrow = build_tracks(banner_pulls, rerolls, {})["rows"][1]["a"][0]["arrow"]
-    assert (arrow["cat"], arrow["to"]) == ("Jurassic Cat", "3B")
+    cell = build_tracks(banner_pulls, rerolls, {})["rows"][1]["a"][0]
+    assert cell["cat"] == "Jurassic Cat"
+    assert cell["arrow"]["to"] == "3B"
+
+
+def test_build_tracks_arrow_only_when_switched():
+    # A normal (non-dupe) pull continues on its own track, so no jump arrow is shown.
+    banner_pulls = {"X": [TrackPull(1, "A", "Bahamut", U)]}
+    assert build_tracks(banner_pulls, {}, {})["rows"][0]["a"][0]["arrow"] is None
 
 
 def test_build_tracks_highlights_the_path_and_target():

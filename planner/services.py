@@ -230,19 +230,17 @@ def build_tracks(banner_pulls, rerolls, equivalents, path=None, targets=None):
             tp = group["grid"].get(index)
             if tp is None:
                 continue
+            # outcome.cat is the cat actually obtained (the rerolled one on a dupe), so the
+            # cell shows it, not the pre-reroll dupe in tp; a dupe also jumps to the other track.
             outcome = group["graph"].outcome(index)
             switched = bool(outcome and outcome.switched)
             cells.append(
                 {
                     "tag": group["tag"],
-                    "cat": tp.cat,
-                    "rarity": str(tp.rarity),
+                    "cat": outcome.cat if outcome else tp.cat,
+                    "rarity": str(outcome.rarity if outcome else tp.rarity),
                     "switch": switched,
-                    "arrow": (
-                        {"cat": outcome.cat, "to": _pos_label(outcome.next_position)}
-                        if switched
-                        else None
-                    ),
+                    "arrow": {"to": _pos_label(outcome.next_position)} if switched else None,
                     "on_path": index in path.get(group["rep"], ()),
                     "target": index in targets.get(group["rep"], ()),
                 }
@@ -372,13 +370,9 @@ def import_units(records: Iterable[Mapping]) -> int:
 
 
 def reconcile_provisional_units() -> tuple[int, list[str]]:
-    """Fold each provisional unit into its now-canonical namesake: re-point that unit's cats
-    and carry over its owned/wishlist flags onto the canonical unit, then delete the stand-in.
-
-    Provisional units are created (ids >= PROVISIONAL_BASE) when a scraped cat has no catalogue
-    entry yet; once the catalogue catches up, the real unit and the stand-in coexist under the
-    same name until this reconciles them. Returns the number merged and the names of any
-    provisionals still without a canonical match (left in place for a later import)."""
+    """Fold each provisional unit into its now-canonical namesake: move its cats and
+    owned/wishlist flags onto the canonical unit, then delete the stand-in. Returns the count
+    merged and the names of any provisionals with no canonical match yet (left in place)."""
     merged = 0
     orphaned = []
     for prov in Unit.objects.filter(canonical=False):
