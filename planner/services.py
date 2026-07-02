@@ -209,15 +209,18 @@ def _banner_groups(banner_pulls, rerolls, equivalents):
     return groups
 
 
-def build_tracks(banner_pulls, rerolls, equivalents, path=None, targets=None):
+def build_tracks(banner_pulls, rerolls, equivalents, path=None, targets=None, pulled=None):
     """One merged A/B table over every selected banner: each cell stacks each banner's
     cat at that shared stream position (à la ubercarry), with rare-dupe switch arrows
     and the plan's path highlighted. Returns ``{"legend": [...], "rows": [...]}``.
 
-    ``path``/``targets`` map a representative banner to the stream indices to light up.
+    ``path``/``targets`` map a representative banner to the stream indices to light up;
+    ``pulled`` maps those indices to the plan's actual pull there (a guaranteed uber differs
+    from the position's normal roll).
     """
     path = path or {}
     targets = targets or {}
+    pulled = pulled or {}
     groups = _banner_groups(banner_pulls, rerolls, equivalents)
 
     avail = max((max(g["grid"]) for g in groups if g["grid"]), default=-1) // 2 + 1
@@ -230,18 +233,26 @@ def build_tracks(banner_pulls, rerolls, equivalents, path=None, targets=None):
             tp = group["grid"].get(index)
             if tp is None:
                 continue
-            # outcome.cat is the cat actually obtained (the rerolled one on a dupe), so the
-            # cell shows it, not the pre-reroll dupe in tp; a dupe also jumps to the other track.
             outcome = group["graph"].outcome(index)
             switched = bool(outcome and outcome.switched)
+            on_path = index in path.get(group["rep"], ())
+            # On the plan's path show the cat it actually pulled: a guaranteed multi obtains an
+            # uber, not this position's normal roll. Off-path use outcome.cat (the rerolled cat
+            # on a dupe, else the normal roll); a dupe also jumps to the other track.
+            plan_pull = pulled.get(group["rep"], {}).get(index) if on_path else None
+            if plan_pull is not None:
+                cat, rarity = plan_pull.cat, str(plan_pull.rarity)
+            else:
+                cat = outcome.cat if outcome else tp.cat
+                rarity = str(outcome.rarity if outcome else tp.rarity)
             cells.append(
                 {
                     "tag": group["tag"],
-                    "cat": outcome.cat if outcome else tp.cat,
-                    "rarity": str(outcome.rarity if outcome else tp.rarity),
+                    "cat": cat,
+                    "rarity": rarity,
                     "switch": switched,
                     "arrow": {"to": _pos_label(outcome.next_position)} if switched else None,
-                    "on_path": index in path.get(group["rep"], ()),
+                    "on_path": on_path,
                     "target": index in targets.get(group["rep"], ()),
                 }
             )
@@ -256,15 +267,19 @@ def build_tracks(banner_pulls, rerolls, equivalents, path=None, targets=None):
 
 
 def plan_highlight(option, equivalents):
-    """Stream indices to light up for one plan, keyed by representative banner."""
+    """Stream indices to light up for one plan, keyed by representative banner, plus the pull
+    the plan made at each - a guaranteed multi obtains an uber that isn't the position's normal
+    roll, so the cell must render `pulled`, not the grid."""
     path: dict[str, set[int]] = {}
     targets: dict[str, set[int]] = {}
+    pulled: dict[str, dict[int, object]] = {}
     for pull in option.plan.pulls:
         rep = _representative(pull.banner_id, equivalents)
         path.setdefault(rep, set()).add(pull.position)
+        pulled.setdefault(rep, {})[pull.position] = pull
         if pull.cat in option.targets:
             targets.setdefault(rep, set()).add(pull.position)
-    return path, targets
+    return path, targets, pulled
 
 
 def plan_summary(plans, equivalents):
@@ -334,10 +349,10 @@ def subset_solutions(
     found_keys = {sp.targets for sp in found}
     solutions = []
     for sp in found:
-        path, target_idx = plan_highlight(sp, equivalents)
+        path, target_idx, pulled = plan_highlight(sp, equivalents)
         solution = plan_summary([sp], equivalents)[0]
         solution["found"] = True
-        solution["track"] = build_tracks(pulls, rerolls, equivalents, path, target_idx)
+        solution["track"] = build_tracks(pulls, rerolls, equivalents, path, target_idx, pulled)
         solutions.append(solution)
     items = sorted(set(targets))
     for size in range(len(items), 0, -1):
