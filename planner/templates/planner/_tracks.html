@@ -1,4 +1,15 @@
 {% if track.rows %}
+  <div class="track-guide">
+    <p><strong>Track A</strong> and <strong>Track B</strong> are alternate timelines. Duplicate cats are
+      auto-rerolled and switch tracks. A <span class="new-swatch">green outline</span> marks Uber or
+      Legend cats not yet in your collection.</p>
+    <div class="rarity-legend">
+      <span class="rarity" data-rarity="Rare">Rare</span>
+      <span class="rarity" data-rarity="Super Rare">Super Rare</span>
+      <span class="rarity" data-rarity="Uber Super Rare">Uber Super Rare</span>
+      <span class="rarity" data-rarity="Legend Rare">Legend Rare</span>
+    </div>
+  </div>
   {% if track.legend|length > 1 %}
     <ul class="track-legend">
       {% for b in track.legend %}
