@@ -68,6 +68,9 @@ class BannerGraph:
     def positions(self) -> list[int]:
         return sorted(self._outcomes)
 
+    def guaranteed_positions(self) -> list[int]:
+        return sorted(self._guaranteed)
+
 
 def build_graphs(
     parsed: Mapping[str, Iterable[TrackPull]],

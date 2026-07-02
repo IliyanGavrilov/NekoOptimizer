@@ -114,6 +114,15 @@ def test_beam_collects_multiple_targets():
     assert set(result.cats) == {"Bahamut", "Kasli"}
 
 
+def test_impossible_pair_returns_none_without_exhausting_the_state_space():
+    # Aaa and Bbb sit on consecutive stream indices (1A, 1B) and a pull advances two,
+    # so whichever is taken skips the other - no budget can collect both. The
+    # collectability pre-check must prove that up front.
+    g = banner("x", (1, "A", "Aaa", U), (1, "B", "Bbb", U), (2, "A", "Cat", R), (2, "B", "Dog", R))
+    assert astar([g], {"Aaa", "Bbb"}, start(tickets=9)) is None
+    assert astar([g], {"Aaa"}, start(tickets=9)) is not None
+
+
 def guaranteed_banner():
     return BannerGraph(
         "x",
