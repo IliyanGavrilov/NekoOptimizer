@@ -30,8 +30,15 @@ def solve_subsets(
     graphs = list(graphs)
     items = sorted(set(targets))
     plans = []
+    # A superset's plan also collects every subset, so its cost bounds the subset's
+    # optimum - passing it as upper_bound prunes the smaller searches hard.
+    bounds: dict[frozenset[str], float] = {}
     for size in range(len(items), 0, -1):
         for combo in combinations(items, size):
+            wanted = frozenset(combo)
+            bound = min(
+                (cost for key, cost in bounds.items() if wanted <= key), default=float("inf")
+            )
             plan = search(
                 graphs,
                 combo,
@@ -40,8 +47,10 @@ def solve_subsets(
                 ticket_value=ticket_value,
                 prefer=prefer,
                 banner_limits=banner_limits,
+                upper_bound=bound,
             )
             if plan is not None:
-                plans.append(SubsetPlan(frozenset(combo), plan))
+                bounds[wanted] = plan.cost + plan.tickets_used * ticket_value
+                plans.append(SubsetPlan(wanted, plan))
     plans.sort(key=lambda result: (-len(result.targets), result.plan.cost))
     return plans
