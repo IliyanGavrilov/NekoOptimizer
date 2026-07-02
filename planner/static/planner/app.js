@@ -177,7 +177,9 @@ if (picker) {
       const input = document.createElement("input");
       input.type = "hidden";
       input.name = "banners";
-      input.value = btn.dataset.banner;
+      // Pin the exact run: a recurring name (Platinum Capsules) reruns with a
+      // different pool, so the server needs the run's start date, not just the name.
+      input.value = btn.dataset.run ? `${btn.dataset.run}|${btn.dataset.banner}` : btn.dataset.banner;
       bannerInputs.appendChild(input);
     }
     const n = bannerInputs.childElementCount;
@@ -191,8 +193,26 @@ if (picker) {
   // of a session, and each toggles on its own.
   const CAPPED = /platinum|legend/i;
   const today = () => new Date().toISOString().slice(0, 10);
+  const dayBefore = (iso) => {
+    const d = new Date(`${iso}T00:00:00Z`);
+    d.setUTCDate(d.getUTCDate() - 1);
+    return d.toISOString().slice(0, 10);
+  };
+  // The day a banner's session means: today when the banner is running right now
+  // (so a still-open long banner selects TODAY's companions, not the ones from its
+  // opening day weeks ago), otherwise the nearest day of its window - a past
+  // banner's closing day, an upcoming banner's opening day.
+  function sessionDay(range) {
+    const now = today();
+    if (now < range[0]) return range[0];
+    if (now >= range[1]) {
+      const last = dayBefore(range[1]);
+      return last < range[0] ? range[0] : last;
+    }
+    return now;
+  }
   // Click an unselected banner -> select that banner's time period (every other
-  // non-capsule banner live on its opening day), replacing whatever period was
+  // non-capsule banner live on its session day), replacing whatever period was
   // selected before. Click a selected banner -> unselect just that one. Capsules
   // are opt-in, toggled individually and left alone when a period is selected.
   function toggleSession(btn) {
@@ -201,7 +221,7 @@ if (picker) {
     } else if (CAPPED.test(btn.dataset.banner)) {
       setIncluded(btn, true);
     } else {
-      const [day] = rangeOf(btn);
+      const day = sessionDay(rangeOf(btn));
       for (const other of includes) {
         if (!CAPPED.test(other.dataset.banner)) setIncluded(other, liveOn(rangeOf(other), day));
       }

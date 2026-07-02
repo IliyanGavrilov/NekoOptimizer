@@ -1,25 +1,15 @@
-import asyncio
 from collections.abc import Iterable, Mapping
-from datetime import date
+from datetime import date, timedelta
 from itertools import combinations
-from pathlib import Path
 
-from neko.cache import RollCache
 from neko.catalogue import match_names, name_index
 from neko.godfat import BannerRolls
 from neko.graph import BannerGraph, build_graphs, stream_index
 from neko.models import CATFOOD_PER_DRAW, Rarity, State
-from neko.scraper import (
-    DEFAULT_COUNT,
-    ScrapeResult,
-    scrape_active,
-    scrape_catalogue,
-    scrape_selected,
-)
+from neko.roller import roll_active, roll_catalogue, roll_selected
+from neko.scraper import DEFAULT_COUNT, ScrapeResult
 from neko.subsets import solve_subsets
 from planner.models import Banner, Cat, Unit
-
-_CACHE = RollCache(Path("rollcache"))
 
 RARITY_ORDER = ["Normal", "Rare", "Super Rare", "Uber Super Rare", "Legend Rare"]
 
@@ -34,18 +24,18 @@ def capped_banner_limits(names: Iterable[str], cap: int) -> dict[str, int]:
 
 
 def fetch_banners(seed: int, count: int = DEFAULT_COUNT) -> ScrapeResult:
-    """Scrape the active banners for a seed (blocking wrapper around the async scraper)."""
-    return asyncio.run(scrape_active(seed, count=count, cache=_CACHE))
+    """Roll the active banners for a seed locally (no godfat)."""
+    return roll_active(seed, count=count)
 
 
 def fetch_catalogue(seed: int) -> ScrapeResult:
-    """Scrape every banner for a seed (blocking wrapper), to broaden the catalogue."""
-    return asyncio.run(scrape_catalogue(seed, cache=_CACHE))
+    """Roll every banner for a seed locally, to broaden the catalogue."""
+    return roll_catalogue(seed, count=DEFAULT_COUNT)
 
 
 def fetch_for_banners(seed: int, names: Iterable[str], count: int = DEFAULT_COUNT) -> ScrapeResult:
-    """Scrape just the chosen banners for a seed (blocking wrapper)."""
-    return asyncio.run(scrape_selected(seed, names, count=count, cache=_CACHE))
+    """Roll just the chosen banners for a seed locally."""
+    return roll_selected(seed, names, count=count)
 
 
 def _by_rarity(cats: Iterable[Cat], reverse: bool = False) -> list[tuple[str, list[Cat]]]:
@@ -144,6 +134,82 @@ def dated_catalogue(
         ("Available now", nest(now)),
         ("Upcoming", nest(upcoming)),
         ("Past", nest(past)),
+        ("Other", leftovers),
+    ]
+    return [group for group in groups if group[1]]
+
+
+def _effective_runs(events) -> list[tuple[str, date, date]]:
+    """Schedule runs with overlapping same-name reruns resolved: a rerun supersedes its
+    predecessor (permanent banners carry a 2030 sentinel end, so the Platinum Capsules'
+    April run really ends the day before the July rerun starts). Sorted by start;
+    ends are inclusive."""
+    by_name: dict[str, list] = {}
+    for event in events:
+        by_name.setdefault(event.name, []).append(event)
+    capped = []
+    for runs in by_name.values():
+        runs.sort(key=lambda e: e.start)
+        for event, successor in zip(runs, runs[1:] + [None], strict=True):
+            end = min(event.end, successor.start - timedelta(days=1)) if successor else event.end
+            capped.append((event.name, event.start, end))
+    return sorted(capped, key=lambda run: run[1])
+
+
+def picker_groups(cats: Iterable[Cat], today: date | None = None, events=None) -> list:
+    """The target picker's banner sections, one row per SCHEDULED RUN, godfat-style: every
+    rerun of every gacha, past and future. A recurring name (Platinum/Legend Capsules,
+    reruns) gets a separate row per run, each with its own dates, so picking one names an
+    exact session. Cats are joined onto rows by banner name from the roll-derived
+    catalogue; only a name's newest past row carries them, so ~2000 historical rows stay
+    light (a brand-new banner shows without cats until imported).
+    Same shape as [dated_catalogue]: ``[(label, [(name, (start, end), rarities)])]``."""
+    today = today or date.today()
+    if events is None:
+        from neko.gachadata import load_events
+
+        events = load_events()
+    by_name: dict[str, list[Cat]] = {}
+    other: list[Cat] = []
+    for cat in cats:
+        names = [banner.name for banner in cat.banners.all()]
+        for name in names:
+            by_name.setdefault(name, []).append(cat)
+        if not names:
+            other.append(cat)
+
+    def row(name, dates, with_cats=True):
+        cats_here = _by_rarity(by_name.get(name, []), reverse=True) if with_cats else []
+        return (name, dates, cats_here)
+
+    runs = _effective_runs(events)
+    now = [row(name, (start, end)) for name, start, end in runs if start <= today <= end]
+    upcoming = [row(name, (start, end)) for name, start, end in runs if start > today]
+    past_runs = sorted(
+        (run for run in runs if run[2] < today), key=lambda run: run[1], reverse=True
+    )
+    carried: set[str] = set()
+    past = []
+    for name, start, end in past_runs:
+        past.append(row(name, (start, end), with_cats=name not in carried))
+        carried.add(name)
+    # DB-dated banners the schedule doesn't know (old godfat-era names) still get a row.
+    scheduled = {name for name, _start, _end in runs}
+    banners = {b.name: b for b in Banner.objects.filter(name__in=by_name)}
+    past += [
+        row(name, (banner.start, banner.end))
+        for name, banner in banners.items()
+        if name not in scheduled and banner.end and banner.end < today
+    ]
+    past.sort(key=lambda r: r[1][0], reverse=True)
+    dated = scheduled | {name for name, banner in banners.items() if banner.end}
+    leftovers = [row(name, None) for name in sorted(by_name) if name not in dated]
+    if other:
+        leftovers.append(("Other", None, _by_rarity(other, reverse=True)))
+    groups = [
+        ("Available now", now),
+        ("Upcoming", upcoming),
+        ("Past", past),
         ("Other", leftovers),
     ]
     return [group for group in groups if group[1]]

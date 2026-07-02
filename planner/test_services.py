@@ -13,6 +13,7 @@ from planner.services import (
     cost_label,
     dated_catalogue,
     equivalent_banners,
+    picker_groups,
     plan_highlight,
     plan_summary,
 )
@@ -100,6 +101,69 @@ def test_dated_catalogue_carries_banner_dates():
     Cat.objects.create(name="Cat").banners.add(banner)
     _label, sections = dated_catalogue(Cat.objects.all(), today=today)[0]
     assert sections[0][1] == run
+
+
+def _run(start, end, pool_id, name):
+    from neko.gachadata import GachaEventRow
+
+    return GachaEventRow(
+        f"{start}_{pool_id}", name, start, end, pool_id, 7000, 2500, 500, 0, False, False
+    )
+
+
+@pytest.mark.django_db
+def test_picker_groups_lists_each_scheduled_run_separately():
+    # A recurring name (Platinum Capsules) gets one row per run: the current run's 2030
+    # sentinel end is capped by its July rerun, and the rerun shows under Upcoming.
+    today = date(2026, 7, 3)
+    sentinel = date(2030, 1, 1)
+    events = [
+        _run(date(2026, 4, 24), sentinel, 1, "Platinum"),
+        _run(date(2026, 7, 11), sentinel, 2, "Platinum"),
+        _run(date(2026, 6, 26), date(2026, 7, 3), 3, "Trixi"),
+    ]
+    cat = Cat.objects.create(name="Luno", rarity="Uber Super Rare")
+    cat.banners.add(Banner.objects.create(name="Platinum"))
+    groups = dict(picker_groups(Cat.objects.all(), today=today, events=events))
+    now = [(name, dates) for name, dates, _ in groups["Available now"]]
+    assert now == [
+        ("Platinum", (date(2026, 4, 24), date(2026, 7, 10))),
+        ("Trixi", (date(2026, 6, 26), date(2026, 7, 3))),
+    ]
+    upcoming = [(n, d) for n, d, _ in groups["Upcoming"]]
+    assert upcoming == [("Platinum", (date(2026, 7, 11), sentinel))]
+    # both Platinum rows carry the same cats, joined by name
+    assert groups["Available now"][0][2] == [("Uber Super Rare", [cat])]
+    assert groups["Upcoming"][0][2] == [("Uber Super Rare", [cat])]
+
+
+@pytest.mark.django_db
+def test_picker_groups_keeps_unscheduled_past_banners_db_dated():
+    today = date(2026, 7, 3)
+    _dated_banner("OldFest", date(2026, 5, 1), date(2026, 5, 4))
+    groups = dict(picker_groups(Cat.objects.all(), today=today, events=[]))
+    assert [(n, d) for n, d, _ in groups["Past"]] == [
+        ("OldFest", (date(2026, 5, 1), date(2026, 5, 4)))
+    ]
+
+
+@pytest.mark.django_db
+def test_picker_groups_lists_every_past_rerun_with_cats_on_the_newest():
+    today = date(2026, 7, 3)
+    events = [
+        _run(date(2026, 2, 1), date(2026, 2, 5), 1, "Fest"),
+        _run(date(2026, 5, 1), date(2026, 5, 5), 2, "Fest"),
+    ]
+    cat = Cat.objects.create(name="Bahamut", rarity="Uber Super Rare")
+    cat.banners.add(Banner.objects.create(name="Fest"))
+    groups = dict(picker_groups(Cat.objects.all(), today=today, events=events))
+    assert [(n, d) for n, d, _ in groups["Past"]] == [
+        ("Fest", (date(2026, 5, 1), date(2026, 5, 5))),
+        ("Fest", (date(2026, 2, 1), date(2026, 2, 5))),
+    ]
+    newest, oldest = groups["Past"]
+    assert newest[2] == [("Uber Super Rare", [cat])]
+    assert oldest[2] == []
 
 
 def test_equivalent_banners_groups_identical_roll_sequences():
