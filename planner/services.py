@@ -8,7 +8,7 @@ from neko.cache import RollCache
 from neko.catalogue import match_names, name_index
 from neko.godfat import BannerRolls
 from neko.graph import BannerGraph, build_graphs, stream_index
-from neko.models import CATFOOD_PER_DRAW, State
+from neko.models import CATFOOD_PER_DRAW, Rarity, State
 from neko.scraper import (
     DEFAULT_COUNT,
     ScrapeResult,
@@ -162,6 +162,9 @@ def equivalent_banners(banners: Mapping[str, BannerRolls]) -> dict[str, list[str
 
 TRACK_ROW_CAP = 100  # A/B rows rendered by default, before a plan extends the window
 
+# Only Uber/Legend cats are worth flagging as "not yet in your collection" in the grid.
+_VALUABLE_RARITIES = {Rarity.UBER_SUPER_RARE.value, Rarity.LEGEND_RARE.value}
+
 
 def cost_label(tickets, catfood):
     """Spell out a plan's price in both currencies; pulls are ticket-funded first,
@@ -209,18 +212,22 @@ def _banner_groups(banner_pulls, rerolls, equivalents):
     return groups
 
 
-def build_tracks(banner_pulls, rerolls, equivalents, path=None, targets=None, pulled=None):
+def build_tracks(
+    banner_pulls, rerolls, equivalents, path=None, targets=None, pulled=None, owned=None
+):
     """One merged A/B table over every selected banner: each cell stacks each banner's
     cat at that shared stream position (à la ubercarry), with rare-dupe switch arrows
     and the plan's path highlighted. Returns ``{"legend": [...], "rows": [...]}``.
 
     ``path``/``targets`` map a representative banner to the stream indices to light up;
     ``pulled`` maps those indices to the plan's actual pull there (a guaranteed uber differs
-    from the position's normal roll).
+    from the position's normal roll). ``owned`` is the set of cat names you already have, used
+    to flag Uber/Legend cats missing from your collection.
     """
     path = path or {}
     targets = targets or {}
     pulled = pulled or {}
+    owned = owned or set()
     groups = _banner_groups(banner_pulls, rerolls, equivalents)
 
     avail = max((max(g["grid"]) for g in groups if g["grid"]), default=-1) // 2 + 1
@@ -254,6 +261,7 @@ def build_tracks(banner_pulls, rerolls, equivalents, path=None, targets=None, pu
                     "arrow": {"to": _pos_label(outcome.next_position)} if switched else None,
                     "on_path": on_path,
                     "target": index in targets.get(group["rep"], ()),
+                    "new": rarity in _VALUABLE_RARITIES and cat not in owned,
                 }
             )
         return cells
@@ -331,6 +339,7 @@ def subset_solutions(
     ticket_value=CATFOOD_PER_DRAW,
     prefer="tickets",
     banner_limits=None,
+    owned=None,
 ):
     """Every non-empty target subset and its best plan, biggest-then-cheapest, with the
     unreachable subsets listed after. Reachable ones carry the steps + highlighted track
@@ -352,7 +361,9 @@ def subset_solutions(
         path, target_idx, pulled = plan_highlight(sp, equivalents)
         solution = plan_summary([sp], equivalents)[0]
         solution["found"] = True
-        solution["track"] = build_tracks(pulls, rerolls, equivalents, path, target_idx, pulled)
+        solution["track"] = build_tracks(
+            pulls, rerolls, equivalents, path, target_idx, pulled, owned
+        )
         solutions.append(solution)
     items = sorted(set(targets))
     for size in range(len(items), 0, -1):

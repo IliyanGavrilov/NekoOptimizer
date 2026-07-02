@@ -40,6 +40,11 @@ def _scrape(seed, chosen_banners, count):
     return fetch_banners(seed, count)
 
 
+def _owned_names():
+    """Cat names you already own, to flag Uber/Legend cats missing from your collection."""
+    return set(Cat.objects.filter(unit__owned=True).values_list("name", flat=True))
+
+
 @require_POST
 def tracks(request):
     """A/B track tables for the current seed + banners, before any plan is run."""
@@ -51,7 +56,7 @@ def tracks(request):
     equivalents = equivalent_banners(result.banners)
     pulls = {name: rolls.pulls for name, rolls in result.banners.items()}
     rerolls = {name: rolls.rerolls for name, rolls in result.banners.items()}
-    track = build_tracks(pulls, rerolls, equivalents)
+    track = build_tracks(pulls, rerolls, equivalents, owned=_owned_names())
     return render(request, "planner/_tracks.html", {"track": track})
 
 
@@ -95,6 +100,7 @@ def find_plan(request):
         ticket_value=form.cleaned_data["ticket_value"],
         prefer=form.cleaned_data["prefer"],
         banner_limits=banner_limits,
+        owned=_owned_names(),
     )
     return JsonResponse(
         {
