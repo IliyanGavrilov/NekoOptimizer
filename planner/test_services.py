@@ -198,6 +198,24 @@ def test_build_tracks_shows_the_guaranteed_uber_not_the_normal_roll():
     assert entry["target"] is True
 
 
+def test_build_tracks_flags_unowned_uber_as_new():
+    banner_pulls = {"X": [TrackPull(1, "A", "Bahamut", U)]}
+    entry = build_tracks(banner_pulls, {}, {}, owned=set())["rows"][0]["a"][0]
+    assert entry["new"] is True
+
+
+def test_build_tracks_owned_uber_is_not_new():
+    banner_pulls = {"X": [TrackPull(1, "A", "Bahamut", U)]}
+    entry = build_tracks(banner_pulls, {}, {}, owned={"Bahamut"})["rows"][0]["a"][0]
+    assert entry["new"] is False
+
+
+def test_build_tracks_rare_cat_is_never_new():
+    banner_pulls = {"X": [TrackPull(1, "A", "Pogo", R)]}
+    entry = build_tracks(banner_pulls, {}, {}, owned=set())["rows"][0]["a"][0]
+    assert entry["new"] is False
+
+
 def test_build_tracks_off_path_cell_keeps_the_normal_roll():
     # The same position off the plan's path still shows its normal roll.
     banner_pulls = {"X": [TrackPull(1, "A", "Shaman Cat", R)]}

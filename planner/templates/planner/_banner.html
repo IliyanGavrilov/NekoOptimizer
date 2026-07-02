@@ -15,7 +15,7 @@
       <span class="rarity" data-rarity="{{ rarity }}">{{ rarity }}</span>
       <div class="chips">
         {% for cat in cats %}
-          <button type="button" class="chip" data-pk="{{ cat.pk }}"
+          <button type="button" class="chip{% if cat.owned %} owned{% endif %}{% if cat.wanted %} wanted{% endif %}" data-pk="{{ cat.pk }}"
                   data-name="{{ cat.name }}" data-rarity="{{ cat.rarity }}">{{ cat.name }}</button>
         {% endfor %}
       </div>

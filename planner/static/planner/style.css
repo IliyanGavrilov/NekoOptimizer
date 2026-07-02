@@ -17,6 +17,7 @@
   --r-super: #ffd24a;
   --r-uber: #c779ff;
   --r-legend: #ff6060;
+  --new: #34d399;  /* Uber/Legend cats not yet in your collection */
 
   --head-font: "Fredoka", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   --body-font: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
@@ -528,6 +529,29 @@ table.track .entry.target {
 /* Rare-dupe reroll: show where the slot jumps (to the other track) on its own line. */
 table.track .arrow { display: block; color: var(--accent); font-size: 0.78rem; font-weight: 400; }
 
+/* Uber/Legend cat not yet in your collection - green outline, à la ubercarry. Uses outline so
+   it coexists with the on-path/target box-shadow rings. */
+table.track .entry.new { outline: 2px solid var(--new); outline-offset: -2px; border-radius: 4px; }
+
+/* Guide above the track grid: how to read the tracks + a rarity legend. */
+.track-guide {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--bg-2);
+  padding: 0.6rem 0.8rem;
+  margin-bottom: 0.75rem;
+}
+.track-guide p { margin: 0 0 0.5rem; color: var(--muted); font-size: 0.85rem; line-height: 1.5; }
+.track-guide strong { color: var(--ink); }
+.new-swatch {
+  color: var(--new);
+  outline: 2px solid var(--new);
+  outline-offset: -2px;
+  border-radius: 4px;
+  padding: 0 0.25rem;
+}
+.rarity-legend { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+
 .banner-group + .banner-group { margin-top: 0.9rem; }
 
 /* ---- Planner form fields --------------------------------------------- */
@@ -642,6 +666,12 @@ table.track .arrow { display: block; color: var(--accent); font-size: 0.78rem; f
 }
 
 .chip.removable span { opacity: 0.8; margin-left: 0.15rem; }
+
+/* Collection status on target-picker chips: owned dimmed with a check, wishlist starred. */
+.chip.owned { opacity: 0.5; }
+.chip.owned::after { content: " \2713"; color: var(--accent); font-weight: 700; }
+.chip.wanted:not(.owned)::after { content: " \2605"; color: var(--r-super); }
+.chip.owned.selected { opacity: 1; }
 
 /* Selected-targets panel */
 .selected-panel {
