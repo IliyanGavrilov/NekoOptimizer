@@ -182,8 +182,28 @@ def test_build_tracks_highlights_the_path_and_target():
 
 def test_plan_highlight_keys_indices_by_representative_banner():
     option = SubsetPlan(frozenset({"Bahamut"}), Path((Pull(0, "Y", "Bahamut", U),), 1, 0))
-    path, targets = plan_highlight(option, {"X": ["X", "Y"], "Y": ["X", "Y"]})
+    path, targets, _ = plan_highlight(option, {"X": ["X", "Y"], "Y": ["X", "Y"]})
     assert (path, targets) == ({"X": {0}}, {"X": {0}})
+
+
+def test_build_tracks_shows_the_guaranteed_uber_not_the_normal_roll():
+    # A guaranteed multi obtains an uber at a position whose normal roll is something else;
+    # the on-path cell must show the uber the plan gets (Trixi), not the normal roll (Shaman).
+    banner_pulls = {"X": [TrackPull(1, "A", "Shaman Cat", R)]}
+    pulled = {"X": {0: Pull(0, "X", "Trixi the Merc", U)}}
+    cell = build_tracks(banner_pulls, {}, {}, path={"X": {0}}, targets={"X": {0}}, pulled=pulled)
+    entry = cell["rows"][0]["a"][0]
+    assert entry["cat"] == "Trixi the Merc"
+    assert entry["rarity"] == "Uber Super Rare"
+    assert entry["target"] is True
+
+
+def test_build_tracks_off_path_cell_keeps_the_normal_roll():
+    # The same position off the plan's path still shows its normal roll.
+    banner_pulls = {"X": [TrackPull(1, "A", "Shaman Cat", R)]}
+    pulled = {"X": {0: Pull(0, "X", "Trixi the Merc", U)}}
+    cell = build_tracks(banner_pulls, {}, {}, path={}, targets={}, pulled=pulled)
+    assert cell["rows"][0]["a"][0]["cat"] == "Shaman Cat"
 
 
 def test_plan_summary_reports_cost_label_for_a_ticket_plan():
