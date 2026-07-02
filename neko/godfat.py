@@ -10,7 +10,9 @@ _PAW = "\U0001f43e"  # godfat appends a paw glyph to every cat name
 _PICK = re.compile(r"pick\('(\d+)([AB])'\)")
 _PICK_GUARANTEED = re.compile(r"pick\('(\d+)([AB])G'\)")
 _PICK_REROLL = re.compile(r"pick\('(\d+)([AB])R'\)")
-_ARROW = re.compile(r"(<-|->)\s*\d+[AB]")  # godfat's "-> 11B" landing hint
+# godfat's "-> 11B" landing hint; the target id gains a trailing "R" when it lands on
+# another reroll cell ("<- 62AR"), so consume it or it glues onto the next name.
+_ARROW = re.compile(r"(<-|->)\s*\d+[AB]R?")
 _RARITY_BY_CLASS = {
     "rare": Rarity.RARE,
     "supa": Rarity.SUPER_RARE,

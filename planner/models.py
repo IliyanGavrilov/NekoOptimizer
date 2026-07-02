@@ -1,8 +1,6 @@
 from django.db import models
 
-# Conjure/unreleased units have no real display name - their name just echoes their id, like
-# "861_1" or "826-1" (miraheze lists these as "Summon N"). We keep them in the catalogue so
-# their ids stay stable, but they should never surface in the site's unit listings.
+# Conjure/unreleased units have no name yet - it just echoes their id, e.g. "861_1".
 _NO_REAL_NAME = r"^[0-9]+[-_][0-9]+$"
 
 

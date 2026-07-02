@@ -92,6 +92,17 @@ def test_parse_rerolls_extracts_the_rerolled_cat_stripping_the_arrow():
     assert (pull.position, pull.track, pull.cat) == (7, "A", "Jurassic Cat")
 
 
+def test_parse_rerolls_strips_reroll_marker_from_backward_landing():
+    # A backward arrow onto another reroll cell reads "<- 62AR"; the trailing R must not
+    # glue onto the cat name (real godfat: seed 1893568593 gave "ROnmyoji Cat").
+    html = (
+        '<table><td class="cat pick rare" onclick="pick(\'60BR\')">'
+        "&lt;- 62AR Onmyoji Cat \U0001f43e</td></table>"
+    )
+    pull = parse_rerolls(html)[0]
+    assert (pull.position, pull.track, pull.cat) == (60, "B", "Onmyoji Cat")
+
+
 def test_parse_rolls_ignores_reroll_cells():
     html = '<table><td class="cat pick rare" onclick="pick(\'7AR\')">Jurassic Cat</td></table>'
     assert parse_rolls(html) == []
