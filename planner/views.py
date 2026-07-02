@@ -12,10 +12,10 @@ from planner.services import (
     build_tracks,
     capped_banner_limits,
     catalogue,
-    dated_catalogue,
     equivalent_banners,
     fetch_banners,
     fetch_for_banners,
+    picker_groups,
     subset_solutions,
     unit_for_cat,
 )
@@ -28,7 +28,7 @@ def planner(request):
     target_flat = sorted(cats, key=lambda cat: (-rank.get(cat.rarity, -1), cat.name))
     context = {
         "form": PlannerForm(),
-        "target_groups": dated_catalogue(cats, reverse_rarity=True),
+        "target_groups": picker_groups(cats),
         "target_flat": target_flat,
     }
     return render(request, "planner/planner.html", context)

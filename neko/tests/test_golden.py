@@ -34,6 +34,44 @@ def graph():
     return graphs[0]
 
 
+def test_local_roll_reproduces_the_capture_byte_for_byte():
+    # The whole local pipeline - committed gacha schedule + pools + catalogue, rolled by our
+    # own engine - must reproduce this real godfat capture exactly, so we can drop godfat.
+    from neko.bcdata import load_records
+    from neko.gachadata import build_banner, load_events, load_pools
+    from neko.roll import roll_banner
+
+    units = {r["id"]: (r["name"], r["rarity"]) for r in load_records()}
+    trixi = next(e for e in load_events() if e.event_id == "2026-06-26_1052")
+    banner = build_banner(trixi, load_pools(), units)
+    fixture = load_rolls()
+    count = max(p.position for p in fixture.pulls)
+    mine = roll_banner(1893568593, banner, count, guaranteed_rolls=11)
+
+    def cells(pulls):
+        return sorted((p.position, p.track, p.cat) for p in pulls)
+
+    assert cells(mine.pulls) == cells(fixture.pulls)
+    assert cells(mine.rerolls) == cells(fixture.rerolls)
+    got = {(p.position, p.track): p.cat for p in mine.guaranteed}
+    assert all(got[(p.position, p.track)] == p.cat for p in fixture.guaranteed)
+
+
+def test_trixi_banner_rolls_without_a_guarantee():
+    # The real Trixi event is neither guaranteed nor step-up (the fixture's guaranteed
+    # column exists only because the capture forced it), so rolled through the app it must
+    # get no guaranteed column and no guaranteed multi - the planner once "found" Trixi at
+    # 30B via a guaranteed 11-roll this banner doesn't offer.
+    from neko.gachadata import load_events
+    from neko.roller import roll_selected
+
+    trixi = next(e for e in load_events() if e.event_id == "2026-06-26_1052")
+    assert (trixi.guaranteed, trixi.step_up) == (False, False)
+    res = roll_selected(1893568593, [trixi.name], count=30)
+    assert res.banners[trixi.name].guaranteed == []
+    assert all(not m.guaranteed for m in res.multis.get(trixi.name, ()))
+
+
 def test_real_capture_has_the_expected_shape():
     rolls = load_rolls()
     counts = (len(rolls.pulls), len(rolls.guaranteed), len(rolls.rerolls))
