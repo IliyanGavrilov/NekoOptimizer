@@ -1,5 +1,10 @@
 from django.db import models
 
+# Conjure/unreleased units have no real display name - their name just echoes their id, like
+# "861_1" or "826-1" (miraheze lists these as "Summon N"). We keep them in the catalogue so
+# their ids stay stable, but they should never surface in the site's unit listings.
+_NO_REAL_NAME = r"^[0-9]+[-_][0-9]+$"
+
 
 class CatQuerySet(models.QuerySet):
     def unowned(self) -> CatQuerySet:
@@ -12,6 +17,14 @@ class CatQuerySet(models.QuerySet):
 class UnitQuerySet(models.QuerySet):
     def wishlist(self) -> UnitQuerySet:
         return self.filter(wanted=True, owned=False)
+
+    def named(self) -> UnitQuerySet:
+        """Only units with a real display name (excludes conjure/unreleased id-name stand-ins)."""
+        return self.exclude(name__regex=_NO_REAL_NAME)
+
+    def unnamed(self) -> UnitQuerySet:
+        """The conjure/unreleased units whose name is still just their id."""
+        return self.filter(name__regex=_NO_REAL_NAME)
 
 
 class Unit(models.Model):

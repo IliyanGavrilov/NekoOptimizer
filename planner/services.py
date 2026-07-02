@@ -371,6 +371,36 @@ def import_units(records: Iterable[Mapping]) -> int:
     return created
 
 
+def reconcile_provisional_units() -> tuple[int, list[str]]:
+    """Fold each provisional unit into its now-canonical namesake: re-point that unit's cats
+    and carry over its owned/wishlist flags onto the canonical unit, then delete the stand-in.
+
+    Provisional units are created (ids >= PROVISIONAL_BASE) when a scraped cat has no catalogue
+    entry yet; once the catalogue catches up, the real unit and the stand-in coexist under the
+    same name until this reconciles them. Returns the number merged and the names of any
+    provisionals still without a canonical match (left in place for a later import)."""
+    merged = 0
+    orphaned = []
+    for prov in Unit.objects.filter(canonical=False):
+        canonical = Unit.objects.filter(canonical=True, name=prov.name).order_by("unit_id").first()
+        if canonical is None:
+            orphaned.append(prov.name)
+            continue
+        Cat.objects.filter(unit=prov).update(unit=canonical)
+        carried = [
+            flag
+            for flag in ("owned", "wanted")
+            if getattr(prov, flag) and not getattr(canonical, flag)
+        ]
+        if carried:
+            for flag in carried:
+                setattr(canonical, flag, True)
+            canonical.save(update_fields=carried)
+        prov.delete()
+        merged += 1
+    return merged, orphaned
+
+
 PROVISIONAL_BASE = 1_000_000  # synthetic ids for cats not yet in the catalogue
 
 
