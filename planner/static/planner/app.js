@@ -218,25 +218,46 @@ if (picker) {
       ? `Rolling ${n} banner${n === 1 ? "" : "s"}.`
       : "No banners selected.";
     locateIdx = 0;
+    syncBannerChips();
     updateWarnings();
     save();
   }
-  // "Rolling N banners." doubles as a locator: selected banners are easy to lose in
-  // the ~2000-row list, so each click scrolls to the next one and flashes it.
-  let locateIdx = 0;
-  bannerCount.addEventListener("click", () => {
-    const marked = includes
-      .filter((b) => b.getAttribute("aria-pressed") === "true")
-      .map((b) => b.closest(".banner-group"));
-    if (!marked.length) return;
-    const group = marked[locateIdx % marked.length];
-    locateIdx += 1;
+  // One chip per selected banner under the hint, labelled with the banner's set
+  // title; clicking a chip scrolls the picker to that banner.
+  const bannerChips = document.getElementById("bannerChips");
+  function syncBannerChips() {
+    bannerChips.replaceChildren();
+    for (const btn of includes) {
+      if (btn.getAttribute("aria-pressed") !== "true") continue;
+      const group = btn.closest(".banner-group");
+      const chip = document.createElement("button");
+      chip.type = "button";
+      chip.className = "banner-chip";
+      chip.textContent = group.dataset.title || btn.dataset.banner;
+      chip.title = btn.dataset.banner; // the run's full marketing text
+      chip.addEventListener("click", () => locate(group));
+      bannerChips.appendChild(chip);
+    }
+    bannerChips.hidden = !bannerChips.childElementCount;
+  }
+  // Scroll the picker to a banner and pulse it (opening the group it hides in).
+  function locate(group) {
     const drop = group.closest("details.group-drop");
     if (drop) drop.open = true;
     group.scrollIntoView({ behavior: "smooth", block: "center" });
     group.classList.remove("flash-locate");
     void group.offsetWidth; // restart the animation when stepping banner to banner
     group.classList.add("flash-locate");
+  }
+  // "Rolling N banners." doubles as a locator too: each click steps to the next one.
+  let locateIdx = 0;
+  bannerCount.addEventListener("click", () => {
+    const marked = includes
+      .filter((b) => b.getAttribute("aria-pressed") === "true")
+      .map((b) => b.closest(".banner-group"));
+    if (!marked.length) return;
+    locate(marked[locateIdx % marked.length]);
+    locateIdx += 1;
   });
   // Platinum/Legend capsules run on scarce tickets, so they're opt-in: never part
   // of a session, and each toggles on its own.
@@ -759,6 +780,17 @@ document.querySelectorAll('input[type="number"]').forEach((input) => {
     if (moved) e.preventDefault();
   });
 });
+
+// ---- Sticky track headers pin below the site header ---------------------
+// The header's height varies (it wraps on narrow screens), so measure it into
+// a CSS variable the thead's sticky top offset reads.
+{
+  const siteHeader = document.querySelector(".site-header");
+  const setHeaderHeight = () =>
+    document.documentElement.style.setProperty("--header-h", `${siteHeader.offsetHeight}px`);
+  setHeaderHeight();
+  addEventListener("resize", setHeaderHeight);
+}
 
 // ---- Theme: light / dark / match-the-device, persisted -----------------
 // The <head> bootstrap already applied the saved choice before first paint;
