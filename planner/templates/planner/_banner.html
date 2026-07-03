@@ -5,6 +5,9 @@
     {% if dates %}
       {% if dates.1.year >= 2030 %}
         <span class="dates">Since {{ dates.0|date:"M j, Y" }}</span>
+      {% elif dates.0.year != dates.1.year %}
+        {# A run spanning New Year needs both years or "Dec 29 - Jan 1, 2026" misreads. #}
+        <span class="dates">{{ dates.0|date:"M j, Y" }} &ndash; {{ dates.1|date:"M j, Y" }}</span>
       {% else %}
         <span class="dates">{{ dates.0|date:"M j" }} &ndash; {{ dates.1|date:"M j, Y" }}</span>
       {% endif %}

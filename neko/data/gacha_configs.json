@@ -1,6 +1,6 @@
 {
   "rules": [
-    {"keywords": ["step up", "step-up"], "multis": [
+    {"keywords": ["step up", "step-up"], "step_up": true, "multis": [
       {"rolls": 3, "cost": 300, "guaranteed": false},
       {"rolls": 8, "cost": 1050, "guaranteed": false},
       {"rolls": 15, "cost": 2100, "guaranteed": true}

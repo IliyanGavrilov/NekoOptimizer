@@ -246,20 +246,19 @@ def test_build_tracks_highlights_the_path_and_target():
 
 def test_plan_highlight_keys_indices_by_representative_banner():
     option = SubsetPlan(frozenset({"Bahamut"}), Path((Pull(0, "Y", "Bahamut", U),), 1, 0))
-    path, targets, _ = plan_highlight(option, {"X": ["X", "Y"], "Y": ["X", "Y"]})
+    path, targets, gpath, gtargets = plan_highlight(option, {"X": ["X", "Y"], "Y": ["X", "Y"]})
     assert (path, targets) == ({"X": {0}}, {"X": {0}})
+    assert (gpath, gtargets) == ({}, {})
 
 
-def test_build_tracks_shows_the_guaranteed_uber_not_the_normal_roll():
-    # A guaranteed multi obtains an uber at a position whose normal roll is something else;
-    # the on-path cell must show the uber the plan gets (Trixi), not the normal roll (Shaman).
-    banner_pulls = {"X": [TrackPull(1, "A", "Shaman Cat", R)]}
-    pulled = {"X": {0: Pull(0, "X", "Trixi the Merc", U)}}
-    cell = build_tracks(banner_pulls, {}, {}, path={"X": {0}}, targets={"X": {0}}, pulled=pulled)
-    entry = cell["rows"][0]["a"][0]
-    assert entry["cat"] == "Trixi the Merc"
-    assert entry["rarity"] == "Uber Super Rare"
-    assert entry["target"] is True
+def test_plan_highlight_routes_guaranteed_pulls_to_the_guaranteed_column():
+    # The guaranteed uber lights the guaranteed COLUMN at the multi's first roll, not the
+    # track cell of some later position.
+    pulls = (Pull(0, "X", "Cat", R), Pull(0, "X", "Mecha", U, guaranteed=True))
+    option = SubsetPlan(frozenset({"Mecha"}), Path(pulls, 0, 3))
+    path, targets, gpath, gtargets = plan_highlight(option, {})
+    assert (path, targets) == ({"X": {0}}, {})
+    assert (gpath, gtargets) == ({"X": {0}}, {"X": {0}})
 
 
 def test_build_tracks_flags_unowned_uber_as_new():
@@ -280,12 +279,74 @@ def test_build_tracks_rare_cat_is_never_new():
     assert entry["new"] is False
 
 
-def test_build_tracks_off_path_cell_keeps_the_normal_roll():
-    # The same position off the plan's path still shows its normal roll.
+def test_build_tracks_highlights_the_guaranteed_column_cell():
+    # A plan that starts a guaranteed multi at 1A lights 1A's guaranteed-column cell (the
+    # uber it awards); the normal track cell keeps its normal roll.
     banner_pulls = {"X": [TrackPull(1, "A", "Shaman Cat", R)]}
-    pulled = {"X": {0: Pull(0, "X", "Trixi the Merc", U)}}
-    cell = build_tracks(banner_pulls, {}, {}, path={}, targets={}, pulled=pulled)
-    assert cell["rows"][0]["a"][0]["cat"] == "Shaman Cat"
+    guaranteed = {"X": [TrackPull(1, "A", "Trixi the Merc", U)]}
+    track = build_tracks(
+        banner_pulls,
+        {},
+        {},
+        path={"X": {0}},
+        guaranteed=guaranteed,
+        gpath={"X": {0}},
+        gtargets={"X": {0}},
+    )
+    entry = track["rows"][0]["ga"][0]
+    assert (entry["on_path"], entry["target"]) == (True, True)
+    assert track["rows"][0]["a"][0]["cat"] == "Shaman Cat"
+
+
+def test_build_tracks_guaranteed_cell_off_path_is_not_highlighted():
+    banner_pulls = {"X": [TrackPull(1, "A", "Shaman Cat", R)]}
+    guaranteed = {"X": [TrackPull(1, "A", "Trixi the Merc", U)]}
+    entry = build_tracks(banner_pulls, {}, {}, guaranteed=guaranteed)["rows"][0]["ga"][0]
+    assert (entry["on_path"], entry["target"]) == (False, False)
+
+
+def test_build_tracks_renders_the_guaranteed_columns():
+    banner_pulls = {"X": [TrackPull(1, "A", "Shaman Cat", R), TrackPull(1, "B", "Pogo", R)]}
+    guaranteed = {"X": [TrackPull(1, "A", "Trixi the Merc", U), TrackPull(1, "B", "Kasli", U)]}
+    track = build_tracks(banner_pulls, {}, {}, guaranteed=guaranteed)
+    assert track["has_guaranteed"] is True
+    row = track["rows"][0]
+    assert [e["cat"] for e in row["ga"]] == ["Trixi the Merc"]
+    assert [e["cat"] for e in row["gb"]] == ["Kasli"]
+    assert row["ga"][0]["rarity"] == "Uber Super Rare"
+
+
+def test_build_tracks_without_a_guarantee_omits_the_columns():
+    banner_pulls = {"X": [TrackPull(1, "A", "Shaman Cat", R)]}
+    track = build_tracks(banner_pulls, {}, {}, guaranteed={"X": []})
+    assert track["has_guaranteed"] is False
+    assert track["rows"][0]["ga"] == []
+
+
+def test_build_tracks_guaranteed_cell_stacks_only_guaranteed_banners():
+    # Banner Y runs no guarantee, so the guaranteed cell holds X's uber alone.
+    banner_pulls = {
+        "X": [TrackPull(1, "A", "Shaman Cat", R)],
+        "Y": [TrackPull(1, "A", "Pogo", R)],
+    }
+    guaranteed = {"X": [TrackPull(1, "A", "Trixi the Merc", U)], "Y": []}
+    row = build_tracks(banner_pulls, {}, {}, guaranteed=guaranteed)["rows"][0]
+    assert [(e["tag"], e["cat"]) for e in row["ga"]] == [("1", "Trixi the Merc")]
+
+
+def test_build_tracks_guaranteed_uber_can_be_new():
+    banner_pulls = {"X": [TrackPull(1, "A", "Shaman Cat", R)]}
+    guaranteed = {"X": [TrackPull(1, "A", "Trixi the Merc", U)]}
+    row = build_tracks(banner_pulls, {}, {}, owned=set(), guaranteed=guaranteed)["rows"][0]
+    assert row["ga"][0]["new"] is True
+
+
+def test_build_tracks_skips_an_empty_guaranteed_cell():
+    # An empty uber pool rolls "" (godfat's id -1); the cell renders nothing for it.
+    banner_pulls = {"X": [TrackPull(1, "A", "Shaman Cat", R)]}
+    guaranteed = {"X": [TrackPull(1, "A", "", U)]}
+    track = build_tracks(banner_pulls, {}, {}, guaranteed=guaranteed)
+    assert track["rows"][0]["ga"] == []
 
 
 def test_plan_summary_reports_cost_label_for_a_ticket_plan():

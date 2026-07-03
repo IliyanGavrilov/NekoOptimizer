@@ -124,10 +124,12 @@ def test_impossible_pair_returns_none_without_exhausting_the_state_space():
 
 
 def guaranteed_banner():
+    # The guaranteed column is keyed by the multi's FIRST roll: a 3-roll guarantee begun
+    # at 1A rolls 1A and 2A, then swaps its final roll for Mecha.
     return BannerGraph(
         "x",
         [TrackPull(1, "A", "Cat", R), TrackPull(2, "A", "Dog", R)],
-        [TrackPull(3, "A", "Mecha", U)],
+        [TrackPull(1, "A", "Mecha", U)],
     )
 
 
@@ -154,6 +156,23 @@ def test_guaranteed_unaffordable_returns_none():
 
 def test_guaranteed_uber_unreachable_without_config():
     assert astar([guaranteed_banner()], {"Mecha"}, start(catfood=9)) is None
+
+
+def test_guaranteed_multi_lands_one_step_past_its_final_roll():
+    # A 3-roll guarantee from 1A walks 1A, 2A (stream 0 -> 2 -> 4), swaps the final roll
+    # for Mecha, and continues at stream 5 (3B): the guarantee flips the track. Kasli at
+    # 3B is only reachable that way - single pulls from 0 keep even parity.
+    g = BannerGraph(
+        "x",
+        [TrackPull(1, "A", "Cat", R), TrackPull(2, "A", "Dog", R), TrackPull(3, "B", "Kasli", U)],
+        [TrackPull(1, "A", "Mecha", U)],
+    )
+    result = astar(
+        [g], {"Mecha", "Kasli"}, start(tickets=1, catfood=3), multis={"x": [Multi(3, 450)]}
+    )
+    assert result.cats == ("Cat", "Dog", "Mecha", "Kasli")
+    forced = result.pulls[2]
+    assert (forced.guaranteed, forced.position) == (True, 0)
 
 
 def test_plain_multi_rolls_normal_cats_for_fixed_cost():
