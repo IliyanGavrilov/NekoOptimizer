@@ -9,6 +9,7 @@ from planner.models import Banner, Cat, Unit
 from planner.services import (
     ADDONS_LABEL,
     REGULARS_LABEL,
+    WIKI_BASE,
     banner_titles,
     build_tracks,
     capped_banner_limits,
@@ -21,6 +22,7 @@ from planner.services import (
     plan_summary,
     series_names,
     set_sections,
+    wiki_url,
 )
 
 U = Rarity.UBER_SUPER_RARE
@@ -571,3 +573,30 @@ def test_plan_summary_never_reads_a_catfood_multi_roll_as_tickets():
     leg = Leg("X", "11-roll (guaranteed)", 1500, pulls)
     option = SubsetPlan(frozenset({"Bahamut"}), Path(pulls, 0, 10, (leg,)))
     assert plan_summary([option], {"X": ["X"]})[0]["legs"][0]["tickets"] == 0
+
+
+@pytest.mark.parametrize(
+    "rarity, title",
+    [
+        ("Normal", "Cat_(Normal_Cat)"),
+        ("Special", "Cat_(Special_Cat)"),
+        ("Rare", "Cat_(Rare_Cat)"),
+        ("Super Rare", "Cat_(Super_Rare_Cat)"),
+        ("Uber Super Rare", "Cat_(Uber_Rare_Cat)"),
+        ("Legend Rare", "Cat_(Legend_Rare_Cat)"),
+    ],
+)
+def test_wiki_url_titles_a_page_by_the_wikis_own_rarity_label(rarity, title):
+    assert wiki_url("Cat", rarity) == WIKI_BASE + title
+
+
+def test_wiki_url_underscores_the_spaces_in_a_multiword_name():
+    assert wiki_url("Bahamut Cat", "Uber Super Rare") == WIKI_BASE + "Bahamut_Cat_(Uber_Rare_Cat)"
+
+
+def test_wiki_url_keeps_an_apostrophe_literal():
+    assert wiki_url("D'arktanyan", "Uber Super Rare") == WIKI_BASE + "D'arktanyan_(Uber_Rare_Cat)"
+
+
+def test_wiki_url_falls_back_to_the_bare_name_for_an_unknown_rarity():
+    assert wiki_url("Doge", "") == WIKI_BASE + "Doge"

@@ -291,3 +291,26 @@ def test_tracks_endpoint_hides_the_guaranteed_column_without_a_guarantee(client,
         "planner.views.fetch_banners", fixed_banners(TrackPull(1, "A", "Bahamut", U))
     )
     assert b"Guaranteed" not in client.post("/tracks/", {"seed": 7}).content
+
+
+@pytest.mark.django_db
+def test_unit_info_lists_a_units_forms(client):
+    Unit.objects.create(
+        unit_id=25, name="Bahamut", rarity="Uber Super Rare", forms=["Bahamut", "Aqua Bahamut"]
+    )
+    assert client.get("/unit/info/", {"name": "Bahamut"}).json()["forms"] == [
+        "Bahamut",
+        "Aqua Bahamut",
+    ]
+
+
+@pytest.mark.django_db
+def test_unit_info_links_to_the_wiki_page(client):
+    Unit.objects.create(unit_id=25, name="Bahamut", rarity="Uber Super Rare")
+    wiki = client.get("/unit/info/", {"name": "Bahamut"}).json()["wiki"]
+    assert wiki.endswith("/Bahamut_(Uber_Rare_Cat)")
+
+
+@pytest.mark.django_db
+def test_unit_info_reports_an_unknown_cat_as_not_found(client):
+    assert client.get("/unit/info/", {"name": "Nobody"}).json() == {"found": False}
