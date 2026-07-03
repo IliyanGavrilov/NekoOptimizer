@@ -1,8 +1,7 @@
 import pytest
 
-from neko.godfat import TrackPull
 from neko.graph import BannerGraph, Outcome, build_graphs, stream_index
-from neko.models import Rarity
+from neko.models import Rarity, TrackPull
 
 R = Rarity.RARE
 S = Rarity.SUPER_RARE

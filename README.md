@@ -13,7 +13,7 @@ cheapest path that collects the wishlist.
 
 | Path | Purpose |
 |------|---------|
-| `neko/` | Pure-Python core - RNG, models, graph builder, search, subset solver, scraper, SQLite. Django-independent and unit-testable in isolation. |
+| `neko/` | Pure-Python core - RNG, roll engine, models, graph builder, search, subset solver. Django-independent and unit-testable in isolation. |
 | `nekosite/` | Django project (settings, urls, wsgi/asgi). The web UI app is added later. |
 | `manage.py` | Django entry point. |
 
@@ -36,8 +36,10 @@ python manage.py migrate        # apply database migrations
 
 ## Tech stack
 
-Django · aiohttp + asyncio · BeautifulSoup4 · heapq · sqlite3 · dataclasses ·
-pytest. Data source for pull sequences: [bc.godfat.org](https://bc.godfat.org).
+Django · heapq · sqlite3 · dataclasses · pytest. Pull sequences are rolled
+locally by our own engine; the gacha schedule comes from
+[bc.godfat.org](https://bc.godfat.org)'s open event data and the unit catalogue
+from the game's data files.
 
 ## Inspiration
 
@@ -46,7 +48,7 @@ Reference projects surveyed for features to borrow. Functionality focus, not vis
 ### Planners / multipath solvers
 - [ubercarry.me](https://ubercarry.me/) & [catcpu.com](https://catcpu.com/) - by [thasmin/bcplanner](https://github.com/thasmin/bcplanner). Roll Planner (next 100 rolls, A/B tracks, rarity colors, guaranteed-Uber, duplicate detection), Uber Planner, Cat Dictionary (800+ units), Tier Lists. Main inspiration.
 - [xirba13/Batte-Cats-Gacha-Path-Finder](https://github.com/xirba13/Batte-Cats-Gacha-Path-Finder) - optimal multipath roll calculator. `BANNER_LIMITS` (per-banner action caps), search caps `MAX_SEARCH_STEPS`/`MAX_SOLUTIONS`, plain-text step output.
-- [bc.godfat.org](https://bc.godfat.org/) - the canonical seed tracker (our parser targets it).
+- [bc.godfat.org](https://bc.godfat.org/) - the canonical seed tracker (our roll engine is byte-validated against it).
 - [ampuri.github.io/bc-normal-seed-tracking](https://ampuri.github.io/bc-normal-seed-tracking/) - modern React normal-seed tracker.
 - [theusaf/battlecats-seed-tracker-util](https://github.com/theusaf/battlecats-seed-tracker-util) / [Greasy Fork script](https://greasyfork.org/en/scripts/480239-bc-seed-tracker-util) - godfat overlay showing paths to wanted cats.
 

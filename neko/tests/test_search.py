@@ -1,6 +1,5 @@
-from neko.godfat import TrackPull
 from neko.graph import BannerGraph
-from neko.models import CATFOOD_PER_DRAW, Path, Rarity, State
+from neko.models import CATFOOD_PER_DRAW, Path, Rarity, State, TrackPull
 from neko.search import Multi, astar, beam_search
 
 R = Rarity.RARE

@@ -2,9 +2,8 @@ from itertools import count
 
 import pytest
 
-from neko.godfat import BannerRolls, TrackPull
-from neko.models import Rarity
-from neko.scraper import ScrapeResult
+from neko.models import BannerRolls, Rarity, TrackPull
+from neko.roller import RollResult
 from neko.search import Multi
 from planner.models import Banner, Cat, Seed, Unit
 
@@ -21,7 +20,7 @@ def cat_with_unit(name, owned=False, wanted=False):
 
 def fixed_banners(*pulls):
     def _fetch(seed, count=100):
-        return ScrapeResult({"x": BannerRolls(list(pulls), [])}, {})
+        return RollResult({"x": BannerRolls(list(pulls), [])}, {})
 
     return _fetch
 
@@ -71,7 +70,7 @@ def test_use_wishlist_searches_wanted_cats(client, monkeypatch):
 @pytest.mark.django_db
 def test_guaranteed_config_reaches_target(client, monkeypatch):
     cat = Cat.objects.create(name="Target")
-    result = ScrapeResult(
+    result = RollResult(
         {"x": BannerRolls([TrackPull(1, "A", "Filler", U)], [TrackPull(2, "A", "Target", U)])},
         {"x": [Multi(rolls=2, cost=300)]},
     )
@@ -81,13 +80,13 @@ def test_guaranteed_config_reaches_target(client, monkeypatch):
 
 
 @pytest.mark.django_db
-def test_selected_banners_use_chosen_scrape(client, monkeypatch):
+def test_selected_banners_use_chosen_rolls(client, monkeypatch):
     cat = Cat.objects.create(name="Bahamut")
     called = {}
 
     def fake_for_banners(seed, names, count=100):
         called["names"] = list(names)
-        return ScrapeResult({"Pick": BannerRolls([TrackPull(1, "A", "Bahamut", U)], [])}, {})
+        return RollResult({"Pick": BannerRolls([TrackPull(1, "A", "Bahamut", U)], [])}, {})
 
     monkeypatch.setattr("planner.views.fetch_for_banners", fake_for_banners)
     monkeypatch.setattr("planner.views.fetch_banners", fixed_banners())
@@ -114,7 +113,7 @@ def test_prefer_catfood_keeps_the_ticket(client, monkeypatch):
 @pytest.mark.django_db
 def test_platinum_legend_cap_zero_excludes_the_banner(client, monkeypatch):
     cat = Cat.objects.create(name="Bahamut")
-    result = ScrapeResult(
+    result = RollResult(
         {"Platinum Capsules": BannerRolls([TrackPull(1, "A", "Bahamut", U)], [])}, {}
     )
     monkeypatch.setattr("planner.views.fetch_banners", lambda seed, count=100: result)
@@ -129,7 +128,7 @@ def test_platinum_legend_cap_zero_excludes_the_banner(client, monkeypatch):
 @pytest.mark.django_db
 def test_platinum_legend_allowed_by_default(client, monkeypatch):
     cat = Cat.objects.create(name="Bahamut")
-    result = ScrapeResult(
+    result = RollResult(
         {"Platinum Capsules": BannerRolls([TrackPull(1, "A", "Bahamut", U)], [])}, {}
     )
     monkeypatch.setattr("planner.views.fetch_banners", lambda seed, count=100: result)
@@ -182,13 +181,13 @@ def test_unreachable_subset_is_listed_not_found(client, monkeypatch):
 
 
 @pytest.mark.django_db
-def test_explore_mode_scrapes_to_the_horizon(client, monkeypatch):
+def test_explore_mode_rolls_to_the_horizon(client, monkeypatch):
     cat = Cat.objects.create(name="Bahamut")
     seen = {}
 
     def fake(seed, count=100):
         seen["count"] = count
-        return ScrapeResult({"x": BannerRolls([TrackPull(1, "A", "Bahamut", U)], [])}, {})
+        return RollResult({"x": BannerRolls([TrackPull(1, "A", "Bahamut", U)], [])}, {})
 
     monkeypatch.setattr("planner.views.fetch_banners", fake)
     data = {"seed": 7, "tickets": 0, "catfood": 0, "targets": [cat.pk]}
@@ -276,7 +275,7 @@ def test_tracks_endpoint_renders_the_guaranteed_column(client, monkeypatch):
         [TrackPull(1, "A", "Shaman Cat", R)], [TrackPull(1, "A", "Trixi the Merc", U)]
     )
     monkeypatch.setattr(
-        "planner.views.fetch_banners", lambda seed, count=100: ScrapeResult({"x": rolls}, {})
+        "planner.views.fetch_banners", lambda seed, count=100: RollResult({"x": rolls}, {})
     )
     response = client.post("/tracks/", {"seed": 7})
     assert b"Guaranteed" in response.content

@@ -1,8 +1,7 @@
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 
-from neko.godfat import TrackPull
-from neko.models import Rarity
+from neko.models import Rarity, TrackPull
 
 
 def stream_index(position: int, track: str) -> int:

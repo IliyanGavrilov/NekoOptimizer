@@ -2,8 +2,7 @@ from datetime import date
 
 from neko.gacha import GachaRule
 from neko.gachadata import GachaEventRow
-from neko.roller import catalogue_banners, roll_active, roll_selected
-from neko.scraper import ScrapeResult
+from neko.roller import RollResult, active_events, catalogue_banners, roll_active, roll_selected
 from neko.search import Multi
 
 
@@ -30,12 +29,18 @@ def roll(fn, *args, **kw):
     return fn(*args, events=EVENTS, pools=POOLS, units=UNITS, rules=[], **kw)
 
 
-def test_roll_selected_returns_a_scrape_result_for_named_banners():
+def test_roll_selected_returns_a_roll_result_for_named_banners():
     res = roll(roll_selected, 123, ["Alpha Banner"])
-    assert isinstance(res, ScrapeResult)
+    assert isinstance(res, RollResult)
     assert set(res.banners) == {"Alpha Banner"}
     assert all(p.cat in {"R1", "R2", "S1", "U1"} for p in res.banners["Alpha Banner"].pulls)
     assert res.dates["Alpha Banner"] == (date(2025, 1, 1), date(2025, 1, 10))
+
+
+def test_active_events_includes_the_start_and_end_dates():
+    assert active_events(EVENTS, date(2025, 1, 1)) == [EVENTS[0]]
+    assert active_events(EVENTS, date(2025, 1, 10)) == [EVENTS[0]]
+    assert active_events(EVENTS, date(2025, 1, 20)) == []
 
 
 def test_roll_active_filters_by_date():
