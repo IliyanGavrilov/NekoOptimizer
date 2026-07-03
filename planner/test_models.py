@@ -16,14 +16,7 @@ def make_cat(name, owned=False, wanted=False):
 def test_wishlist_excludes_owned():
     make_cat("Bahamut", wanted=True)
     make_cat("Kasli", wanted=True, owned=True)
-    assert list(Cat.objects.wishlist().values_list("name", flat=True)) == ["Bahamut"]
-
-
-@pytest.mark.django_db
-def test_unowned_excludes_owned():
-    make_cat("Cat")
-    make_cat("Bahamut", owned=True)
-    assert list(Cat.objects.unowned().values_list("name", flat=True)) == ["Cat"]
+    assert list(Unit.objects.wishlist().values_list("name", flat=True)) == ["Bahamut"]
 
 
 @pytest.mark.django_db

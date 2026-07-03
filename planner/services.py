@@ -3,6 +3,7 @@ from datetime import date, timedelta
 from itertools import combinations
 
 from neko.catalogue import match_names, name_index
+from neko.gachadata import load_events, load_pools
 from neko.godfat import BannerRolls
 from neko.graph import BannerGraph, build_graphs, stream_index
 from neko.models import CATFOOD_PER_DRAW, Rarity, State
@@ -11,7 +12,10 @@ from neko.scraper import DEFAULT_COUNT, ScrapeResult
 from neko.subsets import solve_subsets
 from planner.models import Banner, Cat, Unit
 
-RARITY_ORDER = ["Normal", "Rare", "Super Rare", "Uber Super Rare", "Legend Rare"]
+RARITY_ORDER = ["Normal", "Special", "Rare", "Super Rare", "Uber Super Rare", "Legend Rare"]
+
+# Normal/Special cats come from XP and stages, not capsules.
+NON_GACHA_RARITIES = RARITY_ORDER[:2]
 
 # Platinum/Legend run on scarce tickets, not catfood, so the optimizer treats them as
 # info-only: capped (0 by default) rather than modelled as ordinary catfood gacha.
@@ -56,87 +60,21 @@ def _by_rarity(cats: Iterable[Cat], reverse: bool = False) -> list[tuple[str, li
     return ordered
 
 
-def catalogue(
-    cats: Iterable[Cat], reverse_rarity: bool = False
-) -> list[tuple[str, list[tuple[str, list[Cat]]]]]:
-    """Section cats by banner, then by rarity within each banner.
-
-    Returns ``[(banner_name, [(rarity, [cat, ...]), ...]), ...]``; cats with no
-    banner are collected under 'Other'. Cats in several banners appear in each.
-    Rarity runs cheapest-to-rarest, or rarest-first when ``reverse_rarity``.
-    """
-    banners: dict[str, list[Cat]] = {}
-    other: list[Cat] = []
-    for cat in cats:
-        names = [banner.name for banner in cat.banners.all()]
-        for name in names:
-            banners.setdefault(name, []).append(cat)
-        if not names:
-            other.append(cat)
-    sections = [(name, _by_rarity(banners[name], reverse_rarity)) for name in sorted(banners)]
-    if other:
-        sections.append(("Other", _by_rarity(other, reverse_rarity)))
-    return sections
+def collection_sections(units: Iterable[Unit]) -> list[tuple[str, list[Unit]]]:
+    """Units binned by rarity in game order (Normal first, Legend Rare last), keeping
+    the given order within each bin; blank rarities fall under 'Unknown', always last."""
+    return _by_rarity(units)
 
 
-def dated_catalogue(
-    cats: Iterable[Cat], today: date | None = None, reverse_rarity: bool = False
-) -> list[tuple[str, list]]:
-    """Split the catalogue into date-ordered groups for a less crowded page.
-
-    Returns ``[(group_label, [(banner, (start, end), [(rarity, [cat, ...])])])]``
-    with three possible groups: active/upcoming banners (earliest date first),
-    past banners (most recent first), and undated/bannerless cats (``None`` dates).
-    Empty groups are dropped.
-    """
-    today = today or date.today()
-    by_name: dict[str, list[Cat]] = {}
-    other: list[Cat] = []
-    for cat in cats:
-        names = [banner.name for banner in cat.banners.all()]
-        for name in names:
-            by_name.setdefault(name, []).append(cat)
-        if not names:
-            other.append(cat)
-
-    banners = {b.name: b for b in Banner.objects.filter(name__in=by_name)}
-    now, upcoming, past, undated = [], [], [], []
-    for name in by_name:
-        banner = banners.get(name)
-        if banner is None or banner.end is None:
-            undated.append(name)
-        elif banner.end < today:
-            past.append(name)
-        elif banner.start <= today:
-            now.append(name)
-        else:
-            upcoming.append(name)
-    now.sort(key=lambda name: banners[name].start)
-    upcoming.sort(key=lambda name: banners[name].start)
-    past.sort(key=lambda name: banners[name].start, reverse=True)
-    undated.sort()
-
-    def nest(names: list[str]):
-        return [
-            (
-                name,
-                (banners[name].start, banners[name].end),
-                _by_rarity(by_name[name], reverse_rarity),
-            )
-            for name in names
-        ]
-
-    leftovers = nest(undated)
-    if other:
-        leftovers.append(("Other", None, _by_rarity(other, reverse_rarity)))
-
-    groups = [
-        ("Available now", nest(now)),
-        ("Upcoming", nest(upcoming)),
-        ("Past", nest(past)),
-        ("Other", leftovers),
-    ]
-    return [group for group in groups if group[1]]
+def gacha_sets(events=None, pools=None) -> list[tuple[str, list[int]]]:
+    """Each gacha set (recurring banner name) with every unit id its pools have ever
+    offered, as ``[(name, [unit_id, ...]), ...]`` sorted by name."""
+    events = events if events is not None else load_events()
+    pools = pools if pools is not None else load_pools()
+    sets: dict[str, set[int]] = {}
+    for event in events:
+        sets.setdefault(event.name, set()).update(pools.get(event.pool_id, ()))
+    return [(name, sorted(ids)) for name, ids in sorted(sets.items())]
 
 
 def _effective_runs(events) -> list[tuple[str, date, date]]:
@@ -166,8 +104,6 @@ def picker_groups(cats: Iterable[Cat], today: date | None = None, events=None) -
     Same shape as [dated_catalogue]: ``[(label, [(name, (start, end), rarities)])]``."""
     today = today or date.today()
     if events is None:
-        from neko.gachadata import load_events
-
         events = load_events()
     by_name: dict[str, list[Cat]] = {}
     other: list[Cat] = []
