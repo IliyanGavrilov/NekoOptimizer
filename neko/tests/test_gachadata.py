@@ -8,6 +8,7 @@ from neko.gachadata import (
     merge_events,
     parse_events,
     parse_gacha_pools,
+    parse_series,
 )
 from neko.models import Rarity
 
@@ -59,6 +60,11 @@ def test_parse_events_flags_guaranteed_and_step_up():
 def test_parse_gacha_pools_stops_at_terminator_and_keeps_row_index():
     pools = parse_gacha_pools("header,line\n10,20,30,-1,//comment\n40,50,-1\n")
     assert pools == {1: [10, 20, 30], 2: [40, 50]}
+
+
+def test_parse_series_maps_pool_to_series_by_header_column():
+    option = "GatyaSetID\tBannerON_OFF\tseriesID\n954\t0\t21\n966\t1\t21\nbad\trow\there\n"
+    assert parse_series(option) == {954: 21, 966: 21}
 
 
 def test_build_banner_groups_pool_by_rarity_in_row_order():

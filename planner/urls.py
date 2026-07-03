@@ -3,12 +3,12 @@ from django.urls import path
 from planner.views import (
     apply_plan,
     collection,
+    collection_bulk,
     collection_toggle,
     find_plan,
     picker_past,
     planner,
     tracks,
-    wishlist_all_unowned,
 )
 
 urlpatterns = [
@@ -19,5 +19,5 @@ urlpatterns = [
     path("apply/", apply_plan, name="apply_plan"),
     path("collection/", collection, name="collection"),
     path("collection/toggle/", collection_toggle, name="collection_toggle"),
-    path("collection/wishlist-all/", wishlist_all_unowned, name="wishlist_all_unowned"),
+    path("collection/bulk/", collection_bulk, name="collection_bulk"),
 ]
