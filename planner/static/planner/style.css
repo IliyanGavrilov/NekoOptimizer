@@ -435,6 +435,23 @@ section > h3, .banner-group > summary {
 }
 .banner-group.flash-locate { animation: flash-locate 0.9s ease-out; }
 
+/* The selected banners spelled out under the hint; each chip scrolls to its banner. */
+.banner-chips { display: flex; flex-wrap: wrap; gap: 0.35rem; margin: 0 0 0.6rem; }
+.banner-chip {
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent) 45%, transparent);
+  border-radius: 999px;
+  padding: 0.1rem 0.6rem;
+  margin: 0;
+  width: auto;
+  cursor: pointer;
+}
+.banner-chip:hover { border-color: var(--accent); filter: none; }
+
 .hint { font-size: 0.82rem; margin: 0 0 0.6rem; }
 .hint .key {
   display: inline-block;
@@ -650,7 +667,17 @@ table.track th, table.track td {
   text-align: left;
   vertical-align: top;
 }
-table.track thead th { color: var(--muted); font-family: var(--head-font); font-weight: 600; }
+/* The header row rides along under the site header while the 100 rows scroll
+   (--header-h is measured by app.js - the site header wraps taller on phones). */
+table.track thead th {
+  position: sticky;
+  top: var(--header-h, 52px);
+  z-index: 2;
+  background: var(--panel);
+  color: var(--muted);
+  font-family: var(--head-font);
+  font-weight: 600;
+}
 table.track .pos { color: var(--muted); text-align: right; width: 2.5rem; font-weight: 400; }
 /* Each banner's cat is its own line in the cell; off-path lines stay dim.
    Entries span the full cell (negative margin cancels the td padding) with their
