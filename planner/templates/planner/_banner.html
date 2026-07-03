@@ -1,7 +1,7 @@
-<details class="banner-group"{% if is_open %} open{% endif %}{% if dates %} data-start="{{ dates.0|date:'Y-m-d' }}" data-end="{{ dates.1|date:'Y-m-d' }}"{% endif %}>
+<details class="banner-group" data-title="{{ title }}"{% if is_open %} open{% endif %}{% if dates %} data-start="{{ dates.0|date:'Y-m-d' }}" data-end="{{ dates.1|date:'Y-m-d' }}"{% endif %}>
   <summary>
     {% if dates %}<button type="button" class="banner-include" aria-pressed="false" data-banner="{{ banner }}" data-run="{{ dates.0|date:'Y-m-d' }}" title="Roll this banner's session" aria-label="Include banner">&plus;</button>{% endif %}
-    <span class="banner-name">{{ banner }}</span>
+    <span class="banner-name">{{ title }}{% if title != banner %} <span class="banner-sub">{{ banner }}</span>{% endif %}</span>
     {% if dates %}
       {% if dates.1.year >= 2030 %}
         <span class="dates">Since {{ dates.0|date:"M j, Y" }}</span>

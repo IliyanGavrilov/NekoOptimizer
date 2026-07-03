@@ -46,9 +46,9 @@
       </div>
 
       <div class="search-wrap">
-        <input type="search" id="targetSearch" placeholder="Search cats&hellip;" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+        <input type="search" id="targetSearch" placeholder="Search cats &amp; banners&hellip;" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
         <button type="button" id="targetSearchClear" class="search-clear" hidden aria-label="Clear search and browse banners">&times;</button>
-        <span class="search-hint" id="targetSearchHint" hidden>Searching all cats &middot; clear to pick by banner</span>
+        <span class="search-hint" id="targetSearchHint" hidden>Matching banners (every run) and cats &middot; clear to browse</span>
       </div>
 
       <div id="targetPicker" class="picker-scroll">
@@ -63,8 +63,8 @@
           {% for group_label, banner_sections in target_groups %}
             {% if group_label == "Available now" %}
               <h3 class="group">{{ group_label }} <span class="count-pill">{{ banner_sections|length }}</span></h3>
-              {% for banner, dates, rarities in banner_sections %}
-                {% include "planner/_banner.html" with banner=banner dates=dates rarities=rarities is_open=0 %}
+              {% for banner, title, dates, rarities in banner_sections %}
+                {% include "planner/_banner.html" with banner=banner title=title dates=dates rarities=rarities is_open=0 %}
               {% endfor %}
             {% elif group_label == "Past" %}
               {# ~2000 per-run rows: shipped on demand, fetched the first time it's opened. #}
@@ -75,8 +75,8 @@
             {% else %}
               <details class="group-drop"{% if group_label == "Upcoming" %} open{% endif %}>
                 <summary>{{ group_label }} <span class="count-pill">{{ banner_sections|length }}</span></summary>
-                {% for banner, dates, rarities in banner_sections %}
-                  {% include "planner/_banner.html" with banner=banner dates=dates rarities=rarities is_open=0 %}
+                {% for banner, title, dates, rarities in banner_sections %}
+                  {% include "planner/_banner.html" with banner=banner title=title dates=dates rarities=rarities is_open=0 %}
                 {% endfor %}
               </details>
             {% endif %}

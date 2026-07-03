@@ -313,6 +313,18 @@ section > h3, .banner-group > summary {
   white-space: nowrap;
 }
 
+/* Set name up front, the run's marketing text tucked under it on one trimmed line. */
+.banner-name { min-width: 0; }
+.banner-name .banner-sub {
+  display: block;
+  color: var(--muted);
+  font-size: 0.75rem;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 /* Banner "include in roll" toggle */
 .banner-include {
   flex: 0 0 auto;

@@ -9,6 +9,7 @@ from planner.forms import PlannerForm
 from planner.models import Cat, Seed, Unit
 from planner.services import (
     RARITY_ORDER,
+    banner_titles,
     build_tracks,
     capped_banner_limits,
     collection_sections,
@@ -33,7 +34,7 @@ def planner(request):
     rank = {name: i for i, name in enumerate(RARITY_ORDER)}
     target_flat = sorted(cats, key=lambda cat: (-rank.get(cat.rarity, -1), cat.name))
     groups, past_count = [], 0
-    for label, rows in picker_groups(cats):
+    for label, rows in picker_groups(cats, titles=banner_titles()):
         if label == "Past":
             past_count = len(rows)
             groups.append((label, None))  # rendered as a lazy shell in its place
@@ -51,7 +52,7 @@ def planner(request):
 def picker_past(request):
     """The Past picker rows, fetched when the group is first opened."""
     cats = list(Cat.objects.select_related("unit").prefetch_related("banners"))
-    groups = dict(picker_groups(cats))
+    groups = dict(picker_groups(cats, titles=banner_titles()))
     return render(request, "planner/_picker_rows.html", {"sections": groups.get("Past", [])})
 
 

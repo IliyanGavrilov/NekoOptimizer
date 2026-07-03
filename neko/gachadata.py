@@ -77,21 +77,24 @@ def parse_gacha_pools(r1_text: str) -> dict[int, list[int]]:
     return pools
 
 
-def parse_series(option_text: str) -> dict[int, int]:
-    """Map each pool id (GatyaSetID) to its seriesID from GatyaData_Option_SetR.tsv - the
-    stable identity of a recurring gacha set, unchanged across reruns whose pools and
-    marketing subtitles both differ."""
-    series: dict[int, int] = {}
+def parse_series(option_text: str) -> dict[int, list[int]]:
+    """Map each pool id (GatyaSetID) to its [seriesID, ItemID_Ticket] from
+    GatyaData_Option_SetR.tsv. The series id is the stable identity of a recurring gacha
+    set, unchanged across reruns whose pools and marketing subtitles both differ; the
+    ticket item tells the special capsules (Platinum/Legend) apart from rare-ticket ones.
+    """
+    series: dict[int, list[int]] = {}
     rows = csv.reader(option_text.splitlines(), delimiter="\t")
     header = next(rows, None)
     if header is None:
         return series
-    set_col, series_col = header.index("GatyaSetID"), header.index("seriesID")
+    columns = [header.index(name) for name in ("GatyaSetID", "seriesID", "ItemID_Ticket")]
     for row in rows:
         try:
-            series[int(row[set_col])] = int(row[series_col])
+            set_id, series_id, ticket = (int(row[column]) for column in columns)
         except IndexError, ValueError:
             continue
+        series[set_id] = [series_id, ticket]
     return series
 
 
@@ -204,7 +207,7 @@ def download_events(lang: str = "en") -> list[GachaEventRow]:
     return merge_events(lists)
 
 
-def download_gatya(country: str = "en") -> tuple[dict[int, list[int]], dict[int, int]]:
+def download_gatya(country: str = "en") -> tuple[dict[int, list[int]], dict[int, list[int]]]:
     """Fetch the newest BCData tarball; parse GatyaDataSetR1 into pools and the option
     file into the pool->series map (network)."""
     metadata = json.loads(_get(METADATA_URL))
@@ -241,8 +244,8 @@ def pool_records(pools: Mapping[int, list[int]], event_rows: Iterable[GachaEvent
     return {str(pid): pools[pid] for pid in sorted(referenced) if pid in pools}
 
 
-def series_records(series: Mapping[int, int], event_rows: Iterable[GachaEventRow]) -> dict:
-    """Only the referenced pools' series ids, as {str(pool_id): series_id}."""
+def series_records(series: Mapping[int, list[int]], event_rows: Iterable[GachaEventRow]) -> dict:
+    """Only the referenced pools' entries, as {str(pool_id): [series_id, ticket_id]}."""
     referenced = {e.pool_id for e in event_rows}
     return {str(pid): series[pid] for pid in sorted(referenced) if pid in series}
 
@@ -274,7 +277,12 @@ def load_pools(path: Path = POOLS_PATH) -> dict[int, list[int]]:
 
 def load_series(path: Path = SERIES_PATH) -> dict[int, int]:
     """Read the committed series map back as {pool_id: series_id}."""
-    return {int(k): v for k, v in json.loads(path.read_text(encoding="utf-8")).items()}
+    return {int(k): v[0] for k, v in json.loads(path.read_text(encoding="utf-8")).items()}
+
+
+def load_tickets(path: Path = SERIES_PATH) -> dict[int, int]:
+    """Read the committed series map back as {pool_id: ticket item id}."""
+    return {int(k): v[1] for k, v in json.loads(path.read_text(encoding="utf-8")).items()}
 
 
 def refresh(lang: str = "en") -> tuple[int, int]:
