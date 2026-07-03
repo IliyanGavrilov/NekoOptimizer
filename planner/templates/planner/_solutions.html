@@ -20,7 +20,7 @@
                     data-seed-after="{{ s.seed_after }}"{% endif %}>Apply this plan <span class="apply-cost">{{ s.cost_label }}</span></button>
           </div>
           <div class="view" data-view="track">{% include "planner/_tracks.html" with track=s.track %}</div>
-          <div class="view" data-view="steps" hidden>{% include "planner/_steps.html" with legs=s.legs targets=s.targets %}</div>
+          <div class="view" data-view="steps" hidden>{% include "planner/_steps.html" with legs=s.legs %}</div>
         </div>
       {% endif %}
     </details>
