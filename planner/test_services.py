@@ -381,6 +381,18 @@ def test_build_tracks_arrow_only_when_switched():
     assert build_tracks(banner_pulls, {}, {})["rows"][0]["a"][0]["arrow"] is None
 
 
+def test_build_tracks_a_track_dupe_arrow_points_right_towards_b():
+    banner_pulls = {"X": [TrackPull(1, "A", "Pogo", R), TrackPull(2, "A", "Pogo", R)]}
+    rerolls = {"X": [TrackPull(2, "A", "Jurassic Cat", R)]}
+    assert build_tracks(banner_pulls, rerolls, {})["rows"][1]["a"][0]["arrow"]["left"] is False
+
+
+def test_build_tracks_b_track_dupe_arrow_points_left_towards_a():
+    banner_pulls = {"X": [TrackPull(1, "B", "Pogo", R), TrackPull(2, "B", "Pogo", R)]}
+    rerolls = {"X": [TrackPull(2, "B", "Jurassic Cat", R)]}
+    assert build_tracks(banner_pulls, rerolls, {})["rows"][1]["b"][0]["arrow"]["left"] is True
+
+
 def test_build_tracks_highlights_the_path_and_target():
     banner_pulls = {"X": [TrackPull(1, "A", "Bahamut", U)]}
     track = build_tracks(banner_pulls, {}, {}, path={"X": {0}}, targets={"X": {0}})
@@ -421,6 +433,27 @@ def test_build_tracks_rare_cat_is_never_new():
     banner_pulls = {"X": [TrackPull(1, "A", "Pogo", R)]}
     entry = build_tracks(banner_pulls, {}, {}, owned=set())["rows"][0]["a"][0]
     assert entry["new"] is False
+
+
+def test_build_tracks_marks_an_owned_cat():
+    banner_pulls = {"X": [TrackPull(1, "A", "Pogo", R)]}
+    entry = build_tracks(banner_pulls, {}, {}, owned={"Pogo"})["rows"][0]["a"][0]
+    assert entry["owned"] is True
+
+
+def test_build_tracks_stars_a_wishlisted_cat():
+    banner_pulls = {"X": [TrackPull(1, "A", "Bahamut", U)]}
+    entry = build_tracks(banner_pulls, {}, {}, wanted={"Bahamut"})["rows"][0]["a"][0]
+    assert entry["wanted"] is True
+
+
+def test_build_tracks_guaranteed_uber_can_be_wishlisted():
+    banner_pulls = {"X": [TrackPull(1, "A", "Shaman Cat", R)]}
+    guaranteed = {"X": [TrackPull(1, "A", "Trixi the Merc", U)]}
+    row = build_tracks(banner_pulls, {}, {}, guaranteed=guaranteed, wanted={"Trixi the Merc"})[
+        "rows"
+    ][0]
+    assert row["ga"][0]["wanted"] is True
 
 
 def test_build_tracks_highlights_the_guaranteed_column_cell():
@@ -551,7 +584,29 @@ def test_plan_summary_reports_cost_label_for_a_ticket_plan():
 def test_plan_summary_lists_the_pulled_cats_per_leg():
     leg = Leg("X", "Single pull", 0, (Pull(0, "X", "Bahamut", U),))
     option = SubsetPlan(frozenset({"Bahamut"}), Path(leg.pulls, 1, 0, (leg,)))
-    assert plan_summary([option], {"X": ["X"]})[0]["legs"][0]["cats"] == ["Bahamut"]
+    cats = plan_summary([option], {"X": ["X"]})[0]["legs"][0]["cats"]
+    assert [c["name"] for c in cats] == ["Bahamut"]
+
+
+def test_plan_summary_marks_the_targets_in_a_leg():
+    leg = Leg("X", "Single pull", 0, (Pull(0, "X", "Bahamut", U), Pull(1, "X", "Pogo", R)))
+    option = SubsetPlan(frozenset({"Bahamut"}), Path(leg.pulls, 2, 0, (leg,)))
+    cats = plan_summary([option], {"X": ["X"]})[0]["legs"][0]["cats"]
+    assert [c["target"] for c in cats] == [True, False]
+
+
+def test_plan_summary_marks_owned_and_wishlisted_cats():
+    leg = Leg("X", "Single pull", 0, (Pull(0, "X", "Pogo", R), Pull(1, "X", "Kasli", U)))
+    option = SubsetPlan(frozenset({"Kasli"}), Path(leg.pulls, 2, 0, (leg,)))
+    summary = plan_summary([option], {"X": ["X"]}, owned={"Pogo"}, wanted={"Kasli"})
+    cats = summary[0]["legs"][0]["cats"]
+    assert [(c["owned"], c["wanted"]) for c in cats] == [(True, False), (False, True)]
+
+
+def test_plan_summary_flags_an_unowned_uber_as_new():
+    leg = Leg("X", "Single pull", 0, (Pull(0, "X", "Kasli", U),))
+    option = SubsetPlan(frozenset({"Kasli"}), Path(leg.pulls, 1, 0, (leg,)))
+    assert plan_summary([option], {"X": ["X"]})[0]["legs"][0]["cats"][0]["new"] is True
 
 
 def test_plan_summary_counts_ticket_funded_single_pulls():

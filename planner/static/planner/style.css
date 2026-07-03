@@ -1,4 +1,5 @@
 :root {
+  color-scheme: dark;
   --bg: #181511;
   --bg-2: #1f1b16;
   --panel: #28231d;
@@ -9,6 +10,9 @@
   --accent-ink: #2a1c08;
   --warn: #ff9f43;
   --line: #3d372e;
+  --glow: #2a2114;
+  --header-bg: rgba(24, 21, 17, 0.85);
+  --overlay: rgba(24, 21, 17, 0.82);
   --radius: 14px;
 
   /* Battle Cats rarity colours */
@@ -23,13 +27,39 @@
   --body-font: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
 }
 
+/* Light theme: the same warm palette on cream. Applied via data-theme, which the
+   header toggle sets to the choice (or to whatever the device prefers on "system"). */
+:root[data-theme="light"] {
+  color-scheme: light;
+  --bg: #f5efe3;
+  --bg-2: #ece3d0;
+  --panel: #fdfaf3;
+  --panel-2: #f2ebdc;
+  --ink: #33291b;
+  --muted: #877a64;
+  --accent: #b8720d;
+  --accent-ink: #fff8ea;
+  --warn: #b45309;
+  --line: #ddd2ba;
+  --glow: #ffe4b1;
+  --header-bg: rgba(250, 245, 235, 0.85);
+  --overlay: rgba(245, 239, 227, 0.82);
+
+  --r-normal: #6f6552;
+  --r-rare: #1d74c9;
+  --r-super: #a67a00;
+  --r-uber: #8e3fd1;
+  --r-legend: #d13a3a;
+  --new: #0b8a5c;
+}
+
 * { box-sizing: border-box; }
 [hidden] { display: none !important; }
 
 body {
   margin: 0;
   background:
-    radial-gradient(1200px 600px at 50% -200px, #2a2114 0%, transparent 60%),
+    radial-gradient(1200px 600px at 50% -200px, var(--glow) 0%, transparent 60%),
     var(--bg);
   color: var(--ink);
   font: 16px/1.5 var(--body-font);
@@ -49,7 +79,7 @@ a:hover { text-decoration: underline; }
   position: sticky;
   top: 0;
   z-index: 10;
-  background: rgba(24, 21, 17, 0.85);
+  background: var(--header-bg);
   backdrop-filter: blur(8px);
   border-bottom: 1px solid var(--line);
 }
@@ -91,6 +121,36 @@ a:hover { text-decoration: underline; }
   color: var(--ink);
   text-decoration: none;
 }
+
+/* Theme switch: light / dark / follow the device. */
+.theme-toggle {
+  display: inline-flex;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  overflow: hidden;
+}
+.theme-toggle button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 1.7rem;
+  padding: 0;
+  margin: 0;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  color: var(--muted);
+  cursor: pointer;
+}
+.theme-toggle button + button { border-left: 1px solid var(--line); }
+.theme-toggle button:hover { color: var(--ink); filter: none; }
+.theme-toggle button[aria-pressed="true"] {
+  background: color-mix(in srgb, var(--accent) 16%, transparent);
+  color: var(--accent);
+}
+.theme-toggle button:focus-visible { outline-offset: -2px; }
+.theme-toggle svg { display: block; }
 
 /* ---- Layout ---------------------------------------------------------- */
 main {
@@ -191,7 +251,7 @@ html, .picker-scroll { scrollbar-width: thin; scrollbar-color: var(--accent) var
 ::-webkit-scrollbar { width: 11px; height: 11px; }
 ::-webkit-scrollbar-track { background: var(--bg-2); border-radius: 10px; }
 ::-webkit-scrollbar-thumb {
-  background: linear-gradient(var(--accent), #c77f1f);
+  background: linear-gradient(var(--accent), color-mix(in srgb, var(--accent) 80%, #000));
   border-radius: 10px;
   border: 2px solid var(--bg-2);
 }
@@ -279,7 +339,7 @@ section > h3, .banner-group > summary {
   margin: -0.9rem -1.1rem 0.75rem;
   padding: 0.55rem 1.1rem;
   border-radius: var(--radius) var(--radius) 0 0;
-  background: linear-gradient(90deg, rgba(244, 169, 59, 0.18), transparent);
+  background: linear-gradient(90deg, color-mix(in srgb, var(--accent) 18%, transparent), transparent);
   border-bottom: 1px solid var(--line);
   border-left: 4px solid var(--accent);
   font-size: 1.05rem;
@@ -351,10 +411,29 @@ section > h3, .banner-group > summary {
   box-shadow: 0 0 0 1px var(--accent);
 }
 .banner-group.included > summary {
-  background: linear-gradient(90deg, rgba(244, 169, 59, 0.3), transparent);
+  background: linear-gradient(90deg, color-mix(in srgb, var(--accent) 30%, transparent), transparent);
 }
 
-.banner-count { color: var(--accent); font-weight: 600; }
+/* "Rolling N banners." is also a locator button: each click scrolls the picker to
+   the next selected banner and pulses it. */
+.banner-count {
+  background: none;
+  border: 0;
+  border-radius: 0;
+  padding: 0;
+  margin: 0;
+  width: auto;
+  font: inherit;
+  color: var(--accent);
+  font-weight: 600;
+  cursor: pointer;
+}
+.banner-count:hover { text-decoration: underline; filter: none; }
+@keyframes flash-locate {
+  0%, 100% { box-shadow: 0 0 0 1px var(--accent); }
+  35% { box-shadow: 0 0 0 5px var(--accent); }
+}
+.banner-group.flash-locate { animation: flash-locate 0.9s ease-out; }
 
 .hint { font-size: 0.82rem; margin: 0 0 0.6rem; }
 .hint .key {
@@ -474,7 +553,7 @@ tbody tr:hover, table tr:hover { background: var(--panel-2); }
   cursor: pointer;
 }
 .view-btn + .view-btn { border-left: 1px solid var(--line); }
-.view-btn.is-active { background: rgba(244, 169, 59, 0.16); color: var(--accent); font-weight: 700; }
+.view-btn.is-active { background: color-mix(in srgb, var(--accent) 16%, transparent); color: var(--accent); font-weight: 700; }
 /* Inset the focus ring; the pill's overflow:hidden would clip an outset one into
    a stray line at the divider. */
 .view-btn:focus-visible { outline-offset: -2px; }
@@ -530,7 +609,7 @@ tbody tr:hover, table tr:hover { background: var(--panel-2); }
 .cat-pill:hover { border-color: var(--accent); filter: none; }
 /* A step's searched-for cat, ringed gold like its track cell. */
 .cat-pill.target {
-  background: rgba(244, 169, 59, 0.18);
+  background: color-mix(in srgb, var(--accent) 18%, transparent);
   border-color: var(--accent);
   box-shadow: inset 0 0 0 1px var(--accent);
   font-weight: 700;
@@ -588,22 +667,31 @@ table.track .entry {
 table.track td.cell:has(.entry.on-path) { background: var(--panel-2); }
 table.track .entry.on-path {
   color: var(--ink);
-  background: rgba(244, 169, 59, 0.12);
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
   box-shadow: inset 3px 0 0 var(--accent);
   font-weight: 600;
   border-radius: 2px;
 }
-table.track .entry.target {
-  background: rgba(244, 169, 59, 0.18);
-  box-shadow: inset 0 0 0 2px var(--accent);
-  color: var(--ink);
-  font-weight: 700;
+/* A searched-for cat: a gold pill hugging just its name, so the highlight can't
+   spill over the tag box or the cell's dice button. */
+table.track .entry.target { color: var(--ink); font-weight: 700; }
+table.track .entry.target .catlink {
+  background: color-mix(in srgb, var(--accent) 22%, transparent);
+  box-shadow: inset 0 0 0 1.5px var(--accent);
+  border-radius: 999px;
+  padding: 0 0.45rem;
 }
 /* Rare-dupe reroll: show where the slot jumps (to the other track) on its own line. */
 table.track .arrow { display: block; color: var(--accent); font-size: 0.78rem; font-weight: 400; }
-/* Uber/Legend cat not yet in your collection - green outline, à la ubercarry. Uses outline so
-   it coexists with the on-path/target box-shadow rings. */
-table.track .entry.new { outline: 2px solid var(--new); outline-offset: -2px; border-radius: 4px; }
+/* Collection marks, matching the picker chips: a green name is an Uber/Legend you
+   don't own yet, ✓ = owned (the line dims), ★ = wishlisted. */
+table.track .entry.new .catlink, .cat-pill.new { color: var(--new); }
+/* Owned lines dim - except a searched-for target, whose gold pill must stay lit. */
+table.track .entry.owned:not(.target), .cat-pill.owned:not(.target) { opacity: 0.6; }
+table.track .entry.owned .catlink::after,
+.cat-pill.owned::after { content: " \2713"; color: var(--accent); font-weight: 700; }
+table.track .entry.wanted .catlink::after,
+.cat-pill.wanted::after { content: " \2605"; color: var(--r-super); }
 /* "Roll to here": one dice per track cell (the anchor seed is banner-independent),
    a small fixed-size button docked right and vertically centred, à la ubercarry.
    Kept dim so a whole track of them doesn't shout; hovering lights it up. */
@@ -632,7 +720,7 @@ table.track .reseed svg { display: block; }
 table.track .reseed:hover, table.track .reseed:focus-visible {
   opacity: 1;
   color: var(--accent);
-  background: rgba(244, 169, 59, 0.12);
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
   filter: none;
 }
 
@@ -654,13 +742,9 @@ table.track th.guaranteed-col, table.track td.guaranteed-col {
 }
 .track-guide p { margin: 0 0 0.5rem; color: var(--muted); font-size: 0.85rem; line-height: 1.5; }
 .track-guide strong { color: var(--ink); }
-.new-swatch {
-  color: var(--new);
-  outline: 2px solid var(--new);
-  outline-offset: -2px;
-  border-radius: 4px;
-  padding: 0 0.25rem;
-}
+.new-swatch { color: var(--new); font-weight: 600; }
+.mark-owned { color: var(--accent); font-weight: 700; }
+.mark-wanted { color: var(--r-super); }
 .rarity-legend { display: flex; flex-wrap: wrap; gap: 0.4rem; }
 
 .banner-group + .banner-group { margin-top: 0.9rem; }
@@ -703,7 +787,7 @@ table.track th.guaranteed-col, table.track td.guaranteed-col {
 /* Advisory (not a hard error): a chosen target that no selected banner can drop. */
 .field-warning { color: var(--warn); font-size: 0.8rem; font-weight: 600; margin: 0.45rem 0 0; }
 .chip.selected.unreachable {
-  background: rgba(255, 159, 67, 0.12);
+  background: color-mix(in srgb, var(--warn) 12%, transparent);
   border-color: var(--warn);
   border-style: dashed;
   color: var(--warn);
@@ -716,7 +800,7 @@ table.track th.guaranteed-col, table.track td.guaranteed-col {
   15% { box-shadow: 0 0 0 3px var(--r-legend); }
 }
 .flash-error { animation: flash-error 1s ease-out; }
-.req { color: #ff2d2d; font-weight: 700; }
+.req { color: var(--r-legend); font-weight: 700; }
 .label-row { display: inline-flex; align-items: baseline; gap: 0.25rem; }
 
 /* ---- Roll options + advanced disclosure ------------------------------ */
@@ -786,7 +870,7 @@ table.track th.guaranteed-col, table.track td.guaranteed-col {
 
 /* Selected target (planner) - highlighted outline like ubercarry */
 .chip.selected {
-  background: rgba(244, 169, 59, 0.16);
+  background: color-mix(in srgb, var(--accent) 16%, transparent);
   border-color: var(--accent);
   color: var(--accent);
   font-weight: 700;
@@ -841,11 +925,11 @@ table.track th.guaranteed-col, table.track td.guaranteed-col {
 .own-chip:hover { border-color: var(--accent); }
 
 .own-chip.owned {
-  background: rgba(244, 169, 59, 0.18);
+  background: color-mix(in srgb, var(--accent) 18%, transparent);
   border-color: var(--accent);
 }
 .own-chip.owned .chip { color: var(--accent); font-weight: 700; }
-.own-chip.wanted .chip-star { color: var(--r-super); text-shadow: 0 0 6px rgba(255, 210, 74, 0.6); }
+.own-chip.wanted .chip-star { color: var(--r-super); text-shadow: 0 0 6px color-mix(in srgb, var(--r-super) 60%, transparent); }
 
 /* ---- Cat name -> forms + wiki popup ---------------------------------- */
 /* A cat name in a track cell: plain text that opens the popup on click. */
@@ -987,7 +1071,7 @@ table.track th.guaranteed-col, table.track td.guaranteed-col {
   align-items: center;
   justify-content: center;
   gap: 1rem;
-  background: rgba(24, 21, 17, 0.82);
+  background: var(--overlay);
   backdrop-filter: blur(2px);
   color: var(--ink);
   font-family: var(--head-font);

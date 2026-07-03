@@ -8,7 +8,7 @@
         <span class="step-kind">{% if leg.kind == "Single pull" %}{{ leg.rolls }}&times; single pull{{ leg.rolls|pluralize }}{% else %}{{ leg.kind }}{% endif %}</span>
         <span class="step-cost">{% if leg.tickets %}{{ leg.tickets }} ticket{{ leg.tickets|pluralize }}{% endif %}{% if leg.tickets and leg.cost %} + {% endif %}{% if leg.cost %}{{ leg.cost }} catfood{% endif %}{% if not leg.tickets and not leg.cost %}free{% endif %}</span>
       </div>
-      <div class="step-cats">{% for c in leg.cats %}<button type="button" class="cat-pill{% if c in targets %} target{% endif %}" data-name="{{ c }}">{{ c }}</button>{% endfor %}</div>
+      <div class="step-cats">{% for c in leg.cats %}<button type="button" class="cat-pill{% if c.target %} target{% endif %}{% if c.new %} new{% endif %}{% if c.owned %} owned{% endif %}{% if c.wanted %} wanted{% endif %}" data-name="{{ c.name }}">{{ c.name }}</button>{% endfor %}</div>
     </div>
   {% endfor %}
 </div>
