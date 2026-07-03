@@ -9,6 +9,7 @@ from planner.forms import PlannerForm
 from planner.models import Cat, Seed, Unit
 from planner.services import (
     RARITY_ORDER,
+    SECTION_NOTES,
     banner_titles,
     build_tracks,
     capped_banner_limits,
@@ -135,13 +136,17 @@ def find_plan(request):
 
 
 def collection(request):
-    """The whole cat dictionary in one page: every catalogue unit once, with the player's
-    owned/wishlist marks, browsable by rarity or by gacha set."""
+    """The whole cat dictionary in one page with the player's owned/wishlist marks,
+    browsable by rarity or by gacha set. A unit can sit in several set sections (fests
+    repeat their cats) - the marks are per unit, so every copy stays in step."""
     units = list(Unit.objects.named())
     context = {
         # Both views share the section partial, so a rarity bin becomes a one-row section.
-        "rarity_sections": [(r, [(r, bin)]) for r, bin in collection_sections(units)],
-        "set_sections": set_sections(units),
+        "rarity_sections": [(r, "", [(r, bin)]) for r, bin in collection_sections(units)],
+        "set_sections": [
+            (label, SECTION_NOTES.get(label, ""), rarities)
+            for label, rarities in set_sections(units)
+        ],
     }
     return render(request, "planner/collection.html", context)
 
