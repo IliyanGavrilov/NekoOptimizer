@@ -123,6 +123,28 @@ input[type="search"]::-webkit-search-cancel-button { appearance: none; -webkit-a
 .collection-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem; margin-bottom: 0.75rem; }
 .collection-controls input[type="search"] { flex: 1 1 240px; width: auto; }
 .collection-controls button { margin: 0; white-space: nowrap; }
+/* Gacha-set names are long marketing strings; keep the dropdown from owning the row. */
+.collection-controls select { flex: 0 1 320px; min-width: 160px; text-overflow: ellipsis; }
+
+/* Rarity pills: one pressed at a time, "All" by default. */
+.rarity-filter { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-bottom: 0.5rem; }
+.rarity-filter button {
+  background: var(--bg-2);
+  color: var(--muted);
+  border: 1px solid var(--line);
+  padding: 0.3rem 0.8rem;
+  font-weight: 600;
+  margin: 0;
+}
+.rarity-filter button:hover { color: var(--ink); border-color: var(--accent); filter: none; }
+.rarity-filter button[aria-pressed="true"] {
+  background: var(--accent);
+  color: var(--accent-ink);
+  border-color: var(--accent);
+}
+
+.rarity-section > h3 { display: flex; align-items: baseline; gap: 0.6rem; }
+.rarity-section .owned-count { font-size: 0.78rem; font-weight: 600; }
 
 /* Cat search: an explicit clear (x) + hint so it's obvious how to get back to the
    banner menu, without forcing you to delete the query (selections stay put). */

@@ -1,18 +1,18 @@
-from datetime import date, timedelta
+from datetime import date
 
 import pytest
 
 from neko.godfat import BannerRolls, TrackPull
 from neko.models import Leg, Path, Pull, Rarity
 from neko.subsets import SubsetPlan
-from planner.models import Banner, Cat
+from planner.models import Banner, Cat, Unit
 from planner.services import (
     build_tracks,
     capped_banner_limits,
-    catalogue,
+    collection_sections,
     cost_label,
-    dated_catalogue,
     equivalent_banners,
+    gacha_sets,
     picker_groups,
     plan_highlight,
     plan_summary,
@@ -27,46 +27,14 @@ def test_capped_banner_limits_matches_only_platinum_and_legend():
     assert capped_banner_limits(names, 0) == {"Platinum Capsules": 0, "Legend Capsules": 0}
 
 
-@pytest.mark.django_db
-def test_catalogue_nests_rarity_under_banner():
-    cat = Cat.objects.create(name="Bahamut", rarity="Uber Super Rare")
-    cat.banners.add(Banner.objects.create(name="Epicfest"))
-    assert catalogue([cat]) == [("Epicfest", [("Uber Super Rare", [cat])])]
+def test_collection_sections_orders_rarities_cheapest_to_rarest():
+    units = [Unit(rarity=r) for r in ("Uber Super Rare", "Special", "Normal")]
+    assert [r for r, _ in collection_sections(units)] == ["Normal", "Special", "Uber Super Rare"]
 
 
-@pytest.mark.django_db
-def test_catalogue_files_bannerless_cat_under_other():
-    cat = Cat.objects.create(name="Bahamut")
-    assert catalogue([cat]) == [("Other", [("Unknown", [cat])])]
-
-
-@pytest.mark.django_db
-def test_catalogue_lists_cat_in_every_banner():
-    cat = Cat.objects.create(name="Bahamut")
-    cat.banners.add(Banner.objects.create(name="Epicfest"), Banner.objects.create(name="Uberfest"))
-    assert [banner for banner, _ in catalogue([cat])] == ["Epicfest", "Uberfest"]
-
-
-@pytest.mark.django_db
-def test_catalogue_orders_rarities_cheapest_to_rarest():
-    banner = Banner.objects.create(name="Uberfest")
-    legend = Cat.objects.create(name="Mecha", rarity="Legend Rare")
-    rare = Cat.objects.create(name="Pogo", rarity="Rare")
-    legend.banners.add(banner)
-    rare.banners.add(banner)
-    rarities = [rarity for rarity, _ in catalogue([legend, rare])[0][1]]
-    assert rarities == ["Rare", "Legend Rare"]
-
-
-@pytest.mark.django_db
-def test_catalogue_reverse_rarity_lists_rarest_first():
-    banner = Banner.objects.create(name="Uberfest")
-    legend = Cat.objects.create(name="Mecha", rarity="Legend Rare")
-    rare = Cat.objects.create(name="Pogo", rarity="Rare")
-    legend.banners.add(banner)
-    rare.banners.add(banner)
-    rarities = [rarity for rarity, _ in catalogue([legend, rare], reverse_rarity=True)[0][1]]
-    assert rarities == ["Legend Rare", "Rare"]
+def test_collection_sections_puts_blank_rarity_under_unknown_last():
+    units = [Unit(rarity=""), Unit(rarity="Legend Rare")]
+    assert [r for r, _ in collection_sections(units)] == ["Legend Rare", "Unknown"]
 
 
 def _dated_banner(name, start, end):
@@ -76,31 +44,20 @@ def _dated_banner(name, start, end):
     return cat
 
 
-@pytest.mark.django_db
-def test_dated_catalogue_splits_now_upcoming_and_past():
-    today = date(2026, 6, 15)
-    day = timedelta(days=1)
-    _dated_banner("Soon", today + 5 * day, today + 10 * day)
-    _dated_banner("Later", today + 20 * day, today + 25 * day)
-    _dated_banner("ActiveNow", today - day, today + day)
-    _dated_banner("OldPast", today - 30 * day, today - 20 * day)
-    _dated_banner("RecentPast", today - 6 * day, today - 2 * day)
-
-    groups = dated_catalogue(Cat.objects.all(), today=today)
-    labelled = {label: [name for name, _dates, _ in sections] for label, sections in groups}
-    assert labelled["Available now"] == ["ActiveNow"]
-    assert labelled["Upcoming"] == ["Soon", "Later"]
-    assert labelled["Past"] == ["RecentPast", "OldPast"]
+def test_gacha_sets_unions_ids_across_a_names_reruns():
+    events = [
+        _run(date(2026, 1, 1), date(2026, 1, 5), 1, "Fest"),
+        _run(date(2026, 3, 1), date(2026, 3, 5), 2, "Fest"),
+    ]
+    assert gacha_sets(events, {1: [10, 11], 2: [11, 12]}) == [("Fest", [10, 11, 12])]
 
 
-@pytest.mark.django_db
-def test_dated_catalogue_carries_banner_dates():
-    today = date(2026, 6, 15)
-    run = (today, today + timedelta(days=3))
-    banner = Banner.objects.create(name="ActiveNow", start=run[0], end=run[1])
-    Cat.objects.create(name="Cat").banners.add(banner)
-    _label, sections = dated_catalogue(Cat.objects.all(), today=today)[0]
-    assert sections[0][1] == run
+def test_gacha_sets_sorts_sets_by_name():
+    events = [
+        _run(date(2026, 1, 1), date(2026, 1, 5), 1, "Zed"),
+        _run(date(2026, 1, 1), date(2026, 1, 5), 2, "Alpha"),
+    ]
+    assert [name for name, _ in gacha_sets(events, {1: [1], 2: [2]})] == ["Alpha", "Zed"]
 
 
 def _run(start, end, pool_id, name):

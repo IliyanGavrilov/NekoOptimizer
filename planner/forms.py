@@ -1,7 +1,7 @@
 from django import forms
 
 from neko.models import CATFOOD_PER_DRAW
-from planner.models import Cat
+from planner.models import Cat, Unit
 
 EXPLORE_HORIZON = 1000  # default rolls to look ahead per banner in explore mode
 
@@ -93,7 +93,7 @@ class PlannerForm(forms.Form):
         if (
             cleaned.get("use_wishlist")
             and not cleaned.get("targets")
-            and not Cat.objects.wishlist()
+            and not Unit.objects.wishlist()
         ):
             raise forms.ValidationError("Your wishlist is empty - mark some cats as wanted first.")
         return cleaned
