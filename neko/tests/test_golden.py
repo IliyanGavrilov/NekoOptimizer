@@ -26,8 +26,22 @@ def load_rolls() -> BannerRolls:
     return BannerRolls(pulls("pulls"), pulls("guaranteed"), pulls("rerolls"))
 
 
+def local_banner():
+    from neko.bcdata import load_records
+    from neko.gachadata import build_banner, load_events, load_pools
+
+    units = {r["id"]: (r["name"], r["rarity"]) for r in load_records()}
+    trixi = next(e for e in load_events() if e.event_id == "2026-06-26_1052")
+    return build_banner(trixi, load_pools(), units)
+
+
 def graph():
-    rolls = load_rolls()
+    # The astar tests model a REAL 11-roll guarantee, so the guaranteed column comes from
+    # our engine (the capture's was forced to 1 roll); pulls/rerolls are byte-identical to
+    # the fixture either way.
+    from neko.roll import roll_banner
+
+    rolls = roll_banner(1893568593, local_banner(), 1000, guaranteed_rolls=11)
     graphs = build_graphs(
         {BANNER: rolls.pulls}, {BANNER: rolls.guaranteed}, {BANNER: rolls.rerolls}
     )
@@ -37,16 +51,14 @@ def graph():
 def test_local_roll_reproduces_the_capture_byte_for_byte():
     # The whole local pipeline - committed gacha schedule + pools + catalogue, rolled by our
     # own engine - must reproduce this real godfat capture exactly, so we can drop godfat.
-    from neko.bcdata import load_records
-    from neko.gachadata import build_banner, load_events, load_pools
+    # The capture was taken with force_guaranteed=1 (godfat swaps THAT for the event's
+    # guaranteed_rolls), so its guaranteed column is a 1-roll guarantee: a 0-step follow,
+    # each cell's uber picked by its own rarity seed.
     from neko.roll import roll_banner
 
-    units = {r["id"]: (r["name"], r["rarity"]) for r in load_records()}
-    trixi = next(e for e in load_events() if e.event_id == "2026-06-26_1052")
-    banner = build_banner(trixi, load_pools(), units)
     fixture = load_rolls()
     count = max(p.position for p in fixture.pulls)
-    mine = roll_banner(1893568593, banner, count, guaranteed_rolls=11)
+    mine = roll_banner(1893568593, local_banner(), count, guaranteed_rolls=1)
 
     def cells(pulls):
         return sorted((p.position, p.track, p.cat) for p in pulls)

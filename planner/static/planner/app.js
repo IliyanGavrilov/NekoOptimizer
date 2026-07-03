@@ -132,14 +132,65 @@ if (picker) {
   // A target can only drop on a banner that carries it, so a target picked while
   // its banner isn't in the selected session can never come out. Flag those
   // (dashed chip + a note) live, recomputed whenever targets or banners change.
+  // Cats are keyed by banner NAME and only a name's newest row carries chips (the
+  // Past list is one row per rerun), so reachability unions chips across every row
+  // sharing a selected banner's name.
   const warnSlot = document.getElementById("targetsWarn");
   function reachablePks() {
     const pks = new Set();
+    const names = new Set();
     for (const btn of includes) {
-      if (btn.getAttribute("aria-pressed") !== "true") continue;
+      if (btn.getAttribute("aria-pressed") === "true") names.add(btn.dataset.banner);
+    }
+    if (!names.size) return pks;
+    for (const btn of includes) {
+      if (!names.has(btn.dataset.banner)) continue;
       btn.closest(".banner-group").querySelectorAll(".chip[data-pk]").forEach((c) => pks.add(c.dataset.pk));
     }
     return pks;
+  }
+
+  // Opening a rerun row without chips borrows them from the name's carrier row, so
+  // every Past run is browsable without rendering ~100k chips upfront. ("toggle"
+  // doesn't bubble - listen in the capture phase.)
+  browser.addEventListener("toggle", (e) => {
+    const group = e.target.closest ? e.target.closest(".banner-group") : null;
+    if (!group || !e.target.open || group.querySelector(".chip[data-pk]")) return;
+    const name = group.querySelector(".banner-include")?.dataset.banner;
+    if (!name) return;
+    const carrier = includes
+      .map((b) => b.closest(".banner-group"))
+      .find((g) => g !== group && g.querySelector(".banner-include")?.dataset.banner === name && g.querySelector(".chip[data-pk]"));
+    if (!carrier) return;
+    for (const row of carrier.querySelectorAll("[data-rarity-row]")) {
+      const clone = row.cloneNode(true);
+      clone.querySelectorAll(".chip[data-pk]").forEach((c) => c.classList.toggle("selected", selected.has(c.dataset.pk)));
+      group.appendChild(clone);
+    }
+  }, true);
+
+  // The Past group ships as an empty shell - its ~2000 per-run rows are most of the
+  // page's bytes and render time - so fetch the rows the first time it's opened and
+  // fold the new include buttons into the session/warning logic.
+  const pastGroup = document.getElementById("pastGroup");
+  if (pastGroup) {
+    let pastLoaded = false;
+    pastGroup.addEventListener("toggle", async () => {
+      if (!pastGroup.open || pastLoaded) return;
+      pastLoaded = true;
+      const note = pastGroup.querySelector(".past-loading");
+      if (note) note.hidden = false;
+      try {
+        const resp = await fetch(pastGroup.dataset.pastUrl);
+        pastGroup.insertAdjacentHTML("beforeend", await resp.text());
+        includes.push(...pastGroup.querySelectorAll(".banner-include"));
+        if (note) note.remove();
+        updateWarnings();
+      } catch {
+        pastLoaded = false; // reopen retries
+        if (note) note.textContent = "Couldn't load past banners - close and reopen to retry.";
+      }
+    });
   }
   function updateWarnings() {
     if (!warnSlot) return;

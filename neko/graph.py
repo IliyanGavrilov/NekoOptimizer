@@ -53,7 +53,10 @@ class BannerGraph:
                 index + (3 if switched else 2),
                 switched,
             )
-        # Guaranteed roll: +1 step flips track
+        # The guaranteed column is keyed by the multi's FIRST roll (godfat semantics): the
+        # uber awarded when a guaranteed multi STARTS here. Its true landing depends on the
+        # multi's length (the search walks the chain and lands one step past the final
+        # roll, track flipped), so next_position here is only a placeholder.
         self._guaranteed: dict[int, Outcome] = {}
         for pull in guaranteed:
             index = stream_index(pull.position, pull.track)
