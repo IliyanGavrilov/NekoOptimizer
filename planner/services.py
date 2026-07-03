@@ -69,9 +69,64 @@ def collection_sections(units: Iterable[Unit]) -> list[tuple[str, list[Unit]]]:
 _REGULAR_SERIES_LIMIT = 3
 
 REGULARS_LABEL = "Rare Capsule Regulars"
+ADDONS_LABEL = "Rare Capsule Add-ons"
+
+# True regulars ride along on at least this share of all scheduled series; the rest of
+# the shared crowd are add-ons (Grandon Mining Corps, the Neneko gang, Reinforcement,
+# the Brainwashed cats) that many banners bolt on but fests and collabs skip.
+_REGULAR_CARRY = 0.6
 
 # Ticket gachas by their ItemID_Ticket: their pools mix every set, so no set name fits.
 _TICKET_NAMES = {29: "Platinum Capsules", 145: "Legend Capsules"}
+
+# Display respellings over the Cat Guide's own set names, applied wherever a set name
+# becomes a label (collection sections, picker titles).
+_SET_DISPLAY = {"UBER FEST": "UBERFEST", "Royalfest": "RoyalFest"}
+
+
+def _display(set_name: str) -> str:
+    return _SET_DISPLAY.get(set_name, set_name)
+
+
+# The recurring fest capsules by their stable series id (GatyaData_Option_SetR seriesID,
+# unchanged across reruns). Their pools mix every set, so neither the Cat Guide nor the
+# run's marketing text names them; where the guide DOES name one (UBERFEST, EPICFEST,
+# RoyalFest), the label here matches its displayed name so both name the same section.
+FEST_SERIES = {
+    19: "UBERFEST",
+    27: "EPICFEST",
+    35: "Best of the Best",
+    39: "Neo Best of the Best",
+    42: "SUPERFEST",
+    47: "Dynasty Fest",
+    50: "RoyalFest",
+    59: "Busterfest",
+    70: "Best of the Best: Milestone Editions",
+}
+
+# A fest carrying at least this share of a set (or of the standard legends) features it.
+_FEST_COVER = 0.6
+# A set carried by more fests than this is the general Uber pool every fest drops
+# (Uberfest, Epicfest and Superfest all carry the classic sets), not a fest's feature.
+_FEST_SET_CAP = 2
+
+# One-line section explainers for the collection's by-set view.
+_FEST_NOTE = "Fest exclusives; every standard-set Uber also drops here."
+_BOTB_NOTE = "Anniversary capsules: a rotating best-of selection plus these exclusives."
+_LEGEND_NOTE = "Boosted Legend Rare rates; every standard Legend drops here."
+SECTION_NOTES = {
+    REGULARS_LABEL: "The shared Rare/Super pool; these drop on every Rare Capsule banner.",
+    ADDONS_LABEL: "Extra regulars many banners add to the shared pool; fests skip them.",
+    "UBERFEST": _FEST_NOTE,
+    "EPICFEST": _FEST_NOTE,
+    "SUPERFEST": "Uberfest and Epicfest exclusives combined; every standard-set Uber drops too.",
+    "Dynasty Fest": "Every seasonal set in one capsule.",
+    "Busterfest": "Every Buster unit in one capsule.",
+    "RoyalFest": _LEGEND_NOTE,
+    "Best of the Best: Milestone Editions": _LEGEND_NOTE,
+    "Best of the Best": _BOTB_NOTE,
+    "Neo Best of the Best": _BOTB_NOTE,
+}
 
 
 def _series_pools(events, pools, series):
@@ -91,9 +146,9 @@ def series_names(units, events=None, pools=None, series=None, tickets=None) -> d
 
     Each Cat Guide set names its HOME series: the smallest pool carrying most of the
     set's units - its own banner, not a fest/Platinum umbrella that also has them all.
-    Ticket gachas (Platinum/Legend Capsules) are named by their ticket instead; series
-    the game data doesn't name (collabs) are absent, so callers fall back to the run's
-    marketing text."""
+    Recurring fests get their [FEST_SERIES] name, ticket gachas (Platinum/Legend
+    Capsules) their ticket's; series the game data doesn't name (collabs) are absent,
+    so callers fall back to the run's marketing text."""
     events = events if events is not None else load_events()
     pools = pools if pools is not None else load_pools()
     series = series if series is not None else load_series()
@@ -108,7 +163,10 @@ def series_names(units, events=None, pools=None, series=None, tickets=None) -> d
     for name, ids in sorted(by_set.items(), key=lambda kv: -len(kv[1])):
         carriers = [sid for sid, member in members.items() if len(member & ids) * 2 >= len(ids)]
         if carriers:
-            names.setdefault(min(carriers, key=lambda sid: len(members[sid])), name)
+            names.setdefault(min(carriers, key=lambda sid: len(members[sid])), _display(name))
+    for sid in latest:
+        if sid in FEST_SERIES:
+            names.setdefault(sid, FEST_SERIES[sid])
     for sid, event in latest.items():
         ticket = tickets.get(event.pool_id)
         if ticket in _TICKET_NAMES:
@@ -128,21 +186,30 @@ def banner_titles(units=None, events=None, pools=None, series=None, tickets=None
 def set_sections(
     units: Iterable[Unit], events=None, pools=None, series=None
 ) -> list[tuple[str, list[tuple[str, list[Unit]]]]]:
-    """The by-gacha-set view: every gacha unit once, under its home set, subdivided by
+    """The by-gacha-set view: every gacha unit under its home set(s), subdivided by
     rarity - ``[(set_label, [(rarity, [unit, ...]), ...]), ...]``.
 
     A unit's home is its official Cat Guide set name (The Dynamites, Iron Legion, ...).
     Units the guide doesn't place fall to the banner series that carries them - reruns
     share a series id, so a returning set never repeats. A series whose pool's named
     members mostly share one set (a set's own banner) counts as that set, so its unnamed
-    legend joins them; a mixed pool (fest/Platinum umbrella) never claims a unit. What's
+    legend joins them; a mixed pool (fest/Platinum umbrella) never claims a home. What's
     left homes to its smallest carrier's series, labelled by the latest run's text.
-    Units in more specific series than [_REGULAR_SERIES_LIMIT] are the shared rare/super
-    pool -> one [REGULARS_LABEL] group first (they drop everywhere, so they lead the
-    page). Units in no pool (Normal/Special/story cats) are left to the rarity view.
+    Units in more specific series than [_REGULAR_SERIES_LIMIT] are the shared pool that
+    leads the page: true regulars (carried near-everywhere) under [REGULARS_LABEL],
+    the rest - banner add-ons that fests skip - under [ADDONS_LABEL]. Units in no pool
+    (Normal/Special/story cats) are left to the rarity view.
 
-    After the regulars, named sets in dictionary order (lowest unit id), then series
-    groups, newest run first.
+    The recurring fests ([FEST_SERIES]) get their own sections, and unlike homes they
+    repeat units - it's the same cat everywhere, so its marks stay linked. A fest lists
+    its exclusives (umbrella-only units like Izanagi, on EVERY fest carrying them), any
+    set it (almost) wholly bundles - Superfest = Uberfest + Epicfest, Dynasty Fest = the
+    seasonal sets, Busterfest = the Busters - unless every fest carries that set anyway
+    (the classic sets), and the standard legends where it carries virtually all of them
+    (the legend-rate fests: Royalfest, the Milestone capsules).
+
+    After the regulars and add-ons, named sets and fests in dictionary order (lowest
+    unit id), then series groups, newest run first.
     """
     events = events if events is not None else load_events()
     pools = pools if pools is not None else load_pools()
@@ -163,28 +230,72 @@ def set_sections(
             else:
                 umbrella.add(sid)
 
-    named: dict[str, list[Unit]] = {}
+    named: dict[str, dict[int, Unit]] = {}
     homed: dict[int, list[Unit]] = {}
     regulars: list[Unit] = []
+    addons: list[Unit] = []
+    fests: dict[int, dict[int, Unit]] = {sid: {} for sid in FEST_SERIES if sid in members}
+    standard_legends: set[int] = set()
     for unit in units:
         if unit.set_name:
-            named.setdefault(unit.set_name, []).append(unit)
+            named.setdefault(_display(unit.set_name), {})[unit.unit_id] = unit
             continue
         candidates = [sid for sid, ids in members.items() if unit.unit_id in ids]
         if not candidates:
             continue
         specific = [sid for sid in candidates if sid not in umbrella]
-        if not specific or len(specific) > _REGULAR_SERIES_LIMIT:
-            regulars.append(unit)
+        if not specific:
+            # Fest exclusives have no banner of their own; they live on every fest
+            # that carries them (Izanagi on both Uberfest and Superfest).
+            carried = [sid for sid in candidates if sid in fests]
+            for sid in carried:
+                fests[sid][unit.unit_id] = unit
+            if not carried:
+                addons.append(unit)
+            continue
+        if unit.rarity == Rarity.LEGEND_RARE.value:
+            standard_legends.add(unit.unit_id)
+        if len(specific) > _REGULAR_SERIES_LIMIT:
+            shared = len(candidates) >= _REGULAR_CARRY * len(members)
+            (regulars if shared else addons).append(unit)
             continue
         home = min(specific, key=lambda sid: len(members[sid]))
         if home in series_set:
-            named.setdefault(series_set[home], []).append(unit)
+            named.setdefault(_display(series_set[home]), {})[unit.unit_id] = unit
         else:
             homed.setdefault(home, []).append(unit)
 
-    sections = [(REGULARS_LABEL, regulars)] if regulars else []
-    sections += sorted(named.items(), key=lambda kv: min(u.unit_id for u in kv[1]))
+    by_id = {unit.unit_id: unit for unit in units}
+    by_set: dict[str, set[int]] = {}
+    for uid, name in unit_sets.items():
+        by_set.setdefault(name, set()).add(uid)
+    for ids in by_set.values():
+        carriers = [sid for sid in fests if len(members[sid] & ids) >= _FEST_COVER * len(ids)]
+        if 0 < len(carriers) <= _FEST_SET_CAP:
+            for sid in carriers:
+                for uid in sorted(members[sid] & ids):
+                    fests[sid][uid] = by_id[uid]
+    if standard_legends:
+        for sid in fests:
+            hit = members[sid] & standard_legends
+            if len(hit) >= _FEST_COVER * len(standard_legends):
+                for uid in sorted(hit):
+                    fests[sid][uid] = by_id[uid]
+    # A fest sharing its label with a Cat Guide set (UBER FEST, EPICFEST, Royalfest) IS
+    # that set's banner, so merging by label folds the extras into the named section.
+    for sid, extras in fests.items():
+        if extras:
+            named.setdefault(FEST_SERIES[sid], {}).update(extras)
+
+    sections = [
+        (label, cats)
+        for label, cats in ((REGULARS_LABEL, regulars), (ADDONS_LABEL, addons))
+        if cats
+    ]
+    sections += sorted(
+        ((label, list(group.values())) for label, group in named.items()),
+        key=lambda kv: (min(u.unit_id for u in kv[1]), kv[0]),
+    )
     sections += [
         (latest[sid].name, homed[sid])
         for sid in sorted(homed, key=lambda sid: latest[sid].start, reverse=True)
