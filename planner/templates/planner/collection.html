@@ -4,39 +4,51 @@
 
 {% block content %}
   <h1>Collection</h1>
-  <p class="muted">Click a cat to mark it <strong>owned</strong>; tap the star to add it to your <strong>wishlist</strong>. Saved instantly.</p>
+  <p class="muted">Every cat in the game. Click one to mark it <strong>owned</strong>; tap the star to add it to your <strong>wishlist</strong>. Saved instantly.</p>
 
   <input type="hidden" id="csrfToken" value="{{ csrf_token }}">
   <div class="collection-controls">
-    <input type="search" data-filter="collectionBrowser" placeholder="Search cats&hellip;">
+    <input type="search" id="collectionSearch" placeholder="Search cats&hellip;">
+    <select id="setFilter" title="Only cats that can drop from this gacha set">
+      <option value="">All gacha sets</option>
+      {% for name in set_names %}
+        <option>{{ name }}</option>
+      {% endfor %}
+    </select>
     <button type="button" id="wishlistAll" data-url="{% url 'wishlist_all_unowned' %}">
       &#9733; Wishlist all I don't own
     </button>
   </div>
-
-  <div class="cat-browser" id="collectionBrowser" data-toggle-url="{% url 'collection_toggle' %}">
-    {% for banner, rarities in sections %}
-      <details class="banner-group" open>
-        <summary>{{ banner }}</summary>
-        {% for rarity, cats in rarities %}
-          <div class="rarity-row" data-rarity-row>
-            <span class="rarity" data-rarity="{{ rarity }}">{{ rarity }}</span>
-            <div class="chips">
-              {% for cat in cats %}
-                <span class="own-chip{% if cat.owned %} owned{% endif %}{% if cat.wanted %} wanted{% endif %}"
-                      data-pk="{{ cat.pk }}" data-name="{{ cat.name }}">
-                  <button type="button" class="chip chip-own">{{ cat.name }}</button>
-                  <button type="button" class="chip-star" title="Wishlist" aria-label="Toggle wishlist">&#9733;</button>
-                </span>
-              {% endfor %}
-            </div>
-          </div>
-        {% endfor %}
-      </details>
-    {% empty %}
-      <p class="muted">No cats yet &mdash; add one below.</p>
+  <div class="rarity-filter" id="rarityFilter" role="group" aria-label="Filter by rarity">
+    <button type="button" data-rarity="" aria-pressed="true">All</button>
+    {% for rarity, units in sections %}
+      <button type="button" data-rarity="{{ rarity }}" aria-pressed="false">{{ rarity }}</button>
     {% endfor %}
   </div>
+
+  <div class="cat-browser" id="collectionBrowser" data-toggle-url="{% url 'collection_toggle' %}">
+    {% for rarity, units in sections %}
+      <section class="rarity-section" data-rarity="{{ rarity }}">
+        <h3>
+          <span class="rarity" data-rarity="{{ rarity }}">{{ rarity }}</span>
+          <span class="owned-count muted"></span>
+        </h3>
+        <div class="chips">
+          {% for unit in units %}
+            <span class="own-chip{% if unit.owned %} owned{% endif %}{% if unit.wanted %} wanted{% endif %}"
+                  data-pk="{{ unit.pk }}" data-uid="{{ unit.unit_id }}" data-name="{{ unit.name }}">
+              <button type="button" class="chip chip-own">{{ unit.name }}</button>
+              <button type="button" class="chip-star" title="Wishlist" aria-label="Toggle wishlist">&#9733;</button>
+            </span>
+          {% endfor %}
+        </div>
+      </section>
+    {% empty %}
+      <p class="muted">The catalogue is empty &mdash; run the import first.</p>
+    {% endfor %}
+    <p class="muted no-matches" hidden>No cats match.</p>
+  </div>
+  {{ set_map|json_script:"gachaSets" }}
 
   <details class="add-cat">
     <summary>&#43; Add a cat not in the catalogue</summary>

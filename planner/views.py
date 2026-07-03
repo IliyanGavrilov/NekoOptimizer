@@ -8,16 +8,17 @@ from neko.scraper import DEFAULT_COUNT
 from planner.forms import CatForm, PlannerForm
 from planner.models import Cat, Seed, Unit
 from planner.services import (
+    NON_GACHA_RARITIES,
     RARITY_ORDER,
     build_tracks,
     capped_banner_limits,
-    catalogue,
+    collection_sections,
     equivalent_banners,
     fetch_banners,
     fetch_for_banners,
+    gacha_sets,
     picker_groups,
     subset_solutions,
-    unit_for_cat,
 )
 
 
@@ -63,7 +64,7 @@ def _scrape(seed, chosen_banners, count):
 
 def _owned_names():
     """Cat names you already own, to flag Uber/Legend cats missing from your collection."""
-    return set(Cat.objects.filter(unit__owned=True).values_list("name", flat=True))
+    return set(Unit.objects.filter(owned=True).values_list("name", flat=True))
 
 
 @require_POST
@@ -92,7 +93,7 @@ def find_plan(request):
     Seed.store(seed)
     targets = {cat.name for cat in form.cleaned_data["targets"]}
     if form.cleaned_data["use_wishlist"]:
-        targets |= set(Cat.objects.wishlist().values_list("name", flat=True))
+        targets |= set(Unit.objects.wishlist().values_list("name", flat=True))
     explore = form.cleaned_data["explore"]
     count = form.cleaned_data["horizon"] if explore else DEFAULT_COUNT
     result = _scrape(seed, request.POST.getlist("banners"), count)
@@ -134,14 +135,21 @@ def find_plan(request):
 
 
 def collection(request):
+    """The whole cat dictionary in one page: every catalogue unit once, under its rarity,
+    with the player's owned/wishlist marks and rarity + gacha-set filters."""
     form = CatForm()
     if request.method == "POST":
         form = CatForm(request.POST)
         if form.is_valid():
             form.save()
             return redirect("collection")
-    cats = Cat.objects.select_related("unit").prefetch_related("banners")
-    context = {"form": form, "sections": catalogue(cats)}
+    sets = gacha_sets()
+    context = {
+        "form": form,
+        "sections": collection_sections(Unit.objects.named()),
+        "set_names": [name for name, _ids in sets],
+        "set_map": dict(sets),
+    }
     return render(request, "planner/collection.html", context)
 
 
@@ -149,29 +157,25 @@ def collection(request):
 def apply_plan(request):
     """Mark a plan's obtained cats as owned and drop them from the wishlist."""
     names = request.POST.getlist("cats")
-    applied = Unit.objects.filter(cats__name__in=names).update(owned=True, wanted=False)
+    applied = Unit.objects.filter(name__in=names).update(owned=True, wanted=False)
     return JsonResponse({"applied": applied})
 
 
 @require_POST
 def wishlist_all_unowned(request):
-    """Add every cat you don't own yet to the wishlist - one tap for completion play."""
-    units = Cat.objects.filter(unit__owned=False).values_list("unit", flat=True)
-    wanted = Unit.objects.filter(pk__in=units, owned=False).update(wanted=True)
+    """Add every gacha cat you don't own yet to the wishlist - one tap for completion play."""
+    rollable = Unit.objects.named().exclude(rarity__in=NON_GACHA_RARITIES)
+    wanted = rollable.filter(owned=False).update(wanted=True)
     return JsonResponse({"wanted": wanted})
 
 
 @require_POST
 def collection_toggle(request):
-    """Flip a single cat's owned/wanted flag and return the new state as JSON."""
+    """Flip a single unit's owned/wanted flag and return the new state as JSON."""
     field = request.POST.get("field")
     if field not in {"owned", "wanted"}:
         return HttpResponseBadRequest("field must be 'owned' or 'wanted'")
-    cat = get_object_or_404(Cat, pk=request.POST.get("pk"))
-    unit = cat.unit or unit_for_cat(cat.name, cat.rarity)
+    unit = get_object_or_404(Unit, pk=request.POST.get("pk"))
     setattr(unit, field, not getattr(unit, field))
     unit.save(update_fields=[field])
-    if cat.unit_id is None:
-        cat.unit = unit
-        cat.save(update_fields=["unit"])
     return JsonResponse({"owned": unit.owned, "wanted": unit.wanted})

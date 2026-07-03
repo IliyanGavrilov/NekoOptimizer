@@ -4,14 +4,6 @@ from django.db import models
 _NO_REAL_NAME = r"^[0-9]+[-_][0-9]+$"
 
 
-class CatQuerySet(models.QuerySet):
-    def unowned(self) -> CatQuerySet:
-        return self.filter(unit__owned=False)
-
-    def wishlist(self) -> CatQuerySet:
-        return self.filter(unit__wanted=True, unit__owned=False)
-
-
 class UnitQuerySet(models.QuerySet):
     def wishlist(self) -> UnitQuerySet:
         return self.filter(wanted=True, owned=False)
@@ -70,8 +62,6 @@ class Cat(models.Model):
         "Unit", null=True, blank=True, on_delete=models.SET_NULL, related_name="cats"
     )
     banners = models.ManyToManyField(Banner, related_name="cats", blank=True)
-
-    objects = CatQuerySet.as_manager()
 
     class Meta:
         ordering = ["name"]
