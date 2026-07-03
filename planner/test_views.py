@@ -97,20 +97,6 @@ def test_selected_banners_use_chosen_rolls(client, monkeypatch):
 
 
 @pytest.mark.django_db
-def test_prefer_catfood_keeps_the_ticket(client, monkeypatch):
-    cat = Cat.objects.create(name="Bahamut")
-    monkeypatch.setattr(
-        "planner.views.fetch_banners", fixed_banners(TrackPull(1, "A", "Bahamut", U))
-    )
-    response = client.post(
-        "/plan/",
-        {"seed": 7, "tickets": 1, "catfood": 150, "targets": [cat.pk], "prefer": "catfood"},
-    )
-    # prefer=catfood spends the draw, not the ticket: cost shows catfood, no ticket.
-    assert b"150 catfood" in response.content
-
-
-@pytest.mark.django_db
 def test_platinum_legend_cap_zero_excludes_the_banner(client, monkeypatch):
     cat = Cat.objects.create(name="Bahamut")
     result = RollResult(
@@ -213,6 +199,22 @@ def test_apply_plan_owns_cats_and_clears_wishlist(client):
     client.post("/apply/", {"cats": ["Bahamut"]})
     cat.refresh_from_db()
     assert (cat.owned, cat.wanted) == (True, False)
+
+
+@pytest.mark.django_db
+def test_apply_plan_advances_the_stored_seed(client):
+    # Applying means "you rolled it": the plan's seed-after becomes the stored seed.
+    Seed.store(7)
+    client.post("/apply/", {"cats": ["Bahamut"], "seed_after": 12345})
+    assert Seed.current() == 12345
+
+
+@pytest.mark.django_db
+def test_apply_plan_without_a_seed_after_keeps_the_stored_seed(client):
+    # A plan whose final draw ran off the rolled grid has no seed-after to advance to.
+    Seed.store(7)
+    client.post("/apply/", {"cats": ["Bahamut"]})
+    assert Seed.current() == 7
 
 
 @pytest.mark.django_db

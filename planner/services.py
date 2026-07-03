@@ -518,6 +518,16 @@ def build_tracks(
             )
         return cells
 
+    def cell_seed(index):
+        # The cell's "roll to here" dice: the state that re-anchors it as the new 1A.
+        # It's banner-independent (pure stream position), so one dice serves the whole
+        # cell however many banners stack in it - read it off any banner rolled there.
+        for group in groups:
+            tp = group["grid"].get(index)
+            if tp is not None:
+                return tp.seed_before
+        return 0
+
     def guaranteed_entries(index):
         cells = []
         for group in groups:
@@ -543,6 +553,8 @@ def build_tracks(
             "pos": pos,
             "a": entries(2 * (pos - 1)),
             "b": entries(2 * (pos - 1) + 1),
+            "a_seed": cell_seed(2 * (pos - 1)),
+            "b_seed": cell_seed(2 * (pos - 1) + 1),
             "ga": guaranteed_entries(2 * (pos - 1)) if has_guaranteed else [],
             "gb": guaranteed_entries(2 * (pos - 1) + 1) if has_guaranteed else [],
         }
@@ -568,6 +580,20 @@ def plan_highlight(option, equivalents):
         if pull.cat in option.targets:
             into_targets.setdefault(rep, set()).add(pull.position)
     return path, targets, gpath, gtargets
+
+
+def plan_seed(plan, graphs):
+    """The RNG state after a plan's final draw - what the seed becomes once the plan is
+    actually rolled ("apply plan" advances to it). The final draw is the last pull: a
+    guaranteed multi's uber, or the (reroll-aware) outcome at the last position."""
+    if not plan.pulls:
+        return None
+    last = plan.pulls[-1]
+    graph = next((g for g in graphs if g.banner_id == last.banner_id), None)
+    if graph is None:
+        return None
+    outcome = graph.guaranteed(last.position) if last.guaranteed else graph.outcome(last.position)
+    return outcome.seed if outcome else None
 
 
 def plan_summary(plans, equivalents):
@@ -617,7 +643,6 @@ def subset_solutions(
     guaranteed_pulls=None,
     multis=None,
     ticket_value=CATFOOD_PER_DRAW,
-    prefer="tickets",
     banner_limits=None,
     owned=None,
 ):
@@ -632,7 +657,6 @@ def subset_solutions(
         start,
         multis=multis,
         ticket_value=ticket_value,
-        prefer=prefer,
         banner_limits=banner_limits,
     )
     found_keys = {sp.targets for sp in found}
@@ -641,6 +665,7 @@ def subset_solutions(
         path, target_idx, gpath, gtargets = plan_highlight(sp, equivalents)
         solution = plan_summary([sp], equivalents)[0]
         solution["found"] = True
+        solution["seed_after"] = plan_seed(sp.plan, graphs)
         solution["track"] = build_tracks(
             pulls,
             rerolls,

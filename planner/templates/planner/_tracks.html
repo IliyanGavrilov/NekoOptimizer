@@ -31,9 +31,9 @@
       {% for row in track.rows %}
         <tr>
           <th scope="row" class="pos">{{ row.pos }}</th>
-          {% include "planner/_track_cell.html" with entries=row.a multi=track.legend|length %}
+          {% include "planner/_track_cell.html" with entries=row.a multi=track.legend|length cell_seed=row.a_seed %}
           {% if track.has_guaranteed %}{% include "planner/_track_cell.html" with entries=row.ga multi=track.legend|length cell_class="guaranteed-col" %}{% endif %}
-          {% include "planner/_track_cell.html" with entries=row.b multi=track.legend|length %}
+          {% include "planner/_track_cell.html" with entries=row.b multi=track.legend|length cell_seed=row.b_seed %}
           {% if track.has_guaranteed %}{% include "planner/_track_cell.html" with entries=row.gb multi=track.legend|length cell_class="guaranteed-col" %}{% endif %}
         </tr>
       {% endfor %}
