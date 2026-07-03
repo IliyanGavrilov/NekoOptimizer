@@ -156,6 +156,11 @@ def roll_banner(seed: int, banner: Banner, count: int, guaranteed_rolls: int = 0
     grid = _build_grid(seed, banner, count + _LANDING_BUFFER + 2 * guaranteed_rolls)
     uber = banner.pool(Rarity.UBER_SUPER_RARE)
 
+    # Each pull carries the RNG state after obtaining it: a nominal roll leaves the seed
+    # at its slot value; a dupe's reroll advanced `steps` further (its final value is
+    # stored as the reroll's slot_seed); a guaranteed multi's swapped final draw leaves
+    # it at the very value that picked the uber. Entering that state as the input seed
+    # continues the play chain from its next cell.
     pulls: list[TrackPull] = []
     rerolls: list[TrackPull] = []
     guaranteed: list[TrackPull] = []
@@ -163,15 +168,35 @@ def roll_banner(seed: int, banner: Banner, count: int, guaranteed_rolls: int = 0
         for track in (0, 1):
             cat = grid[seq][track]
             label = _TRACKS[track]
-            pulls.append(TrackPull(seq + 1, label, cat.name, cat.rarity))
+            # The state that re-anchors this cell as the new 1A is the stream value one
+            # step before the cell's rarity value - for the very first cell, the input
+            # seed itself.
+            if track == 1:
+                before = grid[seq][0].rarity_seed
+            elif seq:
+                before = grid[seq - 1][1].rarity_seed
+            else:
+                before = seed
+            pulls.append(
+                TrackPull(
+                    seq + 1, label, cat.name, cat.rarity, seed=cat.slot_seed, seed_before=before
+                )
+            )
             if cat.rerolled is not None:
-                rerolls.append(TrackPull(seq + 1, label, cat.rerolled.name, cat.rarity))
+                rerolls.append(
+                    TrackPull(
+                        seq + 1, label, cat.rerolled.name, cat.rarity, seed=cat.rerolled.slot_seed
+                    )
+                )
             if guaranteed_rolls:
                 last = _follow(cat, guaranteed_rolls - 1)
                 if last is None:
                     continue
                 # A rerolled `last` shares its dupe cell's coordinates; the slot seed is
                 # always the nominal cell's rarity seed (godfat digs the grid, not `last`).
-                got = _pick(uber, grid[last.seq][last.track].rarity_seed)
-                guaranteed.append(TrackPull(seq + 1, label, got, Rarity.UBER_SUPER_RARE))
+                slot_seed = grid[last.seq][last.track].rarity_seed
+                got = _pick(uber, slot_seed)
+                guaranteed.append(
+                    TrackPull(seq + 1, label, got, Rarity.UBER_SUPER_RARE, seed=slot_seed)
+                )
     return BannerRolls(pulls, guaranteed, rerolls)

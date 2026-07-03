@@ -19,12 +19,20 @@ class Rarity(StrEnum):
 
 @dataclass(frozen=True, slots=True)
 class TrackPull:
-    """A pull outcome on track "A" or "B" at a 1-based position."""
+    """A pull outcome on track "A" or "B" at a 1-based position.
+
+    ``seed`` is the RNG state after obtaining this pull: entering it as the input
+    seed makes the play chain's next cell the new 1A (what "apply plan" advances to).
+    ``seed_before`` re-anchors instead: entering it makes THIS cell the new 1A. It
+    depends only on the cell's stream position, never on any banner's pools, so it's
+    the per-cell "roll to here" dice."""
 
     position: int
     track: str
     cat: str
     rarity: Rarity
+    seed: int = 0
+    seed_before: int = 0
 
 
 @dataclass(frozen=True, slots=True)

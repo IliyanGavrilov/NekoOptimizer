@@ -15,7 +15,6 @@ if (picker) {
   const ticketsEl = document.getElementById("id_tickets");
   const catfoodEl = document.getElementById("id_catfood");
   const wishlistEl = document.getElementById("id_use_wishlist");
-  const preferEl = document.getElementById("id_prefer");
   const ticketValueEl = document.getElementById("id_ticket_value");
   const platLegendCapEl = document.getElementById("id_platinum_legend_cap");
   const exploreEl = document.getElementById("id_explore");
@@ -51,7 +50,6 @@ if (picker) {
         tickets: ticketsEl.value,
         catfood: catfoodEl.value,
         useWishlist: wishlistEl.checked,
-        prefer: preferEl.value,
         ticketValue: ticketValueEl.value,
         platLegendCap: platLegendCapEl.value,
         explore: exploreEl.checked,
@@ -322,7 +320,6 @@ if (picker) {
   if (stored.tickets != null) ticketsEl.value = stored.tickets;
   if (stored.catfood != null) catfoodEl.value = stored.catfood;
   wishlistEl.checked = !!stored.useWishlist;
-  if (stored.prefer != null) preferEl.value = stored.prefer;
   if (stored.ticketValue != null) ticketValueEl.value = stored.ticketValue;
   if (stored.platLegendCap != null) platLegendCapEl.value = stored.platLegendCap;
   if (stored.explore != null) exploreEl.checked = stored.explore; // else keep server default (on)
@@ -336,7 +333,6 @@ if (picker) {
   ticketsEl.addEventListener("input", save);
   catfoodEl.addEventListener("input", save);
   wishlistEl.addEventListener("change", save);
-  preferEl.addEventListener("change", save);
   ticketValueEl.addEventListener("input", save);
   platLegendCapEl.addEventListener("input", save);
   exploreEl.addEventListener("change", () => {
@@ -388,6 +384,7 @@ if (picker) {
     const results = btn.closest("#planResults");
     const body = new URLSearchParams({ csrfmiddlewaretoken: token });
     (btn.dataset.cats ? btn.dataset.cats.split("|") : []).forEach((n) => body.append("cats", n));
+    if (btn.dataset.seedAfter) body.append("seed_after", btn.dataset.seedAfter);
     const resp = await fetch(results.dataset.applyUrl, {
       method: "POST",
       headers: { "X-CSRFToken": token },
@@ -399,6 +396,10 @@ if (picker) {
     spend(ticketsEl, "tickets");
     spend(catfoodEl, "catfood");
     save();
+    // "You rolled it": the seed advances to just after the plan's final draw. The
+    // solution stays on screen (its steps still need doing in game); the next
+    // track/plan request rolls from the new seed.
+    if (btn.dataset.seedAfter) setSeed(btn.dataset.seedAfter);
     btn.disabled = true;
     btn.textContent = "Applied ✓";
   });
@@ -433,6 +434,53 @@ if (picker) {
   browser.addEventListener("click", (e) => {
     if (e.target.closest(".banner-include")) scheduleTracks();
   });
+
+  // ---- Seed navigation: "roll to here" + undo ---------------------------
+  // A programmatic seed change (a cell's ↻ button, applying a plan) pushes the
+  // old seed onto a persisted undo stack, so the original is never lost; the
+  // undo button beside the field walks back one change at a time. Typing a seed
+  // by hand doesn't push - undo only covers changes the app made for you.
+  const UNDO_KEY = "nekoSeedUndo";
+  const seedUndo = document.getElementById("seedUndo");
+  const undoStack = (() => {
+    try {
+      return JSON.parse(localStorage.getItem(UNDO_KEY)) || [];
+    } catch {
+      return [];
+    }
+  })();
+  function syncUndo() {
+    seedUndo.hidden = undoStack.length === 0;
+    if (undoStack.length) seedUndo.title = `Back to seed ${undoStack[undoStack.length - 1]}`;
+  }
+  function setSeed(value) {
+    const prev = seedEl.value.trim();
+    if (prev && prev !== String(value)) {
+      undoStack.push(prev);
+      while (undoStack.length > 50) undoStack.shift();
+      localStorage.setItem(UNDO_KEY, JSON.stringify(undoStack));
+    }
+    seedEl.value = value;
+    syncUndo();
+    save();
+  }
+  seedUndo.addEventListener("click", () => {
+    if (!undoStack.length) return;
+    seedEl.value = undoStack.pop();
+    localStorage.setItem(UNDO_KEY, JSON.stringify(undoStack));
+    syncUndo();
+    save();
+    requestTracks();
+  });
+  // "Roll to here" on any track cell (browsing or inside a solution): the seed
+  // becomes the state just after that pull, so the next roll is the new 1A.
+  resultsRegion.addEventListener("click", (e) => {
+    const btn = e.target.closest(".reseed");
+    if (!btn) return;
+    setSeed(btn.dataset.seed);
+    requestTracks();
+  });
+  syncUndo();
 
   // ---- Find plan: inline validation next to each field, then overlay the plan
   const flash = (el) => {

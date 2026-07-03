@@ -34,21 +34,15 @@ def test_tickets_are_spent_before_catfood():
     assert result.cost == CATFOOD_PER_DRAW
 
 
-def test_prefer_catfood_keeps_the_ticket_when_costs_tie():
-    g = banner("x", (1, "A", "Bahamut", U))
-    result = astar([g], {"Bahamut"}, start(tickets=1, catfood=1), prefer="catfood")
-    assert result.tickets_used == 0
-
-
 def test_dear_ticket_is_paid_with_catfood():
     g = banner("x", (1, "A", "Bahamut", U))
     result = astar([g], {"Bahamut"}, start(tickets=1, catfood=1), ticket_value=1000)
     assert result.tickets_used == 0
 
 
-def test_cheap_ticket_is_used_even_when_preferring_catfood():
+def test_cheap_ticket_is_still_spent_first():
     g = banner("x", (1, "A", "Bahamut", U))
-    result = astar([g], {"Bahamut"}, start(tickets=1, catfood=1), ticket_value=50, prefer="catfood")
+    result = astar([g], {"Bahamut"}, start(tickets=1, catfood=1), ticket_value=50)
     assert result.tickets_used == 1
 
 

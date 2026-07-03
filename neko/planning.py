@@ -14,7 +14,6 @@ def plan(
     guaranteed_pulls: Mapping[str, Iterable[TrackPull]] | None = None,
     multis: Mapping[str, Sequence[Multi]] | None = None,
     ticket_value: int = CATFOOD_PER_DRAW,
-    prefer: str = "tickets",
     banner_limits: Mapping[str, int] | None = None,
     rerolls: Mapping[str, Iterable[TrackPull]] | None = None,
 ) -> list[SubsetPlan]:
@@ -22,8 +21,8 @@ def plan(
     else the per-subset fallback breakdown (biggest-then-cheapest).
 
     Pass guaranteed_pulls (the guaranteed-column outcomes per banner) and multis
-    (each banner's multi-roll options) to also consider multi-rolls. ticket_value prices
-    a rare ticket in catfood and prefer ("tickets"/"catfood") breaks remaining ties."""
+    (each banner's multi-roll options) to also consider multi-rolls. ticket_value
+    prices a rare ticket in catfood (tickets are spent first unless dearer)."""
     targets = frozenset(targets)
     start = State(0, tickets, catfood // CATFOOD_PER_DRAW, frozenset())
     graphs = build_graphs(pulls_by_banner, guaranteed_pulls, rerolls)
@@ -33,7 +32,6 @@ def plan(
         start,
         multis=multis,
         ticket_value=ticket_value,
-        prefer=prefer,
         banner_limits=banner_limits,
     )
     if full is not None:
@@ -44,6 +42,5 @@ def plan(
         start,
         multis=multis,
         ticket_value=ticket_value,
-        prefer=prefer,
         banner_limits=banner_limits,
     )

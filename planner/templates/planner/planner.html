@@ -7,7 +7,7 @@
     {% csrf_token %}
 
     <div class="field-grid">
-      <label><span class="label-row">{{ form.seed.label_tag }} <span class="req" title="required">*</span></span>{{ form.seed }}<span class="field-error" id="seedError" aria-live="polite"></span></label>
+      <label><span class="label-row">{{ form.seed.label_tag }} <span class="req" title="required">*</span></span><span class="seed-row">{{ form.seed }}<button type="button" id="seedUndo" class="seed-undo" hidden>&#8630; undo</button></span><span class="field-error" id="seedError" aria-live="polite"></span></label>
       <div class="budget-fields">
         <label>{{ form.tickets.label_tag }} {{ form.tickets }}</label>
         <label>{{ form.catfood.label_tag }} {{ form.catfood }}</label>
@@ -23,9 +23,8 @@
           <label class="opt inline explore-horizon">{{ form.horizon.label_tag }} {{ form.horizon }}</label>
         </div>
         <div class="opt-group">
-          <label class="opt">{{ form.prefer.label_tag }} {{ form.prefer }}</label>
           <label class="opt inline">1 rare ticket is worth {{ form.ticket_value }} catfood</label>
-          <p class="muted">When two plans cost the same, keep the resource you pick. One draw is 150 catfood; raise the ticket value above that only if rare tickets are precious to you &mdash; the planner will then spend catfood to save them.</p>
+          <p class="muted">One draw is 150 catfood, and the planner spends tickets first. Raise the ticket value above 150 if rare tickets are precious to you &mdash; the planner will then spend catfood to save them.</p>
         </div>
         <div class="opt-group">
           <label class="opt">{{ form.platinum_legend_cap.label_tag }} {{ form.platinum_legend_cap }}</label>
