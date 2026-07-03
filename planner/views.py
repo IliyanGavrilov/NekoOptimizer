@@ -4,7 +4,7 @@ from django.template.loader import render_to_string
 from django.views.decorators.http import require_POST
 
 from neko.models import CATFOOD_PER_DRAW
-from neko.scraper import DEFAULT_COUNT
+from neko.roller import DEFAULT_COUNT
 from planner.forms import PlannerForm
 from planner.models import Cat, Seed, Unit
 from planner.services import (
@@ -57,7 +57,7 @@ def picker_past(request):
     return render(request, "planner/_picker_rows.html", {"sections": groups.get("Past", [])})
 
 
-def _scrape(seed, chosen_banners, count):
+def _roll(seed, chosen_banners, count):
     if chosen_banners:
         return fetch_for_banners(seed, chosen_banners, count)
     return fetch_banners(seed, count)
@@ -75,7 +75,7 @@ def tracks(request):
         seed = int(request.POST.get("seed", ""))
     except ValueError:
         return HttpResponse("")
-    result = _scrape(seed, request.POST.getlist("banners"), DEFAULT_COUNT)
+    result = _roll(seed, request.POST.getlist("banners"), DEFAULT_COUNT)
     equivalents = equivalent_banners(result.banners)
     pulls = {name: rolls.pulls for name, rolls in result.banners.items()}
     guaranteed = {name: rolls.guaranteed for name, rolls in result.banners.items()}
@@ -97,7 +97,7 @@ def find_plan(request):
         targets |= set(Unit.objects.wishlist().values_list("name", flat=True))
     explore = form.cleaned_data["explore"]
     count = form.cleaned_data["horizon"] if explore else DEFAULT_COUNT
-    result = _scrape(seed, request.POST.getlist("banners"), count)
+    result = _roll(seed, request.POST.getlist("banners"), count)
     equivalents = equivalent_banners(result.banners)
     pulls = {name: rolls.pulls for name, rolls in result.banners.items()}
     guaranteed_pulls = {name: rolls.guaranteed for name, rolls in result.banners.items()}

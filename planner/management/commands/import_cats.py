@@ -4,7 +4,7 @@ from planner.services import fetch_banners, import_cats
 
 
 class Command(BaseCommand):
-    help = "Populate the cat catalogue by scraping godfat's active banners for a seed."
+    help = "Populate the cat catalogue by rolling the active banners for a seed."
 
     def add_arguments(self, parser):
         parser.add_argument("seed", type=int)

@@ -5,11 +5,15 @@ from itertools import combinations
 
 from neko.catalogue import match_names, name_index
 from neko.gachadata import GachaEventRow, load_events, load_pools, load_series, load_tickets
-from neko.godfat import BannerRolls
 from neko.graph import BannerGraph, build_graphs, stream_index
-from neko.models import CATFOOD_PER_DRAW, Rarity, State
-from neko.roller import catalogue_banners, roll_active, roll_selected
-from neko.scraper import DEFAULT_COUNT, ScrapeResult
+from neko.models import CATFOOD_PER_DRAW, BannerRolls, Rarity, State
+from neko.roller import (
+    DEFAULT_COUNT,
+    RollResult,
+    catalogue_banners,
+    roll_active,
+    roll_selected,
+)
 from neko.subsets import solve_subsets
 from planner.models import Banner, Cat, Unit
 
@@ -25,17 +29,17 @@ def capped_banner_limits(names: Iterable[str], cap: int) -> dict[str, int]:
     return {name: cap for name in names if any(kw in name.lower() for kw in _CAPPED_KEYWORDS)}
 
 
-def fetch_banners(seed: int, count: int = DEFAULT_COUNT) -> ScrapeResult:
+def fetch_banners(seed: int, count: int = DEFAULT_COUNT) -> RollResult:
     """Roll the active banners for a seed locally (no godfat)."""
     return roll_active(seed, count=count)
 
 
-def fetch_catalogue() -> ScrapeResult:
+def fetch_catalogue() -> RollResult:
     """Every scheduled banner's droppable cats, straight from the gacha pools."""
     return catalogue_banners()
 
 
-def fetch_for_banners(seed: int, names: Iterable[str], count: int = DEFAULT_COUNT) -> ScrapeResult:
+def fetch_for_banners(seed: int, names: Iterable[str], count: int = DEFAULT_COUNT) -> RollResult:
     """Roll just the chosen banners for a seed locally."""
     return roll_selected(seed, names, count=count)
 
@@ -658,7 +662,7 @@ def subset_solutions(
 
 
 def unit_match_report() -> tuple[dict[str, int], list[str]]:
-    """Match every scraped cat name against the canonical catalogue; return the
+    """Match every imported cat name against the canonical catalogue; return the
     {name: unit_id} matches and the names with no canonical unit (gaps to chase)."""
     return match_names(Cat.objects.values_list("name", flat=True), name_index(Unit.objects.all()))
 
@@ -724,7 +728,7 @@ def import_cats(
     banners: Mapping[str, BannerRolls],
     dates: Mapping[str, tuple[date, date]] | None = None,
 ) -> int:
-    """Add scraped cats and their banner membership to the catalogue; return new-cat count."""
+    """Add rolled cats and their banner membership to the catalogue; return new-cat count."""
     dates = dates or {}
     created = 0
     for banner_name, rolls in banners.items():

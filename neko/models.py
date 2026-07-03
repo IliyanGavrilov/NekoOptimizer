@@ -1,5 +1,5 @@
 from collections.abc import Mapping
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from enum import StrEnum
 
 CATFOOD_PER_DRAW = 150  # one paid pull = 150 catfood
@@ -15,6 +15,25 @@ class Rarity(StrEnum):
     SUPER_RARE = "Super Rare"
     UBER_SUPER_RARE = "Uber Super Rare"
     LEGEND_RARE = "Legend Rare"
+
+
+@dataclass(frozen=True, slots=True)
+class TrackPull:
+    """A pull outcome on track "A" or "B" at a 1-based position."""
+
+    position: int
+    track: str
+    cat: str
+    rarity: Rarity
+
+
+@dataclass(frozen=True, slots=True)
+class BannerRolls:
+    """A banner's normal pulls, its guaranteed-uber column, and its rare-dupe rerolls."""
+
+    pulls: list[TrackPull]
+    guaranteed: list[TrackPull]
+    rerolls: list[TrackPull] = field(default_factory=list)
 
 
 @dataclass(frozen=True)

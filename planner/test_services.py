@@ -2,8 +2,7 @@ from datetime import date
 
 import pytest
 
-from neko.godfat import BannerRolls, TrackPull
-from neko.models import Leg, Path, Pull, Rarity
+from neko.models import BannerRolls, Leg, Path, Pull, Rarity, TrackPull
 from neko.subsets import SubsetPlan
 from planner.models import Banner, Cat, Unit
 from planner.services import (
