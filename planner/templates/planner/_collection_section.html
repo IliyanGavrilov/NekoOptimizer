@@ -1,0 +1,29 @@
+{# One collection card: a rarity bin or a gacha set, with bulk own/wishlist buttons. #}
+<section class="collection-section" data-label="{{ label }}">
+  <h3>
+    {% if is_rarity %}
+      <span class="rarity" data-rarity="{{ label }}">{{ label }}</span>
+    {% else %}
+      <span class="set-name">{{ label }}</span>
+    {% endif %}
+    <span class="owned-count muted"></span>
+    <span class="bulk-buttons">
+      <button type="button" class="bulk-own" title="Own all / clear" aria-label="Toggle owning every cat here">&#10003;</button>
+      <button type="button" class="bulk-star" title="Wishlist all / clear" aria-label="Toggle wishlisting every cat here">&#9733;</button>
+    </span>
+  </h3>
+  {% for rarity, units in rarities %}
+    <div class="rarity-row" data-rarity="{{ rarity }}">
+      {% if not is_rarity %}<span class="rarity" data-rarity="{{ rarity }}">{{ rarity }}</span>{% endif %}
+      <div class="chips">
+        {% for unit in units %}
+          <span class="own-chip{% if unit.owned %} owned{% endif %}{% if unit.wanted %} wanted{% endif %}"
+                data-pk="{{ unit.pk }}" data-name="{{ unit.name }}">
+            <button type="button" class="chip chip-own">{{ unit.name }}</button>
+            <button type="button" class="chip-star" title="Wishlist" aria-label="Toggle wishlist">&#9733;</button>
+          </span>
+        {% endfor %}
+      </div>
+    </div>
+  {% endfor %}
+</section>

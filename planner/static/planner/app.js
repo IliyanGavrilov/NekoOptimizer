@@ -481,49 +481,66 @@ if (picker) {
   if (seedEl.value.trim()) requestTracks();
 }
 
-// ---- Collection: filters + instant owned / wishlist toggles ----------
+// ---- Collection: views, filters, instant owned / wishlist toggles ----
 const collectionBrowser = document.getElementById("collectionBrowser");
 if (collectionBrowser) {
-  const url = collectionBrowser.dataset.toggleUrl;
   const token = document.getElementById("csrfToken").value;
-  const sections = [...collectionBrowser.querySelectorAll(".rarity-section")];
-
-  // Search, rarity pills and the gacha-set dropdown combine: a chip stays visible
-  // only when it passes all three. Sets map to unit ids ({name: [uid]}, server-built
-  // from the gacha pools).
-  const search = document.getElementById("collectionSearch");
-  const setFilter = document.getElementById("setFilter");
-  const rarityBtns = [...document.querySelectorAll("#rarityFilter button")];
-  const gachaSets = JSON.parse(document.getElementById("gachaSets").textContent);
+  const sections = [...collectionBrowser.querySelectorAll(".collection-section")];
   const noMatches = collectionBrowser.querySelector(".no-matches");
-  let setIds = null; // Set of unit ids, or null for "all sets"
 
+  // Two renderings of the same units (by rarity / by gacha set); one is shown at a
+  // time and the choice sticks across visits. Marks are synced between them by pk.
+  const VIEW_KEY = "nekoCollectionView";
+  const viewBtns = [...document.querySelectorAll("#collectionViews .view-btn")];
+  const views = [...collectionBrowser.querySelectorAll(".collection-view")];
+  function showView(name) {
+    viewBtns.forEach((b) => {
+      const on = b.dataset.view === name;
+      b.classList.toggle("is-active", on);
+      b.setAttribute("aria-selected", on);
+    });
+    views.forEach((v) => {
+      v.hidden = v.dataset.view !== name;
+    });
+    applyFilters();
+  }
+  document.getElementById("collectionViews").addEventListener("click", (e) => {
+    const btn = e.target.closest(".view-btn");
+    if (!btn) return;
+    localStorage.setItem(VIEW_KEY, btn.dataset.view);
+    showView(btn.dataset.view);
+  });
+
+  // Search and the rarity pills combine, applied to the visible view. Every row
+  // carries its rarity (a rarity section is one row of itself), so both views
+  // filter the same way: hide non-matching chips, then empty rows and sections.
+  const search = document.getElementById("collectionSearch");
+  const rarityBtns = [...document.querySelectorAll("#rarityFilter button")];
   function applyFilters() {
     const query = search.value.trim().toLowerCase();
     const rarity = rarityBtns.find((b) => b.getAttribute("aria-pressed") === "true").dataset.rarity;
-    for (const section of sections) {
-      if (rarity && section.dataset.rarity !== rarity) {
-        section.hidden = true;
-        continue;
+    const active = views.find((v) => !v.hidden);
+    for (const section of active.querySelectorAll(".collection-section")) {
+      for (const row of section.querySelectorAll(".rarity-row")) {
+        let shown = 0;
+        if (rarity && row.dataset.rarity !== rarity) {
+          row.querySelectorAll(".own-chip").forEach((chip) => {
+            chip.hidden = true;
+          });
+        } else {
+          row.querySelectorAll(".own-chip").forEach((chip) => {
+            const hit = !query || chip.dataset.name.toLowerCase().includes(query);
+            chip.hidden = !hit;
+            shown += hit;
+          });
+        }
+        row.hidden = shown === 0;
       }
-      let shown = 0;
-      section.querySelectorAll(".own-chip").forEach((chip) => {
-        const hit =
-          (!query || chip.dataset.name.toLowerCase().includes(query)) &&
-          (!setIds || setIds.has(Number(chip.dataset.uid)));
-        chip.hidden = !hit;
-        shown += hit;
-      });
-      section.hidden = shown === 0;
+      section.hidden = !section.querySelector(".rarity-row:not([hidden])");
     }
-    noMatches.hidden = sections.some((s) => !s.hidden);
+    noMatches.hidden = !!active.querySelector(".collection-section:not([hidden])");
   }
-
   search.addEventListener("input", applyFilters);
-  setFilter.addEventListener("change", () => {
-    setIds = setFilter.value ? new Set(gachaSets[setFilter.value]) : null;
-    applyFilters();
-  });
   document.getElementById("rarityFilter").addEventListener("click", (e) => {
     const btn = e.target.closest("button");
     if (!btn) return;
@@ -531,52 +548,70 @@ if (collectionBrowser) {
     applyFilters();
   });
 
-  // "12 / 325 owned" per rarity header, ignoring filters, refreshed on every toggle.
+  // "12 / 325 owned" per section header, ignoring filters, refreshed on every change.
   function updateCounts() {
     for (const section of sections) {
-      const chips = section.querySelectorAll(".own-chip");
+      const total = section.querySelectorAll(".own-chip").length;
       const owned = section.querySelectorAll(".own-chip.owned").length;
-      section.querySelector(".owned-count").textContent = `${owned} / ${chips.length} owned`;
+      section.querySelector(".owned-count").textContent = `${owned} / ${total} owned`;
     }
   }
-  updateCounts();
 
-  // One tap to wishlist every gacha cat you don't own (completion play); the server
-  // marks them, then we star the matching chips (Normal/Special aren't rollable).
-  const wishlistAll = document.getElementById("wishlistAll");
-  wishlistAll.addEventListener("click", async () => {
-    const resp = await fetch(wishlistAll.dataset.url, {
-      method: "POST",
-      headers: { "X-CSRFToken": token },
+  // The same unit renders once per view; every change lands on all its copies.
+  const copiesOf = (pk) => collectionBrowser.querySelectorAll(`.own-chip[data-pk="${pk}"]`);
+  function mark(pk, state) {
+    copiesOf(pk).forEach((c) => {
+      c.classList.toggle("owned", state.owned);
+      c.classList.toggle("wanted", state.wanted);
     });
-    if (!resp.ok) return;
-    for (const section of sections) {
-      if (section.dataset.rarity === "Normal" || section.dataset.rarity === "Special") continue;
-      section
-        .querySelectorAll(".own-chip:not(.owned)")
-        .forEach((chip) => chip.classList.add("wanted"));
-    }
-  });
+  }
 
   collectionBrowser.addEventListener("click", async (e) => {
-    const own = e.target.closest(".chip-own");
+    const bulk = e.target.closest(".bulk-own, .bulk-star");
+    if (bulk) return bulkToggle(bulk);
     const star = e.target.closest(".chip-star");
-    if (!own && !star) return;
+    if (!star && !e.target.closest(".chip-own")) return;
     const chip = e.target.closest(".own-chip");
     const field = star ? "wanted" : "owned";
-
     const body = new URLSearchParams({ pk: chip.dataset.pk, field, csrfmiddlewaretoken: token });
-    const resp = await fetch(url, {
+    const resp = await fetch(collectionBrowser.dataset.toggleUrl, {
       method: "POST",
       headers: { "X-CSRFToken": token },
       body,
     });
     if (!resp.ok) return;
-    const state = await resp.json();
-    chip.classList.toggle("owned", state.owned);
-    chip.classList.toggle("wanted", state.wanted);
+    mark(chip.dataset.pk, await resp.json());
     updateCounts();
   });
+
+  // Section-header ✓/★: mark the whole section owned/wanted, or clear it when it
+  // already is. The server decides which way it goes and skips owned on wishlists.
+  async function bulkToggle(btn) {
+    const field = btn.classList.contains("bulk-star") ? "wanted" : "owned";
+    const chips = [...btn.closest(".collection-section").querySelectorAll(".own-chip")];
+    const body = new URLSearchParams({ field, csrfmiddlewaretoken: token });
+    chips.forEach((c) => body.append("pk", c.dataset.pk));
+    const resp = await fetch(collectionBrowser.dataset.bulkUrl, {
+      method: "POST",
+      headers: { "X-CSRFToken": token },
+      body,
+    });
+    if (!resp.ok) return;
+    const { value } = await resp.json();
+    for (const chip of chips) {
+      const owned = field === "owned" ? value : chip.classList.contains("owned");
+      const wanted =
+        field === "wanted"
+          ? value && !chip.classList.contains("owned")
+          : chip.classList.contains("wanted");
+      mark(chip.dataset.pk, { owned, wanted });
+    }
+    updateCounts();
+  }
+
+  updateCounts();
+  const savedView = localStorage.getItem(VIEW_KEY);
+  showView(savedView === "sets" ? "sets" : "rarity");
 }
 
 // ---- Drag-to-scrub number inputs -------------------------------------

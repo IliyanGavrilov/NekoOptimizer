@@ -1,14 +1,13 @@
 from django.http import HttpResponse, HttpResponseBadRequest, JsonResponse
-from django.shortcuts import get_object_or_404, redirect, render
+from django.shortcuts import get_object_or_404, render
 from django.template.loader import render_to_string
 from django.views.decorators.http import require_POST
 
 from neko.models import CATFOOD_PER_DRAW
 from neko.scraper import DEFAULT_COUNT
-from planner.forms import CatForm, PlannerForm
+from planner.forms import PlannerForm
 from planner.models import Cat, Seed, Unit
 from planner.services import (
-    NON_GACHA_RARITIES,
     RARITY_ORDER,
     build_tracks,
     capped_banner_limits,
@@ -16,8 +15,8 @@ from planner.services import (
     equivalent_banners,
     fetch_banners,
     fetch_for_banners,
-    gacha_sets,
     picker_groups,
+    set_sections,
     subset_solutions,
 )
 
@@ -135,20 +134,13 @@ def find_plan(request):
 
 
 def collection(request):
-    """The whole cat dictionary in one page: every catalogue unit once, under its rarity,
-    with the player's owned/wishlist marks and rarity + gacha-set filters."""
-    form = CatForm()
-    if request.method == "POST":
-        form = CatForm(request.POST)
-        if form.is_valid():
-            form.save()
-            return redirect("collection")
-    sets = gacha_sets()
+    """The whole cat dictionary in one page: every catalogue unit once, with the player's
+    owned/wishlist marks, browsable by rarity or by gacha set."""
+    units = list(Unit.objects.named())
     context = {
-        "form": form,
-        "sections": collection_sections(Unit.objects.named()),
-        "set_names": [name for name, _ids in sets],
-        "set_map": dict(sets),
+        # Both views share the section partial, so a rarity bin becomes a one-row section.
+        "rarity_sections": [(r, [(r, bin)]) for r, bin in collection_sections(units)],
+        "set_sections": set_sections(units),
     }
     return render(request, "planner/collection.html", context)
 
@@ -162,11 +154,18 @@ def apply_plan(request):
 
 
 @require_POST
-def wishlist_all_unowned(request):
-    """Add every gacha cat you don't own yet to the wishlist - one tap for completion play."""
-    rollable = Unit.objects.named().exclude(rarity__in=NON_GACHA_RARITIES)
-    wanted = rollable.filter(owned=False).update(wanted=True)
-    return JsonResponse({"wanted": wanted})
+def collection_bulk(request):
+    """Mark a whole section owned/wanted in one tap - or clear it when it's already all
+    marked. Wishlist marks skip owned units, like everywhere else."""
+    field = request.POST.get("field")
+    if field not in {"owned", "wanted"}:
+        return HttpResponseBadRequest("field must be 'owned' or 'wanted'")
+    units = Unit.objects.filter(pk__in=request.POST.getlist("pk"))
+    if field == "wanted":
+        units = units.filter(owned=False)
+    value = units.filter(**{field: False}).exists()
+    units.update(**{field: value})
+    return JsonResponse({"value": value})
 
 
 @require_POST

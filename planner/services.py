@@ -1,9 +1,10 @@
+from collections import Counter
 from collections.abc import Iterable, Mapping
 from datetime import date, timedelta
 from itertools import combinations
 
 from neko.catalogue import match_names, name_index
-from neko.gachadata import load_events, load_pools
+from neko.gachadata import GachaEventRow, load_events, load_pools, load_series
 from neko.godfat import BannerRolls
 from neko.graph import BannerGraph, build_graphs, stream_index
 from neko.models import CATFOOD_PER_DRAW, Rarity, State
@@ -13,9 +14,6 @@ from neko.subsets import solve_subsets
 from planner.models import Banner, Cat, Unit
 
 RARITY_ORDER = ["Normal", "Special", "Rare", "Super Rare", "Uber Super Rare", "Legend Rare"]
-
-# Normal/Special cats come from XP and stages, not capsules.
-NON_GACHA_RARITIES = RARITY_ORDER[:2]
 
 # Platinum/Legend run on scarce tickets, not catfood, so the optimizer treats them as
 # info-only: capped (0 by default) rather than modelled as ordinary catfood gacha.
@@ -66,15 +64,85 @@ def collection_sections(units: Iterable[Unit]) -> list[tuple[str, list[Unit]]]:
     return _by_rarity(units)
 
 
-def gacha_sets(events=None, pools=None) -> list[tuple[str, list[int]]]:
-    """Each gacha set (recurring banner name) with every unit id its pools have ever
-    offered, as ``[(name, [unit_id, ...]), ...]`` sorted by name."""
+# A unit carried by more series than this is part of the shared rare/super pool that
+# every capsule banner offers, not exclusive to any set.
+_REGULAR_SERIES_LIMIT = 3
+
+REGULARS_LABEL = "Rare Capsule Regulars"
+
+
+def set_sections(
+    units: Iterable[Unit], events=None, pools=None, series=None
+) -> list[tuple[str, list[tuple[str, list[Unit]]]]]:
+    """The by-gacha-set view: every gacha unit once, under its home set, subdivided by
+    rarity - ``[(set_label, [(rarity, [unit, ...]), ...]), ...]``.
+
+    A unit's home is its official Cat Guide set name (The Dynamites, Iron Legion, ...).
+    Units the guide doesn't place fall to the banner series that carries them - reruns
+    share a series id, so a returning set never repeats. A series whose pool's named
+    members mostly share one set (a set's own banner) counts as that set, so its unnamed
+    legend joins them; a mixed pool (fest/Platinum umbrella) never claims a unit. What's
+    left homes to its smallest carrier's series, labelled by the latest run's text.
+    Units in more specific series than [_REGULAR_SERIES_LIMIT] are the shared rare/super
+    pool -> one [REGULARS_LABEL] group at the end. Units in no pool (Normal/Special/
+    story cats) are left to the rarity view.
+
+    Named sets come first in dictionary order (lowest unit id), then series groups,
+    newest run first.
+    """
     events = events if events is not None else load_events()
     pools = pools if pools is not None else load_pools()
-    sets: dict[str, set[int]] = {}
+    series = series if series is not None else load_series()
+    latest: dict[int, GachaEventRow] = {}
     for event in events:
-        sets.setdefault(event.name, set()).update(pools.get(event.pool_id, ()))
-    return [(name, sorted(ids)) for name, ids in sorted(sets.items())]
+        sid = series.get(event.pool_id)
+        current = latest.get(sid)
+        if sid is not None and (current is None or event.start > current.start):
+            latest[sid] = event
+    members = {sid: set(pools.get(event.pool_id, ())) for sid, event in latest.items()}
+
+    # A series speaks for a set when most of its pool's set-named members agree; a pool
+    # naming many sets about equally is an umbrella (fests, Platinum) and claims nobody.
+    unit_sets = {unit.unit_id: unit.set_name for unit in units if unit.set_name}
+    series_set: dict[int, str] = {}
+    umbrella: set[int] = set()
+    for sid, ids in members.items():
+        counts = Counter(unit_sets[uid] for uid in ids if uid in unit_sets)
+        if counts:
+            top, hits = counts.most_common(1)[0]
+            if hits * 2 > counts.total():
+                series_set[sid] = top
+            else:
+                umbrella.add(sid)
+
+    named: dict[str, list[Unit]] = {}
+    homed: dict[int, list[Unit]] = {}
+    regulars: list[Unit] = []
+    for unit in units:
+        if unit.set_name:
+            named.setdefault(unit.set_name, []).append(unit)
+            continue
+        candidates = [sid for sid, ids in members.items() if unit.unit_id in ids]
+        if not candidates:
+            continue
+        specific = [sid for sid in candidates if sid not in umbrella]
+        if not specific or len(specific) > _REGULAR_SERIES_LIMIT:
+            regulars.append(unit)
+            continue
+        home = min(specific, key=lambda sid: len(members[sid]))
+        if home in series_set:
+            named.setdefault(series_set[home], []).append(unit)
+        else:
+            homed.setdefault(home, []).append(unit)
+
+    sections = sorted(named.items(), key=lambda kv: min(u.unit_id for u in kv[1]))
+    sections += [
+        (latest[sid].name, homed[sid])
+        for sid in sorted(homed, key=lambda sid: latest[sid].start, reverse=True)
+    ]
+    if regulars:
+        sections.append((REGULARS_LABEL, regulars))
+    return [(label, _by_rarity(cats)) for label, cats in sections]
 
 
 def _effective_runs(events) -> list[tuple[str, date, date]]:
@@ -438,6 +506,7 @@ def import_units(records: Iterable[Mapping]) -> int:
                 "name": record["name"],
                 "rarity": record.get("rarity", ""),
                 "forms": record.get("forms", []),
+                "set_name": record.get("set", ""),
             },
         )
         created += int(was_created)

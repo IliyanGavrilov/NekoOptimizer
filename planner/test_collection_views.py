@@ -2,7 +2,7 @@ from itertools import count
 
 import pytest
 
-from planner.models import Cat, Unit
+from planner.models import Unit
 
 _ids = count(1)
 
@@ -30,21 +30,14 @@ def test_collection_groups_by_rarity(client):
 
 
 @pytest.mark.django_db
-def test_collection_lists_unit_once(client):
-    unit("Bahamut")
-    assert client.get("/collection/").content.count(b">Bahamut</button>") == 1
+def test_collection_offers_both_views(client):
+    assert b"By gacha set" in client.get("/collection/").content
 
 
 @pytest.mark.django_db
-def test_add_cat_creates_it(client):
-    client.post("/collection/", {"name": "Kasli", "rarity": "Uber Super Rare"})
-    assert Cat.objects.filter(name="Kasli").exists()
-
-
-@pytest.mark.django_db
-def test_added_cat_gets_a_provisional_unit(client):
-    client.post("/collection/", {"name": "Kasli", "rarity": "Uber Super Rare"})
-    assert Unit.objects.filter(name="Kasli", canonical=False).exists()
+def test_collection_shows_a_named_set(client):
+    unit("Ice Cat", set_name="The Dynamites")
+    assert b"The Dynamites" in client.get("/collection/").content
 
 
 @pytest.mark.django_db
@@ -71,24 +64,29 @@ def test_toggle_rejects_unknown_field(client):
 
 
 @pytest.mark.django_db
-def test_wishlist_all_skips_owned_cats(client):
+def test_bulk_owns_every_unit(client):
+    units = [unit("Bahamut"), unit("Kasli")]
+    client.post("/collection/bulk/", {"field": "owned", "pk": [u.pk for u in units]})
+    assert all(u.owned for u in Unit.objects.all())
+
+
+@pytest.mark.django_db
+def test_bulk_clears_a_fully_owned_section(client):
+    units = [unit("Bahamut", owned=True), unit("Kasli", owned=True)]
+    client.post("/collection/bulk/", {"field": "owned", "pk": [u.pk for u in units]})
+    assert not Unit.objects.filter(owned=True).exists()
+
+
+@pytest.mark.django_db
+def test_bulk_wishlist_skips_owned_units(client):
     owned = unit("Bahamut", owned=True)
-    client.post("/collection/wishlist-all/")
-    owned.refresh_from_db()
-    assert owned.wanted is False
-
-
-@pytest.mark.django_db
-def test_wishlist_all_wants_the_unowned(client):
     missing = unit("Kasli")
-    client.post("/collection/wishlist-all/")
+    client.post("/collection/bulk/", {"field": "wanted", "pk": [owned.pk, missing.pk]})
+    owned.refresh_from_db()
     missing.refresh_from_db()
-    assert missing.wanted is True
+    assert (owned.wanted, missing.wanted) == (False, True)
 
 
 @pytest.mark.django_db
-def test_wishlist_all_skips_non_gacha_cats(client):
-    basic = unit("Tank Cat", rarity="Normal")
-    client.post("/collection/wishlist-all/")
-    basic.refresh_from_db()
-    assert basic.wanted is False
+def test_bulk_rejects_unknown_field(client):
+    assert client.post("/collection/bulk/", {"field": "rarity"}).status_code == 400

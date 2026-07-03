@@ -6,21 +6,6 @@ from planner.models import Cat, Unit
 EXPLORE_HORIZON = 1000  # default rolls to look ahead per banner in explore mode
 
 
-class CatForm(forms.ModelForm):
-    class Meta:
-        model = Cat
-        fields = ["name", "rarity"]
-
-    def save(self, commit=True):
-        from planner.services import unit_for_cat
-
-        cat = super().save(commit=False)
-        cat.unit = unit_for_cat(cat.name, cat.rarity)
-        if commit:
-            cat.save()
-        return cat
-
-
 class PlannerForm(forms.Form):
     seed = forms.IntegerField(min_value=0, initial=0)
     # Optional: explore mode hides the budget, and a blank field just means zero.

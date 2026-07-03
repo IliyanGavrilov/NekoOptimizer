@@ -1,6 +1,7 @@
 # Pools come from the game's GatyaDataSetR1.csv (the BCData tarball we already fetch);
 # rates and the schedule from godfat's curated event TSVs (Apache-2.0).
 
+import csv
 import io
 import json
 import tarfile
@@ -22,6 +23,7 @@ _EVENTS_RAW = "https://gitlab.com/godfat/battle-cats-rolls/-/raw/master/data/{la
 
 EVENTS_PATH = Path(__file__).parent / "data" / "gacha_events.json"
 POOLS_PATH = Path(__file__).parent / "data" / "gacha_pools.json"
+SERIES_PATH = Path(__file__).parent / "data" / "gacha_series.json"
 
 _POOL_OFFSET = 9  # godfat tsv_reader PoolOffset: event fields end, pool blocks follow
 _POOL_FIELDS = 15  # godfat tsv_reader PoolFields: each pool block is 15 columns
@@ -73,6 +75,24 @@ def parse_gacha_pools(r1_text: str) -> dict[int, list[int]]:
             ids.append(value)
         pools[index] = ids
     return pools
+
+
+def parse_series(option_text: str) -> dict[int, int]:
+    """Map each pool id (GatyaSetID) to its seriesID from GatyaData_Option_SetR.tsv - the
+    stable identity of a recurring gacha set, unchanged across reruns whose pools and
+    marketing subtitles both differ."""
+    series: dict[int, int] = {}
+    rows = csv.reader(option_text.splitlines(), delimiter="\t")
+    header = next(rows, None)
+    if header is None:
+        return series
+    set_col, series_col = header.index("GatyaSetID"), header.index("seriesID")
+    for row in rows:
+        try:
+            series[int(row[set_col])] = int(row[series_col])
+        except IndexError, ValueError:
+            continue
+    return series
 
 
 def parse_events(tsv_text: str) -> list[GachaEventRow]:
@@ -184,13 +204,15 @@ def download_events(lang: str = "en") -> list[GachaEventRow]:
     return merge_events(lists)
 
 
-def download_pools(country: str = "en") -> dict[int, list[int]]:
-    """Fetch the newest BCData tarball and parse GatyaDataSetR1 into pools (network)."""
+def download_gatya(country: str = "en") -> tuple[dict[int, list[int]], dict[int, int]]:
+    """Fetch the newest BCData tarball; parse GatyaDataSetR1 into pools and the option
+    file into the pool->series map (network)."""
     metadata = json.loads(_get(METADATA_URL))
     raw = _get(release_url(metadata, latest_version(metadata, country), country))
     with tarfile.open(fileobj=io.BytesIO(raw), mode="r:xz") as tar:
         r1 = tar.extractfile("./DataLocal/GatyaDataSetR1.csv").read().decode("utf-8", "replace")
-    return parse_gacha_pools(r1)
+        opt = tar.extractfile("./DataLocal/GatyaData_Option_SetR.tsv").read()
+    return parse_gacha_pools(r1), parse_series(opt.decode("utf-8", "replace"))
 
 
 def event_records(events: Iterable[GachaEventRow]) -> list[dict]:
@@ -219,6 +241,12 @@ def pool_records(pools: Mapping[int, list[int]], event_rows: Iterable[GachaEvent
     return {str(pid): pools[pid] for pid in sorted(referenced) if pid in pools}
 
 
+def series_records(series: Mapping[int, int], event_rows: Iterable[GachaEventRow]) -> dict:
+    """Only the referenced pools' series ids, as {str(pool_id): series_id}."""
+    referenced = {e.pool_id for e in event_rows}
+    return {str(pid): series[pid] for pid in sorted(referenced) if pid in series}
+
+
 def load_events(path: Path = EVENTS_PATH) -> list[GachaEventRow]:
     """Read the committed event schedule back into typed rows."""
     return [
@@ -244,10 +272,18 @@ def load_pools(path: Path = POOLS_PATH) -> dict[int, list[int]]:
     return {int(k): v for k, v in json.loads(path.read_text(encoding="utf-8")).items()}
 
 
+def load_series(path: Path = SERIES_PATH) -> dict[int, int]:
+    """Read the committed series map back as {pool_id: series_id}."""
+    return {int(k): v for k, v in json.loads(path.read_text(encoding="utf-8")).items()}
+
+
 def refresh(lang: str = "en") -> tuple[int, int]:
-    """Fetch the live schedule + pools and rewrite the committed data files (network)."""
+    """Fetch the live schedule + pools + series and rewrite the committed data files
+    (network)."""
     events = download_events(lang)
-    pools = pool_records(download_pools(lang), events)
+    pools, series = download_gatya(lang)
+    kept = pool_records(pools, events)
     EVENTS_PATH.write_text(json.dumps(event_records(events), ensure_ascii=False), encoding="utf-8")
-    POOLS_PATH.write_text(json.dumps(pools), encoding="utf-8")
-    return len(events), len(pools)
+    POOLS_PATH.write_text(json.dumps(kept), encoding="utf-8")
+    SERIES_PATH.write_text(json.dumps(series_records(series, events)), encoding="utf-8")
+    return len(events), len(kept)

@@ -21,11 +21,13 @@ _RARITY_BY_CODE = {
 
 @dataclass(frozen=True, slots=True)
 class Unit:
-    """A catalogue unit: canonical PONOS id, its form names (base first), and rarity."""
+    """A catalogue unit: canonical PONOS id, its form names (base first), rarity, and the
+    official gacha set it belongs to ('' for units outside a recurring capsule set)."""
 
     unit_id: int
     forms: tuple[str, ...]
     rarity: Rarity
+    set_name: str = ""
 
     @property
     def name(self) -> str:
@@ -59,6 +61,27 @@ def parse_rarities(unitbuy_text: str) -> dict[int, Rarity]:
     return rarities
 
 
+# The Cat Guide names a unit's gacha set only for capsule units; for stage/collab units
+# the same field holds a stage or event name instead, so it must be gated on the source.
+_CAPSULE_SOURCES = ("From Rare Capsule Event", "Collect from Limited Rare Capsules")
+_EMPTY_FIELD = "＠"
+
+
+def parse_sets(picture_book_text: str) -> dict[int, str]:
+    """Map unit id (its nyankoPictureBook row) to its official gacha set name, e.g.
+    'The Dynamites' - the name shown on the in-game banner image, which the event
+    data's text field (a per-run marketing subtitle) never carries."""
+    sets: dict[int, str] = {}
+    for unit_id, line in enumerate(picture_book_text.splitlines()):
+        fields = line.split("|")
+        if len(fields) < 2 or fields[0].strip() not in _CAPSULE_SOURCES:
+            continue
+        name = fields[1].strip()
+        if name and name != _EMPTY_FIELD:
+            sets[unit_id] = name
+    return sets
+
+
 def parse_pools(text: str) -> list[list[int]]:
     """Unit ids per GatyaDataSet pool row (each terminated by -1, trailing // dropped)."""
     pools: list[list[int]] = []
@@ -78,14 +101,18 @@ def parse_pools(text: str) -> list[list[int]]:
 
 
 def build_catalogue(
-    rarities: Mapping[int, Rarity], forms: Mapping[int, tuple[str, ...]]
+    rarities: Mapping[int, Rarity],
+    forms: Mapping[int, tuple[str, ...]],
+    sets: Mapping[int, str] | None = None,
 ) -> dict[int, Unit]:
-    """Join rarities and form-names into {unit_id: Unit}; a unit needs both."""
+    """Join rarities, form-names and set names into {unit_id: Unit}; a unit needs the
+    first two, set names are optional."""
+    sets = sets or {}
     catalogue: dict[int, Unit] = {}
     for unit_id, names in forms.items():
         rarity = rarities.get(unit_id)
         if rarity is not None and names:
-            catalogue[unit_id] = Unit(unit_id, tuple(names), rarity)
+            catalogue[unit_id] = Unit(unit_id, tuple(names), rarity, sets.get(unit_id, ""))
     return catalogue
 
 
