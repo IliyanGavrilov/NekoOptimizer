@@ -868,34 +868,28 @@ table.track th.guaranteed-col, table.track td.guaranteed-col {
    so the forms/wiki popup gets its own affordance). */
 .catinfo {
   font: inherit;
-  font-size: 0.82rem;
   line-height: 1;
   background: transparent;
   color: var(--muted);
   border: 0;
   border-radius: 999px;
-  padding: 0.15rem 0.35rem;
+  padding: 0.25rem 0.55rem;
   margin: 0;
   width: auto;
   cursor: pointer;
-  opacity: 0.6;
 }
-.catinfo:hover { color: var(--accent); opacity: 1; filter: none; }
+.catinfo:hover { color: var(--accent); filter: none; }
 
-/* Collection: a third stitched segment of the own-chip, like the star. */
+/* Collection: a third stitched segment of the own-chip, matching the star. */
 .own-chip .catinfo {
   display: flex;
   align-items: center;
   border-left: 1px solid var(--line);
   border-radius: 0;
-  padding: 0.25rem 0.5rem;
+  padding: 0.25rem 0.55rem;
 }
 
-/* Picker: the chip keeps selecting on click; the opener rides alongside it. */
-.picker-chip { display: inline-flex; align-items: center; gap: 0.1rem; }
-
 .cat-popup {
-  position: relative;
   border: 1px solid var(--line);
   border-radius: var(--radius);
   background: var(--panel);
