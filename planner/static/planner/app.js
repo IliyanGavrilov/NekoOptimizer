@@ -147,26 +147,31 @@ if (picker) {
   }, true);
 
   // The Past group ships as an empty shell - its ~2000 per-run rows are most of the
-  // page's bytes and render time - so fetch the rows the first time it's opened and
-  // fold the new include buttons into the session/warning logic.
+  // page's bytes and render time - so fetch the rows the first time they're needed
+  // (opening the group, or searching, which must cover every run) and fold the new
+  // include buttons into the session/warning logic.
   const pastGroup = document.getElementById("pastGroup");
+  let pastLoaded = false;
+  async function loadPast() {
+    if (!pastGroup || pastLoaded) return;
+    pastLoaded = true;
+    const note = pastGroup.querySelector(".past-loading");
+    if (note) note.hidden = false;
+    try {
+      const resp = await fetch(pastGroup.dataset.pastUrl);
+      pastGroup.insertAdjacentHTML("beforeend", await resp.text());
+      includes.push(...pastGroup.querySelectorAll(".banner-include"));
+      if (note) note.remove();
+      updateWarnings();
+      applySearch(); // rows that arrived mid-search must obey the current query
+    } catch {
+      pastLoaded = false; // reopen retries
+      if (note) note.textContent = "Couldn't load past banners - close and reopen to retry.";
+    }
+  }
   if (pastGroup) {
-    let pastLoaded = false;
-    pastGroup.addEventListener("toggle", async () => {
-      if (!pastGroup.open || pastLoaded) return;
-      pastLoaded = true;
-      const note = pastGroup.querySelector(".past-loading");
-      if (note) note.hidden = false;
-      try {
-        const resp = await fetch(pastGroup.dataset.pastUrl);
-        pastGroup.insertAdjacentHTML("beforeend", await resp.text());
-        includes.push(...pastGroup.querySelectorAll(".banner-include"));
-        if (note) note.remove();
-        updateWarnings();
-      } catch {
-        pastLoaded = false; // reopen retries
-        if (note) note.textContent = "Couldn't load past banners - close and reopen to retry.";
-      }
+    pastGroup.addEventListener("toggle", () => {
+      if (pastGroup.open) loadPast();
     });
   }
   function updateWarnings() {
@@ -263,8 +268,9 @@ if (picker) {
     e.stopPropagation();
     toggleSession(btn);
   });
-  // Searching shows a flat, undivided list of matching cats; clearing it
-  // restores the banner/rarity grouping.
+  // Searching matches banners by their set NAME (every run, so a recurring set shows
+  // its whole history) and cats by name, side by side; clearing it restores the
+  // banner/rarity grouping.
   const search = document.getElementById("targetSearch");
   const searchClear = document.getElementById("targetSearchClear");
   const searchHint = document.getElementById("targetSearchHint");
@@ -273,12 +279,26 @@ if (picker) {
   function applySearch() {
     const query = search.value.trim().toLowerCase();
     const searching = query !== "";
-    grouped.hidden = searching;
     flat.hidden = !searching;
     // While searching, surface a clear (x) button + hint so it's obvious how to
     // get back to the banner menu without manually deleting the query.
     searchClear.hidden = !searching;
     searchHint.hidden = !searching;
+    if (searching && !pastLoaded) loadPast(); // a set's past runs must be findable too
+    grouped.querySelectorAll(".banner-group").forEach((group) => {
+      group.hidden =
+        searching && !(group.dataset.title || "").toLowerCase().includes(query);
+    });
+    // Group headings collapse away when nothing under them matches; matching drops
+    // open so the hits are visible without another click.
+    grouped.querySelectorAll("h3.group").forEach((h) => {
+      h.hidden = searching;
+    });
+    grouped.querySelectorAll("details.group-drop").forEach((drop) => {
+      const hasMatch = !!drop.querySelector(".banner-group:not([hidden])");
+      drop.hidden = searching && !hasMatch;
+      if (searching) drop.open = hasMatch;
+    });
     if (searching) {
       flat.querySelectorAll("[data-name]").forEach((chip) => {
         chip.hidden = !chip.dataset.name.toLowerCase().includes(query);
@@ -521,6 +541,8 @@ if (collectionBrowser) {
     const rarity = rarityBtns.find((b) => b.getAttribute("aria-pressed") === "true").dataset.rarity;
     const active = views.find((v) => !v.hidden);
     for (const section of active.querySelectorAll(".collection-section")) {
+      // A query matching the section itself (a set or rarity name) keeps it whole.
+      const labelHit = !!query && section.dataset.label.toLowerCase().includes(query);
       for (const row of section.querySelectorAll(".rarity-row")) {
         let shown = 0;
         if (rarity && row.dataset.rarity !== rarity) {
@@ -529,7 +551,8 @@ if (collectionBrowser) {
           });
         } else {
           row.querySelectorAll(".own-chip").forEach((chip) => {
-            const hit = !query || chip.dataset.name.toLowerCase().includes(query);
+            const hit =
+              !query || labelHit || chip.dataset.name.toLowerCase().includes(query);
             chip.hidden = !hit;
             shown += hit;
           });
