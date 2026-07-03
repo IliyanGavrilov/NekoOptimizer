@@ -4,7 +4,7 @@ from datetime import date, timedelta
 from itertools import combinations
 
 from neko.catalogue import match_names, name_index
-from neko.gachadata import GachaEventRow, load_events, load_pools, load_series
+from neko.gachadata import GachaEventRow, load_events, load_pools, load_series, load_tickets
 from neko.godfat import BannerRolls
 from neko.graph import BannerGraph, build_graphs, stream_index
 from neko.models import CATFOOD_PER_DRAW, Rarity, State
@@ -70,6 +70,60 @@ _REGULAR_SERIES_LIMIT = 3
 
 REGULARS_LABEL = "Rare Capsule Regulars"
 
+# Ticket gachas by their ItemID_Ticket: their pools mix every set, so no set name fits.
+_TICKET_NAMES = {29: "Platinum Capsules", 145: "Legend Capsules"}
+
+
+def _series_pools(events, pools, series):
+    """Each series' latest scheduled run and that run's pool: ({sid: event}, {sid: ids})."""
+    latest: dict[int, GachaEventRow] = {}
+    for event in events:
+        sid = series.get(event.pool_id)
+        current = latest.get(sid)
+        if sid is not None and (current is None or event.start > current.start):
+            latest[sid] = event
+    members = {sid: set(pools.get(event.pool_id, ())) for sid, event in latest.items()}
+    return latest, members
+
+
+def series_names(units, events=None, pools=None, series=None, tickets=None) -> dict[int, str]:
+    """The official display name per series id, e.g. {1: 'The Dynamites'}.
+
+    Each Cat Guide set names its HOME series: the smallest pool carrying most of the
+    set's units - its own banner, not a fest/Platinum umbrella that also has them all.
+    Ticket gachas (Platinum/Legend Capsules) are named by their ticket instead; series
+    the game data doesn't name (collabs) are absent, so callers fall back to the run's
+    marketing text."""
+    events = events if events is not None else load_events()
+    pools = pools if pools is not None else load_pools()
+    series = series if series is not None else load_series()
+    tickets = tickets if tickets is not None else load_tickets()
+    latest, members = _series_pools(events, pools, series)
+    by_set: dict[str, set[int]] = {}
+    for unit in units:
+        if unit.set_name:
+            by_set.setdefault(unit.set_name, set()).add(unit.unit_id)
+    names: dict[int, str] = {}
+    # Biggest set first, so it wins if two sets share a home pool.
+    for name, ids in sorted(by_set.items(), key=lambda kv: -len(kv[1])):
+        carriers = [sid for sid, member in members.items() if len(member & ids) * 2 >= len(ids)]
+        if carriers:
+            names.setdefault(min(carriers, key=lambda sid: len(members[sid])), name)
+    for sid, event in latest.items():
+        ticket = tickets.get(event.pool_id)
+        if ticket in _TICKET_NAMES:
+            names[sid] = _TICKET_NAMES[ticket]
+    return names
+
+
+def banner_titles(units=None, events=None, pools=None, series=None, tickets=None) -> dict[int, str]:
+    """{pool_id: display title} for picker rows - the pool's series name where one is
+    known; pools without one keep their marketing text as the title."""
+    units = units if units is not None else Unit.objects.exclude(set_name="")
+    series = series if series is not None else load_series()
+    names = series_names(units, events, pools, series, tickets)
+    return {pid: names[sid] for pid, sid in series.items() if sid in names}
+
 
 def set_sections(
     units: Iterable[Unit], events=None, pools=None, series=None
@@ -84,22 +138,16 @@ def set_sections(
     legend joins them; a mixed pool (fest/Platinum umbrella) never claims a unit. What's
     left homes to its smallest carrier's series, labelled by the latest run's text.
     Units in more specific series than [_REGULAR_SERIES_LIMIT] are the shared rare/super
-    pool -> one [REGULARS_LABEL] group at the end. Units in no pool (Normal/Special/
-    story cats) are left to the rarity view.
+    pool -> one [REGULARS_LABEL] group first (they drop everywhere, so they lead the
+    page). Units in no pool (Normal/Special/story cats) are left to the rarity view.
 
-    Named sets come first in dictionary order (lowest unit id), then series groups,
-    newest run first.
+    After the regulars, named sets in dictionary order (lowest unit id), then series
+    groups, newest run first.
     """
     events = events if events is not None else load_events()
     pools = pools if pools is not None else load_pools()
     series = series if series is not None else load_series()
-    latest: dict[int, GachaEventRow] = {}
-    for event in events:
-        sid = series.get(event.pool_id)
-        current = latest.get(sid)
-        if sid is not None and (current is None or event.start > current.start):
-            latest[sid] = event
-    members = {sid: set(pools.get(event.pool_id, ())) for sid, event in latest.items()}
+    latest, members = _series_pools(events, pools, series)
 
     # A series speaks for a set when most of its pool's set-named members agree; a pool
     # naming many sets about equally is an umbrella (fests, Platinum) and claims nobody.
@@ -135,17 +183,16 @@ def set_sections(
         else:
             homed.setdefault(home, []).append(unit)
 
-    sections = sorted(named.items(), key=lambda kv: min(u.unit_id for u in kv[1]))
+    sections = [(REGULARS_LABEL, regulars)] if regulars else []
+    sections += sorted(named.items(), key=lambda kv: min(u.unit_id for u in kv[1]))
     sections += [
         (latest[sid].name, homed[sid])
         for sid in sorted(homed, key=lambda sid: latest[sid].start, reverse=True)
     ]
-    if regulars:
-        sections.append((REGULARS_LABEL, regulars))
     return [(label, _by_rarity(cats)) for label, cats in sections]
 
 
-def _effective_runs(events) -> list[tuple[str, date, date]]:
+def _effective_runs(events) -> list[tuple[GachaEventRow, date, date]]:
     """Schedule runs with overlapping same-name reruns resolved: a rerun supersedes its
     predecessor (permanent banners carry a 2030 sentinel end, so the Platinum Capsules'
     April run really ends the day before the July rerun starts). Sorted by start;
@@ -158,21 +205,27 @@ def _effective_runs(events) -> list[tuple[str, date, date]]:
         runs.sort(key=lambda e: e.start)
         for event, successor in zip(runs, runs[1:] + [None], strict=True):
             end = min(event.end, successor.start - timedelta(days=1)) if successor else event.end
-            capped.append((event.name, event.start, end))
+            capped.append((event, event.start, end))
     return sorted(capped, key=lambda run: run[1])
 
 
-def picker_groups(cats: Iterable[Cat], today: date | None = None, events=None) -> list:
+def picker_groups(
+    cats: Iterable[Cat], today: date | None = None, events=None, titles: Mapping[int, str] = ()
+) -> list:
     """The target picker's banner sections, one row per SCHEDULED RUN, godfat-style: every
     rerun of every gacha, past and future. A recurring name (Platinum/Legend Capsules,
     reruns) gets a separate row per run, each with its own dates, so picking one names an
     exact session. Cats are joined onto rows by banner name from the roll-derived
     catalogue; only a name's newest past row carries them, so ~2000 historical rows stay
     light (a brand-new banner shows without cats until imported).
-    Same shape as [dated_catalogue]: ``[(label, [(name, (start, end), rarities)])]``."""
+
+    ``titles`` maps a run's pool id to its set's display name ([banner_titles]); rows
+    without one fall back to the run's marketing text. Returns
+    ``[(label, [(name, title, (start, end), rarities)])]``."""
     today = today or date.today()
     if events is None:
         events = load_events()
+    titles = titles or {}
     by_name: dict[str, list[Cat]] = {}
     other: list[Cat] = []
     for cat in cats:
@@ -182,34 +235,37 @@ def picker_groups(cats: Iterable[Cat], today: date | None = None, events=None) -
         if not names:
             other.append(cat)
 
-    def row(name, dates, with_cats=True):
+    def row(name, dates, title="", with_cats=True):
         cats_here = _by_rarity(by_name.get(name, []), reverse=True) if with_cats else []
-        return (name, dates, cats_here)
+        return (name, title or name, dates, cats_here)
+
+    def run_row(event, start, end, with_cats=True):
+        return row(event.name, (start, end), titles.get(event.pool_id, ""), with_cats)
 
     runs = _effective_runs(events)
-    now = [row(name, (start, end)) for name, start, end in runs if start <= today <= end]
-    upcoming = [row(name, (start, end)) for name, start, end in runs if start > today]
+    now = [run_row(e, start, end) for e, start, end in runs if start <= today <= end]
+    upcoming = [run_row(e, start, end) for e, start, end in runs if start > today]
     past_runs = sorted(
         (run for run in runs if run[2] < today), key=lambda run: run[1], reverse=True
     )
     carried: set[str] = set()
     past = []
-    for name, start, end in past_runs:
-        past.append(row(name, (start, end), with_cats=name not in carried))
-        carried.add(name)
+    for event, start, end in past_runs:
+        past.append(run_row(event, start, end, with_cats=event.name not in carried))
+        carried.add(event.name)
     # DB-dated banners the schedule doesn't know (old godfat-era names) still get a row.
-    scheduled = {name for name, _start, _end in runs}
+    scheduled = {event.name for event, _start, _end in runs}
     banners = {b.name: b for b in Banner.objects.filter(name__in=by_name)}
     past += [
         row(name, (banner.start, banner.end))
         for name, banner in banners.items()
         if name not in scheduled and banner.end and banner.end < today
     ]
-    past.sort(key=lambda r: r[1][0], reverse=True)
+    past.sort(key=lambda r: r[2][0], reverse=True)
     dated = scheduled | {name for name, banner in banners.items() if banner.end}
     leftovers = [row(name, None) for name in sorted(by_name) if name not in dated]
     if other:
-        leftovers.append(("Other", None, _by_rarity(other, reverse=True)))
+        leftovers.append(("Other", "Other", None, _by_rarity(other, reverse=True)))
     groups = [
         ("Available now", now),
         ("Upcoming", upcoming),

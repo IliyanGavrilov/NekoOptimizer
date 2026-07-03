@@ -62,9 +62,12 @@ def test_parse_gacha_pools_stops_at_terminator_and_keeps_row_index():
     assert pools == {1: [10, 20, 30], 2: [40, 50]}
 
 
-def test_parse_series_maps_pool_to_series_by_header_column():
-    option = "GatyaSetID\tBannerON_OFF\tseriesID\n954\t0\t21\n966\t1\t21\nbad\trow\there\n"
-    assert parse_series(option) == {954: 21, 966: 21}
+def test_parse_series_maps_pool_to_series_and_ticket_by_header_column():
+    option = (
+        "GatyaSetID\tBannerON_OFF\tItemID_Ticket\tseriesID\n"
+        "953\t0\t29\t21\n966\t1\t29\t21\nbad\trow\there\ttoo\n"
+    )
+    assert parse_series(option) == {953: [21, 29], 966: [21, 29]}
 
 
 def test_build_banner_groups_pool_by_rarity_in_row_order():

@@ -8,6 +8,7 @@ from neko.subsets import SubsetPlan
 from planner.models import Banner, Cat, Unit
 from planner.services import (
     REGULARS_LABEL,
+    banner_titles,
     build_tracks,
     capped_banner_limits,
     collection_sections,
@@ -16,6 +17,7 @@ from planner.services import (
     picker_groups,
     plan_highlight,
     plan_summary,
+    series_names,
     set_sections,
 )
 
@@ -113,6 +115,52 @@ def test_set_sections_homes_an_unnamed_legend_with_its_set():
     assert ("Legend Rare", [legend]) in dict(sections)["The Dynamites"]
 
 
+def test_set_sections_leads_with_the_regulars():
+    rover = Unit(unit_id=50, name="Rover Cat", rarity="Rare")
+    ice = _uber(42, "The Dynamites")
+    events = [_run(date(2026, 1, 1), date(2026, 1, 5), i, f"Set {i}") for i in range(1, 6)]
+    pools = {i: [50, 42] for i in range(1, 6)}
+    sections = set_sections([rover, ice], events, pools, {i: i for i in range(1, 6)})
+    assert [label for label, _ in sections] == [REGULARS_LABEL, "The Dynamites"]
+
+
+def test_series_names_pick_each_sets_smallest_carrier():
+    dyna = [_uber(42, "The Dynamites"), _uber(43, "The Dynamites")]
+    events = [
+        _run(date(2026, 1, 1), date(2026, 1, 5), 1, "Dynamites!"),
+        _run(date(2026, 2, 1), date(2026, 2, 5), 2, "UBERFEST!"),
+    ]
+    # Both pools carry the whole set; the smaller one is its own banner.
+    pools = {1: [42, 43], 2: [42, 43, 71, 72]}
+    assert series_names(dyna, events, pools, {1: 1, 2: 19}, tickets={}) == {1: "The Dynamites"}
+
+
+def test_series_names_label_ticket_gachas():
+    events = [_run(date(2026, 1, 1), date(2026, 1, 5), 953, "Get an Uber Rare Cat!!")]
+    names = series_names([], events, {953: [500]}, {953: 21}, tickets={953: 29})
+    assert names == {21: "Platinum Capsules"}
+
+
+@pytest.mark.django_db
+def test_banner_titles_map_pools_to_series_names():
+    Unit.objects.create(
+        unit_id=42, name="Ice Cat", rarity="Uber Super Rare", set_name="The Dynamites"
+    )
+    events = [_run(date(2026, 1, 1), date(2026, 1, 5), 7, "Dynamites!")]
+    titles = banner_titles(events=events, pools={7: [42]}, series={7: 1}, tickets={})
+    assert titles == {7: "The Dynamites"}
+
+
+@pytest.mark.django_db
+def test_picker_groups_titles_rows_from_their_pool():
+    today = date(2026, 7, 3)
+    events = [_run(date(2026, 6, 26), date(2026, 7, 10), 5, "Brave new adventurers join!")]
+    groups = dict(picker_groups([], today=today, events=events, titles={5: "The Dynamites"}))
+    assert [(n, t) for n, t, _d, _c in groups["Available now"]] == [
+        ("Brave new adventurers join!", "The Dynamites")
+    ]
+
+
 def _run(start, end, pool_id, name):
     from neko.gachadata import GachaEventRow
 
@@ -135,16 +183,16 @@ def test_picker_groups_lists_each_scheduled_run_separately():
     cat = Cat.objects.create(name="Luno", rarity="Uber Super Rare")
     cat.banners.add(Banner.objects.create(name="Platinum"))
     groups = dict(picker_groups(Cat.objects.all(), today=today, events=events))
-    now = [(name, dates) for name, dates, _ in groups["Available now"]]
+    now = [(name, dates) for name, _title, dates, _ in groups["Available now"]]
     assert now == [
         ("Platinum", (date(2026, 4, 24), date(2026, 7, 10))),
         ("Trixi", (date(2026, 6, 26), date(2026, 7, 3))),
     ]
-    upcoming = [(n, d) for n, d, _ in groups["Upcoming"]]
+    upcoming = [(n, d) for n, _t, d, _ in groups["Upcoming"]]
     assert upcoming == [("Platinum", (date(2026, 7, 11), sentinel))]
     # both Platinum rows carry the same cats, joined by name
-    assert groups["Available now"][0][2] == [("Uber Super Rare", [cat])]
-    assert groups["Upcoming"][0][2] == [("Uber Super Rare", [cat])]
+    assert groups["Available now"][0][3] == [("Uber Super Rare", [cat])]
+    assert groups["Upcoming"][0][3] == [("Uber Super Rare", [cat])]
 
 
 @pytest.mark.django_db
@@ -152,7 +200,7 @@ def test_picker_groups_keeps_unscheduled_past_banners_db_dated():
     today = date(2026, 7, 3)
     _dated_banner("OldFest", date(2026, 5, 1), date(2026, 5, 4))
     groups = dict(picker_groups(Cat.objects.all(), today=today, events=[]))
-    assert [(n, d) for n, d, _ in groups["Past"]] == [
+    assert [(n, d) for n, _t, d, _ in groups["Past"]] == [
         ("OldFest", (date(2026, 5, 1), date(2026, 5, 4)))
     ]
 
@@ -167,13 +215,13 @@ def test_picker_groups_lists_every_past_rerun_with_cats_on_the_newest():
     cat = Cat.objects.create(name="Bahamut", rarity="Uber Super Rare")
     cat.banners.add(Banner.objects.create(name="Fest"))
     groups = dict(picker_groups(Cat.objects.all(), today=today, events=events))
-    assert [(n, d) for n, d, _ in groups["Past"]] == [
+    assert [(n, d) for n, _t, d, _ in groups["Past"]] == [
         ("Fest", (date(2026, 5, 1), date(2026, 5, 5))),
         ("Fest", (date(2026, 2, 1), date(2026, 2, 5))),
     ]
     newest, oldest = groups["Past"]
-    assert newest[2] == [("Uber Super Rare", [cat])]
-    assert oldest[2] == []
+    assert newest[3] == [("Uber Super Rare", [cat])]
+    assert oldest[3] == []
 
 
 def test_equivalent_banners_groups_identical_roll_sequences():
