@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from neko.catalogue import build_catalogue, parse_forms, parse_pools, parse_rarities
+from neko.catalogue import build_catalogue, parse_forms, parse_pools, parse_rarities, parse_sets
 from neko.models import Rarity
 
 FIXTURES = Path(__file__).parent / "fixtures" / "bcdata"
@@ -36,6 +36,28 @@ def test_pool_excludes_terminator_and_comment():
 def test_catalogue_name_is_the_base_form():
     catalogue = build_catalogue({0: Rarity.NORMAL}, {0: ("Cat", "Macho Cat")})
     assert catalogue[0].name == "Cat"
+
+
+PICTURE_BOOK = "\n".join(
+    [
+        "＠|＠|＠|EVOLVE at Level 10",  # 0: a Normal cat, no set
+        "From Rare Capsule Event|The Dynamites|＠|EVOLVE at Level 10",  # 1
+        "Collect from limited event stage|Horde of Cats|＠",  # 2: stage name, not a set
+        "Collect from Limited Rare Capsules|Xmas Gals|＠",  # 3
+        "From Rare Capsule Event|＠|＠",  # 4: capsule cat without a set name
+    ]
+)
+
+
+def test_parse_sets_names_only_capsule_sets():
+    assert parse_sets(PICTURE_BOOK) == {1: "The Dynamites", 3: "Xmas Gals"}
+
+
+def test_catalogue_carries_the_set_name():
+    catalogue = build_catalogue(
+        {1: Rarity.UBER_SUPER_RARE}, {1: ("Ice Cat",)}, {1: "The Dynamites"}
+    )
+    assert catalogue[1].set_name == "The Dynamites"
 
 
 def test_unit_without_rarity_is_dropped():

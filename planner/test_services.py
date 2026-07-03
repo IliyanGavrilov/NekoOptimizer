@@ -7,15 +7,16 @@ from neko.models import Leg, Path, Pull, Rarity
 from neko.subsets import SubsetPlan
 from planner.models import Banner, Cat, Unit
 from planner.services import (
+    REGULARS_LABEL,
     build_tracks,
     capped_banner_limits,
     collection_sections,
     cost_label,
     equivalent_banners,
-    gacha_sets,
     picker_groups,
     plan_highlight,
     plan_summary,
+    set_sections,
 )
 
 U = Rarity.UBER_SUPER_RARE
@@ -44,20 +45,72 @@ def _dated_banner(name, start, end):
     return cat
 
 
-def test_gacha_sets_unions_ids_across_a_names_reruns():
-    events = [
-        _run(date(2026, 1, 1), date(2026, 1, 5), 1, "Fest"),
-        _run(date(2026, 3, 1), date(2026, 3, 5), 2, "Fest"),
-    ]
-    assert gacha_sets(events, {1: [10, 11], 2: [11, 12]}) == [("Fest", [10, 11, 12])]
+def _uber(unit_id, set_name=""):
+    return Unit(unit_id=unit_id, name=f"U{unit_id}", rarity="Uber Super Rare", set_name=set_name)
 
 
-def test_gacha_sets_sorts_sets_by_name():
+def test_set_sections_orders_named_sets_by_dictionary_position():
+    zeus = _uber(257, set_name="The Almighties")
+    luga = _uber(34, set_name="Tales of the Nekoluga")
+    sections = set_sections([zeus, luga], events=[], pools={}, series={})
+    assert [label for label, _ in sections] == ["Tales of the Nekoluga", "The Almighties"]
+
+
+def test_set_sections_subdivides_a_set_by_rarity():
+    ice = _uber(42, set_name="The Dynamites")
+    pogo = Unit(unit_id=43, name="Pogo", rarity="Rare", set_name="The Dynamites")
+    (section,) = set_sections([ice, pogo], events=[], pools={}, series={})
+    assert section == ("The Dynamites", [("Rare", [pogo]), ("Uber Super Rare", [ice])])
+
+
+def test_set_sections_homes_a_collab_unit_to_its_smallest_pool():
+    sonic = _uber(700)
     events = [
-        _run(date(2026, 1, 1), date(2026, 1, 5), 1, "Zed"),
-        _run(date(2026, 1, 1), date(2026, 1, 5), 2, "Alpha"),
+        _run(date(2026, 1, 1), date(2026, 1, 5), 1, "Sonic collab!"),
+        _run(date(2026, 2, 1), date(2026, 2, 5), 2, "Umbrella capsules"),
     ]
-    assert [name for name, _ in gacha_sets(events, {1: [1], 2: [2]})] == ["Alpha", "Zed"]
+    pools = {1: [700, 701], 2: list(range(690, 790))}
+    sections = set_sections([sonic], events, pools, {1: 10, 2: 11})
+    assert [label for label, _ in sections] == ["Sonic collab!"]
+
+
+def test_set_sections_lists_a_rerun_series_once_under_its_latest_text():
+    miku = _uber(650)
+    events = [
+        _run(date(2025, 1, 1), date(2025, 1, 5), 1, "Miku is back!"),
+        _run(date(2026, 1, 1), date(2026, 1, 5), 2, "Miku returns again!"),
+    ]
+    sections = set_sections([miku], events, {1: [650], 2: [650]}, {1: 7, 2: 7})
+    assert [label for label, _ in sections] == ["Miku returns again!"]
+
+
+def test_set_sections_puts_shared_pool_cats_under_regulars():
+    rover = Unit(unit_id=50, name="Rover Cat", rarity="Rare")
+    events = [_run(date(2026, 1, 1), date(2026, 1, 5), i, f"Set {i}") for i in range(1, 6)]
+    sections = set_sections(
+        [rover], events, {i: [50] for i in range(1, 6)}, {i: i for i in range(1, 6)}
+    )
+    assert [label for label, _ in sections] == [REGULARS_LABEL]
+
+
+def test_set_sections_leaves_non_gacha_units_out():
+    moneko = Unit(unit_id=900, name="Moneko", rarity="Special")
+    assert set_sections([moneko], events=[], pools={}, series={}) == []
+
+
+def test_set_sections_homes_an_unnamed_legend_with_its_set():
+    dyna = [_uber(42, "The Dynamites"), _uber(43, "The Dynamites")]
+    vaji = [_uber(71, "Vajiras"), _uber(72, "Vajiras")]
+    legend = Unit(unit_id=600, name="Dyna Legend", rarity="Legend Rare")
+    events = [
+        _run(date(2026, 1, 1), date(2026, 1, 5), 1, "Dynamites are back!"),
+        _run(date(2026, 2, 1), date(2026, 2, 5), 2, "UBERFEST!"),
+    ]
+    # The fest pool mixes both sets evenly (an umbrella), so the legend homes to the
+    # Dynamites' own banner and joins their named section.
+    pools = {1: [42, 43, 600], 2: [42, 43, 71, 72, 600]}
+    sections = set_sections([*dyna, *vaji, legend], events, pools, {1: 1, 2: 19})
+    assert ("Legend Rare", [legend]) in dict(sections)["The Dynamites"]
 
 
 def _run(start, end, pool_id, name):

@@ -38,6 +38,12 @@ def test_import_keeps_the_evolution_forms():
 
 
 @pytest.mark.django_db
+def test_import_stores_the_gacha_set():
+    import_units([{**RECORD, "set": "The Dynamites"}])
+    assert Unit.objects.get(unit_id=25).set_name == "The Dynamites"
+
+
+@pytest.mark.django_db
 def test_command_loads_records(monkeypatch):
     monkeypatch.setattr("planner.management.commands.import_units.load_records", lambda: [RECORD])
     call_command("import_units")

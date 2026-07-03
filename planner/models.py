@@ -25,6 +25,7 @@ class Unit(models.Model):
     unit_id = models.PositiveIntegerField(unique=True)
     name = models.CharField(max_length=200)
     rarity = models.CharField(max_length=20, blank=True)
+    set_name = models.CharField(max_length=200, blank=True)
     forms = models.JSONField(default=list)
     owned = models.BooleanField(default=False)
     wanted = models.BooleanField(default=False)
