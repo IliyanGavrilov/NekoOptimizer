@@ -7,6 +7,7 @@ from neko.models import Leg, Path, Pull, Rarity
 from neko.subsets import SubsetPlan
 from planner.models import Banner, Cat, Unit
 from planner.services import (
+    ADDONS_LABEL,
     REGULARS_LABEL,
     banner_titles,
     build_tracks,
@@ -124,15 +125,97 @@ def test_set_sections_leads_with_the_regulars():
     assert [label for label, _ in sections] == [REGULARS_LABEL, "The Dynamites"]
 
 
+def test_set_sections_splits_shared_cats_missing_from_most_banners_into_addons():
+    rover = Unit(unit_id=50, name="Rover Cat", rarity="Rare")
+    neneko = Unit(unit_id=60, name="Neneko", rarity="Super Rare")
+    events = [_run(date(2026, 1, 1), date(2026, 1, 5), i, f"Set {i}") for i in range(1, 11)]
+    # Rover rides every banner; Neneko only 4 of 10 (fests and collabs skip her).
+    pools = {i: [50, 60] if i <= 4 else [50] for i in range(1, 11)}
+    sections = set_sections([rover, neneko], events, pools, {i: i for i in range(1, 11)})
+    assert [label for label, _ in sections] == [REGULARS_LABEL, ADDONS_LABEL]
+    assert dict(sections)[ADDONS_LABEL] == [("Super Rare", [neneko])]
+
+
+def _fest_fixture():
+    """Three fests over two exclusive fest sets, a classic set, and a fest-only legend:
+    Uberfest (19) and Epicfest (27) each carry the classics plus their own set, and
+    Superfest (42) carries both fest sets; Izanagi drops on Uberfest and Superfest."""
+    dyna = [_uber(100, "The Dynamites"), _uber(101, "The Dynamites")]
+    uf = [_uber(200, "UBER FEST"), _uber(201, "UBER FEST")]
+    ef = [_uber(300, "EPICFEST"), _uber(301, "EPICFEST")]
+    izanagi = Unit(unit_id=600, name="Izanagi", rarity="Legend Rare")
+    events = [
+        _run(date(2026, 1, 1), date(2026, 1, 5), 1, "Dynamites!"),
+        _run(date(2026, 2, 1), date(2026, 2, 5), 2, "Uberfest!"),
+        _run(date(2026, 3, 1), date(2026, 3, 5), 3, "Epicfest!"),
+        _run(date(2026, 4, 1), date(2026, 4, 5), 4, "Superfest!"),
+    ]
+    pools = {
+        1: [100, 101],
+        2: [100, 101, 200, 201, 600],
+        3: [100, 101, 300, 301],
+        4: [100, 101, 200, 201, 300, 301, 600],
+    }
+    series = {1: 1, 2: 19, 3: 27, 4: 42}
+    return [*dyna, *uf, *ef, izanagi], events, pools, series
+
+
+def test_set_sections_lists_a_fest_exclusive_on_every_fest_that_carries_it():
+    units, events, pools, series = _fest_fixture()
+    sections = dict(set_sections(units, events, pools, series))
+    assert REGULARS_LABEL not in sections
+    izanagi = units[-1]
+    # The guide's "UBER FEST" set and the fest series label the same section, respelled.
+    assert ("Legend Rare", [izanagi]) in sections["UBERFEST"]
+    assert ("Legend Rare", [izanagi]) in sections["SUPERFEST"]
+    assert ("Legend Rare", [izanagi]) not in sections["EPICFEST"]
+
+
+def test_set_sections_bundles_covered_sets_but_not_the_general_uber_pool():
+    units, events, pools, series = _fest_fixture()
+    sections = dict(set_sections(units, events, pools, series))
+    superfest = [u.name for _, bin in sections["SUPERFEST"] for u in bin]
+    # Both fest sets combine on Superfest; the classics drop on every fest, so they
+    # stay under their own set only.
+    assert superfest == ["U200", "U201", "U300", "U301", "Izanagi"]
+    assert [u.name for _, bin in sections["The Dynamites"] for u in bin] == ["U100", "U101"]
+
+
+def test_set_sections_lists_the_standard_legends_on_legend_rate_fests():
+    dyna = [_uber(100, "The Dynamites"), _uber(101, "The Dynamites")]
+    vaji = [_uber(110, "Vajiras"), _uber(111, "Vajiras")]
+    legends = [
+        Unit(unit_id=700, name="Musashi", rarity="Legend Rare"),
+        Unit(unit_id=701, name="Jeanne", rarity="Legend Rare"),
+    ]
+    events = [
+        _run(date(2026, 1, 1), date(2026, 1, 5), 1, "Dynamites!"),
+        _run(date(2026, 2, 1), date(2026, 2, 5), 2, "Vajiras!"),
+        _run(date(2026, 3, 1), date(2026, 3, 5), 3, "Royal Fest!"),
+    ]
+    # Each legend homes to its set's banner; Royal Fest (a mixed pool) carries them all.
+    pools = {1: [100, 101, 700], 2: [110, 111, 701], 3: [100, 110, 700, 701]}
+    sections = dict(set_sections([*dyna, *vaji, *legends], events, pools, {1: 1, 2: 2, 3: 50}))
+    assert ("Legend Rare", legends) in sections["RoyalFest"]
+    assert ("Legend Rare", [legends[0]]) in sections["The Dynamites"]
+
+
 def test_series_names_pick_each_sets_smallest_carrier():
     dyna = [_uber(42, "The Dynamites"), _uber(43, "The Dynamites")]
     events = [
         _run(date(2026, 1, 1), date(2026, 1, 5), 1, "Dynamites!"),
         _run(date(2026, 2, 1), date(2026, 2, 5), 2, "UBERFEST!"),
     ]
-    # Both pools carry the whole set; the smaller one is its own banner.
+    # Both pools carry the whole set; the smaller one is its own banner. The fest
+    # series keeps its fest name.
     pools = {1: [42, 43], 2: [42, 43, 71, 72]}
-    assert series_names(dyna, events, pools, {1: 1, 2: 19}, tickets={}) == {1: "The Dynamites"}
+    names = series_names(dyna, events, pools, {1: 1, 2: 19}, tickets={})
+    assert names == {1: "The Dynamites", 19: "UBERFEST"}
+
+
+def test_series_names_label_the_fests():
+    events = [_run(date(2026, 1, 1), date(2026, 1, 5), 7, "Lone Moon Lunos added!")]
+    assert series_names([], events, {7: [500]}, {7: 42}, tickets={}) == {42: "SUPERFEST"}
 
 
 def test_series_names_label_ticket_gachas():

@@ -16,7 +16,7 @@
   </div>
   <div class="rarity-filter" id="rarityFilter" role="group" aria-label="Filter by rarity">
     <button type="button" data-rarity="" aria-pressed="true">All</button>
-    {% for label, rarities in rarity_sections %}
+    {% for label, note, rarities in rarity_sections %}
       <button type="button" data-rarity="{{ label }}" aria-pressed="false">{{ label }}</button>
     {% endfor %}
   </div>
@@ -24,14 +24,14 @@
   <div class="cat-browser" id="collectionBrowser"
        data-toggle-url="{% url 'collection_toggle' %}" data-bulk-url="{% url 'collection_bulk' %}">
     <div class="collection-view" data-view="rarity">
-      {% for label, rarities in rarity_sections %}
+      {% for label, note, rarities in rarity_sections %}
         {% include "planner/_collection_section.html" with is_rarity=True %}
       {% empty %}
         <p class="muted">The catalogue is empty &mdash; run the import first.</p>
       {% endfor %}
     </div>
     <div class="collection-view" data-view="sets" hidden>
-      {% for label, rarities in set_sections %}
+      {% for label, note, rarities in set_sections %}
         {% include "planner/_collection_section.html" with is_rarity=False %}
       {% endfor %}
     </div>

@@ -12,6 +12,7 @@
       <button type="button" class="bulk-star" title="Wishlist all / clear" aria-label="Toggle wishlisting every cat here">&#9733;</button>
     </span>
   </h3>
+  {% if note %}<p class="muted section-note">{{ note }}</p>{% endif %}
   {% for rarity, units in rarities %}
     <div class="rarity-row" data-rarity="{{ rarity }}">
       {% if not is_rarity %}<span class="rarity" data-rarity="{{ rarity }}">{{ rarity }}</span>{% endif %}
