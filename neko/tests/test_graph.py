@@ -76,3 +76,22 @@ def test_guaranteed_missing_position_is_none():
 def test_build_graphs_wires_guaranteed_pulls():
     graphs = build_graphs({"x": []}, {"x": [TrackPull(1, "A", "Bahamut", U)]})
     assert graphs[0].guaranteed(0) == Outcome("Bahamut", U, 1, False)
+
+
+def test_outcome_carries_the_pull_seed():
+    assert graph((1, "A", "Cat", R, 111)).outcome(0).seed == 111
+
+
+def test_dupe_outcome_carries_the_reroll_seed():
+    # The "roll to here" state of a dupe cell is the reroll's (it advanced further).
+    g = BannerGraph(
+        "b",
+        [TrackPull(1, "A", "Cat", R, seed=111), TrackPull(2, "A", "Cat", R, seed=222)],
+        rerolls=[TrackPull(2, "A", "Dog", R, seed=333)],
+    )
+    assert g.outcome(2).seed == 333
+
+
+def test_guaranteed_outcome_carries_the_pull_seed():
+    g = BannerGraph("b", [], [TrackPull(1, "A", "Bahamut", U, seed=444)])
+    assert g.guaranteed(0).seed == 444

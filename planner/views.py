@@ -122,7 +122,6 @@ def find_plan(request):
         guaranteed_pulls=guaranteed_pulls,
         multis=result.multis,
         ticket_value=form.cleaned_data["ticket_value"],
-        prefer=form.cleaned_data["prefer"],
         banner_limits=banner_limits,
         owned=_owned_names(),
     )
@@ -153,9 +152,14 @@ def collection(request):
 
 @require_POST
 def apply_plan(request):
-    """Mark a plan's obtained cats as owned and drop them from the wishlist."""
+    """Mark a plan's obtained cats as owned and drop them from the wishlist. Applying
+    means "you rolled it", so the plan's seed-after becomes the stored seed."""
     names = request.POST.getlist("cats")
     applied = Unit.objects.filter(name__in=names).update(owned=True, wanted=False)
+    try:
+        Seed.store(int(request.POST["seed_after"]))
+    except KeyError, ValueError:
+        pass  # a plan whose seed-after ran off the rolled grid doesn't advance the seed
     return JsonResponse({"applied": applied})
 
 

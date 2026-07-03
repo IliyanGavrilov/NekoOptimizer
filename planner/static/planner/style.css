@@ -597,6 +597,37 @@ table.track .arrow { display: block; color: var(--accent); font-size: 0.78rem; f
 /* Uber/Legend cat not yet in your collection - green outline, à la ubercarry. Uses outline so
    it coexists with the on-path/target box-shadow rings. */
 table.track .entry.new { outline: 2px solid var(--new); outline-offset: -2px; border-radius: 4px; }
+/* "Roll to here": one dice per track cell (the anchor seed is banner-independent),
+   a small fixed-size button docked right and vertically centred, à la ubercarry.
+   Kept dim so a whole track of them doesn't shout; hovering lights it up. */
+table.track td.cell { position: relative; }
+table.track td.cell:has(.reseed) { padding-right: 2.2rem; }
+table.track .reseed {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  right: 3px;
+  margin: auto 0;
+  width: 1.9rem;
+  height: min(1.9rem, 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: 0;
+  border-radius: 8px;
+  color: var(--muted);
+  padding: 0;
+  opacity: 0.55;
+  transition: color 0.2s, background-color 0.2s, opacity 0.2s;
+}
+table.track .reseed svg { display: block; }
+table.track .reseed:hover, table.track .reseed:focus-visible {
+  opacity: 1;
+  color: var(--accent);
+  background: rgba(244, 169, 59, 0.12);
+  filter: none;
+}
 
 /* godfat-style guaranteed columns: the uber a guaranteed multi awards when its last draw
    lands on that cell. Tinted and dash-separated so they read as auxiliary to their track. */
@@ -637,6 +668,23 @@ table.track th.guaranteed-col, table.track td.guaranteed-col {
 
 .field-grid label { display: flex; flex-direction: column; gap: 0.2rem; color: var(--ink); }
 .field-grid input { width: 100%; }
+/* Undo beside the seed field: restores the seed from before the app last changed
+   it (a cell's ↻ or an applied plan); hidden while there's nothing to undo. */
+.seed-row { display: flex; align-items: center; gap: 0.4rem; }
+.seed-row input { min-width: 0; }
+.seed-undo {
+  flex: 0 0 auto;
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  color: var(--muted);
+  font-size: 0.82rem;
+  line-height: 1;
+  padding: 0.35rem 0.6rem;
+  margin: 0;
+  white-space: nowrap;
+}
+.seed-undo:hover { color: var(--accent); border-color: var(--accent); filter: none; }
 .check-row { display: inline-flex; align-items: center; gap: 0.5rem; color: var(--ink); margin: 0.5rem 0; }
 .error { color: var(--r-legend); }
 

@@ -2,6 +2,7 @@ from datetime import date
 
 import pytest
 
+from neko.graph import build_graphs
 from neko.models import BannerRolls, Leg, Path, Pull, Rarity, TrackPull
 from neko.subsets import SubsetPlan
 from planner.models import Banner, Cat, Unit
@@ -16,6 +17,7 @@ from planner.services import (
     equivalent_banners,
     picker_groups,
     plan_highlight,
+    plan_seed,
     plan_summary,
     series_names,
     set_sections,
@@ -487,6 +489,55 @@ def test_build_tracks_skips_an_empty_guaranteed_cell():
     guaranteed = {"X": [TrackPull(1, "A", "", U)]}
     track = build_tracks(banner_pulls, {}, {}, guaranteed=guaranteed)
     assert track["rows"][0]["ga"] == []
+
+
+def test_build_tracks_row_carries_the_cell_dice_seed():
+    banner_pulls = {"X": [TrackPull(1, "A", "Bahamut", U, seed_before=111)]}
+    assert build_tracks(banner_pulls, {}, {})["rows"][0]["a_seed"] == 111
+
+
+def test_build_tracks_cell_dice_reads_any_banner_rolled_there():
+    # The anchor is banner-independent (pure stream position), so a banner that wasn't
+    # rolled at the cell doesn't blank its dice - another banner's pull supplies it.
+    banner_pulls = {
+        "X": [TrackPull(1, "A", "Pogo", R, seed_before=5)],
+        "Y": [
+            TrackPull(1, "A", "Kasli", U, seed_before=5),
+            TrackPull(2, "A", "Pogo", R, seed_before=7),
+        ],
+    }
+    track = build_tracks(banner_pulls, {}, {})
+    assert (track["rows"][0]["a_seed"], track["rows"][1]["a_seed"]) == (5, 7)
+
+
+def test_plan_seed_is_the_state_after_the_last_pull():
+    graphs = build_graphs(
+        {"X": [TrackPull(1, "A", "Cat", R, seed=7), TrackPull(2, "A", "Dog", R, seed=8)]}
+    )
+    plan = Path((Pull(0, "X", "Cat", R), Pull(2, "X", "Dog", R)), 2, 0)
+    assert plan_seed(plan, graphs) == 8
+
+
+def test_plan_seed_on_a_dupe_is_the_reroll_seed():
+    graphs = build_graphs(
+        {"X": [TrackPull(1, "A", "Cat", R, seed=7), TrackPull(2, "A", "Cat", R, seed=8)]},
+        rerolls={"X": [TrackPull(2, "A", "Dog", R, seed=9)]},
+    )
+    plan = Path((Pull(2, "X", "Dog", R),), 1, 0)
+    assert plan_seed(plan, graphs) == 9
+
+
+def test_plan_seed_guaranteed_pull_reads_the_guaranteed_column():
+    graphs = build_graphs(
+        {"X": [TrackPull(1, "A", "Cat", R, seed=7)]},
+        {"X": [TrackPull(1, "A", "Mecha", U, seed=10)]},
+    )
+    plan = Path((Pull(0, "X", "Mecha", U, guaranteed=True),), 0, 3)
+    assert plan_seed(plan, graphs) == 10
+
+
+def test_plan_seed_empty_plan_is_none():
+    assert plan_seed(Path((), 0, 0), []) is None
 
 
 def test_plan_summary_reports_cost_label_for_a_ticket_plan():

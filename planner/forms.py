@@ -17,12 +17,6 @@ class PlannerForm(forms.Form):
     use_wishlist = forms.BooleanField(
         required=False, label="Also search my wishlist (unowned cats I marked wanted)"
     )
-    prefer = forms.ChoiceField(
-        choices=[("tickets", "Rare tickets"), ("catfood", "Catfood")],
-        initial="tickets",
-        required=False,
-        label="Prefer",
-    )
     ticket_value = forms.IntegerField(
         min_value=1,
         initial=CATFOOD_PER_DRAW,
@@ -55,9 +49,6 @@ class PlannerForm(forms.Form):
 
     def clean_horizon(self):
         return self.cleaned_data.get("horizon") or EXPLORE_HORIZON
-
-    def clean_prefer(self):
-        return self.cleaned_data.get("prefer") or "tickets"
 
     def clean_ticket_value(self):
         return self.cleaned_data.get("ticket_value") or CATFOOD_PER_DRAW

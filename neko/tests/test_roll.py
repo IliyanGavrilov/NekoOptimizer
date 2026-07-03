@@ -1,4 +1,5 @@
 from neko.models import Banner, Rarity
+from neko.rng import xorshift
 from neko.roll import pick_rarity, roll_banner
 
 
@@ -113,6 +114,76 @@ def test_guaranteed_follows_the_play_chain():
     assert eleven.guaranteed
     for pull in eleven.guaranteed:
         assert pull.cat == single[(pull.position + 10, pull.track)]
+
+
+def test_pull_seed_is_its_slot_value():
+    # Cell j reads the stream at advance^{j+1}(seed) (rarity) and advance^{j+2}(seed)
+    # (slot); the state after obtaining a nominal pull is its slot value.
+    rolls = roll_banner(42, FOUR_BAND, 2)
+    stream = [42]
+    for _ in range(5):
+        stream.append(xorshift(stream[-1]))
+    seeds = {(p.position, p.track): p.seed for p in rolls.pulls}
+    assert seeds[(1, "A")] == stream[2]
+    assert seeds[(1, "B")] == stream[3]
+    assert seeds[(2, "A")] == stream[4]
+
+
+def test_reseeding_to_a_pull_makes_its_successor_the_new_1a():
+    # The apply-plan advance: entering a nominal pull's (after-)seed re-rolls the
+    # stream so its play successor (next position, same track) becomes the new 1A.
+    rolls = roll_banner(1893568593, FOUR_BAND, 10)
+    nominal = {(p.position, p.track): p.cat for p in rolls.pulls}
+    duped = {(p.position, p.track) for p in rolls.rerolls}
+    checked = 0
+    for pull in rolls.pulls:
+        successor = (pull.position + 1, pull.track)
+        if (pull.position, pull.track) in duped or successor not in nominal:
+            continue  # a dupe's after-state is its reroll's, covered below
+        assert roll_banner(pull.seed, FOUR_BAND, 1).pulls[0].cat == nominal[successor]
+        checked += 1
+    assert checked
+
+
+def test_reseeding_to_a_reroll_continues_past_the_bounce():
+    # A dupe's reroll consumed one extra stream value (a two-unit pool always resolves
+    # in one step), so its seed re-rolls with the landing cell - half a row on, the
+    # other track (index + 3) - as the new 1A.
+    rolls = roll_banner(1893568593, TWO_UNIT_RARE, 50)
+    nominal = {(p.position, p.track): p.cat for p in rolls.pulls}
+    assert rolls.rerolls
+    for reroll in rolls.rerolls:
+        landing = 2 * (reroll.position - 1) + (0 if reroll.track == "A" else 1) + 3
+        successor = (landing // 2 + 1, "AB"[landing % 2])
+        if successor not in nominal:
+            continue
+        assert roll_banner(reroll.seed, TWO_UNIT_RARE, 1).pulls[0].cat == nominal[successor]
+
+
+def test_seed_before_re_anchors_the_cell_as_the_new_1a():
+    # The per-cell dice: entering a pull's seed_before re-rolls the stream so that THIS
+    # cell is the new 1A - whatever track it was on (a B cell's chain becomes A's). The
+    # anchor is pure stream position, so it holds on every cell, dupes included.
+    rolls = roll_banner(1893568593, FOUR_BAND, 10)
+    for pull in rolls.pulls:
+        assert roll_banner(pull.seed_before, FOUR_BAND, 1).pulls[0].cat == pull.cat
+
+
+def test_seed_before_of_the_first_cell_is_the_input_seed():
+    assert roll_banner(42, FOUR_BAND, 1).pulls[0].seed_before == 42
+
+
+def test_reseeding_to_a_guaranteed_pull_lands_one_past_the_multi():
+    # After a guaranteed multi the play continues half a row on, track flipped: the
+    # stored seed (the very value that picked the uber) makes that cell the new 1A.
+    rolls = roll_banner(97, ALL_UBER, 30, guaranteed_rolls=11)
+    nominal = {(p.position, p.track): p.cat for p in rolls.pulls}
+    for pull in rolls.guaranteed[:10]:
+        # All-uber rolls never dupe, so the chain's last cell is 10 rows down the same
+        # track; the multi continues at the stream index right after it.
+        last = 2 * (pull.position - 1) + (0 if pull.track == "A" else 1) + 20
+        successor = ((last + 1) // 2 + 1, "AB"[(last + 1) % 2])
+        assert roll_banner(pull.seed, ALL_UBER, 1).pulls[0].cat == nominal[successor]
 
 
 def test_guaranteed_chain_crosses_tracks_on_a_dupe():
