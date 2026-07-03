@@ -217,9 +217,27 @@ if (picker) {
     bannerCount.textContent = n
       ? `Rolling ${n} banner${n === 1 ? "" : "s"}.`
       : "No banners selected.";
+    locateIdx = 0;
     updateWarnings();
     save();
   }
+  // "Rolling N banners." doubles as a locator: selected banners are easy to lose in
+  // the ~2000-row list, so each click scrolls to the next one and flashes it.
+  let locateIdx = 0;
+  bannerCount.addEventListener("click", () => {
+    const marked = includes
+      .filter((b) => b.getAttribute("aria-pressed") === "true")
+      .map((b) => b.closest(".banner-group"));
+    if (!marked.length) return;
+    const group = marked[locateIdx % marked.length];
+    locateIdx += 1;
+    const drop = group.closest("details.group-drop");
+    if (drop) drop.open = true;
+    group.scrollIntoView({ behavior: "smooth", block: "center" });
+    group.classList.remove("flash-locate");
+    void group.offsetWidth; // restart the animation when stepping banner to banner
+    group.classList.add("flash-locate");
+  });
   // Platinum/Legend capsules run on scarce tickets, so they're opt-in: never part
   // of a session, and each toggles on its own.
   const CAPPED = /platinum|legend/i;
@@ -397,9 +415,13 @@ if (picker) {
     spend(catfoodEl, "catfood");
     save();
     // "You rolled it": the seed advances to just after the plan's final draw. The
-    // solution stays on screen (its steps still need doing in game); the next
-    // track/plan request rolls from the new seed.
-    if (btn.dataset.seedAfter) setSeed(btn.dataset.seedAfter);
+    // solution stays on screen (its steps still need doing in game), and the Rolls
+    // track re-rolls from the new seed so it shows what comes next.
+    if (btn.dataset.seedAfter) {
+      setSeed(btn.dataset.seedAfter);
+      browseTrack.hidden = false;
+      refreshTracks();
+    }
     btn.disabled = true;
     btn.textContent = "Applied ✓";
   });
@@ -409,19 +431,22 @@ if (picker) {
   // (no implicit "current banners" fallback).
   let trackTimer;
   const anyBanner = () => includes.some((b) => b.getAttribute("aria-pressed") === "true");
-  async function requestTracks() {
-    // Changing the seed/banners invalidates any plan: drop back to browsing the rolls.
-    solutions.innerHTML = "";
-    browseTrack.hidden = false;
+  async function refreshTracks() {
     if (!seedEl.value.trim() || !anyBanner()) {
       trackHost.innerHTML = "";
-      resultsRegion.hidden = true;
+      resultsRegion.hidden = !solutions.firstElementChild;
       return;
     }
     const resp = await post(trackHost.dataset.tracksUrl);
     if (!resp.ok) return;
     trackHost.innerHTML = await resp.text();
     resultsRegion.hidden = !trackHost.firstElementChild;
+  }
+  async function requestTracks() {
+    // Changing the seed/banners invalidates any plan: drop back to browsing the rolls.
+    solutions.innerHTML = "";
+    browseTrack.hidden = false;
+    await refreshTracks();
   }
   const scheduleTracks = () => {
     clearTimeout(trackTimer);
@@ -734,6 +759,35 @@ document.querySelectorAll('input[type="number"]').forEach((input) => {
     if (moved) e.preventDefault();
   });
 });
+
+// ---- Theme: light / dark / match-the-device, persisted -----------------
+// The <head> bootstrap already applied the saved choice before first paint;
+// this wires the header buttons and follows the OS while on "system".
+{
+  const THEME_KEY = "nekoTheme";
+  const buttons = [...document.querySelectorAll(".theme-toggle button")];
+  const systemDark = matchMedia("(prefers-color-scheme: dark)");
+  const preference = () => {
+    const saved = localStorage.getItem(THEME_KEY);
+    return saved === "light" || saved === "dark" ? saved : "system";
+  };
+  const applyTheme = () => {
+    const pref = preference();
+    document.documentElement.dataset.theme =
+      pref === "system" ? (systemDark.matches ? "dark" : "light") : pref;
+    buttons.forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.setTheme === pref)));
+  };
+  for (const btn of buttons) {
+    btn.addEventListener("click", () => {
+      // "System" clears the override so the OS setting takes over again.
+      if (btn.dataset.setTheme === "system") localStorage.removeItem(THEME_KEY);
+      else localStorage.setItem(THEME_KEY, btn.dataset.setTheme);
+      applyTheme();
+    });
+  }
+  systemDark.addEventListener("change", applyTheme);
+  applyTheme();
+}
 
 // ---- Cat popup: a unit's forms (icons) + a link to its wiki page ------
 // Opened from any cat name (track / steps) or the ⓘ opener on collection/picker

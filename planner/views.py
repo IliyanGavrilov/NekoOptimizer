@@ -69,6 +69,11 @@ def _owned_names():
     return set(Unit.objects.filter(owned=True).values_list("name", flat=True))
 
 
+def _wanted_names():
+    """Cat names on your wishlist, starred in the track and steps."""
+    return set(Unit.objects.wishlist().values_list("name", flat=True))
+
+
 @require_POST
 def tracks(request):
     """A/B track tables for the current seed + banners, before any plan is run."""
@@ -81,7 +86,14 @@ def tracks(request):
     pulls = {name: rolls.pulls for name, rolls in result.banners.items()}
     guaranteed = {name: rolls.guaranteed for name, rolls in result.banners.items()}
     rerolls = {name: rolls.rerolls for name, rolls in result.banners.items()}
-    track = build_tracks(pulls, rerolls, equivalents, owned=_owned_names(), guaranteed=guaranteed)
+    track = build_tracks(
+        pulls,
+        rerolls,
+        equivalents,
+        owned=_owned_names(),
+        guaranteed=guaranteed,
+        wanted=_wanted_names(),
+    )
     return render(request, "planner/_tracks.html", {"track": track})
 
 
@@ -95,7 +107,7 @@ def find_plan(request):
     Seed.store(seed)
     targets = {cat.name for cat in form.cleaned_data["targets"]}
     if form.cleaned_data["use_wishlist"]:
-        targets |= set(Unit.objects.wishlist().values_list("name", flat=True))
+        targets |= _wanted_names()
     explore = form.cleaned_data["explore"]
     count = form.cleaned_data["horizon"] if explore else DEFAULT_COUNT
     result = _roll(seed, request.POST.getlist("banners"), count)
@@ -125,6 +137,7 @@ def find_plan(request):
         ticket_value=form.cleaned_data["ticket_value"],
         banner_limits=banner_limits,
         owned=_owned_names(),
+        wanted=_wanted_names(),
     )
     return JsonResponse(
         {

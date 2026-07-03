@@ -490,14 +490,16 @@ def build_tracks(
     guaranteed=None,
     gpath=None,
     gtargets=None,
+    wanted=None,
 ):
     """One merged A/B table over every selected banner: each cell stacks each banner's
     cat at that shared stream position (à la ubercarry), with rare-dupe switch arrows
     and the plan's path highlighted. Returns ``{"legend": [...], "rows": [...]}``.
 
     ``path``/``targets`` map a representative banner to the stream indices to light up.
-    ``owned`` is the set of cat names you already have, used to flag Uber/Legend cats
-    missing from your collection. ``guaranteed`` maps a banner to its guaranteed-uber
+    ``owned``/``wanted`` are the cat names you already have / wishlisted, shown as the
+    same ✓ / ★ marks the picker uses (``new`` flags Uber/Legend cats missing from your
+    collection). ``guaranteed`` maps a banner to its guaranteed-uber
     column (godfat's: the uber a guaranteed multi awards when STARTED on that cell);
     banners without a guaranteed multi have none, and when no selected banner has any the
     columns are omitted entirely (``has_guaranteed``). ``gpath``/``gtargets`` light up
@@ -508,6 +510,7 @@ def build_tracks(
     gpath = gpath or {}
     gtargets = gtargets or {}
     owned = owned or set()
+    wanted = wanted or set()
     groups = _banner_groups(banner_pulls, rerolls, equivalents, guaranteed)
 
     avail = max((max(g["grid"]) for g in groups if g["grid"]), default=-1) // 2 + 1
@@ -533,10 +536,19 @@ def build_tracks(
                     "cat": cat,
                     "rarity": rarity,
                     "switch": switched,
-                    "arrow": {"to": _pos_label(outcome.next_position)} if switched else None,
+                    # A dupe jumps to the other track; the arrow points the way there
+                    # (left towards the A column, right towards B).
+                    "arrow": {
+                        "to": _pos_label(outcome.next_position),
+                        "left": outcome.next_position % 2 == 0,
+                    }
+                    if switched
+                    else None,
                     "on_path": index in path.get(group["rep"], ()),
                     "target": index in targets.get(group["rep"], ()),
                     "new": rarity in _VALUABLE_RARITIES and cat not in owned,
+                    "owned": cat in owned,
+                    "wanted": cat in wanted,
                 }
             )
         return cells
@@ -566,6 +578,8 @@ def build_tracks(
                     "on_path": index in gpath.get(group["rep"], ()),
                     "target": index in gtargets.get(group["rep"], ()),
                     "new": rarity in _VALUABLE_RARITIES and tp.cat not in owned,
+                    "owned": tp.cat in owned,
+                    "wanted": tp.cat in wanted,
                 }
             )
         return cells
@@ -619,8 +633,11 @@ def plan_seed(plan, graphs):
     return outcome.seed if outcome else None
 
 
-def plan_summary(plans, equivalents):
-    """Per-option summary: targets, cost, and per-banner-leg rolls + cat sequence."""
+def plan_summary(plans, equivalents, owned=None, wanted=None):
+    """Per-option summary: targets, cost, and per-banner-leg rolls + cat sequence.
+    Each cat carries the same marks as its track cell (target / owned / wanted / new)."""
+    owned = owned or set()
+    wanted = wanted or set()
     summaries = []
     for option in plans:
         legs = []
@@ -638,7 +655,16 @@ def plan_summary(plans, equivalents):
                     "cost": leg.cost,
                     "tickets": tickets,
                     "rolls": rolls,
-                    "cats": [pull.cat for pull in leg.pulls],
+                    "cats": [
+                        {
+                            "name": pull.cat,
+                            "target": pull.cat in option.targets,
+                            "owned": pull.cat in owned,
+                            "wanted": pull.cat in wanted,
+                            "new": str(pull.rarity) in _VALUABLE_RARITIES and pull.cat not in owned,
+                        }
+                        for pull in leg.pulls
+                    ],
                 }
             )
             last_banner = leg.banner_id
@@ -668,6 +694,7 @@ def subset_solutions(
     ticket_value=CATFOOD_PER_DRAW,
     banner_limits=None,
     owned=None,
+    wanted=None,
 ):
     """Every non-empty target subset and its best plan, biggest-then-cheapest, with the
     unreachable subsets listed after. Reachable ones carry the steps + highlighted track
@@ -686,7 +713,7 @@ def subset_solutions(
     solutions = []
     for sp in found:
         path, target_idx, gpath, gtargets = plan_highlight(sp, equivalents)
-        solution = plan_summary([sp], equivalents)[0]
+        solution = plan_summary([sp], equivalents, owned, wanted)[0]
         solution["found"] = True
         solution["seed_after"] = plan_seed(sp.plan, graphs)
         solution["track"] = build_tracks(
@@ -699,6 +726,7 @@ def subset_solutions(
             guaranteed_pulls,
             gpath,
             gtargets,
+            wanted,
         )
         solutions.append(solution)
     items = sorted(set(targets))
