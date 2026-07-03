@@ -10,7 +10,7 @@
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&display=swap">
   <link rel="stylesheet" href="{% static 'planner/style.css' %}">
 </head>
-<body>
+<body data-unit-info-url="{% url 'unit_info' %}">
   <header class="site-header">
     <div class="bar">
       <a class="brand" href="{% url 'planner' %}">🐾 Neko Optimizer</a>
@@ -23,6 +23,17 @@
   <main>
     {% block content %}{% endblock %}
   </main>
+  {# One shared popup for any cat name: its forms (icons hotlinked from battlecatsinfo)
+     and a link to its Battle Cats Wiki page. Filled in by app.js. #}
+  <dialog id="catPopup" class="cat-popup">
+    <button type="button" class="cat-popup-close" data-close aria-label="Close">&times;</button>
+    <div class="cat-popup-head">
+      <span class="cat-popup-name"></span>
+      <span class="rarity"></span>
+    </div>
+    <div class="cat-popup-forms"></div>
+    <a class="cat-popup-wiki" target="_blank" rel="noopener">View on the Battle Cats Wiki &#8599;</a>
+  </dialog>
   <script src="{% static 'planner/app.js' %}"></script>
 </body>
 </html>
