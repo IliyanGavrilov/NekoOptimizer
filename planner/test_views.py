@@ -254,3 +254,39 @@ def test_tracks_endpoint_lists_the_rolls(client, monkeypatch):
 @pytest.mark.django_db
 def test_tracks_endpoint_blank_seed_renders_nothing(client):
     assert client.post("/tracks/", {}).content == b""
+
+
+@pytest.mark.django_db
+def test_planner_ships_the_past_group_as_a_lazy_shell(client):
+    # The ~2000 Past rows are nearly all of the page; they must not render inline.
+    html = client.get("/").content
+    assert b'id="pastGroup"' in html
+    assert html.count(b"banner-include") < 100
+
+
+@pytest.mark.django_db
+def test_picker_past_serves_the_past_rows(client):
+    html = client.get("/picker/past/").content
+    assert html.count(b"banner-include") > 1000
+
+
+@pytest.mark.django_db
+def test_tracks_endpoint_renders_the_guaranteed_column(client, monkeypatch):
+    rolls = BannerRolls(
+        [TrackPull(1, "A", "Shaman Cat", R)], [TrackPull(1, "A", "Trixi the Merc", U)]
+    )
+    monkeypatch.setattr(
+        "planner.views.fetch_banners", lambda seed, count=100: ScrapeResult({"x": rolls}, {})
+    )
+    response = client.post("/tracks/", {"seed": 7})
+    assert b"Guaranteed" in response.content
+    assert b"Trixi the Merc" in response.content
+
+
+@pytest.mark.django_db
+def test_tracks_endpoint_hides_the_guaranteed_column_without_a_guarantee(client, monkeypatch):
+    # No selected banner runs a guarantee, so the extra columns stay out of the table.
+    monkeypatch.setattr(
+        "planner.views.fetch_banners", fixed_banners(TrackPull(1, "A", "Bahamut", U))
+    )
+    assert b"Guaranteed" not in client.post("/tracks/", {"seed": 7}).content

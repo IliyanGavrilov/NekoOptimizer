@@ -5,6 +5,7 @@ from planner.views import (
     collection,
     collection_toggle,
     find_plan,
+    picker_past,
     planner,
     tracks,
     wishlist_all_unowned,
@@ -12,6 +13,7 @@ from planner.views import (
 
 urlpatterns = [
     path("", planner, name="planner"),
+    path("picker/past/", picker_past, name="picker_past"),
     path("tracks/", tracks, name="tracks"),
     path("plan/", find_plan, name="find_plan"),
     path("apply/", apply_plan, name="apply_plan"),

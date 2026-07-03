@@ -82,8 +82,8 @@ def test_no_guaranteed_column_without_a_roll_count():
 
 
 def test_guaranteed_column_is_an_uber_at_every_cell():
-    # An 11-roll guaranteed lands an uber from each cell. We roll a small buffer past the
-    # display so the forward follow always resolves (godfat drops the final cell only
+    # An 11-roll guaranteed started at any cell awards an uber. We roll a buffer past the
+    # display so the forward follow always resolves (godfat drops trailing cells only
     # because it has no data past its window; the RNG past it is still deterministic).
     rolls = roll_banner(1893568593, FOUR_BAND, 40, guaranteed_rolls=11)
     assert len(rolls.guaranteed) == 40 * 2
@@ -93,3 +93,40 @@ def test_guaranteed_column_is_an_uber_at_every_cell():
     for pull in rolls.guaranteed:
         assert pull.rarity is Rarity.UBER_SUPER_RARE
         assert pull.cat in FOUR_BAND.pool(Rarity.UBER_SUPER_RARE)
+
+
+ALL_UBER = banner(
+    {Rarity.RARE: 0, Rarity.SUPER_RARE: 0, Rarity.UBER_SUPER_RARE: 10000},
+    {Rarity.UBER_SUPER_RARE: ("U1", "U2", "U3", "U4", "U5", "U6", "U7")},
+)
+
+
+def test_guaranteed_follows_the_play_chain():
+    # godfat's fill_guaranteed: the column value at a cell is the uber picked by the
+    # rarity seed of the cell guaranteed_rolls - 1 chain steps FORWARD (the swapped final
+    # roll). With every roll an uber there are no rare dupes, so the chain never switches
+    # tracks and an 11-roll column must equal the 1-roll column (godfat's
+    # force_guaranteed=1, a 0-step follow) shifted 10 rows down the same track.
+    eleven = roll_banner(97, ALL_UBER, 30, guaranteed_rolls=11)
+    one = roll_banner(97, ALL_UBER, 45, guaranteed_rolls=1)
+    single = {(p.position, p.track): p.cat for p in one.guaranteed}
+    assert eleven.guaranteed
+    for pull in eleven.guaranteed:
+        assert pull.cat == single[(pull.position + 10, pull.track)]
+
+
+def test_guaranteed_chain_crosses_tracks_on_a_dupe():
+    # With rare dupes in play the chain switches tracks mid-follow, so the 11-roll column
+    # cannot be a plain same-track shift of the 1-roll column.
+    dupey = banner(
+        {Rarity.RARE: 9000, Rarity.UBER_SUPER_RARE: 1000},
+        {
+            Rarity.RARE: ("R1", "R2"),
+            Rarity.UBER_SUPER_RARE: ("U1", "U2", "U3", "U4", "U5"),
+        },
+    )
+    rolls = roll_banner(1893568593, dupey, 100, guaranteed_rolls=11)
+    assert rolls.rerolls  # dupes (and thus track switches) do occur on this seed
+    one = roll_banner(1893568593, dupey, 130, guaranteed_rolls=1)
+    single = {(p.position, p.track): p.cat for p in one.guaranteed}
+    assert any(pull.cat != single[(pull.position + 10, pull.track)] for pull in rolls.guaranteed)

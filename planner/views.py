@@ -22,16 +22,37 @@ from planner.services import (
 
 
 def planner(request):
-    """The planner shell: the form plus empty hosts that JS fills with tracks/plan."""
-    cats = list(Cat.objects.prefetch_related("banners"))
+    """The planner shell: the form plus empty hosts that JS fills with tracks/plan.
+
+    The Past picker group is ~2000 per-run rows (nearly all of the page's bytes and
+    render time), so it ships as a count only; JS fetches [picker_past] on first open.
+    """
+    # select_related("unit"): the owned/wanted chip marks read cat.unit, one query per
+    # chip otherwise.
+    cats = list(Cat.objects.select_related("unit").prefetch_related("banners"))
     rank = {name: i for i, name in enumerate(RARITY_ORDER)}
     target_flat = sorted(cats, key=lambda cat: (-rank.get(cat.rarity, -1), cat.name))
+    groups, past_count = [], 0
+    for label, rows in picker_groups(cats):
+        if label == "Past":
+            past_count = len(rows)
+            groups.append((label, None))  # rendered as a lazy shell in its place
+        else:
+            groups.append((label, rows))
     context = {
         "form": PlannerForm(),
-        "target_groups": picker_groups(cats),
+        "target_groups": groups,
+        "past_count": past_count,
         "target_flat": target_flat,
     }
     return render(request, "planner/planner.html", context)
+
+
+def picker_past(request):
+    """The Past picker rows, fetched when the group is first opened."""
+    cats = list(Cat.objects.select_related("unit").prefetch_related("banners"))
+    groups = dict(picker_groups(cats))
+    return render(request, "planner/_picker_rows.html", {"sections": groups.get("Past", [])})
 
 
 def _scrape(seed, chosen_banners, count):
@@ -55,8 +76,9 @@ def tracks(request):
     result = _scrape(seed, request.POST.getlist("banners"), DEFAULT_COUNT)
     equivalents = equivalent_banners(result.banners)
     pulls = {name: rolls.pulls for name, rolls in result.banners.items()}
+    guaranteed = {name: rolls.guaranteed for name, rolls in result.banners.items()}
     rerolls = {name: rolls.rerolls for name, rolls in result.banners.items()}
-    track = build_tracks(pulls, rerolls, equivalents, owned=_owned_names())
+    track = build_tracks(pulls, rerolls, equivalents, owned=_owned_names(), guaranteed=guaranteed)
     return render(request, "planner/_tracks.html", {"track": track})
 
 
@@ -118,7 +140,7 @@ def collection(request):
         if form.is_valid():
             form.save()
             return redirect("collection")
-    cats = Cat.objects.prefetch_related("banners")
+    cats = Cat.objects.select_related("unit").prefetch_related("banners")
     context = {"form": form, "sections": catalogue(cats)}
     return render(request, "planner/collection.html", context)
 

@@ -8,6 +8,7 @@ from datetime import date
 from neko.bcdata import load_records
 from neko.gacha import GachaRule, load_rules, multi_configs
 from neko.gachadata import GachaEventRow, build_banner, load_events, load_pools
+from neko.godfat import BannerRolls, TrackPull
 from neko.roll import roll_banner
 from neko.scraper import DEFAULT_COUNT, ScrapeResult, active_events
 from neko.search import Multi
@@ -152,15 +153,26 @@ def roll_selected(
     return _result(seed, select_events(events, names, today), pools, units, count, rules)
 
 
-def roll_catalogue(
-    seed: int,
+def catalogue_banners(
     *,
-    count: int = DEFAULT_COUNT,
     events: Iterable[GachaEventRow] | None = None,
     pools: Mapping[int, list[int]] | None = None,
     units: Mapping[int, tuple[str, str]] | None = None,
-    rules: Iterable[GachaRule] | None = None,
 ) -> ScrapeResult:
-    """Roll every banner in the schedule, to broaden the catalogue."""
-    events, pools, units, rules = _load(events, pools, units, rules)
-    return _result(seed, events, pools, units, count, rules)
+    """Every scheduled banner's cats straight from its latest run's pool - the catalogue
+    needs who CAN drop on a banner, not a rolled sample, so no seed and no rolling."""
+    events, pools, units, _ = _load(events, pools, units, [])
+    latest: dict[str, GachaEventRow] = {}
+    for event in events:
+        current = latest.get(event.name)
+        if current is None or event.start > current.start:
+            latest[event.name] = event
+    banners, dates = {}, {}
+    for name, event in latest.items():
+        banner = build_banner(event, pools, units)
+        cats = [
+            TrackPull(1, "A", cat, rarity) for rarity, pool in banner.pools.items() for cat in pool
+        ]
+        banners[name] = BannerRolls(cats, [])
+        dates[name] = (event.start, event.end)
+    return ScrapeResult(banners, {}, dates)

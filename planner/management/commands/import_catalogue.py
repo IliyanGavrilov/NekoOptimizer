@@ -4,12 +4,9 @@ from planner.services import fetch_catalogue, import_cats
 
 
 class Command(BaseCommand):
-    help = "Populate the catalogue from every godfat banner for a seed, not just the active ones."
-
-    def add_arguments(self, parser):
-        parser.add_argument("seed", type=int)
+    help = "Populate the catalogue with every scheduled banner's cats from the gacha pools."
 
     def handle(self, *args, **options):
-        result = fetch_catalogue(options["seed"])
+        result = fetch_catalogue()
         created = import_cats(result.banners, result.dates)
         self.stdout.write(self.style.SUCCESS(f"Imported {created} new cats."))

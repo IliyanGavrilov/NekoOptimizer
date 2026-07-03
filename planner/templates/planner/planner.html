@@ -66,6 +66,12 @@
               {% for banner, dates, rarities in banner_sections %}
                 {% include "planner/_banner.html" with banner=banner dates=dates rarities=rarities is_open=0 %}
               {% endfor %}
+            {% elif group_label == "Past" %}
+              {# ~2000 per-run rows: shipped on demand, fetched the first time it's opened. #}
+              <details class="group-drop" id="pastGroup" data-past-url="{% url 'picker_past' %}">
+                <summary>Past <span class="count-pill">{{ past_count }}</span></summary>
+                <p class="muted past-loading" hidden>Loading&hellip;</p>
+              </details>
             {% else %}
               <details class="group-drop"{% if group_label == "Upcoming" %} open{% endif %}>
                 <summary>{{ group_label }} <span class="count-pill">{{ banner_sections|length }}</span></summary>

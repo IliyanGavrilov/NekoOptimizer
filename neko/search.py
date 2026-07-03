@@ -20,8 +20,9 @@ class Multi:
 
 
 def _occurrences(graphs: Iterable[BannerGraph], targets: frozenset[str]) -> dict[str, list[int]]:
-    # Guaranteed-column spots count too: a guaranteed multi can obtain a target there
-    # that never appears as a normal roll, and its last pull still lands ON that position.
+    # Guaranteed-column spots count too: a guaranteed multi can obtain a target that never
+    # appears as a normal roll. The column is keyed by the multi's first roll, so the spot
+    # is where that multi must START - a position the plan still has to reach.
     spots: dict[str, list[int]] = {target: [] for target in targets}
     for graph in graphs:
         for position in graph.positions():
@@ -37,13 +38,36 @@ def _occurrences(graphs: Iterable[BannerGraph], targets: frozenset[str]) -> dict
     return spots
 
 
-def _collectable(graphs: list[BannerGraph], targets: frozenset[str], position: int) -> bool:
+def _multi_landing(graph: BannerGraph, position: int, rolls: int) -> int | None:
+    """Where a guaranteed multi started at ``position`` continues: walk its ``rolls - 1``
+    real rolls along the chain, then one half-step past the swapped final roll (track
+    flips with the parity). None when the chain runs off the rolled window."""
+    for _ in range(rolls - 1):
+        outcome = graph.outcome(position)
+        if outcome is None:
+            return None
+        position = outcome.next_position
+    return position + 1
+
+
+def _collectable(
+    graphs: list[BannerGraph],
+    targets: frozenset[str],
+    position: int,
+    multis: Mapping[str, Sequence[Multi]] | None = None,
+) -> bool:
     """Ignoring budget, can every target still be collected from ``position``? BFS over
     (position, found) using the graphs' real step structure - rare-dupe switches force +3
     steps, so a spot's parity can make it genuinely unreachable, and the full search
-    would only prove that after exhausting every budget split of the whole state space."""
+    would only prove that after exhausting every budget split of the whole state space.
+    Guaranteed multis are modelled with their real landing so their off-parity continue
+    points stay reachable."""
     if not targets:
         return True
+    rolls_by_banner = {
+        banner_id: sorted({m.rolls for m in ms if m.guaranteed})
+        for banner_id, ms in (multis or {}).items()
+    }
     start = (position, frozenset())
     seen = {start}
     frontier = [start]
@@ -54,15 +78,19 @@ def _collectable(graphs: list[BannerGraph], targets: frozenset[str], position: i
                 moves = []
                 outcome = graph.outcome(pos)
                 if outcome is not None:
-                    moves.append((outcome, not outcome.switched))
+                    cat = outcome.cat if not outcome.switched else ""
+                    moves.append((cat, outcome.next_position))
                 forced = graph.guaranteed(pos)
                 if forced is not None:
-                    moves.append((forced, True))
-                for move, counts in moves:
-                    got = found | {move.cat} if counts and move.cat in targets else found
+                    for rolls in rolls_by_banner.get(graph.banner_id, ()):
+                        landing = _multi_landing(graph, pos, rolls)
+                        if landing is not None:
+                            moves.append((forced.cat, landing))
+                for cat, next_position in moves:
+                    got = found | {cat} if cat in targets else found
                     if got >= targets:
                         return True
-                    state = (move.next_position, got)
+                    state = (next_position, got)
                     if state not in seen:
                         seen.add(state)
                         upcoming.append(state)
@@ -208,12 +236,17 @@ def _pull_variants(
 def _multi_move(
     state: State, graph: BannerGraph, multi: Multi, targets: frozenset[str], limit: int | None
 ):
-    # `rolls` normal pulls (the last replaced by the guaranteed uber if guaranteed),
-    # for a fixed catfood cost.
+    # `rolls` normal pulls (the last swapped for the guaranteed uber if guaranteed),
+    # for a fixed catfood cost. The guaranteed uber is the column value at the multi's
+    # FIRST roll (godfat semantics); the multi then continues one half-step past where
+    # the swapped final roll would have been, which flips the track.
     draws = multi.cost // CATFOOD_PER_DRAW
     if state.catfood_draws < draws:
         return None
     if limit is not None and _banner_pulls(state, graph.banner_id) + multi.rolls > limit:
+        return None
+    forced = graph.guaranteed(state.position) if multi.guaranteed else None
+    if multi.guaranteed and forced is None:
         return None
     position = state.position
     found = state.found
@@ -228,13 +261,12 @@ def _multi_move(
             found = found | {outcome.cat}
         position = outcome.next_position
     if multi.guaranteed:
-        final = graph.guaranteed(position)
-        if final is None:
-            return None
-        pulls.append(Pull(position, graph.banner_id, final.cat, final.rarity))
-        if final.cat in targets:
-            found = found | {final.cat}
-        position = final.next_position
+        pulls.append(
+            Pull(state.position, graph.banner_id, forced.cat, forced.rarity, guaranteed=True)
+        )
+        if forced.cat in targets:
+            found = found | {forced.cat}
+        position += 1
     counts = (
         state.banner_pulls
         if limit is None
@@ -293,7 +325,7 @@ def astar(
     graphs = list(graphs)
     targets = frozenset(targets)
     occurrences = _occurrences(graphs, targets)
-    if not _collectable(graphs, targets - start.found, start.position):
+    if not _collectable(graphs, targets - start.found, start.position, multis):
         return None
     floor = _multi_floor(multis)
     # Lexicographic g (catfood-equivalent, switches, disfavoured spend): cheapest first,
@@ -344,7 +376,7 @@ def beam_search(
     if targets <= start.found:
         return _reconstruct(start, {}, start)
     occurrences = _occurrences(graphs, targets)
-    if not _collectable(graphs, targets - start.found, start.position):
+    if not _collectable(graphs, targets - start.found, start.position, multis):
         return None
     floor = _multi_floor(multis)
     # Lexicographic g (catfood-equivalent, switches, disfavoured spend); see astar.

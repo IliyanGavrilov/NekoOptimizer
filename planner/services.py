@@ -6,7 +6,7 @@ from neko.catalogue import match_names, name_index
 from neko.godfat import BannerRolls
 from neko.graph import BannerGraph, build_graphs, stream_index
 from neko.models import CATFOOD_PER_DRAW, Rarity, State
-from neko.roller import roll_active, roll_catalogue, roll_selected
+from neko.roller import catalogue_banners, roll_active, roll_selected
 from neko.scraper import DEFAULT_COUNT, ScrapeResult
 from neko.subsets import solve_subsets
 from planner.models import Banner, Cat, Unit
@@ -28,9 +28,9 @@ def fetch_banners(seed: int, count: int = DEFAULT_COUNT) -> ScrapeResult:
     return roll_active(seed, count=count)
 
 
-def fetch_catalogue(seed: int) -> ScrapeResult:
-    """Roll every banner for a seed locally, to broaden the catalogue."""
-    return roll_catalogue(seed, count=DEFAULT_COUNT)
+def fetch_catalogue() -> ScrapeResult:
+    """Every scheduled banner's droppable cats, straight from the gacha pools."""
+    return catalogue_banners()
 
 
 def fetch_for_banners(seed: int, names: Iterable[str], count: int = DEFAULT_COUNT) -> ScrapeResult:
@@ -253,9 +253,10 @@ def _representative(name, equivalents):
     return sorted(equivalents.get(name, [name]))[0]
 
 
-def _banner_groups(banner_pulls, rerolls, equivalents):
+def _banner_groups(banner_pulls, rerolls, equivalents, guaranteed=None):
     """Distinct selected banners (equivalent ones merged), each tagged 1, 2, 3...
-    with its stream grid and outcome graph."""
+    with its stream grid, outcome graph and guaranteed-uber grid."""
+    guaranteed = guaranteed or {}
     groups = []
     seen = set()
     for name, pulls in banner_pulls.items():
@@ -273,31 +274,47 @@ def _banner_groups(banner_pulls, rerolls, equivalents):
                 "rep": rep,
                 "grid": grid,
                 "graph": graph,
+                "guaranteed": {
+                    stream_index(p.position, p.track): p for p in guaranteed.get(name, ())
+                },
             }
         )
     return groups
 
 
 def build_tracks(
-    banner_pulls, rerolls, equivalents, path=None, targets=None, pulled=None, owned=None
+    banner_pulls,
+    rerolls,
+    equivalents,
+    path=None,
+    targets=None,
+    owned=None,
+    guaranteed=None,
+    gpath=None,
+    gtargets=None,
 ):
     """One merged A/B table over every selected banner: each cell stacks each banner's
     cat at that shared stream position (à la ubercarry), with rare-dupe switch arrows
     and the plan's path highlighted. Returns ``{"legend": [...], "rows": [...]}``.
 
-    ``path``/``targets`` map a representative banner to the stream indices to light up;
-    ``pulled`` maps those indices to the plan's actual pull there (a guaranteed uber differs
-    from the position's normal roll). ``owned`` is the set of cat names you already have, used
-    to flag Uber/Legend cats missing from your collection.
+    ``path``/``targets`` map a representative banner to the stream indices to light up.
+    ``owned`` is the set of cat names you already have, used to flag Uber/Legend cats
+    missing from your collection. ``guaranteed`` maps a banner to its guaranteed-uber
+    column (godfat's: the uber a guaranteed multi awards when STARTED on that cell);
+    banners without a guaranteed multi have none, and when no selected banner has any the
+    columns are omitted entirely (``has_guaranteed``). ``gpath``/``gtargets`` light up
+    guaranteed-column cells where the plan starts a guaranteed multi.
     """
     path = path or {}
     targets = targets or {}
-    pulled = pulled or {}
+    gpath = gpath or {}
+    gtargets = gtargets or {}
     owned = owned or set()
-    groups = _banner_groups(banner_pulls, rerolls, equivalents)
+    groups = _banner_groups(banner_pulls, rerolls, equivalents, guaranteed)
 
     avail = max((max(g["grid"]) for g in groups if g["grid"]), default=-1) // 2 + 1
-    needed = max((index // 2 + 1 for indices in path.values() for index in indices), default=0)
+    lit = [index for indices in (*path.values(), *gpath.values()) for index in indices]
+    needed = max((index // 2 + 1 for index in lit), default=0)
     max_pos = max(min(avail, max(TRACK_ROW_CAP, needed)), 0)
 
     def entries(index):
@@ -308,16 +325,10 @@ def build_tracks(
                 continue
             outcome = group["graph"].outcome(index)
             switched = bool(outcome and outcome.switched)
-            on_path = index in path.get(group["rep"], ())
-            # On the plan's path show the cat it actually pulled: a guaranteed multi obtains an
-            # uber, not this position's normal roll. Off-path use outcome.cat (the rerolled cat
-            # on a dupe, else the normal roll); a dupe also jumps to the other track.
-            plan_pull = pulled.get(group["rep"], {}).get(index) if on_path else None
-            if plan_pull is not None:
-                cat, rarity = plan_pull.cat, str(plan_pull.rarity)
-            else:
-                cat = outcome.cat if outcome else tp.cat
-                rarity = str(outcome.rarity if outcome else tp.rarity)
+            # outcome.cat is the rerolled cat on a dupe, else the normal roll; a dupe also
+            # jumps to the other track.
+            cat = outcome.cat if outcome else tp.cat
+            rarity = str(outcome.rarity if outcome else tp.rarity)
             cells.append(
                 {
                     "tag": group["tag"],
@@ -325,35 +336,63 @@ def build_tracks(
                     "rarity": rarity,
                     "switch": switched,
                     "arrow": {"to": _pos_label(outcome.next_position)} if switched else None,
-                    "on_path": on_path,
+                    "on_path": index in path.get(group["rep"], ()),
                     "target": index in targets.get(group["rep"], ()),
                     "new": rarity in _VALUABLE_RARITIES and cat not in owned,
                 }
             )
         return cells
 
+    def guaranteed_entries(index):
+        cells = []
+        for group in groups:
+            tp = group["guaranteed"].get(index)
+            if tp is None or not tp.cat:  # no guarantee on this banner, or an empty uber pool
+                continue
+            rarity = str(tp.rarity)
+            cells.append(
+                {
+                    "tag": group["tag"],
+                    "cat": tp.cat,
+                    "rarity": rarity,
+                    "on_path": index in gpath.get(group["rep"], ()),
+                    "target": index in gtargets.get(group["rep"], ()),
+                    "new": rarity in _VALUABLE_RARITIES and tp.cat not in owned,
+                }
+            )
+        return cells
+
+    has_guaranteed = any(group["guaranteed"] for group in groups)
     rows = [
-        {"pos": pos, "a": entries(2 * (pos - 1)), "b": entries(2 * (pos - 1) + 1)}
+        {
+            "pos": pos,
+            "a": entries(2 * (pos - 1)),
+            "b": entries(2 * (pos - 1) + 1),
+            "ga": guaranteed_entries(2 * (pos - 1)) if has_guaranteed else [],
+            "gb": guaranteed_entries(2 * (pos - 1) + 1) if has_guaranteed else [],
+        }
         for pos in range(1, max_pos + 1)
     ]
     legend = [{"tag": g["tag"], "names": g["names"]} for g in groups]
-    return {"legend": legend, "rows": rows}
+    return {"legend": legend, "rows": rows, "has_guaranteed": has_guaranteed}
 
 
 def plan_highlight(option, equivalents):
-    """Stream indices to light up for one plan, keyed by representative banner, plus the pull
-    the plan made at each - a guaranteed multi obtains an uber that isn't the position's normal
-    roll, so the cell must render `pulled`, not the grid."""
+    """Stream indices to light up for one plan, keyed by representative banner. A normal
+    pull lights its track cell; a guaranteed pull lights the guaranteed COLUMN at the
+    multi's first roll (where godfat shows the awarded uber), returned separately as
+    ``gpath``/``gtargets``."""
     path: dict[str, set[int]] = {}
     targets: dict[str, set[int]] = {}
-    pulled: dict[str, dict[int, object]] = {}
+    gpath: dict[str, set[int]] = {}
+    gtargets: dict[str, set[int]] = {}
     for pull in option.plan.pulls:
         rep = _representative(pull.banner_id, equivalents)
-        path.setdefault(rep, set()).add(pull.position)
-        pulled.setdefault(rep, {})[pull.position] = pull
+        into_path, into_targets = (gpath, gtargets) if pull.guaranteed else (path, targets)
+        into_path.setdefault(rep, set()).add(pull.position)
         if pull.cat in option.targets:
-            targets.setdefault(rep, set()).add(pull.position)
-    return path, targets, pulled
+            into_targets.setdefault(rep, set()).add(pull.position)
+    return path, targets, gpath, gtargets
 
 
 def plan_summary(plans, equivalents):
@@ -424,11 +463,19 @@ def subset_solutions(
     found_keys = {sp.targets for sp in found}
     solutions = []
     for sp in found:
-        path, target_idx, pulled = plan_highlight(sp, equivalents)
+        path, target_idx, gpath, gtargets = plan_highlight(sp, equivalents)
         solution = plan_summary([sp], equivalents)[0]
         solution["found"] = True
         solution["track"] = build_tracks(
-            pulls, rerolls, equivalents, path, target_idx, pulled, owned
+            pulls,
+            rerolls,
+            equivalents,
+            path,
+            target_idx,
+            owned,
+            guaranteed_pulls,
+            gpath,
+            gtargets,
         )
         solutions.append(solution)
     items = sorted(set(targets))

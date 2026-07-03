@@ -2,7 +2,7 @@ from datetime import date
 
 from neko.gacha import GachaRule
 from neko.gachadata import GachaEventRow
-from neko.roller import roll_active, roll_catalogue, roll_selected
+from neko.roller import catalogue_banners, roll_active, roll_selected
 from neko.scraper import ScrapeResult
 from neko.search import Multi
 
@@ -43,8 +43,12 @@ def test_roll_active_filters_by_date():
     assert set(roll(roll_active, 123, today=date(2025, 2, 5)).banners) == {"Beta Banner"}
 
 
-def test_roll_catalogue_rolls_every_banner():
-    assert set(roll(roll_catalogue, 123).banners) == {"Alpha Banner", "Beta Banner"}
+def test_catalogue_banners_lists_every_pool_cat_without_rolling():
+    res = catalogue_banners(events=EVENTS, pools=POOLS, units=UNITS)
+    assert set(res.banners) == {"Alpha Banner", "Beta Banner"}
+    assert {p.cat for p in res.banners["Alpha Banner"].pulls} == {"R1", "R2", "S1", "U1"}
+    assert {p.cat for p in res.banners["Beta Banner"].pulls} == {"R1", "S1"}
+    assert res.dates["Beta Banner"] == (date(2025, 2, 1), date(2025, 2, 10))
 
 
 def test_multis_are_matched_by_rule():
@@ -91,12 +95,12 @@ def test_step_up_guarantee_lands_only_on_the_15_roll_multi():
             step_up=True,
         )
     ]
-    rule = GachaRule((), (Multi(11, 1500, True), Multi(15, 2100, True)))
+    rule = GachaRule((), (Multi(3, 300, True), Multi(15, 2100, True)), step_up=True)
     res = roll_selected(
         123, ["Step Up Banner"], events=step, pools=POOLS, units=UNITS, rules=[rule]
     )
     assert res.banners["Step Up Banner"].guaranteed
-    assert res.multis["Step Up Banner"] == (Multi(11, 1500, False), Multi(15, 2100, True))
+    assert res.multis["Step Up Banner"] == (Multi(3, 300, False), Multi(15, 2100, True))
 
 
 def test_bare_name_resolves_to_the_run_live_today_not_a_future_rerun():

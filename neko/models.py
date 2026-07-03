@@ -36,12 +36,14 @@ class Banner:
 
 @dataclass(frozen=True, slots=True)
 class Pull:
-    """A single pull outcome."""
+    """A single pull outcome. A guaranteed pull is the uber a guaranteed multi awards;
+    its position is the multi's FIRST roll (where godfat's guaranteed column shows it)."""
 
     position: int
     banner_id: str
     cat: str
     rarity: Rarity
+    guaranteed: bool = False
 
 
 @dataclass(frozen=True, slots=True)

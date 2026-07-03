@@ -2,7 +2,9 @@
   <div class="track-guide">
     <p><strong>Track A</strong> and <strong>Track B</strong> are alternate timelines. Duplicate cats are
       auto-rerolled and switch tracks. A <span class="new-swatch">green outline</span> marks Uber or
-      Legend cats not yet in your collection.</p>
+      Legend cats not yet in your collection.{% if track.has_guaranteed %} A <strong>Guaranteed</strong>
+      column shows the Uber the banner's guaranteed multi awards when it is <em>started</em> on
+      that cell (the multi's final draw is swapped for it).{% endif %}</p>
     <div class="rarity-legend">
       <span class="rarity" data-rarity="Rare">Rare</span>
       <span class="rarity" data-rarity="Super Rare">Super Rare</span>
@@ -18,13 +20,21 @@
     </ul>
   {% endif %}
   <table class="track">
-    <thead><tr><th class="pos">#</th><th>Track A</th><th>Track B</th></tr></thead>
+    <thead><tr>
+      <th class="pos">#</th>
+      <th>Track A</th>
+      {% if track.has_guaranteed %}<th class="guaranteed-col">Guaranteed</th>{% endif %}
+      <th>Track B</th>
+      {% if track.has_guaranteed %}<th class="guaranteed-col">Guaranteed</th>{% endif %}
+    </tr></thead>
     <tbody>
       {% for row in track.rows %}
         <tr>
           <th scope="row" class="pos">{{ row.pos }}</th>
           {% include "planner/_track_cell.html" with entries=row.a multi=track.legend|length %}
+          {% if track.has_guaranteed %}{% include "planner/_track_cell.html" with entries=row.ga multi=track.legend|length cell_class="guaranteed-col" %}{% endif %}
           {% include "planner/_track_cell.html" with entries=row.b multi=track.legend|length %}
+          {% if track.has_guaranteed %}{% include "planner/_track_cell.html" with entries=row.gb multi=track.legend|length cell_class="guaranteed-col" %}{% endif %}
         </tr>
       {% endfor %}
     </tbody>
