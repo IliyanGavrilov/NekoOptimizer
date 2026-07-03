@@ -1,9 +1,8 @@
 import json
 from pathlib import Path
 
-from neko.godfat import BannerRolls, TrackPull
 from neko.graph import build_graphs, stream_index
-from neko.models import CATFOOD_PER_DRAW, Rarity, State
+from neko.models import CATFOOD_PER_DRAW, BannerRolls, Rarity, State, TrackPull
 from neko.search import Multi, astar
 
 # A real bc.godfat capture: seed 1893568593, "Trixi joins the Capsules" (2026-06-26_1052),

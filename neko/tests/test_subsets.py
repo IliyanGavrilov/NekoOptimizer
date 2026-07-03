@@ -1,6 +1,5 @@
-from neko.godfat import TrackPull
 from neko.graph import BannerGraph
-from neko.models import CATFOOD_PER_DRAW, Rarity, State
+from neko.models import CATFOOD_PER_DRAW, Rarity, State, TrackPull
 from neko.subsets import solve_subsets
 
 U = Rarity.UBER_SUPER_RARE

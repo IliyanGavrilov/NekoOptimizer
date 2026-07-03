@@ -1,20 +1,37 @@
-# Local drop-in for the scrape_* functions: the same ScrapeResult, built from the
-# committed schedule/pools/catalogue and rolled by our own engine.
+# Rolls banners from the committed schedule/pools/catalogue with our own engine.
 
 import re
 from collections.abc import Iterable, Mapping
+from dataclasses import dataclass, field
 from datetime import date
 
 from neko.bcdata import load_records
 from neko.gacha import GachaRule, load_rules, multi_configs
 from neko.gachadata import GachaEventRow, build_banner, load_events, load_pools
-from neko.godfat import BannerRolls, TrackPull
+from neko.models import BannerRolls, TrackPull
 from neko.roll import roll_banner
-from neko.scraper import DEFAULT_COUNT, ScrapeResult, active_events
 from neko.search import Multi
+
+DEFAULT_COUNT = 100
 
 # A picker selection can pin an exact run as "YYYY-MM-DD|name" (the run's start date).
 _DATED = re.compile(r"^(\d{4}-\d{2}-\d{2})\|")
+
+
+@dataclass(frozen=True, slots=True)
+class RollResult:
+    """The rolled banners plus each banner's multi-roll options and run dates."""
+
+    banners: dict[str, BannerRolls]
+    multis: dict[str, tuple[Multi, ...]]
+    dates: dict[str, tuple[date, date]] = field(default_factory=dict)
+
+
+def active_events(
+    events: Iterable[GachaEventRow], today: date | None = None
+) -> list[GachaEventRow]:
+    today = today or date.today()
+    return [event for event in events if event.start <= today <= event.end]
 
 
 def units_from_records(records: Iterable[Mapping] | None = None) -> dict[int, tuple[str, str]]:
@@ -92,7 +109,7 @@ def _result(
     units: Mapping[int, tuple[str, str]],
     count: int,
     rules: Iterable[GachaRule],
-) -> ScrapeResult:
+) -> RollResult:
     """Roll each event and key it by banner name, keeping a recurring banner's latest run."""
     latest: dict[str, GachaEventRow] = {}
     for event in events:
@@ -108,7 +125,7 @@ def _result(
         if event.event_id in configs:
             multis[name] = _event_multis(configs[event.event_id], guaranteed_rolls)
         dates[name] = (event.start, event.end)
-    return ScrapeResult(banners, multis, dates)
+    return RollResult(banners, multis, dates)
 
 
 def _load(events, pools, units, rules):
@@ -130,7 +147,7 @@ def roll_active(
     pools: Mapping[int, list[int]] | None = None,
     units: Mapping[int, tuple[str, str]] | None = None,
     rules: Iterable[GachaRule] | None = None,
-) -> ScrapeResult:
+) -> RollResult:
     """Roll the banners active on ``today`` (defaults to the real date)."""
     events, pools, units, rules = _load(events, pools, units, rules)
     return _result(seed, active_events(events, today), pools, units, count, rules)
@@ -146,7 +163,7 @@ def roll_selected(
     pools: Mapping[int, list[int]] | None = None,
     units: Mapping[int, tuple[str, str]] | None = None,
     rules: Iterable[GachaRule] | None = None,
-) -> ScrapeResult:
+) -> RollResult:
     """Roll the selected banners: each "start|name" its pinned run, each bare name its
     current run (see [select_events])."""
     events, pools, units, rules = _load(events, pools, units, rules)
@@ -158,7 +175,7 @@ def catalogue_banners(
     events: Iterable[GachaEventRow] | None = None,
     pools: Mapping[int, list[int]] | None = None,
     units: Mapping[int, tuple[str, str]] | None = None,
-) -> ScrapeResult:
+) -> RollResult:
     """Every scheduled banner's cats straight from its latest run's pool - the catalogue
     needs who CAN drop on a banner, not a rolled sample, so no seed and no rolling."""
     events, pools, units, _ = _load(events, pools, units, [])
@@ -175,4 +192,4 @@ def catalogue_banners(
         ]
         banners[name] = BannerRolls(cats, [])
         dates[name] = (event.start, event.end)
-    return ScrapeResult(banners, {}, dates)
+    return RollResult(banners, {}, dates)

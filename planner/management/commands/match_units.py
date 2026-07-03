@@ -4,7 +4,7 @@ from planner.services import unit_match_report
 
 
 class Command(BaseCommand):
-    help = "Report which scraped cat names map to a canonical unit, and which don't."
+    help = "Report which imported cat names map to a canonical unit, and which don't."
 
     def handle(self, *args, **options):
         matches, unmatched = unit_match_report()

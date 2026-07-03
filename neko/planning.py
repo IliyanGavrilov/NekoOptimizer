@@ -1,8 +1,7 @@
 from collections.abc import Iterable, Mapping, Sequence
 
-from neko.godfat import TrackPull
 from neko.graph import build_graphs
-from neko.models import CATFOOD_PER_DRAW, State
+from neko.models import CATFOOD_PER_DRAW, State, TrackPull
 from neko.search import Multi, astar
 from neko.subsets import SubsetPlan, solve_subsets
 

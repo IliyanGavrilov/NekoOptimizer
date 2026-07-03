@@ -3,8 +3,7 @@
 
 from dataclasses import dataclass
 
-from neko.godfat import BannerRolls, TrackPull
-from neko.models import Banner, Rarity
+from neko.models import Banner, BannerRolls, Rarity, TrackPull
 from neko.rng import xorshift
 
 _BASE = 10000  # godfat's GachaPool::Base: rarity scores and rates are parts-per-10000.

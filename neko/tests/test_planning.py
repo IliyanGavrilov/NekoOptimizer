@@ -1,5 +1,4 @@
-from neko.godfat import TrackPull
-from neko.models import Rarity
+from neko.models import Rarity, TrackPull
 from neko.planning import plan
 from neko.search import Multi
 
