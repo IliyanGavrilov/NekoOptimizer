@@ -2,6 +2,7 @@ from collections import Counter
 from collections.abc import Iterable, Mapping
 from datetime import date, timedelta
 from itertools import combinations
+from urllib.parse import quote
 
 from neko.catalogue import match_names, name_index
 from neko.gachadata import GachaEventRow, load_events, load_pools, load_series, load_tickets
@@ -18,6 +19,28 @@ from neko.subsets import solve_subsets
 from planner.models import Banner, Cat, Unit
 
 RARITY_ORDER = ["Normal", "Special", "Rare", "Super Rare", "Uber Super Rare", "Legend Rare"]
+
+WIKI_BASE = "https://battlecats.miraheze.org/wiki/"
+
+# The wiki titles every cat page '{name} ({rarity} Cat)' and its rarity labels differ
+# from the game's internal names (internal 'Uber Super Rare' -> wiki 'Uber Rare').
+_WIKI_RARITY = {
+    Rarity.NORMAL.value: "Normal Cat",
+    Rarity.SPECIAL.value: "Special Cat",
+    Rarity.RARE.value: "Rare Cat",
+    Rarity.SUPER_RARE.value: "Super Rare Cat",
+    Rarity.UBER_SUPER_RARE.value: "Uber Rare Cat",
+    Rarity.LEGEND_RARE.value: "Legend Rare Cat",
+}
+
+
+def wiki_url(name: str, rarity: str = "") -> str:
+    """The unit's Battle Cats Wiki (Miraheze) page URL; an unknown rarity falls back to
+    the bare, undisambiguated name."""
+    label = _WIKI_RARITY.get(rarity)
+    title = f"{name} ({label})" if label else name
+    return WIKI_BASE + quote(title.replace(" ", "_"), safe="()'")
+
 
 # Platinum/Legend run on scarce tickets, not catfood, so the optimizer treats them as
 # info-only: capped (0 by default) rather than modelled as ordinary catfood gacha.

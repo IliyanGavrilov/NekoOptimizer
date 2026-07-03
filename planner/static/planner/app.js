@@ -734,3 +734,76 @@ document.querySelectorAll('input[type="number"]').forEach((input) => {
     if (moved) e.preventDefault();
   });
 });
+
+// ---- Cat popup: a unit's forms (icons) + a link to its wiki page ------
+// Opened from any cat name (track / steps) or the ⓘ opener on collection/picker
+// chips. Form icons are hotlinked per-form from battlecatsinfo's asset repo (via its
+// GitHub Pages CDN); ones that 404 (unreleased units) just hide themselves.
+const catPopup = document.getElementById("catPopup");
+if (catPopup) {
+  const ICON_BASE = "https://battlecatsinfo.github.io/img/u";
+  const infoUrl = document.body.dataset.unitInfoUrl;
+  const nameEl = catPopup.querySelector(".cat-popup-name");
+  const rarityEl = catPopup.querySelector(".cat-popup-head .rarity");
+  const formsEl = catPopup.querySelector(".cat-popup-forms");
+  const wikiEl = catPopup.querySelector(".cat-popup-wiki");
+  const cache = new Map(); // name -> Promise<info | null>
+
+  const load = (name) => {
+    if (!cache.has(name)) {
+      cache.set(
+        name,
+        fetch(`${infoUrl}?name=${encodeURIComponent(name)}`)
+          .then((r) => (r.ok ? r.json() : null))
+          .then((d) => (d && d.found ? d : null))
+          .catch(() => null),
+      );
+    }
+    return cache.get(name);
+  };
+
+  async function openFor(name) {
+    const info = await load(name);
+    if (!info) return; // a cat not in the catalogue yet: no forms/wiki to show
+    nameEl.textContent = info.name;
+    rarityEl.textContent = info.rarity;
+    rarityEl.dataset.rarity = info.rarity;
+    rarityEl.hidden = !info.rarity;
+    wikiEl.href = info.wiki;
+    formsEl.replaceChildren();
+    (info.forms || []).forEach((form, i) => {
+      const fig = document.createElement("figure");
+      fig.className = "cat-form";
+      const img = document.createElement("img");
+      img.loading = "lazy";
+      img.alt = form;
+      img.src = `${ICON_BASE}/${info.unit_id}/${i}.png`;
+      img.addEventListener("error", () => fig.classList.add("no-icon"));
+      const caption = document.createElement("figcaption");
+      caption.textContent = form;
+      fig.append(img, caption);
+      formsEl.appendChild(fig);
+    });
+    if (!catPopup.open) catPopup.showModal();
+  }
+
+  document.addEventListener("click", (e) => {
+    const trigger = e.target.closest(
+      ".catlink[data-name], .catinfo[data-name], .cat-pill[data-name]",
+    );
+    if (!trigger) return;
+    e.preventDefault();
+    openFor(trigger.dataset.name);
+  });
+  // Close on the ×, or on a click in the backdrop (outside the dialog's box). Esc is
+  // handled natively by showModal().
+  catPopup.addEventListener("click", (e) => {
+    const box = catPopup.getBoundingClientRect();
+    const inside =
+      e.clientX >= box.left &&
+      e.clientX <= box.right &&
+      e.clientY >= box.top &&
+      e.clientY <= box.bottom;
+    if (!inside || e.target.closest("[data-close]")) catPopup.close();
+  });
+}

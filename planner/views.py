@@ -20,6 +20,7 @@ from planner.services import (
     picker_groups,
     set_sections,
     subset_solutions,
+    wiki_url,
 )
 
 
@@ -130,6 +131,24 @@ def find_plan(request):
             "solutions_html": render_to_string(
                 "planner/_solutions.html", {"solutions": solutions}, request
             ),
+        }
+    )
+
+
+def unit_info(request):
+    """A unit's forms, rarity and wiki link, for the cat popup (looked up by base-form
+    name - the label every cat chip and track cell carries)."""
+    unit = Unit.objects.filter(name=request.GET.get("name", "")).first()
+    if unit is None:
+        return JsonResponse({"found": False})
+    return JsonResponse(
+        {
+            "found": True,
+            "unit_id": unit.unit_id,
+            "name": unit.name,
+            "rarity": unit.rarity,
+            "forms": unit.forms,
+            "wiki": wiki_url(unit.name, unit.rarity),
         }
     )
 

@@ -513,14 +513,21 @@ tbody tr:hover, table tr:hover { background: var(--panel-2); }
 .step-meta { display: flex; flex-wrap: wrap; gap: 0.5rem; font-size: 0.8rem; color: var(--muted); }
 .step-kind { color: var(--ink); }
 .step-cats { display: flex; flex-wrap: wrap; gap: 0.25rem; margin-top: 0.2rem; }
+/* A step's cat: reads as a pill, and (being a button) opens the forms/wiki popup. */
 .cat-pill {
+  font-family: inherit;
   font-size: 0.78rem;
+  font-weight: 500;
   color: var(--ink);
   background: var(--panel-2);
   border: 1px solid var(--line);
   border-radius: 999px;
   padding: 0.05rem 0.5rem;
+  margin: 0;
+  width: auto;
+  cursor: pointer;
 }
+.cat-pill:hover { border-color: var(--accent); filter: none; }
 /* A step's searched-for cat, ringed gold like its track cell. */
 .cat-pill.target {
   background: rgba(244, 169, 59, 0.18);
@@ -839,6 +846,103 @@ table.track th.guaranteed-col, table.track td.guaranteed-col {
 }
 .own-chip.owned .chip { color: var(--accent); font-weight: 700; }
 .own-chip.wanted .chip-star { color: var(--r-super); text-shadow: 0 0 6px rgba(255, 210, 74, 0.6); }
+
+/* ---- Cat name -> forms + wiki popup ---------------------------------- */
+/* A cat name in a track cell: plain text that opens the popup on click. */
+.catlink {
+  font: inherit;
+  background: transparent;
+  color: inherit;
+  border: 0;
+  border-radius: 0;
+  padding: 0;
+  margin: 0;
+  width: auto;
+  cursor: pointer;
+  text-decoration: underline dotted transparent;
+  text-underline-offset: 2px;
+}
+.catlink:hover { color: var(--accent); text-decoration-color: currentColor; filter: none; }
+
+/* The small "ⓘ" opener on collection + picker chips (they toggle on their main click,
+   so the forms/wiki popup gets its own affordance). */
+.catinfo {
+  font: inherit;
+  font-size: 0.82rem;
+  line-height: 1;
+  background: transparent;
+  color: var(--muted);
+  border: 0;
+  border-radius: 999px;
+  padding: 0.15rem 0.35rem;
+  margin: 0;
+  width: auto;
+  cursor: pointer;
+  opacity: 0.6;
+}
+.catinfo:hover { color: var(--accent); opacity: 1; filter: none; }
+
+/* Collection: a third stitched segment of the own-chip, like the star. */
+.own-chip .catinfo {
+  display: flex;
+  align-items: center;
+  border-left: 1px solid var(--line);
+  border-radius: 0;
+  padding: 0.25rem 0.5rem;
+}
+
+/* Picker: the chip keeps selecting on click; the opener rides alongside it. */
+.picker-chip { display: inline-flex; align-items: center; gap: 0.1rem; }
+
+.cat-popup {
+  position: relative;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--panel);
+  color: var(--ink);
+  padding: 1.1rem 1.2rem 1rem;
+  max-width: min(92vw, 360px);
+  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.5);
+}
+.cat-popup::backdrop { background: rgba(10, 8, 5, 0.55); backdrop-filter: blur(2px); }
+.cat-popup-close {
+  position: absolute;
+  top: 0.4rem;
+  right: 0.5rem;
+  background: transparent;
+  color: var(--muted);
+  border: 0;
+  border-radius: 999px;
+  font-size: 1.3rem;
+  line-height: 1;
+  padding: 0.1rem 0.45rem;
+  margin: 0;
+  width: auto;
+  cursor: pointer;
+}
+.cat-popup-close:hover { color: var(--ink); filter: none; }
+.cat-popup-head {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin: 0 1.5rem 0.85rem 0;
+}
+.cat-popup-name { font-family: var(--head-font); font-weight: 700; font-size: 1.05rem; }
+.cat-popup-forms { display: flex; flex-wrap: wrap; gap: 0.7rem; margin-bottom: 0.9rem; }
+.cat-popup-forms:empty { display: none; }
+.cat-form { margin: 0; width: 64px; text-align: center; }
+.cat-form img {
+  width: 64px;
+  height: 64px;
+  object-fit: contain;
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+}
+.cat-form.no-icon img { visibility: hidden; }
+.cat-form figcaption { margin-top: 0.25rem; font-size: 0.72rem; line-height: 1.15; color: var(--muted); }
+.cat-popup-wiki { display: inline-block; font-weight: 600; }
 
 /* ---- Add-a-cat (secondary) ------------------------------------------- */
 
