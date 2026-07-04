@@ -22,10 +22,9 @@ class TrackPull:
     """A pull outcome on track "A" or "B" at a 1-based position.
 
     ``seed`` is the RNG state after obtaining this pull: entering it as the input
-    seed makes the play chain's next cell the new 1A (what "apply plan" advances to).
-    ``seed_before`` re-anchors instead: entering it makes THIS cell the new 1A. It
-    depends only on the cell's stream position, never on any banner's pools, so it's
-    the per-cell "roll to here" dice.
+    seed makes the play chain's next cell the new 1A (what "apply plan" advances to,
+    and what a cell's dice jumps to). It is banner-independent for a nominal pull (a
+    clean roll consumes the same two stream values whatever the pool).
 
     Reroll cells (a rare arriving as a dupe of the previous pull) also carry
     ``steps``, the extra seed values the reroll consumed - the pull then continues
@@ -38,7 +37,6 @@ class TrackPull:
     cat: str
     rarity: Rarity
     seed: int = 0
-    seed_before: int = 0
     steps: int = 0
     realized: bool = False
 

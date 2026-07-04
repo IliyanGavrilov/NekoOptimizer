@@ -718,11 +718,14 @@ table.track .entry.shared {
   padding-left: calc(0.5rem - 3px);
   border-radius: 2px;
 }
-/* Rare-dupe reroll: show where the slot jumps (to the other track) on its own line. */
-table.track .arrow { display: block; color: var(--accent); font-size: 0.78rem; font-weight: 400; }
-/* A conditional reroll (godfat's extra R cell): it only triggers when a bounce path
-   arrives holding this cell's cat - dimmed so it reads as an "only if". */
-table.track .arrow.cond { color: color-mix(in srgb, var(--accent) 45%, var(--muted)); }
+/* Rare-dupe reroll: show where the slot jumps (to the other track) on its own line.
+   Dimmed accent so it reads as a branch note, not a pull of its own. */
+table.track .arrow {
+  display: block;
+  color: color-mix(in srgb, var(--accent) 45%, var(--muted));
+  font-size: 0.78rem;
+  font-weight: 400;
+}
 /* Collection marks, matching the picker chips: a green name is an Uber/Legend you
    don't own yet, ✓ = owned (the line dims), ★ = wishlisted. */
 table.track .entry.new .catlink, .cat-pill.new { color: var(--new); }

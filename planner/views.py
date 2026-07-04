@@ -60,12 +60,21 @@ def picker_past(request):
 
 
 def _roll(seed, chosen_banners, count, last_cat=""):
-    # last_cat only travels when set, so the many tests stubbing fetch_* with
-    # (seed, count) lambdas keep working.
-    extra = {"last_cat": last_cat} if last_cat else {}
     if chosen_banners:
-        return fetch_for_banners(seed, chosen_banners, count, **extra)
-    return fetch_banners(seed, count, **extra)
+        return fetch_for_banners(seed, chosen_banners, count, last_cat=last_cat)
+    return fetch_banners(seed, count, last_cat=last_cat)
+
+
+def _rolls_by_banner(result):
+    """A roll result split into the per-banner maps [build_tracks] and
+    [subset_solutions] take: (pulls, guaranteed, rerolls, guaranteed_rerolls)."""
+    banners = result.banners
+    return (
+        {name: rolls.pulls for name, rolls in banners.items()},
+        {name: rolls.guaranteed for name, rolls in banners.items()},
+        {name: rolls.rerolls for name, rolls in banners.items()},
+        {name: rolls.guaranteed_rerolls for name, rolls in banners.items()},
+    )
 
 
 def _owned_names():
@@ -91,9 +100,7 @@ def tracks(request):
     last_cat = request.POST.get("last_cat", "").strip()
     result = _roll(seed, request.POST.getlist("banners"), DEFAULT_COUNT, last_cat)
     equivalents = equivalent_banners(result.banners)
-    pulls = {name: rolls.pulls for name, rolls in result.banners.items()}
-    guaranteed = {name: rolls.guaranteed for name, rolls in result.banners.items()}
-    rerolls = {name: rolls.rerolls for name, rolls in result.banners.items()}
+    pulls, guaranteed, rerolls, _ = _rolls_by_banner(result)
     track = build_tracks(
         pulls,
         rerolls,
@@ -122,10 +129,7 @@ def find_plan(request):
     last_cat = request.POST.get("last_cat", "").strip()
     result = _roll(seed, request.POST.getlist("banners"), count, last_cat)
     equivalents = equivalent_banners(result.banners)
-    pulls = {name: rolls.pulls for name, rolls in result.banners.items()}
-    guaranteed_pulls = {name: rolls.guaranteed for name, rolls in result.banners.items()}
-    rerolls = {name: rolls.rerolls for name, rolls in result.banners.items()}
-    guaranteed_rerolls = {name: rolls.guaranteed_rerolls for name, rolls in result.banners.items()}
+    pulls, guaranteed_pulls, rerolls, guaranteed_rerolls = _rolls_by_banner(result)
     banner_limits = capped_banner_limits(pulls, form.cleaned_data["platinum_legend_cap"])
     if explore:
         # Ignore the budget but still fund single pulls with tickets (their real

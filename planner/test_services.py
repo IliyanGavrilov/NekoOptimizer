@@ -11,6 +11,7 @@ from planner.services import (
     ADDONS_LABEL,
     REGULARS_LABEL,
     WIKI_BASE,
+    TrackMarks,
     banner_titles,
     build_tracks,
     capped_banner_limits,
@@ -444,7 +445,8 @@ def test_build_tracks_guaranteed_entry_carries_its_after_seed():
 
 def test_build_tracks_highlights_the_path_and_target():
     banner_pulls = {"X": [TrackPull(1, "A", "Bahamut", U)]}
-    track = build_tracks(banner_pulls, {}, {}, path={"X": {0}}, targets={"X": {0: "Bahamut"}})
+    marks = TrackMarks(path={"X": {0}}, targets={"X": {0: "Bahamut"}})
+    track = build_tracks(banner_pulls, {}, {}, marks=marks)
     entry = track["rows"][0]["a"][0]
     assert (entry["on_path"], entry["target"]) == (True, True)
 
@@ -454,18 +456,17 @@ def test_build_tracks_target_pill_follows_the_dupe_branch():
     # nominal one - the obtained cat is recorded per lit index.
     banner_pulls = {"X": [TrackPull(1, "A", "Pogo", R), TrackPull(2, "A", "Pogo", R)]}
     rerolls = {"X": [TrackPull(2, "A", "Jurassic Cat", R)]}
-    track = build_tracks(
-        banner_pulls, rerolls, {}, path={"X": {2}}, targets={"X": {2: "Jurassic Cat"}}
-    )
+    marks = TrackMarks(path={"X": {2}}, targets={"X": {2: "Jurassic Cat"}})
+    track = build_tracks(banner_pulls, rerolls, {}, marks=marks)
     cell = track["rows"][1]["a"][0]
     assert (cell["target"], cell["alt"]["target"]) == (False, True)
 
 
 def test_plan_highlight_keys_indices_by_representative_banner():
     option = SubsetPlan(frozenset({"Bahamut"}), Path((Pull(0, "Y", "Bahamut", U),), 1, 0))
-    path, targets, gpath, gtargets = plan_highlight(option, {"X": ["X", "Y"], "Y": ["X", "Y"]})
-    assert (path, targets) == ({"X": {0}}, {"X": {0: "Bahamut"}})
-    assert (gpath, gtargets) == ({}, {})
+    marks = plan_highlight(option, {"X": ["X", "Y"], "Y": ["X", "Y"]})
+    assert (marks.path, marks.targets) == ({"X": {0}}, {"X": {0: "Bahamut"}})
+    assert (marks.gpath, marks.gtargets) == ({}, {})
 
 
 def test_plan_highlight_routes_guaranteed_pulls_to_the_guaranteed_column():
@@ -473,9 +474,9 @@ def test_plan_highlight_routes_guaranteed_pulls_to_the_guaranteed_column():
     # track cell of some later position.
     pulls = (Pull(0, "X", "Cat", R), Pull(0, "X", "Mecha", U, guaranteed=True))
     option = SubsetPlan(frozenset({"Mecha"}), Path(pulls, 0, 3))
-    path, targets, gpath, gtargets = plan_highlight(option, {})
-    assert (path, targets) == ({"X": {0}}, {})
-    assert (gpath, gtargets) == ({"X": {0}}, {"X": {0: "Mecha"}})
+    marks = plan_highlight(option, {})
+    assert (marks.path, marks.targets) == ({"X": {0}}, {})
+    assert (marks.gpath, marks.gtargets) == ({"X": {0}}, {"X": {0: "Mecha"}})
 
 
 def test_build_tracks_flags_unowned_uber_as_new():
@@ -522,15 +523,8 @@ def test_build_tracks_highlights_the_guaranteed_column_cell():
     # uber it awards); the normal track cell keeps its normal roll.
     banner_pulls = {"X": [TrackPull(1, "A", "Shaman Cat", R)]}
     guaranteed = {"X": [TrackPull(1, "A", "Trixi the Merc", U)]}
-    track = build_tracks(
-        banner_pulls,
-        {},
-        {},
-        path={"X": {0}},
-        guaranteed=guaranteed,
-        gpath={"X": {0}},
-        gtargets={"X": {0: "Trixi the Merc"}},
-    )
+    marks = TrackMarks(path={"X": {0}}, gpath={"X": {0}}, gtargets={"X": {0: "Trixi the Merc"}})
+    track = build_tracks(banner_pulls, {}, {}, marks=marks, guaranteed=guaranteed)
     entry = track["rows"][0]["ga"][0]
     assert (entry["on_path"], entry["target"]) == (True, True)
     assert track["rows"][0]["a"][0]["cat"] == "Shaman Cat"
@@ -863,7 +857,8 @@ def test_build_tracks_marks_an_interchangeable_entry():
         "X": [TrackPull(1, "A", "Pogo", R)],
         "Y": [TrackPull(1, "A", "Pogo", R)],
     }
-    track = build_tracks(banner_pulls, {}, {}, path={"X": {0}}, shared={"Y": {0}})
+    marks = TrackMarks(path={"X": {0}}, shared={"Y": {0}})
+    track = build_tracks(banner_pulls, {}, {}, marks=marks)
     cell = track["rows"][0]["a"]
     assert [(e["on_path"], e["shared"]) for e in cell] == [(True, False), (False, True)]
     assert track["has_shared"] is True
@@ -875,9 +870,8 @@ def test_build_tracks_guaranteed_entry_can_be_shared():
         "Y": [TrackPull(1, "A", "Shaman Cat", R)],
     }
     guaranteed = {"X": [TrackPull(1, "A", "Mecha", U)], "Y": [TrackPull(1, "A", "Mecha", U)]}
-    track = build_tracks(
-        banner_pulls, {}, {}, guaranteed=guaranteed, gpath={"X": {0}}, gshared={"Y": {0}}
-    )
+    marks = TrackMarks(gpath={"X": {0}}, gshared={"Y": {0}})
+    track = build_tracks(banner_pulls, {}, {}, marks=marks, guaranteed=guaranteed)
     cell = track["rows"][0]["ga"]
     assert [(e["on_path"], e["shared"]) for e in cell] == [(True, False), (False, True)]
 
