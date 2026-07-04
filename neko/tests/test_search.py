@@ -14,6 +14,64 @@ def start(position=0, tickets=0, catfood=0, found=()):
     return State(position, tickets, catfood, frozenset(found))
 
 
+def test_dupe_reroll_target_is_credited():
+    # A target that only drops as a dupe's reroll: pulling through the dupe obtains it.
+    g = BannerGraph(
+        "x",
+        [TrackPull(1, "A", "Cat", R), TrackPull(2, "A", "Cat", R)],
+        rerolls=[TrackPull(2, "A", "Bahamut", R, steps=1)],
+    )
+    result = astar([g], {"Bahamut"}, start(tickets=2))
+    assert result.cats == ("Cat", "Bahamut")
+
+
+def test_static_dupe_cell_rolls_normally_on_a_clean_arrival():
+    # Starting AT a cell that statically repeats its predecessor: nothing was obtained
+    # before it on this path, so it rolls its nominal cat and walks straight on.
+    g = BannerGraph(
+        "x",
+        [TrackPull(1, "A", "Cat", R), TrackPull(2, "A", "Cat", R), TrackPull(3, "A", "Dog", R)],
+        rerolls=[TrackPull(2, "A", "Rat", R, steps=1)],
+    )
+    result = astar([g], {"Cat", "Dog"}, start(position=2, tickets=2))
+    assert result.cats == ("Cat", "Dog")
+
+
+def test_bounce_chain_rerolls_again_on_the_landing():
+    # The 60B->62AR shape in miniature: 3A dupes 2A and rerolls to Bird, landing on 4B -
+    # whose nominal roll is Bird too, so THAT path rerolls again and yields the target.
+    g = BannerGraph(
+        "x",
+        [
+            TrackPull(1, "A", "Dog", R),
+            TrackPull(2, "A", "Cat", R),
+            TrackPull(3, "A", "Cat", R),
+            TrackPull(4, "B", "Bird", R),
+        ],
+        rerolls=[
+            TrackPull(3, "A", "Bird", R, steps=1),
+            TrackPull(4, "B", "Target", R, steps=1),
+        ],
+    )
+    result = astar([g], {"Target"}, start(tickets=4))
+    assert result.cats == ("Dog", "Cat", "Bird", "Target")
+
+
+def test_guaranteed_multi_started_on_a_dupe_awards_the_duped_column():
+    # The multi's first roll arrives as a dupe, so its chain ends elsewhere: it awards
+    # the duped guaranteed column's uber, not the clean one.
+    g = BannerGraph(
+        "x",
+        [TrackPull(1, "A", "Cat", R), TrackPull(2, "A", "Cat", R), TrackPull(3, "B", "Dog", R)],
+        guaranteed=[TrackPull(2, "A", "Filler", U)],
+        rerolls=[TrackPull(2, "A", "Rat", R, steps=1)],
+        guaranteed_rerolls=[TrackPull(2, "A", "Mekako", U)],
+    )
+    result = astar([g], {"Mekako"}, start(tickets=1, catfood=2), multis={"x": [Multi(2, 300)]})
+    assert result.cats == ("Cat", "Rat", "Mekako")
+    assert "guaranteed" in result.legs[-1].kind
+
+
 def test_no_targets_returns_empty_plan():
     assert astar([banner("x", (1, "A", "Cat", R))], set(), start(tickets=5)) == Path((), 0, 0)
 

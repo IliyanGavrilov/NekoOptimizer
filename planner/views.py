@@ -117,6 +117,7 @@ def find_plan(request):
     pulls = {name: rolls.pulls for name, rolls in result.banners.items()}
     guaranteed_pulls = {name: rolls.guaranteed for name, rolls in result.banners.items()}
     rerolls = {name: rolls.rerolls for name, rolls in result.banners.items()}
+    guaranteed_rerolls = {name: rolls.guaranteed_rerolls for name, rolls in result.banners.items()}
     banner_limits = capped_banner_limits(pulls, form.cleaned_data["platinum_legend_cap"])
     if explore:
         # Ignore the budget but still fund single pulls with tickets (their real
@@ -141,6 +142,7 @@ def find_plan(request):
         owned=_owned_names(),
         wanted=_wanted_names(),
         titles=display_titles(),
+        guaranteed_rerolls=guaranteed_rerolls,
     )
     return JsonResponse(
         {

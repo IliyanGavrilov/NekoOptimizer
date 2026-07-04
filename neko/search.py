@@ -1,11 +1,11 @@
 import heapq
 from bisect import bisect_left
 from collections.abc import Iterable, Mapping, Sequence
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from itertools import count
 
 from neko.graph import BannerGraph
-from neko.models import CATFOOD_PER_DRAW, Leg, Path, Pull, State
+from neko.models import CATFOOD_PER_DRAW, Leg, Path, Pull, Rarity, State
 
 INF = float("inf")
 
@@ -20,34 +20,58 @@ class Multi:
 
 
 def _occurrences(graphs: Iterable[BannerGraph], targets: frozenset[str]) -> dict[str, list[int]]:
-    # Guaranteed-column spots count too: a guaranteed multi can obtain a target that never
-    # appears as a normal roll. The column is keyed by the multi's first roll, so the spot
-    # is where that multi must START - a position the plan still has to reach.
+    # A target counts wherever SOME path can obtain it: a cell's nominal roll, its
+    # conditional reroll (a dupe arrival really obtains that cat), and the guaranteed
+    # columns for both kinds of start - a guaranteed multi can obtain a target that
+    # never appears as a normal roll, and its spot is where the multi must START.
+    # Extra spots only weaken the lower bound; missing ones would break admissibility.
     spots: dict[str, list[int]] = {target: [] for target in targets}
     for graph in graphs:
         for position in graph.positions():
-            outcome = graph.outcome(position)
-            if not outcome.switched and outcome.cat in targets:
-                spots[outcome.cat].append(position)
-        for position in graph.guaranteed_positions():
-            forced = graph.guaranteed(position)
-            if forced.cat in targets:
-                spots[forced.cat].append(position)
+            nominal = graph.resolve(position)
+            if nominal.cat in targets:
+                spots[nominal.cat].append(position)
+            reroll = graph.reroll(position)
+            if reroll is not None and reroll.cat in targets:
+                spots[reroll.cat].append(position)
+        for duped in (False, True):
+            for position in graph.guaranteed_positions(duped):
+                forced = graph.guaranteed(position, duped)
+                if forced.cat in targets:
+                    spots[forced.cat].append(position)
     for positions in spots.values():
         positions.sort()
     return spots
 
 
-def _multi_landing(graph: BannerGraph, position: int, rolls: int) -> int | None:
+def _multi_landing(graph: BannerGraph, position: int, rolls: int, last_cat: str = "") -> int | None:
     """Where a guaranteed multi started at ``position`` continues: walk its ``rolls - 1``
     real rolls along the chain, then one half-step past the swapped final roll (track
     flips with the parity). None when the chain runs off the rolled window."""
     for _ in range(rolls - 1):
-        outcome = graph.outcome(position)
+        outcome = graph.resolve(position, last_cat)
         if outcome is None:
             return None
+        last_cat = outcome.cat
         position = outcome.next_position
     return position + 1
+
+
+def _canon_last(graphs: Iterable[BannerGraph], position: int, last_cat: str) -> str:
+    """The previously obtained cat only matters where the next roll could repeat it;
+    dropping it everywhere else lets converging search paths share one state."""
+    if not last_cat:
+        return ""
+    for graph in graphs:
+        nominal = graph.resolve(position)
+        if nominal is not None and nominal.rarity is Rarity.RARE and nominal.cat == last_cat:
+            return last_cat
+    return ""
+
+
+def _canon(state: State, graphs: Iterable[BannerGraph]) -> State:
+    last = _canon_last(graphs, state.position, state.last_cat)
+    return state if last == state.last_cat else replace(state, last_cat=last)
 
 
 def _collectable(
@@ -55,42 +79,42 @@ def _collectable(
     targets: frozenset[str],
     position: int,
     multis: Mapping[str, Sequence[Multi]] | None = None,
+    last_cat: str = "",
 ) -> bool:
     """Ignoring budget, can every target still be collected from ``position``? BFS over
-    (position, found) using the graphs' real step structure - rare-dupe switches force +3
-    steps, so a spot's parity can make it genuinely unreachable, and the full search
-    would only prove that after exhausting every budget split of the whole state space.
-    Guaranteed multis are modelled with their real landing so their off-parity continue
-    points stay reachable."""
+    (position, last cat, found) using the graphs' real step structure - rare-dupe
+    rerolls force extra steps, so a spot's parity can make it genuinely unreachable, and
+    the full search would only prove that after exhausting every budget split of the
+    whole state space. Guaranteed multis are modelled with their real landing so their
+    off-parity continue points stay reachable."""
     if not targets:
         return True
     rolls_by_banner = {
         banner_id: sorted({m.rolls for m in ms if m.guaranteed})
         for banner_id, ms in (multis or {}).items()
     }
-    start = (position, frozenset())
+    start = (position, _canon_last(graphs, position, last_cat), frozenset())
     seen = {start}
     frontier = [start]
     while frontier:
         upcoming = []
-        for pos, found in frontier:
+        for pos, last, found in frontier:
             for graph in graphs:
                 moves = []
-                outcome = graph.outcome(pos)
+                outcome = graph.resolve(pos, last)
                 if outcome is not None:
-                    cat = outcome.cat if not outcome.switched else ""
-                    moves.append((cat, outcome.next_position))
-                forced = graph.guaranteed(pos)
-                if forced is not None:
-                    for rolls in rolls_by_banner.get(graph.banner_id, ()):
-                        landing = _multi_landing(graph, pos, rolls)
-                        if landing is not None:
-                            moves.append((forced.cat, landing))
+                    moves.append((outcome.cat, outcome.next_position))
+                    forced = graph.guaranteed(pos, duped=outcome.switched)
+                    if forced is not None:
+                        for rolls in rolls_by_banner.get(graph.banner_id, ()):
+                            landing = _multi_landing(graph, pos, rolls, last)
+                            if landing is not None:
+                                moves.append((forced.cat, landing))
                 for cat, next_position in moves:
                     got = found | {cat} if cat in targets else found
                     if got >= targets:
                         return True
-                    state = (next_position, got)
+                    state = (next_position, _canon_last(graphs, next_position, cat), got)
                     if state not in seen:
                         seen.add(state)
                         upcoming.append(state)
@@ -111,16 +135,18 @@ def _heuristic(
     occurrences: dict[str, list[int]],
     ticket_value: int,
     multi_floor: float = INF,
+    advance: int = 3,
 ) -> float:
     # Lower-bound the pulls to the farthest still-needed target: each pull advances the
-    # position by at most 3, so reaching a target d away costs at least d // 3 + 1 pulls.
+    # position by at most `advance` (+2 nominal, +2+steps on the banners' worst reroll),
+    # so reaching a target d away costs at least d // advance + 1 pulls.
     worst = 0
     for cat in remaining:
         spots = occurrences[cat]
         index = bisect_left(spots, position)
         if index == len(spots):
             return INF
-        worst = max(worst, (spots[index] - position) // 3 + 1)
+        worst = max(worst, (spots[index] - position) // advance + 1)
     if worst == 0:
         return 0.0
     # The cheapest any pull can be: a multi's per-roll price when that undercuts a full
@@ -133,7 +159,12 @@ def _heuristic(
 
 
 def _node_h(
-    state: State, targets: frozenset[str], occurrences, ticket_value: int, multi_floor: float
+    state: State,
+    targets: frozenset[str],
+    occurrences,
+    ticket_value: int,
+    multi_floor: float,
+    advance: int = 3,
 ) -> float:
     return _heuristic(
         state.position,
@@ -142,6 +173,7 @@ def _node_h(
         occurrences,
         ticket_value,
         multi_floor,
+        advance,
     )
 
 
@@ -187,13 +219,13 @@ def _pull_variants(
 ):
     # Each affordable way to pull `graph` once at `state`: a ticket-funded move and/or a
     # catfood-funded one. They reach the same outcome, differing only in what they spend.
-    outcome = graph.outcome(state.position)
+    outcome = graph.resolve(state.position, state.last_cat)
     if outcome is None:
         return
     if limit is not None and _banner_pulls(state, graph.banner_id) >= limit:
         return
     found = state.found
-    if not outcome.switched and outcome.cat in targets:
+    if outcome.cat in targets:
         found = found | {outcome.cat}
     pull = Pull(state.position, graph.banner_id, outcome.cat, outcome.rarity)
     counts = state.banner_pulls if limit is None else _bump(state.banner_pulls, graph.banner_id, 1)
@@ -215,6 +247,7 @@ def _pull_variants(
             found,
             graph.banner_id,
             counts,
+            outcome.cat,
         )
         yield nxt, Leg(graph.banner_id, "Single pull", 0, (pull,))
     if can_catfood:
@@ -225,6 +258,7 @@ def _pull_variants(
             found,
             graph.banner_id,
             counts,
+            outcome.cat,
         )
         yield nxt, Leg(graph.banner_id, "Single pull", CATFOOD_PER_DRAW, (pull,))
 
@@ -234,27 +268,33 @@ def _multi_move(
 ):
     # `rolls` normal pulls (the last swapped for the guaranteed uber if guaranteed),
     # for a fixed catfood cost. The guaranteed uber is the column value at the multi's
-    # FIRST roll (godfat semantics); the multi then continues one half-step past where
-    # the swapped final roll would have been, which flips the track.
+    # FIRST roll (godfat semantics) - the duped column when the first roll arrives as a
+    # dupe, since the reroll's chain ends on a different cell; the multi then continues
+    # one half-step past where the swapped final roll would have been, flipping the track.
     draws = multi.cost // CATFOOD_PER_DRAW
     if state.catfood_draws < draws:
         return None
     if limit is not None and _banner_pulls(state, graph.banner_id) + multi.rolls > limit:
         return None
-    forced = graph.guaranteed(state.position) if multi.guaranteed else None
+    first = graph.resolve(state.position, state.last_cat)
+    if first is None:
+        return None
+    forced = graph.guaranteed(state.position, duped=first.switched) if multi.guaranteed else None
     if multi.guaranteed and forced is None:
         return None
     position = state.position
+    last = state.last_cat
     found = state.found
     pulls = []
     normal_rolls = multi.rolls - 1 if multi.guaranteed else multi.rolls
     for _ in range(normal_rolls):
-        outcome = graph.outcome(position)
+        outcome = graph.resolve(position, last)
         if outcome is None:
             return None
         pulls.append(Pull(position, graph.banner_id, outcome.cat, outcome.rarity))
-        if not outcome.switched and outcome.cat in targets:
+        if outcome.cat in targets:
             found = found | {outcome.cat}
+        last = outcome.cat
         position = outcome.next_position
     if multi.guaranteed:
         pulls.append(
@@ -262,6 +302,7 @@ def _multi_move(
         )
         if forced.cat in targets:
             found = found | {forced.cat}
+        last = forced.cat
         position += 1
     counts = (
         state.banner_pulls
@@ -269,7 +310,13 @@ def _multi_move(
         else _bump(state.banner_pulls, graph.banner_id, multi.rolls)
     )
     nxt = State(
-        position, state.tickets_left, state.catfood_draws - draws, found, graph.banner_id, counts
+        position,
+        state.tickets_left,
+        state.catfood_draws - draws,
+        found,
+        graph.banner_id,
+        counts,
+        last,
     )
     kind = f"{multi.rolls}-roll" + (" (guaranteed)" if multi.guaranteed else "")
     return nxt, Leg(graph.banner_id, kind, multi.cost, tuple(pulls))
@@ -320,15 +367,16 @@ def astar(
     graphs = list(graphs)
     targets = frozenset(targets)
     occurrences = _occurrences(graphs, targets)
-    if not _collectable(graphs, targets - start.found, start.position, multis):
+    if not _collectable(graphs, targets - start.found, start.position, multis, start.last_cat):
         return None
     floor = _multi_floor(multis)
+    advance = max((graph.max_advance() for graph in graphs), default=3)
     # Lexicographic g (catfood-equivalent, switches, catfood spent): cheapest first,
     # then fewest banner switches, then the least catfood (it also funds multis).
     g_score: dict[State, tuple[int, int, int]] = {start: (0, 0, 0)}
     came_from: dict[State, tuple] = {}
     counter = count()
-    h0 = _node_h(start, targets, occurrences, ticket_value, floor)
+    h0 = _node_h(start, targets, occurrences, ticket_value, floor, advance)
     heap = [((h0, 0, 0), next(counter), (0, 0, 0), start)]
     while heap:
         _, _, g, state = heapq.heappop(heap)
@@ -339,10 +387,11 @@ def astar(
         for graph in graphs:
             moves = _candidate_moves(state, graph, targets, multis, banner_limits, ticket_value)
             for nxt, leg in moves:
+                nxt = _canon(nxt, graphs)
                 dc, ds, dd = _step_cost(state, nxt, leg, ticket_value)
                 new_g = (g[0] + dc, g[1] + ds, g[2] + dd)
                 if new_g < g_score.get(nxt, (INF, INF, INF)):
-                    h = _node_h(nxt, targets, occurrences, ticket_value, floor)
+                    h = _node_h(nxt, targets, occurrences, ticket_value, floor, advance)
                     if h == INF or new_g[0] + h > upper_bound:
                         continue
                     g_score[nxt] = new_g
@@ -368,9 +417,10 @@ def beam_search(
     if targets <= start.found:
         return _reconstruct(start, {}, start)
     occurrences = _occurrences(graphs, targets)
-    if not _collectable(graphs, targets - start.found, start.position, multis):
+    if not _collectable(graphs, targets - start.found, start.position, multis, start.last_cat):
         return None
     floor = _multi_floor(multis)
+    advance = max((graph.max_advance() for graph in graphs), default=3)
     # Lexicographic g (catfood-equivalent, switches, catfood spent); see astar.
     best_cost: dict[State, tuple[int, int, int]] = {start: (0, 0, 0)}
     came_from: dict[State, tuple] = {}
@@ -384,6 +434,7 @@ def beam_search(
             for graph in graphs:
                 moves = _candidate_moves(state, graph, targets, multis, banner_limits, ticket_value)
                 for nxt, leg in moves:
+                    nxt = _canon(nxt, graphs)
                     dc, ds, dd = _step_cost(state, nxt, leg, ticket_value)
                     new_g = (g[0] + dc, g[1] + ds, g[2] + dd)
                     if new_g >= best_cost.get(nxt, (INF, INF, INF)):
@@ -394,7 +445,7 @@ def beam_search(
                         if new_g < best_goal_cost:
                             best_goal, best_goal_cost = nxt, new_g
                         continue
-                    h = _node_h(nxt, targets, occurrences, ticket_value, floor)
+                    h = _node_h(nxt, targets, occurrences, ticket_value, floor, advance)
                     if h == INF or new_g[0] + h > upper_bound:
                         continue
                     ranked.append((new_g[0] + h, new_g[1], new_g[2], nxt))

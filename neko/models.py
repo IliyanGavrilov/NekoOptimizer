@@ -25,7 +25,13 @@ class TrackPull:
     seed makes the play chain's next cell the new 1A (what "apply plan" advances to).
     ``seed_before`` re-anchors instead: entering it makes THIS cell the new 1A. It
     depends only on the cell's stream position, never on any banner's pools, so it's
-    the per-cell "roll to here" dice."""
+    the per-cell "roll to here" dice.
+
+    Reroll cells (a rare arriving as a dupe of the previous pull) also carry
+    ``steps``, the extra seed values the reroll consumed - the pull then continues
+    2 + steps stream positions on, flipping the track - and ``realized``, whether
+    the straight play chains actually hit this reroll (godfat renders exactly
+    those; the rest are conditional cells only other arrival paths can trigger)."""
 
     position: int
     track: str
@@ -33,15 +39,22 @@ class TrackPull:
     rarity: Rarity
     seed: int = 0
     seed_before: int = 0
+    steps: int = 0
+    realized: bool = False
 
 
 @dataclass(frozen=True, slots=True)
 class BannerRolls:
-    """A banner's normal pulls, its guaranteed-uber column, and its rare-dupe rerolls."""
+    """A banner's normal pulls, its guaranteed-uber column, and its rare-dupe rerolls.
+
+    ``guaranteed_rerolls`` is the guaranteed column for multis whose FIRST roll
+    arrives as a dupe: the reroll jumps the chain, so the multi ends on a different
+    cell and can award a different uber than ``guaranteed`` at the same position."""
 
     pulls: list[TrackPull]
     guaranteed: list[TrackPull]
     rerolls: list[TrackPull] = field(default_factory=list)
+    guaranteed_rerolls: list[TrackPull] = field(default_factory=list)
 
 
 @dataclass(frozen=True)
@@ -83,6 +96,7 @@ class State:
     found: frozenset[str]
     last_banner: str = ""  # banner of the previous pull, to count banner switches
     banner_pulls: frozenset[tuple[str, int]] = frozenset()  # pulls so far on capped banners
+    last_cat: str = ""  # what the previous pull obtained: a rare repeating it rerolls
 
 
 @dataclass(frozen=True, slots=True)

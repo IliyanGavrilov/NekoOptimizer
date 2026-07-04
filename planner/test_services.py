@@ -396,6 +396,25 @@ def test_build_tracks_b_track_dupe_arrow_points_left_towards_a():
     assert build_tracks(banner_pulls, rerolls, {})["rows"][1]["b"][0]["arrow"]["left"] is True
 
 
+def test_build_tracks_shows_a_conditional_reroll_on_a_realized_bounce_cell():
+    # The 62AR shape: 2A is no dupe on its own track, but a bounce path arrives holding
+    # Onmyoji and rerolls it - the cell keeps its nominal cat and adds the conditional
+    # value with its own landing.
+    banner_pulls = {"X": [TrackPull(1, "A", "Aset", U), TrackPull(2, "A", "Onmyoji", R)]}
+    rerolls = {"X": [TrackPull(2, "A", "Pirate", R, steps=1, realized=True)]}
+    cell = build_tracks(banner_pulls, rerolls, {})["rows"][1]["a"][0]
+    assert (cell["cat"], cell["switch"]) == ("Onmyoji", False)
+    assert cell["cond"] == {"cat": "Pirate", "to": "3B", "left": False}
+
+
+def test_build_tracks_keeps_unrealized_conditional_rerolls_quiet():
+    # Every rare cell carries a conditional reroll now; only the ones a straight chain
+    # actually bounces into (godfat's extra R cells) earn a badge.
+    banner_pulls = {"X": [TrackPull(1, "A", "Aset", U), TrackPull(2, "A", "Onmyoji", R)]}
+    rerolls = {"X": [TrackPull(2, "A", "Pirate", R, steps=1)]}
+    assert build_tracks(banner_pulls, rerolls, {})["rows"][1]["a"][0]["cond"] is None
+
+
 def test_build_tracks_highlights_the_path_and_target():
     banner_pulls = {"X": [TrackPull(1, "A", "Bahamut", U)]}
     track = build_tracks(banner_pulls, {}, {}, path={"X": {0}}, targets={"X": {0}})
@@ -578,6 +597,34 @@ def test_plan_seed_empty_plan_is_none():
     assert plan_seed(Path((), 0, 0), []) is None
 
 
+def test_plan_seed_resolves_a_conditional_dupe_by_the_walk():
+    # The final pull lands on a cell that is no dupe on its own track, but the plan's
+    # walk arrives holding that very cat (a bounce) - the state is the reroll's.
+    graphs = build_graphs(
+        {
+            "X": [
+                TrackPull(1, "A", "Dog", R, seed=1),
+                TrackPull(2, "A", "Cat", R, seed=2),
+                TrackPull(3, "A", "Cat", R, seed=3),
+                TrackPull(4, "B", "Bird", R, seed=4),
+            ]
+        },
+        rerolls={
+            "X": [
+                TrackPull(3, "A", "Bird", R, seed=5, steps=1),
+                TrackPull(4, "B", "Fish", R, seed=6, steps=1),
+            ]
+        },
+    )
+    pulls = (
+        Pull(0, "X", "Dog", R),
+        Pull(2, "X", "Cat", R),
+        Pull(4, "X", "Bird", R),
+        Pull(7, "X", "Fish", R),
+    )
+    assert plan_seed(Path(pulls, 4, 0), graphs) == 6
+
+
 def test_plan_summary_reports_cost_label_for_a_ticket_plan():
     leg = Leg("X", "Single pull", 0, (Pull(0, "X", "Bahamut", U),))
     option = SubsetPlan(frozenset({"Bahamut"}), Path(leg.pulls, 1, 0, (leg,)))
@@ -679,6 +726,23 @@ def test_plan_shared_rejects_a_pull_whose_walk_diverges():
     option = _plan({"Jurassic Cat"}, (_single(2, "X", "Jurassic Cat", R),), 1)
     shared, _gshared = plan_shared(option, graphs, {})
     assert shared == {}
+
+
+def test_plan_shared_rejects_a_filler_swap_that_would_dupe_the_next_pull():
+    # Y's 1A drops the very cat the plan's NEXT pull rolls at 2A: rolled on Y, that
+    # next pull would arrive as a dupe and jump tracks, derailing everything after.
+    # Z's different filler leaves the next pull untouched, so Z still counts.
+    graphs = build_graphs(
+        {
+            "X": [TrackPull(1, "A", "Ape", R), TrackPull(2, "A", "Bee", R)],
+            "Y": [TrackPull(1, "A", "Bee", R)],
+            "Z": [TrackPull(1, "A", "Cow", R)],
+        },
+        rerolls={"X": [TrackPull(2, "A", "Rat", R, steps=1)]},
+    )
+    option = _plan({"Bee"}, (_single(0, "X", "Ape", R), _single(2, "X", "Bee", R)), 2)
+    shared, _gshared = plan_shared(option, graphs, {})
+    assert shared == {"Z": {0}}
 
 
 def _guaranteed_multi_fixture(y_uber="Mecha"):

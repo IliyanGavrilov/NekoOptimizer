@@ -166,7 +166,7 @@ def build_banner(
     units: Mapping[int, tuple[str, str]],
 ) -> Banner:
     """Assemble a rollable Banner: rates from the event, pools from its GatyaDataSet row
-    grouped by rarity in row order, unit ids resolved to names via ``units`` (id → name,
+    grouped by rarity in row order, unit ids resolved to names via ``units`` (id -> name,
     rarity). godfat's legend rate is the remainder, so uber gets whatever the event omits."""
     rates = {
         Rarity.RARE: event.rare,
