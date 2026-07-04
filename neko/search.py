@@ -44,6 +44,16 @@ def _occurrences(graphs: Iterable[BannerGraph], targets: frozenset[str]) -> dict
     return spots
 
 
+def obtainable(graphs: Iterable[BannerGraph], targets: Iterable[str]) -> frozenset[str]:
+    """The targets that occur anywhere in the graphs - as a nominal roll, a conditional
+    reroll, or a guaranteed-column uber. A target with no occurrence can never be
+    collected whatever the budget, so callers can drop it before searching: every such
+    target DOUBLES a subset enumeration without ever contributing a plan."""
+    graphs = list(graphs)
+    spots = _occurrences(graphs, frozenset(targets))
+    return frozenset(cat for cat, positions in spots.items() if positions)
+
+
 def _multi_landing(graph: BannerGraph, position: int, rolls: int, last_cat: str = "") -> int | None:
     """Where a guaranteed multi started at ``position`` continues: walk its ``rolls - 1``
     real rolls along the chain, then one half-step past the swapped final roll (track
@@ -80,22 +90,36 @@ def _collectable(
     position: int,
     multis: Mapping[str, Sequence[Multi]] | None = None,
     last_cat: str = "",
+    occurrences: dict[str, list[int]] | None = None,
 ) -> bool:
     """Ignoring budget, can every target still be collected from ``position``? BFS over
     (position, last cat, found) using the graphs' real step structure - rare-dupe
     rerolls force extra steps, so a spot's parity can make it genuinely unreachable, and
     the full search would only prove that after exhausting every budget split of the
     whole state space. Guaranteed multis are modelled with their real landing so their
-    off-parity continue points stay reachable."""
+    off-parity continue points stay reachable.
+
+    Pass ``occurrences`` (each target's obtain spots, as [_occurrences] returns them)
+    to reuse the caller's; a target with no spot at or past ``position`` is a plain
+    "no" without any BFS."""
     if not targets:
         return True
+    spots = occurrences if occurrences is not None else _occurrences(graphs, targets)
+    for target in targets:
+        places = spots[target]
+        if bisect_left(places, position) == len(places):
+            return False
     rolls_by_banner = {
         banner_id: sorted({m.rolls for m in ms if m.guaranteed})
         for banner_id, ms in (multis or {}).items()
     }
-    start = (position, _canon_last(graphs, position, last_cat), frozenset())
-    seen = {start}
-    frontier = [start]
+    start = (position, _canon_last(graphs, position, last_cat))
+    # Per (position, last cat), only the maximal found-sets: a path arriving with a
+    # subset of another's finds can do nothing the other can't (moves depend only on
+    # position and last cat, and found only grows), so the whole 2^targets lattice
+    # never needs walking. Without this the BFS itself explodes past ~8 targets.
+    seen: dict[tuple[int, str], list[frozenset[str]]] = {start: [frozenset()]}
+    frontier = [(*start, frozenset())]
     while frontier:
         upcoming = []
         for pos, last, found in frontier:
@@ -114,10 +138,13 @@ def _collectable(
                     got = found | {cat} if cat in targets else found
                     if got >= targets:
                         return True
-                    state = (next_position, _canon_last(graphs, next_position, cat), got)
-                    if state not in seen:
-                        seen.add(state)
-                        upcoming.append(state)
+                    key = (next_position, _canon_last(graphs, next_position, cat))
+                    kept = seen.setdefault(key, [])
+                    if any(got <= other for other in kept):
+                        continue
+                    kept[:] = [other for other in kept if not other <= got]
+                    kept.append(got)
+                    upcoming.append((*key, got))
         frontier = upcoming
     return False
 
@@ -367,7 +394,8 @@ def astar(
     graphs = list(graphs)
     targets = frozenset(targets)
     occurrences = _occurrences(graphs, targets)
-    if not _collectable(graphs, targets - start.found, start.position, multis, start.last_cat):
+    needed = targets - start.found
+    if not _collectable(graphs, needed, start.position, multis, start.last_cat, occurrences):
         return None
     floor = _multi_floor(multis)
     advance = max((graph.max_advance() for graph in graphs), default=3)
@@ -417,8 +445,14 @@ def beam_search(
     if targets <= start.found:
         return _reconstruct(start, {}, start)
     occurrences = _occurrences(graphs, targets)
-    if not _collectable(graphs, targets - start.found, start.position, multis, start.last_cat):
-        return None
+    # Only the cheap "does every target still occur ahead" guard here, not the exact
+    # reachability BFS: the frontier is width-capped, so an uncollectable target set
+    # just runs off the rolled window and returns None anyway - the exact pre-check
+    # can cost more than the whole beam.
+    for target in targets - start.found:
+        spots = occurrences[target]
+        if bisect_left(spots, start.position) == len(spots):
+            return None
     floor = _multi_floor(multis)
     advance = max((graph.max_advance() for graph in graphs), default=3)
     # Lexicographic g (catfood-equivalent, switches, catfood spent); see astar.
