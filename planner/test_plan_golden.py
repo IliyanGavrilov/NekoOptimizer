@@ -35,9 +35,7 @@ def _banner(overrides, rerolls, rares, supers, ubers, positions=12, seed_base=0)
     for idx in range(2 * positions):
         pos, track = idx // 2 + 1, "AB"[idx % 2]
         cat, rarity = overrides.get(idx) or _fill(idx, rares, supers)
-        pulls.append(
-            TrackPull(pos, track, cat, rarity, seed=seed_base + idx, seed_before=seed_base + idx)
-        )
+        pulls.append(TrackPull(pos, track, cat, rarity, seed=seed_base + idx))
         guaranteed.append(TrackPull(pos, track, ubers[idx % len(ubers)], U, seed=seed_base + idx))
         guaranteed_rerolls.append(
             TrackPull(pos, track, ubers[(idx + 1) % len(ubers)], U, seed=seed_base + idx)

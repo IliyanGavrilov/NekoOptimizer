@@ -180,19 +180,6 @@ def test_reseeding_to_a_reroll_continues_past_the_bounce():
         assert roll_banner(reroll.seed, TWO_UNIT_RARE, 1).pulls[0].cat == nominal[successor]
 
 
-def test_seed_before_re_anchors_the_cell_as_the_new_1a():
-    # The per-cell dice: entering a pull's seed_before re-rolls the stream so that THIS
-    # cell is the new 1A - whatever track it was on (a B cell's chain becomes A's). The
-    # anchor is pure stream position, so it holds on every cell, dupes included.
-    rolls = roll_banner(1893568593, FOUR_BAND, 10)
-    for pull in rolls.pulls:
-        assert roll_banner(pull.seed_before, FOUR_BAND, 1).pulls[0].cat == pull.cat
-
-
-def test_seed_before_of_the_first_cell_is_the_input_seed():
-    assert roll_banner(42, FOUR_BAND, 1).pulls[0].seed_before == 42
-
-
 def test_reseeding_to_a_guaranteed_pull_lands_one_past_the_multi():
     # After a guaranteed multi the play continues half a row on, track flipped: the
     # stored seed (the very value that picked the uber) makes that cell the new 1A.

@@ -1,5 +1,6 @@
 from collections import Counter
 from collections.abc import Iterable, Mapping
+from dataclasses import dataclass, field
 from datetime import date, timedelta
 from itertools import combinations
 from urllib.parse import quote
@@ -465,6 +466,45 @@ def _pos_label(index):
     return f"{index // 2 + 1}{'A' if index % 2 == 0 else 'B'}"
 
 
+def _collection_marks(cat, rarity, owned, wanted):
+    """The collection marks every rendered cat carries: ✓ owned, ★ wishlisted, and a
+    green "new" name for an Uber/Legend not yet in the collection."""
+    return {
+        "new": rarity in _VALUABLE_RARITIES and cat not in owned,
+        "owned": cat in owned,
+        "wanted": cat in wanted,
+    }
+
+
+def _dupe_branch(outcome, obtained):
+    """A cell's "if dupe" line: the reroll a dupe arrival obtains, where it jumps, and
+    the seed just after it (its own dice). ``obtained`` - the cat the plan pulled at
+    this cell, if lit - puts the gold target pill on this branch when it collected it."""
+    return {
+        "cat": outcome.cat,
+        "to": _pos_label(outcome.next_position),
+        "left": outcome.next_position % 2 == 0,
+        "seed": outcome.seed,
+        "target": obtained == outcome.cat,
+    }
+
+
+@dataclass(slots=True)
+class TrackMarks:
+    """Where a plan lights the track, each keyed by representative banner: the lit
+    stream indices (``path``), the cat obtained at each lit index (``targets`` - the
+    gold pill follows the branch actually pulled), and the indices another banner can
+    serve instead (``shared``, [plan_shared]); ``g*`` twins mark the guaranteed
+    columns. Defaults render an unhighlighted track (the browse view)."""
+
+    path: dict[str, set[int]] = field(default_factory=dict)
+    targets: dict[str, dict[int, str]] = field(default_factory=dict)
+    gpath: dict[str, set[int]] = field(default_factory=dict)
+    gtargets: dict[str, dict[int, str]] = field(default_factory=dict)
+    shared: dict[str, set[int]] = field(default_factory=dict)
+    gshared: dict[str, set[int]] = field(default_factory=dict)
+
+
 def _representative(name, equivalents):
     """The single banner an equivalent group is rendered under (its first name)."""
     return sorted(equivalents.get(name, [name]))[0]
@@ -503,47 +543,33 @@ def build_tracks(
     banner_pulls,
     rerolls,
     equivalents,
-    path=None,
-    targets=None,
+    marks=None,
     owned=None,
     guaranteed=None,
-    gpath=None,
-    gtargets=None,
     wanted=None,
-    shared=None,
-    gshared=None,
     titles=None,
 ):
     """One merged A/B table over every selected banner: each cell stacks each banner's
     cat at that shared stream position (à la ubercarry), with rare-dupe switch arrows
     and the plan's path highlighted. Returns ``{"legend": [...], "rows": [...]}``.
 
-    ``path`` maps a representative banner to the stream indices to light up;
-    ``targets``/``gtargets`` map each lit index to the cat obtained there ([plan_highlight]).
+    ``marks`` ([TrackMarks]) is the plan's highlighting; omitted for the browse view.
     ``owned``/``wanted`` are the cat names you already have / wishlisted, shown as the
     same ✓ / ★ marks the picker uses (``new`` flags Uber/Legend cats missing from your
     collection). ``guaranteed`` maps a banner to its guaranteed-uber
     column (godfat's: the uber a guaranteed multi awards when STARTED on that cell);
     banners without a guaranteed multi have none, and when no selected banner has any the
-    columns are omitted entirely (``has_guaranteed``). ``gpath``/``gtargets`` light up
-    guaranteed-column cells where the plan starts a guaranteed multi. ``shared`` and
-    ``gshared`` ([plan_shared]) mark OTHER banners' entries at path indices where the
-    step can be rolled without changing the plan. ``titles`` ([display_titles])
+    columns are omitted entirely (``has_guaranteed``). ``titles`` ([display_titles])
     shortens the legend's banner names.
     """
-    path = path or {}
-    targets = targets or {}
-    gpath = gpath or {}
-    gtargets = gtargets or {}
+    marks = marks or TrackMarks()
     owned = owned or set()
     wanted = wanted or set()
-    shared = shared or {}
-    gshared = gshared or {}
     titles = titles or {}
     groups = _banner_groups(banner_pulls, rerolls, equivalents, guaranteed)
 
     avail = max((max(g["grid"]) for g in groups if g["grid"]), default=-1) // 2 + 1
-    lit = [index for indices in (*path.values(), *gpath.values()) for index in indices]
+    lit = [index for indices in (*marks.path.values(), *marks.gpath.values()) for index in indices]
     needed = max((index // 2 + 1 for index in lit), default=0)
     max_pos = max(min(avail, max(TRACK_ROW_CAP, needed)), 0)
 
@@ -557,50 +583,34 @@ def build_tracks(
             outcome = graph.outcome(index)
             switched = bool(outcome and outcome.switched)
             rarity = str(tp.rarity)
-            on_path = index in path.get(group["rep"], ())
+            on_path = index in marks.path.get(group["rep"], ())
             # Every cell reads nominal-first: the cat a clean arrival rolls. Its dupe
             # branch - a rare repeating the previous pull rerolls and jumps tracks -
             # renders beneath as one uniform "if dupe" line, whether the straight chain
             # takes it (a static dupe, `switch`), only a bounce path does (godfat's
             # extra R cells), or the remembered last pull dupes the very first cell.
-            # The branch carries its landing and the seed just after its reroll, so it
-            # can be dice-jumped independently of the clean roll.
-            alt = None
+            branch = None
             if switched:
-                alt = {
-                    "cat": outcome.cat,
-                    "to": _pos_label(outcome.next_position),
-                    "left": outcome.next_position % 2 == 0,
-                    "seed": outcome.seed,
-                }
+                branch = outcome
             elif graph.realized(index):
                 reroll = graph.reroll(index)
                 if reroll is not None and reroll.cat:
-                    alt = {
-                        "cat": reroll.cat,
-                        "to": _pos_label(reroll.next_position),
-                        "left": reroll.next_position % 2 == 0,
-                        "seed": reroll.seed,
-                    }
-            # The gold target pill follows the branch the plan actually pulls: the
-            # obtained cat is recorded per lit index, so a dupe-collected target lights
-            # the "if dupe" name, not the nominal one.
-            tcat = targets.get(group["rep"], {}).get(index)
-            if alt is not None:
-                alt["target"] = tcat == alt["cat"]
+                    branch = reroll
+            # The cat the plan obtained here, if lit: the gold pill follows the branch
+            # the plan actually pulls (a dupe-collected target lights the "if dupe"
+            # name, not the nominal one).
+            obtained = marks.targets.get(group["rep"], {}).get(index)
             cells.append(
                 {
                     "tag": group["tag"],
                     "cat": tp.cat,
                     "rarity": rarity,
                     "switch": switched,
-                    "alt": alt,
+                    "alt": _dupe_branch(branch, obtained) if branch is not None else None,
                     "on_path": on_path,
-                    "target": tcat == tp.cat,
-                    "shared": not on_path and index in shared.get(group["rep"], ()),
-                    "new": rarity in _VALUABLE_RARITIES and tp.cat not in owned,
-                    "owned": tp.cat in owned,
-                    "wanted": tp.cat in wanted,
+                    "target": obtained == tp.cat,
+                    "shared": not on_path and index in marks.shared.get(group["rep"], ()),
+                    **_collection_marks(tp.cat, rarity, owned, wanted),
                 }
             )
         return cells
@@ -630,7 +640,7 @@ def build_tracks(
             if tp is None or not tp.cat:  # no guarantee on this banner, or an empty uber pool
                 continue
             rarity = str(tp.rarity)
-            on_path = index in gpath.get(group["rep"], ())
+            on_path = index in marks.gpath.get(group["rep"], ())
             cells.append(
                 {
                     "tag": group["tag"],
@@ -641,11 +651,9 @@ def build_tracks(
                     # is the track cell's own dice (same start anchor).
                     "seed": tp.seed,
                     "on_path": on_path,
-                    "target": gtargets.get(group["rep"], {}).get(index) == tp.cat,
-                    "shared": not on_path and index in gshared.get(group["rep"], ()),
-                    "new": rarity in _VALUABLE_RARITIES and tp.cat not in owned,
-                    "owned": tp.cat in owned,
-                    "wanted": tp.cat in wanted,
+                    "target": marks.gtargets.get(group["rep"], {}).get(index) == tp.cat,
+                    "shared": not on_path and index in marks.gshared.get(group["rep"], ()),
+                    **_collection_marks(tp.cat, rarity, owned, wanted),
                 }
             )
         return cells
@@ -670,28 +678,25 @@ def build_tracks(
         "legend": legend,
         "rows": rows,
         "has_guaranteed": has_guaranteed,
-        "has_shared": bool(shared or gshared),
+        "has_shared": bool(marks.shared or marks.gshared),
     }
 
 
 def plan_highlight(option, equivalents):
-    """Stream indices to light up for one plan, keyed by representative banner. A normal
-    pull lights its track cell; a guaranteed pull lights the guaranteed COLUMN at the
-    multi's first roll (where godfat shows the awarded uber), returned separately as
-    ``gpath``/``gtargets``. Targets map each lit index to the cat OBTAINED there, so
-    the pill lands on the branch the plan actually pulls (a dupe-collected target
-    lights the "if dupe" name, not the nominal one)."""
-    path: dict[str, set[int]] = {}
-    targets: dict[str, dict[int, str]] = {}
-    gpath: dict[str, set[int]] = {}
-    gtargets: dict[str, dict[int, str]] = {}
+    """The plan's [TrackMarks]: a normal pull lights its track cell, a guaranteed pull
+    the guaranteed COLUMN at the multi's first roll (where godfat shows the awarded
+    uber). The interchangeable-banner marks (``shared``/``gshared``, [plan_shared])
+    are left empty for the caller to fill."""
+    marks = TrackMarks()
     for pull in option.plan.pulls:
         rep = _representative(pull.banner_id, equivalents)
-        into_path, into_targets = (gpath, gtargets) if pull.guaranteed else (path, targets)
-        into_path.setdefault(rep, set()).add(pull.position)
+        path, targets = (
+            (marks.gpath, marks.gtargets) if pull.guaranteed else (marks.path, marks.targets)
+        )
+        path.setdefault(rep, set()).add(pull.position)
         if pull.cat in option.targets:
-            into_targets.setdefault(rep, {})[pull.position] = pull.cat
-    return path, targets, gpath, gtargets
+            targets.setdefault(rep, {})[pull.position] = pull.cat
+    return marks
 
 
 def _move_walk(graph, move, last):
@@ -864,9 +869,7 @@ def plan_summary(plans, equivalents, owned=None, wanted=None, titles=None):
                         {
                             "name": pull.cat,
                             "target": pull.cat in option.targets,
-                            "owned": pull.cat in owned,
-                            "wanted": pull.cat in wanted,
-                            "new": str(pull.rarity) in _VALUABLE_RARITIES and pull.cat not in owned,
+                            **_collection_marks(pull.cat, str(pull.rarity), owned, wanted),
                         }
                         for pull in leg.pulls
                     ],
@@ -938,6 +941,33 @@ def _wishlist_plans(graphs, wanted, start, multis, ticket_value, banner_limits):
     return found
 
 
+def _subset_plans(graphs, targets, start, multis, ticket_value, banner_limits):
+    """The plan rows behind [subset_solutions]: ``(found plans, missing target-lists)``.
+
+    Up to [SUBSET_TARGET_LIMIT] targets get the exact per-subset breakdown. Past that
+    the subset space is unenumerable (a 100-cat wishlist is 2^100 rows), so it narrows
+    to the targets obtainable in the selected banners - still per-subset when few, else
+    the bounded whole-set + per-cat view ([_wishlist_plans]) - and every unobtainable
+    target goes straight to missing."""
+    search = dict(multis=multis, ticket_value=ticket_value, banner_limits=banner_limits)
+    items = sorted(set(targets))
+    if len(items) <= SUBSET_TARGET_LIMIT:
+        pool, unobtainable = items, []
+    else:
+        pool = sorted(obtainable(graphs, targets))
+        pooled = set(pool)
+        unobtainable = [[cat] for cat in items if cat not in pooled]
+    if len(pool) <= SUBSET_TARGET_LIMIT:
+        found = solve_subsets(graphs, pool, start, **search)
+        missing = _missing_subsets(pool, {sp.targets for sp in found})
+    else:
+        found = _wishlist_plans(graphs, pool, start, **search)
+        found_keys = {sp.targets for sp in found}
+        missing = [pool] if frozenset(pool) not in found_keys else []
+        missing += [[cat] for cat in pool if frozenset({cat}) not in found_keys]
+    return found, missing + unobtainable
+
+
 def subset_solutions(
     pulls,
     rerolls,
@@ -961,49 +991,17 @@ def subset_solutions(
     to render on demand; unreachable ones are flagged so the UI can say "Not found".
 
     ``last_cat`` is the pull obtained just before this view (the dupe memory): the
-    search's first roll on a cell repeating it arrives as a dupe.
-
-    Past [SUBSET_TARGET_LIMIT] targets the subset space is unenumerable (a 100-cat
-    wishlist is 2^100 rows), so the breakdown narrows to the targets obtainable in the
-    selected banners - per-subset when few, else whole-set + per-cat - and every
-    unobtainable target gets its own "Not found" row."""
+    search's first roll on a cell repeating it arrives as a dupe. The subset/plan
+    breakdown itself is [_subset_plans]."""
     graphs = build_graphs(pulls, guaranteed_pulls, rerolls, guaranteed_rerolls)
     start = State(0, tickets, catfood // CATFOOD_PER_DRAW, frozenset(), last_cat=last_cat)
-    items = sorted(set(targets))
-    if len(items) <= SUBSET_TARGET_LIMIT:
-        found = solve_subsets(
-            graphs,
-            targets,
-            start,
-            multis=multis,
-            ticket_value=ticket_value,
-            banner_limits=banner_limits,
-        )
-        found_keys = {sp.targets for sp in found}
-        missing = _missing_subsets(items, found_keys)
-    else:
-        can_get = sorted(obtainable(graphs, targets))
-        if len(can_get) <= SUBSET_TARGET_LIMIT:
-            found = solve_subsets(
-                graphs,
-                can_get,
-                start,
-                multis=multis,
-                ticket_value=ticket_value,
-                banner_limits=banner_limits,
-            )
-            found_keys = {sp.targets for sp in found}
-            missing = _missing_subsets(can_get, found_keys)
-        else:
-            found = _wishlist_plans(graphs, can_get, start, multis, ticket_value, banner_limits)
-            found_keys = {sp.targets for sp in found}
-            missing = [can_get] if frozenset(can_get) not in found_keys else []
-            missing += [[cat] for cat in can_get if frozenset({cat}) not in found_keys]
-        missing += [[cat] for cat in items if cat not in set(can_get)]
+    found, missing = _subset_plans(graphs, targets, start, multis, ticket_value, banner_limits)
     solutions = []
     for sp in found:
-        path, target_idx, gpath, gtargets = plan_highlight(sp, equivalents)
-        shared, gshared = plan_shared(sp, graphs, equivalents, multis, exclude=banner_limits or ())
+        marks = plan_highlight(sp, equivalents)
+        marks.shared, marks.gshared = plan_shared(
+            sp, graphs, equivalents, multis, exclude=banner_limits or ()
+        )
         solution = plan_summary([sp], equivalents, owned, wanted, titles)[0]
         solution["found"] = True
         solution["seed_after"] = plan_seed(sp.plan, graphs)
@@ -1014,15 +1012,10 @@ def subset_solutions(
             pulls,
             rerolls,
             equivalents,
-            path,
-            target_idx,
-            owned,
-            guaranteed_pulls,
-            gpath,
-            gtargets,
-            wanted,
-            shared=shared,
-            gshared=gshared,
+            marks,
+            owned=owned,
+            guaranteed=guaranteed_pulls,
+            wanted=wanted,
             titles=titles,
         )
         solutions.append(solution)

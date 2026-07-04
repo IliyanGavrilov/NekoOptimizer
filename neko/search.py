@@ -54,6 +54,16 @@ def obtainable(graphs: Iterable[BannerGraph], targets: Iterable[str]) -> frozens
     return frozenset(cat for cat, positions in spots.items() if positions)
 
 
+def _all_occur_ahead(
+    occurrences: dict[str, list[int]], targets: frozenset[str], position: int
+) -> bool:
+    """Does every target still occur at or past ``position``? The cheap necessary
+    condition for collectability - a target with no spot ahead is a plain "no"."""
+    return all(
+        bisect_left(occurrences[target], position) < len(occurrences[target]) for target in targets
+    )
+
+
 def _multi_landing(graph: BannerGraph, position: int, rolls: int, last_cat: str = "") -> int | None:
     """Where a guaranteed multi started at ``position`` continues: walk its ``rolls - 1``
     real rolls along the chain, then one half-step past the swapped final roll (track
@@ -105,10 +115,8 @@ def _collectable(
     if not targets:
         return True
     spots = occurrences if occurrences is not None else _occurrences(graphs, targets)
-    for target in targets:
-        places = spots[target]
-        if bisect_left(places, position) == len(places):
-            return False
+    if not _all_occur_ahead(spots, targets, position):
+        return False
     rolls_by_banner = {
         banner_id: sorted({m.rolls for m in ms if m.guaranteed})
         for banner_id, ms in (multis or {}).items()
@@ -449,10 +457,8 @@ def beam_search(
     # reachability BFS: the frontier is width-capped, so an uncollectable target set
     # just runs off the rolled window and returns None anyway - the exact pre-check
     # can cost more than the whole beam.
-    for target in targets - start.found:
-        spots = occurrences[target]
-        if bisect_left(spots, start.position) == len(spots):
-            return None
+    if not _all_occur_ahead(occurrences, targets - start.found, start.position):
+        return None
     floor = _multi_floor(multis)
     advance = max((graph.max_advance() for graph in graphs), default=3)
     # Lexicographic g (catfood-equivalent, switches, catfood spent); see astar.

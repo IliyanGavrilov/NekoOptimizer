@@ -76,13 +76,11 @@ class BannerGraph:
         if pull is None:
             return None
         if pull.rarity is Rarity.RARE and pull.cat != "" and pull.cat == last_cat:
-            reroll = self._rerolls.get(position)
-            if reroll is None:
+            duped = self.reroll(position)
+            if duped is None:
                 # No reroll data for this cell: keep the dupe's name, assume one step.
                 return Outcome(pull.cat, pull.rarity, position + 3, True, pull.seed)
-            return Outcome(
-                reroll.cat, reroll.rarity, position + 2 + (reroll.steps or 1), True, reroll.seed
-            )
+            return duped
         return Outcome(pull.cat, pull.rarity, position + 2, False, pull.seed)
 
     def outcome(self, position: int) -> Outcome | None:

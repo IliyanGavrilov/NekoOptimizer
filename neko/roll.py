@@ -209,20 +209,7 @@ def roll_banner(
         for track in (0, 1):
             cat = grid[seq][track]
             label = _TRACKS[track]
-            # The state that re-anchors this cell as the new 1A is the stream value one
-            # step before the cell's rarity value - for the very first cell, the input
-            # seed itself.
-            if track == 1:
-                before = grid[seq][0].rarity_seed
-            elif seq:
-                before = grid[seq - 1][1].rarity_seed
-            else:
-                before = seed
-            pulls.append(
-                TrackPull(
-                    seq + 1, label, cat.name, cat.rarity, seed=cat.slot_seed, seed_before=before
-                )
-            )
+            pulls.append(TrackPull(seq + 1, label, cat.name, cat.rarity, seed=cat.slot_seed))
             if cat.rerolled is not None:
                 rerolls.append(
                     TrackPull(

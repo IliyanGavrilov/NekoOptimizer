@@ -102,7 +102,17 @@ def _event_multis(multis: tuple[Multi, ...], guaranteed_rolls: int) -> tuple[Mul
     )
 
 
-def _result(
+def _latest_runs(events: Iterable[GachaEventRow]) -> dict[str, GachaEventRow]:
+    """Each banner name's latest run - a recurring banner reruns under the same name."""
+    latest: dict[str, GachaEventRow] = {}
+    for event in events:
+        current = latest.get(event.name)
+        if current is None or event.start > current.start:
+            latest[event.name] = event
+    return latest
+
+
+def _roll_events(
     seed: int,
     events: Iterable[GachaEventRow],
     pools: Mapping[int, list[int]],
@@ -112,11 +122,7 @@ def _result(
     last_cat: str = "",
 ) -> RollResult:
     """Roll each event and key it by banner name, keeping a recurring banner's latest run."""
-    latest: dict[str, GachaEventRow] = {}
-    for event in events:
-        current = latest.get(event.name)
-        if current is None or event.start > current.start:
-            latest[event.name] = event
+    latest = _latest_runs(events)
     configs = multi_configs(latest.values(), rules)
     banners, multis, dates = {}, {}, {}
     for name, event in latest.items():
@@ -155,7 +161,7 @@ def roll_active(
     """Roll the banners active on ``today`` (defaults to the real date). ``last_cat`` is
     the pull obtained just before this view - it can dupe each banner's first cell."""
     events, pools, units, rules = _load(events, pools, units, rules)
-    return _result(seed, active_events(events, today), pools, units, count, rules, last_cat)
+    return _roll_events(seed, active_events(events, today), pools, units, count, rules, last_cat)
 
 
 def roll_selected(
@@ -174,7 +180,7 @@ def roll_selected(
     current run (see [select_events]). ``last_cat`` as in [roll_active]."""
     events, pools, units, rules = _load(events, pools, units, rules)
     chosen = select_events(events, names, today)
-    return _result(seed, chosen, pools, units, count, rules, last_cat)
+    return _roll_events(seed, chosen, pools, units, count, rules, last_cat)
 
 
 def catalogue_banners(
@@ -186,12 +192,8 @@ def catalogue_banners(
     """Every scheduled banner's cats straight from its latest run's pool - the catalogue
     needs who CAN drop on a banner, not a rolled sample, so no seed and no rolling."""
     events, pools, units, _ = _load(events, pools, units, [])
-    latest: dict[str, GachaEventRow] = {}
-    for event in events:
-        current = latest.get(event.name)
-        if current is None or event.start > current.start:
-            latest[event.name] = event
     banners, dates = {}, {}
+    latest = _latest_runs(events)
     for name, event in latest.items():
         banner = build_banner(event, pools, units)
         cats = [
