@@ -1,9 +1,11 @@
 from datetime import date
 
 import pytest
+from django.template.loader import render_to_string
 
 from neko.graph import build_graphs
 from neko.models import BannerRolls, Leg, Path, Pull, Rarity, TrackPull
+from neko.search import Multi
 from neko.subsets import SubsetPlan
 from planner.models import Banner, Cat, Unit
 from planner.services import (
@@ -19,9 +21,11 @@ from planner.services import (
     picker_groups,
     plan_highlight,
     plan_seed,
+    plan_shared,
     plan_summary,
     series_names,
     set_sections,
+    subset_solutions,
     wiki_url,
 )
 
@@ -628,6 +632,198 @@ def test_plan_summary_never_reads_a_catfood_multi_roll_as_tickets():
     leg = Leg("X", "11-roll (guaranteed)", 1500, pulls)
     option = SubsetPlan(frozenset({"Bahamut"}), Path(pulls, 0, 10, (leg,)))
     assert plan_summary([option], {"X": ["X"]})[0]["legs"][0]["tickets"] == 0
+
+
+def _single(index, banner, cat, rarity, cost=0):
+    return Leg(banner, "Single pull", cost, (Pull(index, banner, cat, rarity),))
+
+
+def _plan(targets, moves, tickets=0, catfood=0):
+    pulls = tuple(pull for leg in moves for pull in leg.pulls)
+    return SubsetPlan(frozenset(targets), Path(pulls, tickets, catfood, tuple(moves)))
+
+
+def test_plan_shared_marks_identical_pulls_on_the_other_banner():
+    # Both banners drop Pogo at 1A via the same walk; only the uber at 2A differs, so
+    # the first step is interchangeable and the second pins the banner.
+    graphs = build_graphs(
+        {
+            "X": [TrackPull(1, "A", "Pogo", R), TrackPull(2, "A", "Bahamut", U)],
+            "Y": [TrackPull(1, "A", "Pogo", R), TrackPull(2, "A", "Kasli", U)],
+        }
+    )
+    option = _plan({"Bahamut"}, (_single(0, "X", "Pogo", R), _single(2, "X", "Bahamut", U)), 2)
+    shared, gshared, alternatives = plan_shared(option, graphs, {})
+    assert shared == {"Y": {0}}
+    assert gshared == {}
+    assert alternatives == [frozenset({"Y"}), frozenset()]
+
+
+def test_plan_shared_rejects_a_same_cat_reached_by_a_dupe_switch():
+    # Y also yields Jurassic Cat at 2A, but through a rare-dupe reroll that jumps
+    # tracks - rolling that step on Y walks on differently, so it's not interchangeable.
+    graphs = build_graphs(
+        {
+            "X": [TrackPull(1, "A", "Bahamut", U), TrackPull(2, "A", "Jurassic Cat", R)],
+            "Y": [TrackPull(1, "A", "Pogo", R), TrackPull(2, "A", "Pogo", R)],
+        },
+        rerolls={"Y": [TrackPull(2, "A", "Jurassic Cat", R)]},
+    )
+    option = _plan({"Jurassic Cat"}, (_single(2, "X", "Jurassic Cat", R),), 1)
+    shared, _gshared, alternatives = plan_shared(option, graphs, {})
+    assert shared == {}
+    assert alternatives == [frozenset()]
+
+
+def _guaranteed_multi_fixture(y_uber="Mecha"):
+    pulls = [TrackPull(1, "A", "Pogo", R), TrackPull(2, "A", "Rover Cat", R)]
+    graphs = build_graphs(
+        {"X": list(pulls), "Y": list(pulls)},
+        {"X": [TrackPull(1, "A", "Mecha", U)], "Y": [TrackPull(1, "A", y_uber, U)]},
+    )
+    move = Leg(
+        "X",
+        "3-roll (guaranteed)",
+        450,
+        (
+            Pull(0, "X", "Pogo", R),
+            Pull(2, "X", "Rover Cat", R),
+            Pull(0, "X", "Mecha", U, guaranteed=True),
+        ),
+    )
+    return graphs, _plan({"Mecha"}, (move,), catfood=3)
+
+
+def test_plan_shared_multi_matches_the_whole_chain_and_its_guaranteed_uber():
+    graphs, option = _guaranteed_multi_fixture()
+    multis = {"X": [Multi(3, 450)], "Y": [Multi(3, 450)]}
+    shared, gshared, alternatives = plan_shared(option, graphs, {}, multis)
+    assert shared == {"Y": {0, 2}}
+    assert gshared == {"Y": {0}}
+    assert alternatives == [frozenset({"Y"})]
+
+
+def test_plan_shared_multi_not_on_offer_elsewhere_is_not_interchangeable():
+    graphs, option = _guaranteed_multi_fixture()
+    shared, gshared, alternatives = plan_shared(option, graphs, {}, {"X": [Multi(3, 450)]})
+    assert (shared, gshared, alternatives) == ({}, {}, [frozenset()])
+
+
+def test_plan_shared_multi_with_a_different_guaranteed_uber_is_not_interchangeable():
+    graphs, option = _guaranteed_multi_fixture(y_uber="Kasli")
+    multis = {"X": [Multi(3, 450)], "Y": [Multi(3, 450)]}
+    shared, gshared, alternatives = plan_shared(option, graphs, {}, multis)
+    assert (shared, gshared, alternatives) == ({}, {}, [frozenset()])
+
+
+def test_plan_shared_never_offers_a_capped_ticket_gacha_as_an_alternative():
+    # Platinum/Legend pulls cost their own scarce tickets, not a draw - an identical
+    # outcome there is not the same price, so it never counts as interchangeable.
+    pulls = [TrackPull(1, "A", "Pogo", R)]
+    graphs = build_graphs({"X": list(pulls), "Platinum Capsules": list(pulls)})
+    option = _plan({"Pogo"}, (_single(0, "X", "Pogo", R),), 1)
+    shared, _gshared, alternatives = plan_shared(
+        option, graphs, {}, exclude={"Platinum Capsules": 0}
+    )
+    assert shared == {}
+    assert alternatives == [frozenset()]
+
+
+def test_plan_shared_keys_marks_by_the_representative_banner():
+    pulls = [TrackPull(1, "A", "Pogo", R)]
+    graphs = build_graphs({"X": list(pulls), "Y": list(pulls), "Z": list(pulls)})
+    equivalents = {"Y": ["Y", "Z"], "Z": ["Y", "Z"]}
+    option = _plan({"Pogo"}, (_single(0, "X", "Pogo", R),), 1)
+    shared, _gshared, alternatives = plan_shared(option, graphs, equivalents)
+    assert shared == {"Y": {0}}
+    assert alternatives == [frozenset({"Y"})]
+
+
+def test_plan_summary_splits_a_run_where_the_interchangeable_set_changes():
+    moves = (_single(0, "X", "Pogo", R), _single(2, "X", "Bahamut", U))
+    option = _plan({"Bahamut"}, moves, 2)
+    legs = plan_summary([option], {}, alternatives=[[frozenset({"Y"}), frozenset()]])[0]["legs"]
+    assert [leg["any_of"] for leg in legs] == [["X", "Y"], []]
+    assert [leg["new_banner"] for leg in legs] == [True, True]
+
+
+def test_plan_summary_merges_singles_sharing_the_same_alternatives():
+    moves = (_single(0, "X", "Pogo", R), _single(2, "X", "Rover Cat", R))
+    option = _plan(set(), moves, 2)
+    alternatives = [frozenset({"Y"}), frozenset({"Y"})]
+    (leg,) = plan_summary([option], {"Y": ["Y", "Z"]}, alternatives=[alternatives])[0]["legs"]
+    assert leg["rolls"] == 2
+    # The interchangeable list spells out every banner of an equivalent group.
+    assert leg["any_of"] == ["X", "Y", "Z"]
+
+
+def test_plan_summary_without_alternatives_keeps_the_merged_leg():
+    moves = (_single(0, "X", "Pogo", R), _single(2, "X", "Bahamut", U))
+    option = _plan({"Bahamut"}, moves, 2)
+    legs = plan_summary([option], {})[0]["legs"]
+    assert len(legs) == 1
+    assert legs[0]["any_of"] == []
+
+
+def test_build_tracks_marks_an_interchangeable_entry():
+    banner_pulls = {
+        "X": [TrackPull(1, "A", "Pogo", R)],
+        "Y": [TrackPull(1, "A", "Pogo", R)],
+    }
+    track = build_tracks(banner_pulls, {}, {}, path={"X": {0}}, shared={"Y": {0}})
+    cell = track["rows"][0]["a"]
+    assert [(e["on_path"], e["shared"]) for e in cell] == [(True, False), (False, True)]
+    assert track["has_shared"] is True
+
+
+def test_build_tracks_guaranteed_entry_can_be_shared():
+    banner_pulls = {
+        "X": [TrackPull(1, "A", "Shaman Cat", R)],
+        "Y": [TrackPull(1, "A", "Shaman Cat", R)],
+    }
+    guaranteed = {"X": [TrackPull(1, "A", "Mecha", U)], "Y": [TrackPull(1, "A", "Mecha", U)]}
+    track = build_tracks(
+        banner_pulls, {}, {}, guaranteed=guaranteed, gpath={"X": {0}}, gshared={"Y": {0}}
+    )
+    cell = track["rows"][0]["ga"]
+    assert [(e["on_path"], e["shared"]) for e in cell] == [(True, False), (False, True)]
+
+
+def test_build_tracks_without_marks_has_no_shared():
+    track = build_tracks({"X": [TrackPull(1, "A", "Pogo", R)]}, {}, {})
+    assert track["has_shared"] is False
+    assert track["rows"][0]["a"][0]["shared"] is False
+
+
+def test_subset_solutions_reports_interchangeable_steps():
+    pulls = {
+        "X": [TrackPull(1, "A", "Pogo", R), TrackPull(2, "A", "Bahamut", U)],
+        "Y": [TrackPull(1, "A", "Pogo", R), TrackPull(2, "A", "Kasli", U)],
+    }
+    (solution,) = subset_solutions(pulls, {}, {}, {"Bahamut"}, tickets=2, catfood=0)
+    assert [leg["any_of"] for leg in solution["legs"]] == [["X", "Y"], []]
+    cell = solution["track"]["rows"][0]["a"]
+    assert [(e["tag"], e["shared"]) for e in cell] == [("1", False), ("2", True)]
+
+
+def test_steps_template_headers_an_interchangeable_run_with_any_of():
+    def leg(any_of, cat):
+        return {
+            "names": ["X"],
+            "any_of": any_of,
+            "new_banner": True,
+            "kind": "Single pull",
+            "cost": 0,
+            "tickets": 1,
+            "rolls": 1,
+            "cats": [{"name": cat}],
+        }
+
+    html = render_to_string(
+        "planner/_steps.html", {"legs": [leg(["X", "Y"], "Pogo"), leg([], "Bahamut")]}
+    )
+    assert "Any of: X · Y" in html
+    assert html.count("step-banner") == 2
 
 
 @pytest.mark.parametrize(

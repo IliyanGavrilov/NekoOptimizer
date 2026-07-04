@@ -708,6 +708,16 @@ table.track .entry.target .catlink {
   border-radius: 999px;
   padding: 0 0.45rem;
 }
+/* Another banner giving the identical cat at one of the plan's pulls: that step is
+   interchangeable - roll it on either. A dashed echo of the on-path stripe (border,
+   not box-shadow: shadows can't dash; the padding offsets the added width). */
+table.track .entry.shared {
+  color: var(--ink);
+  background: color-mix(in srgb, var(--accent) 6%, transparent);
+  border-left: 3px dashed color-mix(in srgb, var(--accent) 60%, transparent);
+  padding-left: calc(0.5rem - 3px);
+  border-radius: 2px;
+}
 /* Rare-dupe reroll: show where the slot jumps (to the other track) on its own line. */
 table.track .arrow { display: block; color: var(--accent); font-size: 0.78rem; font-weight: 400; }
 /* Collection marks, matching the picker chips: a green name is an Uber/Legend you
@@ -770,6 +780,10 @@ table.track th.guaranteed-col, table.track td.guaranteed-col {
 .track-guide p { margin: 0 0 0.5rem; color: var(--muted); font-size: 0.85rem; line-height: 1.5; }
 .track-guide strong { color: var(--ink); }
 .new-swatch { color: var(--new); font-weight: 600; }
+.shared-swatch {
+  border-left: 3px dashed color-mix(in srgb, var(--accent) 60%, transparent);
+  padding-left: 0.25rem;
+}
 .mark-owned { color: var(--accent); font-weight: 700; }
 .mark-wanted { color: var(--r-super); }
 .rarity-legend { display: flex; flex-wrap: wrap; gap: 0.4rem; }
