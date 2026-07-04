@@ -14,7 +14,7 @@ from neko.models import Rarity
 
 
 def tsv_row(start="20250101", end="20250108", type_="1", offset="1", pools=()):
-    event = [start, "", end, "", "0", "", "", "", type_, offset]  # fields 0..9
+    event = [start, "", end, "", "0", "", "", "", type_, offset]
     blocks = []
     for p in pools:
         block = ["0"] * 15
@@ -84,7 +84,7 @@ def test_build_banner_groups_pool_by_rarity_in_row_order():
 
 def test_merge_events_dedupes_by_event_id():
     a = parse_events(tsv_row(pools=[POOL]))
-    b = parse_events(tsv_row(pools=[{**POOL, "name": "Renamed"}]))  # same id, newer snapshot
+    b = parse_events(tsv_row(pools=[{**POOL, "name": "Renamed"}]))
     merged = merge_events([a, b])
     assert len(merged) == 1 and merged[0].name == "Renamed"
 

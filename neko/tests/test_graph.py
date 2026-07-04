@@ -83,7 +83,6 @@ def test_outcome_carries_the_pull_seed():
 
 
 def test_dupe_outcome_carries_the_reroll_seed():
-    # The "roll to here" state of a dupe cell is the reroll's (it advanced further).
     g = BannerGraph(
         "b",
         [TrackPull(1, "A", "Cat", R, seed=111), TrackPull(2, "A", "Cat", R, seed=222)],
@@ -98,9 +97,6 @@ def test_guaranteed_outcome_carries_the_pull_seed():
 
 
 def test_resolve_rerolls_only_when_the_last_cat_repeats():
-    # The path decides a rare cell's dupe: the same cell rerolls after obtaining its
-    # cat elsewhere (a bounce landing) and rolls normally after anything else - even
-    # when its same-track predecessor is a different cat (no static dupe).
     g = BannerGraph(
         "b",
         [TrackPull(1, "A", "Ape", U), TrackPull(2, "A", "Cat", R, seed=8)],
@@ -112,8 +108,6 @@ def test_resolve_rerolls_only_when_the_last_cat_repeats():
 
 
 def test_resolve_multi_step_reroll_advances_further():
-    # A reroll that re-picked the dupe again consumed more stream values; the landing
-    # moves with the steps (+2+steps), which also decides the landing track's parity.
     g = BannerGraph(
         "b",
         [TrackPull(1, "A", "Cat", R)],
@@ -124,8 +118,8 @@ def test_resolve_multi_step_reroll_advances_further():
 
 def test_static_outcome_is_resolve_against_the_same_track_predecessor():
     g = graph((1, "A", "Cat", R), (2, "A", "Cat", R), (2, "B", "Cat", R))
-    assert g.outcome(2).switched is True  # 1A -> 2A repeats
-    assert g.outcome(3).switched is False  # 1B is missing, so 2B can't be a dupe
+    assert g.outcome(2).switched is True
+    assert g.outcome(3).switched is False
     assert g.resolve(2, "Cat") == g.outcome(2)
 
 
@@ -162,7 +156,7 @@ def test_build_graphs_wires_guaranteed_rerolls():
 
 def test_max_advance_tracks_the_worst_reroll():
     plain = graph((1, "A", "Cat", R))
-    assert plain.max_advance() == 3  # no reroll data: assume the usual one-step dupe
+    assert plain.max_advance() == 3
     g = BannerGraph(
         "b",
         [TrackPull(1, "A", "Cat", R)],
