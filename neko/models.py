@@ -145,4 +145,5 @@ class Path:
                 )
             else:
                 merged.append(move)
+
         return merged

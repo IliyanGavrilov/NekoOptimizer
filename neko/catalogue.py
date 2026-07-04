@@ -42,6 +42,7 @@ def parse_forms(text: str) -> tuple[str, ...]:
         name = line.split("|", 1)[0].strip()
         if name:
             forms.append(name)
+
     return tuple(forms)
 
 
@@ -51,13 +52,16 @@ def parse_rarities(unitbuy_text: str) -> dict[int, Rarity]:
     for unit_id, row in enumerate(csv.reader(unitbuy_text.splitlines())):
         if len(row) <= _RARITY_COL:
             continue
+
         try:
             code = int(row[_RARITY_COL])
         except ValueError:
             continue
+
         rarity = _RARITY_BY_CODE.get(code)
         if rarity is not None:
             rarities[unit_id] = rarity
+
     return rarities
 
 
@@ -76,9 +80,11 @@ def parse_sets(picture_book_text: str) -> dict[int, str]:
         fields = line.split("|")
         if len(fields) < 2 or fields[0].strip() not in _CAPSULE_SOURCES:
             continue
+
         name = fields[1].strip()
         if name and name != _EMPTY_FIELD:
             sets[unit_id] = name
+
     return sets
 
 
@@ -92,11 +98,15 @@ def parse_pools(text: str) -> list[list[int]]:
                 value = int(cell.strip())
             except ValueError:
                 break  # blank padding or the // comment: the pool has ended
+
             if value == -1:
                 break
+
             ids.append(value)
+
         if ids:
             pools.append(ids)
+
     return pools
 
 
@@ -108,11 +118,13 @@ def build_catalogue(
     """Join rarities, form-names and set names into {unit_id: Unit}; a unit needs the
     first two, set names are optional."""
     sets = sets or {}
+
     catalogue: dict[int, Unit] = {}
     for unit_id, names in forms.items():
         rarity = rarities.get(unit_id)
         if rarity is not None and names:
             catalogue[unit_id] = Unit(unit_id, tuple(names), rarity, sets.get(unit_id, ""))
+
     return catalogue
 
 
@@ -126,9 +138,11 @@ def match_names(names: Iterable[str], index: Mapping[str, int]) -> tuple[dict[st
     """Split roll-names into {name: unit_id} matches and the sorted names with no unit."""
     matches: dict[str, int] = {}
     unmatched: set[str] = set()
+
     for name in names:
         if name in index:
             matches[name] = index[name]
         else:
             unmatched.add(name)
+
     return matches, sorted(unmatched)
