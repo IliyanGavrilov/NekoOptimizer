@@ -7,7 +7,7 @@ from urllib.parse import quote
 from neko.catalogue import match_names, name_index
 from neko.gachadata import GachaEventRow, load_events, load_pools, load_series, load_tickets
 from neko.graph import BannerGraph, build_graphs, stream_index
-from neko.models import CATFOOD_PER_DRAW, BannerRolls, Rarity, State
+from neko.models import CATFOOD_PER_DRAW, BannerRolls, Leg, Rarity, State
 from neko.roller import (
     DEFAULT_COUNT,
     RollResult,
@@ -491,6 +491,8 @@ def build_tracks(
     gpath=None,
     gtargets=None,
     wanted=None,
+    shared=None,
+    gshared=None,
 ):
     """One merged A/B table over every selected banner: each cell stacks each banner's
     cat at that shared stream position (à la ubercarry), with rare-dupe switch arrows
@@ -503,7 +505,9 @@ def build_tracks(
     column (godfat's: the uber a guaranteed multi awards when STARTED on that cell);
     banners without a guaranteed multi have none, and when no selected banner has any the
     columns are omitted entirely (``has_guaranteed``). ``gpath``/``gtargets`` light up
-    guaranteed-column cells where the plan starts a guaranteed multi.
+    guaranteed-column cells where the plan starts a guaranteed multi. ``shared`` and
+    ``gshared`` ([plan_shared]) mark OTHER banners' entries at path indices where the
+    pull is interchangeable - the same cat via the same walk.
     """
     path = path or {}
     targets = targets or {}
@@ -511,6 +515,8 @@ def build_tracks(
     gtargets = gtargets or {}
     owned = owned or set()
     wanted = wanted or set()
+    shared = shared or {}
+    gshared = gshared or {}
     groups = _banner_groups(banner_pulls, rerolls, equivalents, guaranteed)
 
     avail = max((max(g["grid"]) for g in groups if g["grid"]), default=-1) // 2 + 1
@@ -530,6 +536,7 @@ def build_tracks(
             # jumps to the other track.
             cat = outcome.cat if outcome else tp.cat
             rarity = str(outcome.rarity if outcome else tp.rarity)
+            on_path = index in path.get(group["rep"], ())
             cells.append(
                 {
                     "tag": group["tag"],
@@ -544,8 +551,9 @@ def build_tracks(
                     }
                     if switched
                     else None,
-                    "on_path": index in path.get(group["rep"], ()),
+                    "on_path": on_path,
                     "target": index in targets.get(group["rep"], ()),
+                    "shared": not on_path and index in shared.get(group["rep"], ()),
                     "new": rarity in _VALUABLE_RARITIES and cat not in owned,
                     "owned": cat in owned,
                     "wanted": cat in wanted,
@@ -570,13 +578,15 @@ def build_tracks(
             if tp is None or not tp.cat:  # no guarantee on this banner, or an empty uber pool
                 continue
             rarity = str(tp.rarity)
+            on_path = index in gpath.get(group["rep"], ())
             cells.append(
                 {
                     "tag": group["tag"],
                     "cat": tp.cat,
                     "rarity": rarity,
-                    "on_path": index in gpath.get(group["rep"], ()),
+                    "on_path": on_path,
                     "target": index in gtargets.get(group["rep"], ()),
+                    "shared": not on_path and index in gshared.get(group["rep"], ()),
                     "new": rarity in _VALUABLE_RARITIES and tp.cat not in owned,
                     "owned": tp.cat in owned,
                     "wanted": tp.cat in wanted,
@@ -598,7 +608,12 @@ def build_tracks(
         for pos in range(1, max_pos + 1)
     ]
     legend = [{"tag": g["tag"], "names": g["names"]} for g in groups]
-    return {"legend": legend, "rows": rows, "has_guaranteed": has_guaranteed}
+    return {
+        "legend": legend,
+        "rows": rows,
+        "has_guaranteed": has_guaranteed,
+        "has_shared": bool(shared or gshared),
+    }
 
 
 def plan_highlight(option, equivalents):
@@ -619,6 +634,81 @@ def plan_highlight(option, equivalents):
     return path, targets, gpath, gtargets
 
 
+def _outcome_key(outcome):
+    """What makes two banners' pulls at one position interchangeable: the same cat
+    obtained AND the same walk onward (a dupe-switch on one side steps differently)."""
+    return (outcome.cat, outcome.rarity, outcome.next_position)
+
+
+def _serves_move(other, other_names, graph, move, multis):
+    """True when banner ``other`` executes the whole move exactly as ``graph`` does:
+    every roll yields the same cat and continues the same walk, and a multi is also
+    on offer there at the same size and price, awarding the same guaranteed uber."""
+    if move.kind != "Single pull":
+        guaranteed = any(pull.guaranteed for pull in move.pulls)
+        offered = (m for name in other_names for m in multis.get(name, ()))
+        if not any(
+            m.rolls == len(move.pulls) and m.cost == move.cost and m.guaranteed == guaranteed
+            for m in offered
+        ):
+            return False
+        if guaranteed:
+            start = move.pulls[0].position
+            forced, own = other.guaranteed(start), graph.guaranteed(start)
+            if forced is None or own is None or forced.cat != own.cat:
+                return False
+    for pull in move.pulls:
+        if pull.guaranteed:
+            continue
+        outcome = other.outcome(pull.position)
+        if outcome is None or _outcome_key(outcome) != _outcome_key(graph.outcome(pull.position)):
+            return False
+    return True
+
+
+def plan_shared(option, graphs, equivalents, multis=None, exclude=()):
+    """Which OTHER selected banners execute each of a plan's moves identically, so the
+    step can be rolled on any of them. Finer than [equivalent_banners]: only the pulls
+    the plan actually makes must agree, not the whole rolled window - featured banners
+    share the rare/super pool, so a plan's rare stretch is usually interchangeable and
+    only the uber it chases pins the banner.
+
+    A move is one in-game action: a single pull matches where the other banner's
+    outcome agrees ([_outcome_key]); a multi must match every roll of its chain, be on
+    offer there at the same size and price, and award the same guaranteed uber. Banners
+    named in ``exclude`` (the capped Platinum/Legend gachas - they run on their own
+    scarce tickets, a different price altogether) never count as interchangeable.
+
+    Returns ``(shared, gshared, alternatives)``: the stream indices to mark per other
+    representative banner - normal cells and guaranteed columns - plus each move's
+    frozenset of interchangeable representatives, aligned with ``option.plan.moves``."""
+    multis = multis or {}
+    by_name = {graph.banner_id: graph for graph in graphs}
+    groups: dict[str, list[str]] = {}
+    for name in by_name:
+        groups.setdefault(_representative(name, equivalents), []).append(name)
+    excluded = {rep for rep, names in groups.items() if any(name in exclude for name in names)}
+    shared: dict[str, set[int]] = {}
+    gshared: dict[str, set[int]] = {}
+    alternatives: list[frozenset[str]] = []
+    for move in option.plan.moves:
+        own = _representative(move.banner_id, equivalents)
+        graph = by_name[move.banner_id]
+        matched = [
+            rep
+            for rep in groups
+            if rep != own
+            and rep not in excluded
+            and _serves_move(by_name[rep], groups[rep], graph, move, multis)
+        ]
+        for rep in matched:
+            for pull in move.pulls:
+                into = gshared if pull.guaranteed else shared
+                into.setdefault(rep, set()).add(pull.position)
+        alternatives.append(frozenset(matched))
+    return shared, gshared, alternatives
+
+
 def plan_seed(plan, graphs):
     """The RNG state after a plan's final draw - what the seed becomes once the plan is
     actually rolled ("apply plan" advances to it). The final draw is the last pull: a
@@ -633,24 +723,55 @@ def plan_seed(plan, graphs):
     return outcome.seed if outcome else None
 
 
-def plan_summary(plans, equivalents, owned=None, wanted=None):
+def _shared_legs(option, alternatives):
+    """The plan's moves merged for display: [Path.legs]' single-pull merge, but a run
+    only merges while its interchangeable-banner set ([plan_shared]) stays the same,
+    so one displayed step never mixes pulls with different "any of" banner lists."""
+    if alternatives is None:
+        return [(leg, frozenset()) for leg in option.plan.legs]
+    merged: list[tuple[Leg, frozenset]] = []
+    for move, alt in zip(option.plan.moves, alternatives, strict=True):
+        last, last_alt = merged[-1] if merged else (None, None)
+        if (
+            last is not None
+            and alt == last_alt
+            and last.kind == "Single pull" == move.kind
+            and last.banner_id == move.banner_id
+        ):
+            merged[-1] = (
+                Leg(move.banner_id, move.kind, last.cost + move.cost, last.pulls + move.pulls),
+                alt,
+            )
+        else:
+            merged.append((move, alt))
+    return merged
+
+
+def plan_summary(plans, equivalents, owned=None, wanted=None, alternatives=None):
     """Per-option summary: targets, cost, and per-banner-leg rolls + cat sequence.
-    Each cat carries the same marks as its track cell (target / owned / wanted / new)."""
+    Each cat carries the same marks as its track cell (target / owned / wanted / new).
+    ``alternatives`` (one list per plan, aligned with its moves - see [plan_shared])
+    splits single-pull runs where the interchangeable-banner set changes; a leg the
+    plan could roll elsewhere lists every serving banner in ``any_of`` and a header
+    break (``new_banner``) marks each divergence."""
     owned = owned or set()
     wanted = wanted or set()
     summaries = []
-    for option in plans:
+    for i, option in enumerate(plans):
         legs = []
-        last_banner = None
-        for leg in option.plan.legs:
+        last_key = None
+        for leg, alt in _shared_legs(option, alternatives[i] if alternatives else None):
             rolls = len(leg.pulls)
             # Single pulls are paid per draw with a ticket (free) or 150 catfood;
             # leg.cost only counts the catfood ones, so the rest are ticket-funded.
             tickets = rolls - leg.cost // CATFOOD_PER_DRAW if leg.kind == "Single pull" else 0
+            names = sorted(equivalents.get(leg.banner_id, [leg.banner_id]))
+            others = {name for rep in alt for name in equivalents.get(rep, [rep])}
             legs.append(
                 {
-                    "names": sorted(equivalents.get(leg.banner_id, [leg.banner_id])),
-                    "new_banner": leg.banner_id != last_banner,
+                    "names": names,
+                    "any_of": sorted({*names, *others}) if others else [],
+                    "new_banner": (leg.banner_id, alt) != last_key,
                     "kind": leg.kind,
                     "cost": leg.cost,
                     "tickets": tickets,
@@ -667,7 +788,7 @@ def plan_summary(plans, equivalents, owned=None, wanted=None):
                     ],
                 }
             )
-            last_banner = leg.banner_id
+            last_key = (leg.banner_id, alt)
         summaries.append(
             {
                 "targets": sorted(option.targets),
@@ -713,7 +834,10 @@ def subset_solutions(
     solutions = []
     for sp in found:
         path, target_idx, gpath, gtargets = plan_highlight(sp, equivalents)
-        solution = plan_summary([sp], equivalents, owned, wanted)[0]
+        shared, gshared, alternatives = plan_shared(
+            sp, graphs, equivalents, multis, exclude=banner_limits or ()
+        )
+        solution = plan_summary([sp], equivalents, owned, wanted, [alternatives])[0]
         solution["found"] = True
         solution["seed_after"] = plan_seed(sp.plan, graphs)
         solution["track"] = build_tracks(
@@ -727,6 +851,8 @@ def subset_solutions(
             gpath,
             gtargets,
             wanted,
+            shared=shared,
+            gshared=gshared,
         )
         solutions.append(solution)
     items = sorted(set(targets))
