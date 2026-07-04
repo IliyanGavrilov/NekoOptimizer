@@ -548,13 +548,26 @@ def build_tracks(
             tp = group["grid"].get(index)
             if tp is None:
                 continue
-            outcome = group["graph"].outcome(index)
+            graph = group["graph"]
+            outcome = graph.outcome(index)
             switched = bool(outcome and outcome.switched)
             # outcome.cat is the rerolled cat on a dupe, else the normal roll; a dupe also
             # jumps to the other track.
             cat = outcome.cat if outcome else tp.cat
             rarity = str(outcome.rarity if outcome else tp.rarity)
             on_path = index in path.get(group["rep"], ())
+            # A cell godfat also renders an R value for without it being a dupe on its
+            # own track: an earlier reroll bounces here and rerolls AGAIN on that path
+            # only. Straight arrivals keep the nominal cat; show the conditional one too.
+            cond = None
+            if not switched and graph.realized(index):
+                reroll = graph.reroll(index)
+                if reroll is not None and reroll.cat:
+                    cond = {
+                        "cat": reroll.cat,
+                        "to": _pos_label(reroll.next_position),
+                        "left": reroll.next_position % 2 == 0,
+                    }
             cells.append(
                 {
                     "tag": group["tag"],
@@ -569,6 +582,7 @@ def build_tracks(
                     }
                     if switched
                     else None,
+                    "cond": cond,
                     "on_path": on_path,
                     "target": index in targets.get(group["rep"], ()),
                     "shared": not on_path and index in shared.get(group["rep"], ()),
@@ -652,21 +666,35 @@ def plan_highlight(option, equivalents):
     return path, targets, gpath, gtargets
 
 
-def _walks_alike(other, graph, pull, targets):
-    """True when rolling this pull on ``other`` leaves the rest of the plan intact:
-    the walk continues from the same next position (a dupe-switch on one side steps
-    differently), and a pull that collects a target still yields that exact cat -
-    a filler pull may yield a different one."""
-    outcome = other.outcome(pull.position)
-    if outcome is None or outcome.next_position != graph.outcome(pull.position).next_position:
-        return False
-    return pull.cat not in targets or outcome.cat == pull.cat
+def _move_walk(graph, move, last):
+    """Replay one plan move on ``graph``, threading the previously obtained cat
+    ``last`` the way the search walked it: a rare repeating it rerolls, and a
+    guaranteed multi whose first roll arrives as a dupe awards the duped column's
+    uber. Returns (outcomes aligned with move.pulls, the cat obtained after the
+    move), or None when the walk runs off the rolled window or the guaranteed
+    column is missing."""
+    first = graph.resolve(move.pulls[0].position, last)
+    if first is None:
+        return None
+    outcomes = []
+    for pull in move.pulls:
+        if pull.guaranteed:
+            outcome = graph.guaranteed(pull.position, duped=first.switched)
+        else:
+            outcome = graph.resolve(pull.position, last)
+        if outcome is None:
+            return None
+        outcomes.append(outcome)
+        last = outcome.cat
+    return outcomes, last
 
 
-def _serves_move(other, other_names, graph, move, targets, multis):
-    """True when the whole move can be rolled on banner ``other`` without changing the
-    plan: every pull walks alike ([_walks_alike]), and a multi is also on offer there
-    at the same size and price, still awarding any targeted guaranteed uber."""
+def _serves_move(other, other_names, own_outcomes, move, targets, multis, last):
+    """The cat banner ``other`` would leave as "last obtained" after rolling this whole
+    move, or None when the move doesn't fit there: the multi must be on offer at the
+    same size and price, every pull must keep the original walk's continue point (a
+    dupe on one side steps differently), and a pull that collects a target must still
+    yield that exact cat - a filler pull may yield a different one."""
     if move.kind != "Single pull":
         guaranteed = any(pull.guaranteed for pull in move.pulls)
         offered = (m for name in other_names for m in multis.get(name, ()))
@@ -674,15 +702,17 @@ def _serves_move(other, other_names, graph, move, targets, multis):
             m.rolls == len(move.pulls) and m.cost == move.cost and m.guaranteed == guaranteed
             for m in offered
         ):
-            return False
-    for pull in move.pulls:
-        if pull.guaranteed:
-            forced = other.guaranteed(pull.position)
-            if forced is None or (pull.cat in targets and forced.cat != pull.cat):
-                return False
-        elif not _walks_alike(other, graph, pull, targets):
-            return False
-    return True
+            return None
+    walk = _move_walk(other, move, last)
+    if walk is None:
+        return None
+    outcomes, end = walk
+    for pull, own, mine in zip(move.pulls, own_outcomes, outcomes, strict=True):
+        if not pull.guaranteed and mine.next_position != own.next_position:
+            return None
+        if pull.cat in targets and mine.cat != pull.cat:
+            return None
+    return end
 
 
 def plan_shared(option, graphs, equivalents, multis=None, exclude=()):
@@ -692,10 +722,14 @@ def plan_shared(option, graphs, equivalents, multis=None, exclude=()):
     a filler pull only has to keep the walk (the cat there may differ); a pull that
     collects a target must still yield it.
 
-    A move is one in-game action: a single pull matches where [_walks_alike] holds; a
+    A move is one in-game action: a single pull matches where the walk holds; a
     multi needs its whole chain to walk alike and the same multi on offer at the same
-    price. Banners named in ``exclude`` (the capped Platinum/Legend gachas - they run
-    on their own scarce tickets, a different price altogether) never count.
+    price. The plan's walk is replayed path-aware ([_move_walk]): the cat obtained
+    before each move decides its dupes. A swapped move that ends on a different
+    filler cat is only shared when the plan's NEXT pull still resolves identically -
+    a dupe triggered on one side only would derail everything after it. Banners
+    named in ``exclude`` (the capped Platinum/Legend gachas - they run on their own
+    scarce tickets, a different price altogether) never count.
 
     Returns ``(shared, gshared)``: the stream indices to mark, per other
     representative banner - normal cells and guaranteed columns."""
@@ -707,31 +741,71 @@ def plan_shared(option, graphs, equivalents, multis=None, exclude=()):
     excluded = {rep for rep, names in groups.items() if any(name in exclude for name in names)}
     shared: dict[str, set[int]] = {}
     gshared: dict[str, set[int]] = {}
-    for move in option.plan.moves:
+    moves = option.plan.moves
+    last = ""
+    for index, move in enumerate(moves):
         own = _representative(move.banner_id, equivalents)
-        graph = by_name[move.banner_id]
+        walk = _move_walk(by_name[move.banner_id], move, last)
+        if walk is None:  # can't happen for a plan the search produced; stay safe
+            break
+        own_outcomes, own_end = walk
+        follow = moves[index + 1] if index + 1 < len(moves) else None
         for rep, names in groups.items():
             if rep == own or rep in excluded:
                 continue
-            if _serves_move(by_name[rep], names, graph, move, option.targets, multis):
-                for pull in move.pulls:
-                    into = gshared if pull.guaranteed else shared
-                    into.setdefault(rep, set()).add(pull.position)
+            end = _serves_move(
+                by_name[rep], names, own_outcomes, move, option.targets, multis, last
+            )
+            if end is None:
+                continue
+            if follow is not None and end != own_end:
+                nxt = by_name[follow.banner_id]
+                start = follow.pulls[0].position
+                if nxt.resolve(start, own_end) != nxt.resolve(start, end):
+                    continue
+            for pull in move.pulls:
+                into = gshared if pull.guaranteed else shared
+                into.setdefault(rep, set()).add(pull.position)
+        last = own_end
     return shared, gshared
 
 
 def plan_seed(plan, graphs):
     """The RNG state after a plan's final draw - what the seed becomes once the plan is
-    actually rolled ("apply plan" advances to it). The final draw is the last pull: a
-    guaranteed multi's uber, or the (reroll-aware) outcome at the last position."""
+    actually rolled ("apply plan" advances to it). The plan records its whole walk, so
+    the final pull resolves against the cat obtained just before it: a dupe - even one
+    only this path triggers - lands on its reroll's seed, and a guaranteed multi whose
+    first roll arrived duped reads the duped column's. The recorded cat arbitrates
+    when the graph's data can't say (a plan replayed without its history)."""
     if not plan.pulls:
         return None
     last = plan.pulls[-1]
     graph = next((g for g in graphs if g.banner_id == last.banner_id), None)
     if graph is None:
         return None
-    outcome = graph.guaranteed(last.position) if last.guaranteed else graph.outcome(last.position)
-    return outcome.seed if outcome else None
+    if last.guaranteed:
+        # The multi started duped iff its first roll (the recorded pull at the same
+        # position) obtained the reroll rather than the nominal cat.
+        inner = next(
+            (
+                p
+                for p in plan.pulls
+                if p.position == last.position
+                and p.banner_id == last.banner_id
+                and not p.guaranteed
+            ),
+            None,
+        )
+        nominal = graph.resolve(last.position)
+        duped = inner is not None and nominal is not None and inner.cat != nominal.cat
+        forced = graph.guaranteed(last.position, duped=duped) or graph.guaranteed(last.position)
+        return forced.seed if forced else None
+    before = plan.pulls[-2].cat if len(plan.pulls) > 1 else ""
+    resolved = graph.resolve(last.position, before)
+    for outcome in (resolved, graph.reroll(last.position)):
+        if outcome is not None and outcome.cat == last.cat:
+            return outcome.seed
+    return resolved.seed if resolved else None
 
 
 def plan_summary(plans, equivalents, owned=None, wanted=None, titles=None):
@@ -799,11 +873,12 @@ def subset_solutions(
     owned=None,
     wanted=None,
     titles=None,
+    guaranteed_rerolls=None,
 ):
     """Every non-empty target subset and its best plan, biggest-then-cheapest, with the
     unreachable subsets listed after. Reachable ones carry the steps + highlighted track
     to render on demand; unreachable ones are flagged so the UI can say "Not found"."""
-    graphs = build_graphs(pulls, guaranteed_pulls, rerolls)
+    graphs = build_graphs(pulls, guaranteed_pulls, rerolls, guaranteed_rerolls)
     start = State(0, tickets, catfood // CATFOOD_PER_DRAW, frozenset())
     found = solve_subsets(
         graphs,

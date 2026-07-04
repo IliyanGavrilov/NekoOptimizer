@@ -67,7 +67,7 @@ def test_rare_dupe_rerolls_to_the_other_unit():
 
 
 def test_reroll_on_a_single_unit_pool_empties():
-    # Deleting the only slot leaves nothing to re-pick (godfat's id -1 → "").
+    # Deleting the only slot leaves nothing to re-pick (godfat's id -1 -> "").
     rolls = roll_banner(1893568593, ONE_UNIT_RARE, 10)
     assert rolls.rerolls and all(r.cat == "" for r in rolls.rerolls)
 
@@ -184,6 +184,62 @@ def test_reseeding_to_a_guaranteed_pull_lands_one_past_the_multi():
         last = 2 * (pull.position - 1) + (0 if pull.track == "A" else 1) + 20
         successor = ((last + 1) // 2 + 1, "AB"[(last + 1) % 2])
         assert roll_banner(pull.seed, ALL_UBER, 1).pulls[0].cat == nominal[successor]
+
+
+def test_every_named_rare_cell_carries_its_conditional_reroll():
+    # Any path can make any rare cell a dupe (a bounce landing or a mid-stream start
+    # changes the previously obtained cat), so every named rare cell carries what a
+    # dupe there would reroll into, with the extra steps the reroll would consume.
+    rolls = roll_banner(1893568593, FOUR_BAND, 50)
+    rare = {(p.position, p.track) for p in rolls.pulls if p.rarity is Rarity.RARE and p.cat}
+    assert {(r.position, r.track) for r in rolls.rerolls} == rare
+    assert all(r.steps >= 1 for r in rolls.rerolls)
+
+
+def test_realized_rerolls_are_the_straight_chain_dupes_and_their_bounces():
+    # godfat renders an R cell exactly where a straight chain hits a dupe: a cell that
+    # repeats its same-track predecessor, or the landing of a realized reroll that
+    # repeats the rerolled cat (a bounce, which rerolls again). Everything else stays
+    # a conditional cell other paths can trigger.
+    rolls = roll_banner(1893568593, TWO_UNIT_RARE, 300)
+    nominal = {(p.position, p.track): p.cat for p in rolls.pulls}
+    static = {
+        (pos, track)
+        for (pos, track), cat in nominal.items()
+        if nominal.get((pos - 1, track)) == cat
+    }
+    rerolls = {(r.position, r.track): r for r in rolls.rerolls}
+    realized = {spot for spot, reroll in rerolls.items() if reroll.realized}
+    assert static <= realized
+    bounces = realized - static
+    assert bounces  # this seed does bounce
+    for pos, track in bounces:
+        index = 2 * (pos - 1) + (track == "B")
+        # some realized reroll lands exactly here holding this cell's nominal cat
+        assert any(
+            reroll.realized
+            and 2 * (p - 1) + (t == "B") + 2 + reroll.steps == index
+            and reroll.cat == nominal[(pos, track)]
+            for (p, t), reroll in rerolls.items()
+        )
+
+
+def test_guaranteed_reroll_column_diverges_where_the_chains_do():
+    # A multi started on a dupe walks the reroll's chain (an extra step from the very
+    # first roll), so its final cell - and the awarded uber - can differ from a clean
+    # start's. The duped column covers every reroll cell rolled with a guarantee.
+    dupey = banner(
+        {Rarity.RARE: 9000, Rarity.UBER_SUPER_RARE: 1000},
+        {
+            Rarity.RARE: ("R1", "R2"),
+            Rarity.UBER_SUPER_RARE: ("U1", "U2", "U3", "U4", "U5"),
+        },
+    )
+    rolls = roll_banner(1893568593, dupey, 100, guaranteed_rolls=11)
+    spots = {(r.position, r.track) for r in rolls.rerolls}
+    assert {(g.position, g.track) for g in rolls.guaranteed_rerolls} == spots
+    clean = {(g.position, g.track): g.cat for g in rolls.guaranteed}
+    assert any(g.cat != clean[(g.position, g.track)] for g in rolls.guaranteed_rerolls)
 
 
 def test_guaranteed_chain_crosses_tracks_on_a_dupe():

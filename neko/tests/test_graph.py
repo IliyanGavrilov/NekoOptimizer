@@ -95,3 +95,77 @@ def test_dupe_outcome_carries_the_reroll_seed():
 def test_guaranteed_outcome_carries_the_pull_seed():
     g = BannerGraph("b", [], [TrackPull(1, "A", "Bahamut", U, seed=444)])
     assert g.guaranteed(0).seed == 444
+
+
+def test_resolve_rerolls_only_when_the_last_cat_repeats():
+    # The path decides a rare cell's dupe: the same cell rerolls after obtaining its
+    # cat elsewhere (a bounce landing) and rolls normally after anything else - even
+    # when its same-track predecessor is a different cat (no static dupe).
+    g = BannerGraph(
+        "b",
+        [TrackPull(1, "A", "Ape", U), TrackPull(2, "A", "Cat", R, seed=8)],
+        rerolls=[TrackPull(2, "A", "Dog", R, seed=9, steps=1)],
+    )
+    assert g.resolve(2, "Cat") == Outcome("Dog", R, 5, True, 9)
+    assert g.resolve(2, "Ape") == Outcome("Cat", R, 4, False, 8)
+    assert g.resolve(2) == Outcome("Cat", R, 4, False, 8)
+
+
+def test_resolve_multi_step_reroll_advances_further():
+    # A reroll that re-picked the dupe again consumed more stream values; the landing
+    # moves with the steps (+2+steps), which also decides the landing track's parity.
+    g = BannerGraph(
+        "b",
+        [TrackPull(1, "A", "Cat", R)],
+        rerolls=[TrackPull(1, "A", "Dog", R, steps=2)],
+    )
+    assert g.resolve(0, "Cat").next_position == 4
+
+
+def test_static_outcome_is_resolve_against_the_same_track_predecessor():
+    g = graph((1, "A", "Cat", R), (2, "A", "Cat", R), (2, "B", "Cat", R))
+    assert g.outcome(2).switched is True  # 1A -> 2A repeats
+    assert g.outcome(3).switched is False  # 1B is missing, so 2B can't be a dupe
+    assert g.resolve(2, "Cat") == g.outcome(2)
+
+
+def test_reroll_and_realized_expose_the_conditional_cell():
+    g = BannerGraph(
+        "b",
+        [TrackPull(1, "A", "Ape", U), TrackPull(2, "A", "Cat", R)],
+        rerolls=[TrackPull(2, "A", "Dog", R, seed=9, steps=1, realized=True)],
+    )
+    assert g.reroll(2) == Outcome("Dog", R, 5, True, 9)
+    assert g.realized(2) is True
+    assert g.reroll(0) is None and g.realized(0) is False
+
+
+def test_guaranteed_duped_reads_the_reroll_column():
+    g = BannerGraph(
+        "b",
+        [TrackPull(1, "A", "Cat", R)],
+        guaranteed=[TrackPull(1, "A", "Bahamut", U, seed=5)],
+        guaranteed_rerolls=[TrackPull(1, "A", "Mekako", U, seed=6)],
+    )
+    assert g.guaranteed(0) == Outcome("Bahamut", U, 1, False, 5)
+    assert g.guaranteed(0, duped=True) == Outcome("Mekako", U, 1, False, 6)
+    assert g.guaranteed_positions(duped=True) == [0]
+
+
+def test_build_graphs_wires_guaranteed_rerolls():
+    graphs = build_graphs(
+        {"x": [TrackPull(1, "A", "Cat", R)]},
+        guaranteed_rerolls={"x": [TrackPull(1, "A", "Mekako", U)]},
+    )
+    assert graphs[0].guaranteed(0, duped=True).cat == "Mekako"
+
+
+def test_max_advance_tracks_the_worst_reroll():
+    plain = graph((1, "A", "Cat", R))
+    assert plain.max_advance() == 3  # no reroll data: assume the usual one-step dupe
+    g = BannerGraph(
+        "b",
+        [TrackPull(1, "A", "Cat", R)],
+        rerolls=[TrackPull(1, "A", "Dog", R, steps=2)],
+    )
+    assert g.max_advance() == 4
