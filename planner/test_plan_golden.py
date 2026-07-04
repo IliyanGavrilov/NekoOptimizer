@@ -1,10 +1,3 @@
-# Regression pins for the plan search: small target sets keep byte-identical results
-# (the golden fixture holds the full solution structure), and wishlist-sized target
-# sets finish inside a strict time budget - before the fix, every wanted cat NOT
-# obtainable in the selected banners doubled the subset enumeration, so a ~100-cat
-# wishlist never returned. After an intended output change, regenerate the fixture by
-# dumping {name: render(case) for golden_cases()} into GOLDEN_PATH (sort_keys, indent 2).
-
 import json
 import time
 from pathlib import Path
@@ -21,16 +14,12 @@ GOLDEN_PATH = Path(__file__).parent / "fixtures" / "plan_golden.json"
 
 
 def _fill(idx, rares, supers):
-    """Deterministic filler for a stream cell: mostly rares, a super every 5th cell.
-    Consecutive same-track cells never repeat a cat, so no accidental dupe rerolls."""
     if idx % 5 == 3:
         return supers[(idx // 5) % len(supers)], S
     return rares[idx % len(rares)], R
 
 
 def _banner(overrides, rerolls, rares, supers, ubers, positions=12, seed_base=0):
-    """A synthetic rolled banner: filler cells plus targeted overrides, a full
-    guaranteed column cycling `ubers`, and the given dupe-reroll cells."""
     pulls, guaranteed, guaranteed_rerolls = [], [], []
     for idx in range(2 * positions):
         pos, track = idx // 2 + 1, "AB"[idx % 2]
@@ -44,8 +33,6 @@ def _banner(overrides, rerolls, rares, supers, ubers, positions=12, seed_base=0)
 
 
 def _rolls():
-    """Three banners: X and Y are byte-identical (an equivalent pair), Z is distinct.
-    X carries a deliberate on-track dupe pair (7A/8A Tin Cat) with a realized reroll."""
     x = _banner(
         overrides={
             2: ("Windy", U),
@@ -92,8 +79,6 @@ _MULTIS = {"X": (Multi(11, 1500),), "Y": (Multi(11, 1500),)}
 
 
 def golden_cases():
-    """(name, subset_solutions kwargs) for every pinned small input. All of these
-    completed quickly before the fix, so their results must never change."""
     base = _base()
     yield "singleton", dict(base, targets={"Windy"}, tickets=2, catfood=0)
     yield (
@@ -148,7 +133,6 @@ def solve(case):
 
 
 def _norm(value):
-    """Solution dicts down to JSON-stable primitives (sets sorted, keys stringified)."""
     if isinstance(value, dict):
         return {str(k): _norm(v) for k, v in value.items()}
     if isinstance(value, (list, tuple)):
@@ -170,8 +154,6 @@ def test_small_inputs_are_byte_identical_to_golden():
     assert current == golden
 
 
-# Generous versus the observed post-fix runtimes (well under a second), tight versus
-# the failure mode (hours to never).
 TIME_BUDGET = 15.0
 
 
@@ -182,8 +164,6 @@ def _timed(case):
 
 
 def test_wishlist_of_100_with_few_obtainable_completes_in_budget():
-    # 100 wanted cats, 3 of them obtainable in the selected banners: before the fix
-    # every unobtainable cat doubled the subset enumeration (2^100 searches).
     targets = {"Windy", "Thundia", "Kasa Jizo"} | {f"Wish {i:03d}" for i in range(97)}
     case = dict(_base(), targets=targets, tickets=2, catfood=1200, multis=_MULTIS)
     elapsed, solutions = _timed(case)
@@ -197,7 +177,6 @@ def test_wishlist_of_100_with_few_obtainable_completes_in_budget():
 
 
 def _wide_banner():
-    """One banner whose rolled window really shows 16 distinct ubers."""
     ubers = [f"Big Uber {i:02d}" for i in range(16)]
     return _banner(
         overrides={2 * i: (ubers[i], U) for i in range(16)},
@@ -211,8 +190,6 @@ def _wide_banner():
 
 
 def test_wishlist_with_many_obtainable_completes_in_budget():
-    # 16 obtainable targets is beyond the exact 2^k breakdown; the planner must fall
-    # back to the bounded view (full obtainable set + per-cat plans), not hang.
     rolls = _wide_banner()
     targets = {f"Big Uber {i:02d}" for i in range(16)} | {f"Wish {i:03d}" for i in range(84)}
     case = dict(

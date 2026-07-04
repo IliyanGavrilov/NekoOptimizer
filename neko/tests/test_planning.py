@@ -29,8 +29,6 @@ def test_unaffordable_wishlist_falls_back_to_subsets():
 
 
 def test_guaranteed_multi_reaches_otherwise_unreachable_target():
-    # The guaranteed column is keyed by the multi's first roll: a 2-roll guarantee begun
-    # at 1A rolls Filler, then swaps its final roll for Target.
     result = plan(
         {"x": pulls((1, "A", "Filler", U))},
         {"Target"},

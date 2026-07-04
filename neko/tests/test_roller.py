@@ -65,13 +65,11 @@ def test_multis_are_matched_by_rule():
 
 
 def test_guaranteed_banner_gets_the_guaranteed_column():
-    res = roll(roll_selected, 123, ["Alpha Banner"])  # Alpha runs a guaranteed event
+    res = roll(roll_selected, 123, ["Alpha Banner"])
     assert res.banners["Alpha Banner"].guaranteed
 
 
 def test_plain_banner_gets_no_guaranteed_column_and_its_multi_is_demoted():
-    # A banner that is neither guaranteed nor step-up must not offer a guaranteed uber:
-    # no guaranteed column, and the config's 11-roll multi becomes a plain 11-roll.
     plain = [
         event(
             "2025-03-01_44",
@@ -109,8 +107,6 @@ def test_step_up_guarantee_lands_only_on_the_15_roll_multi():
 
 
 def test_bare_name_resolves_to_the_run_live_today_not_a_future_rerun():
-    # A recurring banner name reruns with a DIFFERENT pool; asking for the name must
-    # give the run that's on now, not the future rerun (whose start date is later).
     reruns = [
         event("2025-04-24_42", "Platinum", date(2025, 4, 24), date(2030, 1, 1), 42),
         event("2025-07-11_43", "Platinum", date(2025, 7, 11), date(2030, 1, 1), 43),

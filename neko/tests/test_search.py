@@ -15,7 +15,6 @@ def start(position=0, tickets=0, catfood=0, found=()):
 
 
 def test_dupe_reroll_target_is_credited():
-    # A target that only drops as a dupe's reroll: pulling through the dupe obtains it.
     g = BannerGraph(
         "x",
         [TrackPull(1, "A", "Cat", R), TrackPull(2, "A", "Cat", R)],
@@ -26,8 +25,6 @@ def test_dupe_reroll_target_is_credited():
 
 
 def test_start_dupe_memory_rerolls_the_first_pull():
-    # The start state's last_cat (what the pull just before the search obtained - the
-    # app's dupe memory) makes a first roll repeating it arrive as a dupe.
     g = BannerGraph(
         "x",
         [TrackPull(1, "A", "Cat", R)],
@@ -38,8 +35,6 @@ def test_start_dupe_memory_rerolls_the_first_pull():
 
 
 def test_static_dupe_cell_rolls_normally_on_a_clean_arrival():
-    # Starting AT a cell that statically repeats its predecessor: nothing was obtained
-    # before it on this path, so it rolls its nominal cat and walks straight on.
     g = BannerGraph(
         "x",
         [TrackPull(1, "A", "Cat", R), TrackPull(2, "A", "Cat", R), TrackPull(3, "A", "Dog", R)],
@@ -50,8 +45,6 @@ def test_static_dupe_cell_rolls_normally_on_a_clean_arrival():
 
 
 def test_bounce_chain_rerolls_again_on_the_landing():
-    # The 60B->62AR shape in miniature: 3A dupes 2A and rerolls to Bird, landing on 4B -
-    # whose nominal roll is Bird too, so THAT path rerolls again and yields the target.
     g = BannerGraph(
         "x",
         [
@@ -70,8 +63,6 @@ def test_bounce_chain_rerolls_again_on_the_landing():
 
 
 def test_guaranteed_multi_started_on_a_dupe_awards_the_duped_column():
-    # The multi's first roll arrives as a dupe, so its chain ends elsewhere: it awards
-    # the duped guaranteed column's uber, not the clean one.
     g = BannerGraph(
         "x",
         [TrackPull(1, "A", "Cat", R), TrackPull(2, "A", "Cat", R), TrackPull(3, "B", "Dog", R)],
@@ -188,17 +179,12 @@ def test_beam_collects_multiple_targets():
 
 
 def test_impossible_pair_returns_none_without_exhausting_the_state_space():
-    # Aaa and Bbb sit on consecutive stream indices (1A, 1B) and a pull advances two,
-    # so whichever is taken skips the other - no budget can collect both. The
-    # collectability pre-check must prove that up front.
     g = banner("x", (1, "A", "Aaa", U), (1, "B", "Bbb", U), (2, "A", "Cat", R), (2, "B", "Dog", R))
     assert astar([g], {"Aaa", "Bbb"}, start(tickets=9)) is None
     assert astar([g], {"Aaa"}, start(tickets=9)) is not None
 
 
 def guaranteed_banner():
-    # The guaranteed column is keyed by the multi's FIRST roll: a 3-roll guarantee begun
-    # at 1A rolls 1A and 2A, then swaps its final roll for Mecha.
     return BannerGraph(
         "x",
         [TrackPull(1, "A", "Cat", R), TrackPull(2, "A", "Dog", R)],
@@ -232,9 +218,6 @@ def test_guaranteed_uber_unreachable_without_config():
 
 
 def test_guaranteed_multi_lands_one_step_past_its_final_roll():
-    # A 3-roll guarantee from 1A walks 1A, 2A (stream 0 -> 2 -> 4), swaps the final roll
-    # for Mecha, and continues at stream 5 (3B): the guarantee flips the track. Kasli at
-    # 3B is only reachable that way - single pulls from 0 keep even parity.
     g = BannerGraph(
         "x",
         [TrackPull(1, "A", "Cat", R), TrackPull(2, "A", "Dog", R), TrackPull(3, "B", "Kasli", U)],
@@ -318,4 +301,4 @@ def test_prefers_single_banner_when_cost_is_equal():
     x = banner("x", (1, "A", "Aqua", U), (2, "A", "Bora", U))
     y = banner("y", (1, "A", "Aqua", U), (2, "A", "Bora", U))
     result = astar([x, y], {"Aqua", "Bora"}, start(tickets=2))
-    assert len(result.legs) == 1  # both cats taken on one banner, no switch
+    assert len(result.legs) == 1

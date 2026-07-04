@@ -5,9 +5,6 @@ from neko.graph import build_graphs, stream_index
 from neko.models import CATFOOD_PER_DRAW, BannerRolls, Rarity, State, TrackPull
 from neko.search import Multi, astar
 
-# A real bc.godfat capture: seed 1893568593, "Trixi joins the Capsules" (2026-06-26_1052),
-# 1000 rolls. Trixi is a guaranteed-only uber here (first normal roll at position 193), so
-# the whole guaranteed-multi + reroll pipeline runs against genuine data, not synthetic cells.
 FIXTURE = Path(__file__).parent / "fixtures" / "godfat_seed_1893568593_trixi.json"
 BANNER = "trixi"
 TRIXI = "Trixi the Merc"
@@ -35,9 +32,6 @@ def local_banner():
 
 
 def graph():
-    # The astar tests model a REAL 11-roll guarantee, so the guaranteed column comes from
-    # our engine (the capture's was forced to 1 roll); pulls/rerolls are byte-identical to
-    # the fixture either way.
     from neko.roll import roll_banner
 
     rolls = roll_banner(1893568593, local_banner(), 1000, guaranteed_rolls=11)
@@ -51,11 +45,6 @@ def graph():
 
 
 def test_local_roll_reproduces_the_capture_byte_for_byte():
-    # The whole local pipeline - committed gacha schedule + pools + catalogue, rolled by our
-    # own engine - must reproduce this real godfat capture exactly, so we can drop godfat.
-    # The capture was taken with force_guaranteed=1 (godfat swaps THAT for the event's
-    # guaranteed_rolls), so its guaranteed column is a 1-roll guarantee: a 0-step follow,
-    # each cell's uber picked by its own rarity seed.
     from neko.roll import roll_banner
 
     fixture = load_rolls()
@@ -66,18 +55,12 @@ def test_local_roll_reproduces_the_capture_byte_for_byte():
         return sorted((p.position, p.track, p.cat) for p in pulls)
 
     assert cells(mine.pulls) == cells(fixture.pulls)
-    # The engine now carries a conditional reroll for every rare cell; godfat renders
-    # exactly the ones its straight chains realize, so those must match byte-for-byte.
     assert cells(p for p in mine.rerolls if p.realized) == cells(fixture.rerolls)
     got = {(p.position, p.track): p.cat for p in mine.guaranteed}
     assert all(got[(p.position, p.track)] == p.cat for p in fixture.guaranteed)
 
 
 def test_trixi_banner_rolls_without_a_guarantee():
-    # The real Trixi event is neither guaranteed nor step-up (the fixture's guaranteed
-    # column exists only because the capture forced it), so rolled through the app it must
-    # get no guaranteed column and no guaranteed multi - the planner once "found" Trixi at
-    # 30B via a guaranteed 11-roll this banner doesn't offer.
     from neko.gachadata import load_events
     from neko.roller import roll_selected
 
@@ -100,8 +83,6 @@ def test_real_capture_first_roll():
 
 
 def test_real_rare_dupe_rerolls_to_a_clean_name_and_switches_track():
-    # 60B nominally repeats 59B (Welterweight Cat), so godfat rerolls it to Onmyoji Cat and
-    # jumps a track. Guards both the stray-"R" parse bug and the pre-reroll dupe display.
     outcome = graph().outcome(stream_index(60, "B"))
     assert outcome.cat == "Onmyoji Cat"
     assert outcome.switched is True
@@ -109,10 +90,6 @@ def test_real_rare_dupe_rerolls_to_a_clean_name_and_switches_track():
 
 
 def test_bounce_path_rerolls_62a_again_but_only_on_that_path():
-    # godfat's 60B -> 62AR: 60B dupes 59B (Welterweight) and rerolls to Onmyoji,
-    # landing on 62A - whose nominal roll is Onmyoji too, so THAT path rerolls again
-    # (Pirate Cat, the fixture's 62A R cell) and continues on 63B. A straight arrival
-    # at 62A (61A is Lightmother Aset) keeps Onmyoji and walks on to 63A.
     g = graph()
     sixty_b = g.outcome(stream_index(60, "B"))
     assert (sixty_b.cat, sixty_b.next_position) == ("Onmyoji Cat", stream_index(62, "A"))
@@ -121,7 +98,7 @@ def test_bounce_path_rerolls_62a_again_but_only_on_that_path():
     assert bounced.next_position == stream_index(63, "B")
     straight = g.outcome(stream_index(62, "A"))
     assert (straight.cat, straight.switched) == ("Onmyoji Cat", False)
-    assert g.realized(stream_index(62, "A")) is True  # the conditional-R badge shows
+    assert g.realized(stream_index(62, "A")) is True
 
 
 def test_trixi_only_rolls_normally_deep_into_the_stream():
@@ -130,8 +107,6 @@ def test_trixi_only_rolls_normally_deep_into_the_stream():
 
 
 def test_guaranteed_multi_lands_trixi_far_earlier_than_the_normal_roll():
-    # The plan repositions with single pulls, then one guaranteed 11-roll obtains Trixi -
-    # well before its position-193 normal roll, which is the whole point of the guaranteed.
     start = State(0, 40, 1500 // CATFOOD_PER_DRAW, frozenset())
     result = astar([graph()], {TRIXI}, start, multis={BANNER: [GUARANTEED_MULTI]})
     trixi_pull = result.pulls[-1]
@@ -147,7 +122,5 @@ def test_trixi_comes_from_the_guaranteed_leg_not_a_single_pull():
 
 
 def test_without_a_multi_config_a_cheap_budget_cannot_reach_trixi():
-    # Trixi's first normal roll is 193 pulls in; a small budget only reaches it via the
-    # guaranteed. Drop the multi and a modest budget can no longer collect it.
     start = State(0, 40, 1500 // CATFOOD_PER_DRAW, frozenset())
     assert astar([graph()], {TRIXI}, start) is None
