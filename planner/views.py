@@ -14,6 +14,7 @@ from planner.services import (
     build_tracks,
     capped_banner_limits,
     collection_sections,
+    display_titles,
     equivalent_banners,
     fetch_banners,
     fetch_for_banners,
@@ -93,6 +94,7 @@ def tracks(request):
         owned=_owned_names(),
         guaranteed=guaranteed,
         wanted=_wanted_names(),
+        titles=display_titles(),
     )
     return render(request, "planner/_tracks.html", {"track": track})
 
@@ -138,6 +140,7 @@ def find_plan(request):
         banner_limits=banner_limits,
         owned=_owned_names(),
         wanted=_wanted_names(),
+        titles=display_titles(),
     )
     return JsonResponse(
         {

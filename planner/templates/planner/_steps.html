@@ -1,7 +1,7 @@
 <div class="steps">
   {% for leg in legs %}
     {% if leg.new_banner %}
-      <div class="step-banner">{% if leg.any_of %}Any of: {{ leg.any_of|join:" · " }} <span class="equiv-note">identical for these pulls</span>{% else %}{{ leg.names|join:" · " }}{% if leg.names|length > 1 %} <span class="equiv-note">same rolls</span>{% endif %}{% endif %}</div>
+      <div class="step-banner">{{ leg.names|join:" · " }}{% if leg.names|length > 1 %} <span class="equiv-note">same rolls</span>{% endif %}</div>
     {% endif %}
     <div class="step">
       <div class="step-meta">
