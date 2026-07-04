@@ -1,6 +1,6 @@
 from neko.graph import BannerGraph
 from neko.models import CATFOOD_PER_DRAW, Path, Rarity, State, TrackPull
-from neko.search import Multi, astar, beam_search
+from neko.search import Multi, astar, beam_search, obtainable
 
 R = Rarity.RARE
 U = Rarity.UBER_SUPER_RARE
@@ -106,6 +106,16 @@ def test_cheap_ticket_is_still_spent_first():
 
 def test_unreachable_target_returns_none():
     assert astar([banner("x", (1, "A", "Cat", R))], {"Bahamut"}, start(tickets=5)) is None
+
+
+def test_obtainable_sees_rolls_rerolls_and_guaranteed():
+    g = BannerGraph(
+        "x",
+        [TrackPull(1, "A", "Cat", R), TrackPull(2, "A", "Cat", R)],
+        guaranteed=[TrackPull(1, "A", "Mecha", U)],
+        rerolls=[TrackPull(2, "A", "Bahamut", R, steps=1)],
+    )
+    assert obtainable([g], {"Cat", "Bahamut", "Mecha", "Ghost"}) == {"Cat", "Bahamut", "Mecha"}
 
 
 def test_insufficient_resources_returns_none():
