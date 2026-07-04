@@ -28,7 +28,7 @@ def pick_rarity(score: int, banner: Banner) -> Rarity:
 
 
 def _pick(pool: tuple[str, ...], slot_seed: int) -> str:
-    """The unit at ``slot_seed % len(pool)``; empty pool → "" (godfat's id -1)."""
+    """The unit at ``slot_seed % len(pool)``; empty pool -> "" (godfat's id -1)."""
     return pool[slot_seed % len(pool)] if pool else ""
 
 
@@ -43,7 +43,8 @@ class _Cat:
     slot_seed: int
     name: str
     steps: int = 0  # reroll iterations that produced this cat (0 = a nominal roll)
-    rerolled: _Cat | None = None  # set on a rare dupe: the cat you actually obtain
+    rerolled: _Cat | None = None  # every named rare's reroll: what a dupe arrival obtains
+    realized: bool = False  # the straight play chains hit this cell's reroll (godfat shows it)
     next: _Cat | None = None  # the play chain (godfat's cat.next): what the next roll obtains
 
     def duped(self, prev: _Cat | None) -> bool:
@@ -107,17 +108,28 @@ def _build_grid(seed: int, banner: Banner, rows: int) -> list[list[_Cat]]:
             row.append(_Cat(seq, track, rarity, rarity_seed, slot_seed, name))
         grid.append(row)
 
-    # A rare that repeats the previous same-track cat rerolls. On the play chain a cell's
-    # predecessor obtains the reroll, not the dupe (godfat's fill_cat_links).
+    # Every named rare cell gets its reroll up front: the reroll depends only on the
+    # cell's slot seed and the pool, so whatever path makes the cell a dupe (the straight
+    # chain, a bounce landing, a mid-stream start) it rerolls the same way.
+    rare_pool = banner.pool(Rarity.RARE)
+    for row in grid:
+        for cat in row:
+            if cat.rarity is Rarity.RARE and cat.name:
+                cat.rerolled = _reroll(cat, rare_pool)
+
+    # The play chain: a cell that repeats the previous same-track cat arrives as a dupe
+    # there, so its predecessor obtains the reroll instead (godfat's fill_cat_links).
     for seq in range(1, rows):
         for track in (0, 1):
             cur = grid[seq][track]
-            if cur.duped(grid[seq - 1][track]):
-                cur.rerolled = _reroll(cur, banner.pool(cur.rarity))
-            grid[seq - 1][track].next = cur.rerolled or cur
+            prev = grid[seq - 1][track]
+            cur.realized = cur.duped(prev)
+            prev.next = cur.rerolled if cur.realized else cur
+
     # A reroll's extra step continues on the landing cell (godfat's finish_rerolled_links);
-    # if that cell is itself a rare dupe of the rerolled cat it "bounces" and rerolls again.
-    # Bounces always land forward, so a single forward pass resolves the whole chain.
+    # a landing that repeats the rerolled cat "bounces" into the landing's own reroll. A
+    # bounce also realizes the landing's reroll when the chain that reaches it is itself
+    # realized. Bounces always land forward, so one forward pass resolves every chain.
     for row in grid:
         for cat in row:
             if cat.rerolled is None:
@@ -126,9 +138,8 @@ def _build_grid(seed: int, banner: Banner, rows: int) -> list[list[_Cat]]:
             if landing is None:
                 continue
             if landing.duped(cat.rerolled):
-                if landing.rerolled is None:
-                    landing.rerolled = _reroll(landing, banner.pool(landing.rarity))
                 cat.rerolled.next = landing.rerolled
+                landing.realized = landing.realized or cat.realized
             else:
                 cat.rerolled.next = landing
     return grid
@@ -146,15 +157,31 @@ def _follow(cat: _Cat, steps: int) -> _Cat | None:
 def roll_banner(seed: int, banner: Banner, count: int, guaranteed_rolls: int = 0) -> BannerRolls:
     """Roll ``count`` positions of ``banner`` from ``seed``, mirroring godfat's grid.
 
-    Returns every A/B cell as a normal pull, the rare-dupe reroll cell for each duplicate,
-    and - when ``guaranteed_rolls`` is set (the banner offers a guaranteed multi) - the
-    guaranteed-uber column, keyed like godfat's by the multi's FIRST roll: starting a
-    guaranteed multi on a cell rolls ``guaranteed_rolls - 1`` cats along the play chain,
-    then swaps the final roll for the uber picked by that final cell's rarity seed
-    (godfat's fill_guaranteed; the multi then continues one half-step on, track flipped).
+    Returns every A/B cell as a normal pull, the reroll cell of every named rare (what a
+    dupe arrival there obtains; ``realized`` marks the ones the straight chains actually
+    hit, which are the R cells godfat renders), and - when ``guaranteed_rolls`` is set
+    (the banner offers a guaranteed multi) - the guaranteed-uber columns, keyed like
+    godfat's by the multi's FIRST roll: starting a guaranteed multi on a cell rolls
+    ``guaranteed_rolls - 1`` cats along the play chain, then swaps the final roll for the
+    uber picked by that final cell's rarity seed (godfat's fill_guaranteed; the multi
+    then continues one half-step on, track flipped). ``guaranteed_rerolls`` is the same
+    column for a start whose first roll arrives as a dupe: the reroll's chain ends on a
+    different cell, so the awarded uber can differ.
     """
     grid = _build_grid(seed, banner, count + _LANDING_BUFFER + 2 * guaranteed_rolls)
     uber = banner.pool(Rarity.UBER_SUPER_RARE)
+
+    def guaranteed_from(cat: _Cat) -> TrackPull | None:
+        last = _follow(cat, guaranteed_rolls - 1)
+        if last is None:
+            return None
+        # A rerolled `last` shares its dupe cell's coordinates; the slot seed is
+        # always the nominal cell's rarity seed (godfat digs the grid, not `last`).
+        slot_seed = grid[last.seq][last.track].rarity_seed
+        got = _pick(uber, slot_seed)
+        return TrackPull(
+            cat.seq + 1, _TRACKS[cat.track], got, Rarity.UBER_SUPER_RARE, seed=slot_seed
+        )
 
     # Each pull carries the RNG state after obtaining it: a nominal roll leaves the seed
     # at its slot value; a dupe's reroll advanced `steps` further (its final value is
@@ -164,6 +191,7 @@ def roll_banner(seed: int, banner: Banner, count: int, guaranteed_rolls: int = 0
     pulls: list[TrackPull] = []
     rerolls: list[TrackPull] = []
     guaranteed: list[TrackPull] = []
+    guaranteed_rerolls: list[TrackPull] = []
     for seq in range(count):
         for track in (0, 1):
             cat = grid[seq][track]
@@ -185,18 +213,21 @@ def roll_banner(seed: int, banner: Banner, count: int, guaranteed_rolls: int = 0
             if cat.rerolled is not None:
                 rerolls.append(
                     TrackPull(
-                        seq + 1, label, cat.rerolled.name, cat.rarity, seed=cat.rerolled.slot_seed
+                        seq + 1,
+                        label,
+                        cat.rerolled.name,
+                        cat.rarity,
+                        seed=cat.rerolled.slot_seed,
+                        steps=cat.rerolled.steps,
+                        realized=cat.realized,
                     )
                 )
             if guaranteed_rolls:
-                last = _follow(cat, guaranteed_rolls - 1)
-                if last is None:
-                    continue
-                # A rerolled `last` shares its dupe cell's coordinates; the slot seed is
-                # always the nominal cell's rarity seed (godfat digs the grid, not `last`).
-                slot_seed = grid[last.seq][last.track].rarity_seed
-                got = _pick(uber, slot_seed)
-                guaranteed.append(
-                    TrackPull(seq + 1, label, got, Rarity.UBER_SUPER_RARE, seed=slot_seed)
-                )
-    return BannerRolls(pulls, guaranteed, rerolls)
+                got = guaranteed_from(cat)
+                if got is not None:
+                    guaranteed.append(got)
+                if cat.rerolled is not None:
+                    got = guaranteed_from(cat.rerolled)
+                    if got is not None:
+                        guaranteed_rerolls.append(got)
+    return BannerRolls(pulls, guaranteed, rerolls, guaranteed_rerolls)

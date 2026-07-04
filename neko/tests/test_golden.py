@@ -42,7 +42,10 @@ def graph():
 
     rolls = roll_banner(1893568593, local_banner(), 1000, guaranteed_rolls=11)
     graphs = build_graphs(
-        {BANNER: rolls.pulls}, {BANNER: rolls.guaranteed}, {BANNER: rolls.rerolls}
+        {BANNER: rolls.pulls},
+        {BANNER: rolls.guaranteed},
+        {BANNER: rolls.rerolls},
+        {BANNER: rolls.guaranteed_rerolls},
     )
     return graphs[0]
 
@@ -63,7 +66,9 @@ def test_local_roll_reproduces_the_capture_byte_for_byte():
         return sorted((p.position, p.track, p.cat) for p in pulls)
 
     assert cells(mine.pulls) == cells(fixture.pulls)
-    assert cells(mine.rerolls) == cells(fixture.rerolls)
+    # The engine now carries a conditional reroll for every rare cell; godfat renders
+    # exactly the ones its straight chains realize, so those must match byte-for-byte.
+    assert cells(p for p in mine.rerolls if p.realized) == cells(fixture.rerolls)
     got = {(p.position, p.track): p.cat for p in mine.guaranteed}
     assert all(got[(p.position, p.track)] == p.cat for p in fixture.guaranteed)
 
@@ -101,6 +106,22 @@ def test_real_rare_dupe_rerolls_to_a_clean_name_and_switches_track():
     assert outcome.cat == "Onmyoji Cat"
     assert outcome.switched is True
     assert outcome.next_position == stream_index(60, "B") + 3
+
+
+def test_bounce_path_rerolls_62a_again_but_only_on_that_path():
+    # godfat's 60B -> 62AR: 60B dupes 59B (Welterweight) and rerolls to Onmyoji,
+    # landing on 62A - whose nominal roll is Onmyoji too, so THAT path rerolls again
+    # (Pirate Cat, the fixture's 62A R cell) and continues on 63B. A straight arrival
+    # at 62A (61A is Lightmother Aset) keeps Onmyoji and walks on to 63A.
+    g = graph()
+    sixty_b = g.outcome(stream_index(60, "B"))
+    assert (sixty_b.cat, sixty_b.next_position) == ("Onmyoji Cat", stream_index(62, "A"))
+    bounced = g.resolve(sixty_b.next_position, sixty_b.cat)
+    assert (bounced.cat, bounced.switched) == ("Pirate Cat", True)
+    assert bounced.next_position == stream_index(63, "B")
+    straight = g.outcome(stream_index(62, "A"))
+    assert (straight.cat, straight.switched) == ("Onmyoji Cat", False)
+    assert g.realized(stream_index(62, "A")) is True  # the conditional-R badge shows
 
 
 def test_trixi_only_rolls_normally_deep_into_the_stream():
