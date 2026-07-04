@@ -4,7 +4,7 @@ from itertools import combinations
 
 from neko.graph import BannerGraph
 from neko.models import CATFOOD_PER_DRAW, Path, State
-from neko.search import Multi, astar
+from neko.search import Multi, astar, obtainable
 
 
 @dataclass(frozen=True, slots=True)
@@ -24,10 +24,13 @@ def solve_subsets(
 ) -> list[SubsetPlan]:
     """Best plan for every reachable non-empty target subset, biggest-then-cheapest.
 
-    One search per subset -> O(2^n) searches, so warn the caller for large n.
+    Targets that occur nowhere in the graphs are dropped up front: no subset holding
+    one can ever have a plan, yet each would DOUBLE the enumeration (a wishlist of
+    them used to hang the solve outright). One search per remaining subset ->
+    O(2^k) searches in the k obtainable targets, so warn the caller for large k.
     """
     graphs = list(graphs)
-    items = sorted(set(targets))
+    items = sorted(obtainable(graphs, targets))
     plans = []
     # A superset's plan also collects every subset, so its cost bounds the subset's
     # optimum - passing it as upper_bound prunes the smaller searches hard.

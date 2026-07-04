@@ -1,3 +1,5 @@
+import time
+
 from neko.graph import BannerGraph
 from neko.models import CATFOOD_PER_DRAW, Rarity, State, TrackPull
 from neko.subsets import solve_subsets
@@ -34,3 +36,14 @@ def test_singletons_ordered_by_cost():
 def test_drops_subsets_that_are_unaffordable():
     plans = solve_subsets([banner()], {"Aaa", "Bbb"}, start(catfood=1))
     assert [p.targets for p in plans] == [frozenset({"Aaa"})]
+
+
+def test_unobtainable_targets_do_not_multiply_the_subsets():
+    # A wishlist-sized target set where most cats occur in no banner: each absent cat
+    # used to DOUBLE the enumeration (2^100 subsets - the search never returned).
+    noise = {f"wish{i:03d}" for i in range(100)}
+    begin = time.perf_counter()
+    plans = solve_subsets([banner()], {"Aaa", "Bbb", "Ccc"} | noise, start(tickets=3))
+    assert time.perf_counter() - begin < 5
+    assert len(plans) == 7  # same subsets as without the noise
+    assert plans[0].targets == frozenset({"Aaa", "Bbb", "Ccc"})
