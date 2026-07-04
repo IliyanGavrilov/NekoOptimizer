@@ -55,6 +55,7 @@ class PlannerForm(forms.Form):
 
     def clean_platinum_legend_cap(self):
         cap = self.cleaned_data.get("platinum_legend_cap")
+
         return 1 if cap is None else cap
 
     def __init__(self, *args, **kwargs):
@@ -72,4 +73,5 @@ class PlannerForm(forms.Form):
             and not Unit.objects.wishlist()
         ):
             raise forms.ValidationError("Your wishlist is empty - mark some cats as wanted first.")
+
         return cleaned

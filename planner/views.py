@@ -36,6 +36,7 @@ def planner(request):
     cats = list(Cat.objects.select_related("unit").prefetch_related("banners"))
     rank = {name: i for i, name in enumerate(RARITY_ORDER)}
     target_flat = sorted(cats, key=lambda cat: (-rank.get(cat.rarity, -1), cat.name))
+
     groups, past_count = [], 0
     for label, rows in picker_groups(cats, titles=banner_titles()):
         if label == "Past":
@@ -43,12 +44,14 @@ def planner(request):
             groups.append((label, None))  # rendered as a lazy shell in its place
         else:
             groups.append((label, rows))
+
     context = {
         "form": PlannerForm(),
         "target_groups": groups,
         "past_count": past_count,
         "target_flat": target_flat,
     }
+
     return render(request, "planner/planner.html", context)
 
 
@@ -56,12 +59,14 @@ def picker_past(request):
     """The Past picker rows, fetched when the group is first opened."""
     cats = list(Cat.objects.select_related("unit").prefetch_related("banners"))
     groups = dict(picker_groups(cats, titles=banner_titles()))
+
     return render(request, "planner/_picker_rows.html", {"sections": groups.get("Past", [])})
 
 
 def _roll(seed, chosen_banners, count, last_cat=""):
     if chosen_banners:
         return fetch_for_banners(seed, chosen_banners, count, last_cat=last_cat)
+
     return fetch_banners(seed, count, last_cat=last_cat)
 
 
@@ -69,6 +74,7 @@ def _rolls_by_banner(result):
     """A roll result split into the per-banner maps [build_tracks] and
     [subset_solutions] take: (pulls, guaranteed, rerolls, guaranteed_rerolls)."""
     banners = result.banners
+
     return (
         {name: rolls.pulls for name, rolls in banners.items()},
         {name: rolls.guaranteed for name, rolls in banners.items()},
@@ -97,6 +103,7 @@ def tracks(request):
         seed = int(request.POST.get("seed", ""))
     except ValueError:
         return HttpResponse("")
+
     last_cat = request.POST.get("last_cat", "").strip()
     result = _roll(seed, request.POST.getlist("banners"), DEFAULT_COUNT, last_cat)
     equivalents = equivalent_banners(result.banners)
@@ -110,6 +117,7 @@ def tracks(request):
         wanted=_wanted_names(),
         titles=display_titles(),
     )
+
     return render(request, "planner/_tracks.html", {"track": track})
 
 
@@ -119,11 +127,13 @@ def find_plan(request):
     form = PlannerForm(request.POST)
     if not form.is_valid():
         return JsonResponse({"errors": form.errors}, status=400)
+
     seed = form.cleaned_data["seed"]
     Seed.store(seed)
     targets = {cat.name for cat in form.cleaned_data["targets"]}
     if form.cleaned_data["use_wishlist"]:
         targets |= _wanted_names()
+
     explore = form.cleaned_data["explore"]
     count = form.cleaned_data["horizon"] if explore else DEFAULT_COUNT
     last_cat = request.POST.get("last_cat", "").strip()
@@ -131,6 +141,7 @@ def find_plan(request):
     equivalents = equivalent_banners(result.banners)
     pulls, guaranteed_pulls, rerolls, guaranteed_rerolls = _rolls_by_banner(result)
     banner_limits = capped_banner_limits(pulls, form.cleaned_data["platinum_legend_cap"])
+
     if explore:
         # Ignore the budget but still fund single pulls with tickets (their real
         # currency) so an all-singles plan reads "8 tickets", not "1200 catfood".
@@ -138,6 +149,7 @@ def find_plan(request):
         tickets, catfood = horizon, horizon * CATFOOD_PER_DRAW
     else:
         tickets, catfood = form.cleaned_data["tickets"], form.cleaned_data["catfood"]
+
     # One accordion row per target subset: each reachable one carries its own
     # highlighted track + steps; the rest are listed as "Not found".
     solutions = subset_solutions(
@@ -157,6 +169,7 @@ def find_plan(request):
         guaranteed_rerolls=guaranteed_rerolls,
         last_cat=last_cat,
     )
+
     return JsonResponse(
         {
             "solutions_html": render_to_string(
@@ -172,6 +185,7 @@ def unit_info(request):
     unit = Unit.objects.filter(name=request.GET.get("name", "")).first()
     if unit is None:
         return JsonResponse({"found": False})
+
     return JsonResponse(
         {
             "found": True,
@@ -197,6 +211,7 @@ def collection(request):
             for label, rarities in set_sections(units)
         ],
     }
+
     return render(request, "planner/collection.html", context)
 
 
@@ -206,10 +221,12 @@ def apply_plan(request):
     means "you rolled it", so the plan's seed-after becomes the stored seed."""
     names = request.POST.getlist("cats")
     applied = Unit.objects.filter(name__in=names).update(owned=True, wanted=False)
+
     try:
         Seed.store(int(request.POST["seed_after"]))
     except KeyError, ValueError:
         pass  # a plan whose seed-after ran off the rolled grid doesn't advance the seed
+
     return JsonResponse({"applied": applied})
 
 
@@ -220,11 +237,14 @@ def collection_bulk(request):
     field = request.POST.get("field")
     if field not in {"owned", "wanted"}:
         return HttpResponseBadRequest("field must be 'owned' or 'wanted'")
+
     units = Unit.objects.filter(pk__in=request.POST.getlist("pk"))
     if field == "wanted":
         units = units.filter(owned=False)
+
     value = units.filter(**{field: False}).exists()
     units.update(**{field: value})
+
     return JsonResponse({"value": value})
 
 
@@ -234,7 +254,9 @@ def collection_toggle(request):
     field = request.POST.get("field")
     if field not in {"owned", "wanted"}:
         return HttpResponseBadRequest("field must be 'owned' or 'wanted'")
+
     unit = get_object_or_404(Unit, pk=request.POST.get("pk"))
     setattr(unit, field, not getattr(unit, field))
     unit.save(update_fields=[field])
+
     return JsonResponse({"owned": unit.owned, "wanted": unit.wanted})

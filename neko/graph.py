@@ -75,17 +75,21 @@ class BannerGraph:
         pull = self._pulls.get(position)
         if pull is None:
             return None
+
         if pull.rarity is Rarity.RARE and pull.cat != "" and pull.cat == last_cat:
             duped = self.reroll(position)
             if duped is None:
                 # No reroll data for this cell: keep the dupe's name, assume one step.
                 return Outcome(pull.cat, pull.rarity, position + 3, True, pull.seed)
+
             return duped
+
         return Outcome(pull.cat, pull.rarity, position + 2, False, pull.seed)
 
     def outcome(self, position: int) -> Outcome | None:
         """The static straight-chain view of ``position`` (godfat's grid)."""
         prev = self._pulls.get(position - 2)
+
         return self.resolve(position, prev.cat if prev else "")
 
     def reroll(self, position: int) -> Outcome | None:
@@ -94,6 +98,7 @@ class BannerGraph:
         reroll = self._rerolls.get(position)
         if reroll is None:
             return None
+
         return Outcome(
             reroll.cat, reroll.rarity, position + 2 + (reroll.steps or 1), True, reroll.seed
         )
@@ -102,12 +107,14 @@ class BannerGraph:
         """Whether the straight play chains actually hit the reroll at ``position``
         (godfat renders exactly those R cells)."""
         reroll = self._rerolls.get(position)
+
         return reroll is not None and reroll.realized
 
     def guaranteed(self, position: int, duped: bool = False) -> Outcome | None:
         """The uber a guaranteed multi started at ``position`` awards; ``duped`` reads
         the column for a start whose first roll arrives as a dupe."""
         column = self._guaranteed_rerolls if duped else self._guaranteed
+
         return column.get(position)
 
     def positions(self) -> list[int]:
@@ -130,6 +137,7 @@ def build_graphs(
     guaranteed = guaranteed or {}
     rerolls = rerolls or {}
     guaranteed_rerolls = guaranteed_rerolls or {}
+
     return [
         BannerGraph(
             banner_id,

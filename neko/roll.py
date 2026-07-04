@@ -18,12 +18,14 @@ def pick_rarity(score: int, banner: Banner) -> Rarity:
     rare = banner.rates.get(Rarity.RARE, 0)
     supa = banner.rates.get(Rarity.SUPER_RARE, 0)
     uber = banner.rates.get(Rarity.UBER_SUPER_RARE, 0)
+
     if score < rare:
         return Rarity.RARE
     if score < rare + supa:
         return Rarity.SUPER_RARE
     if score < rare + supa + uber:
         return Rarity.UBER_SUPER_RARE
+
     return Rarity.LEGEND_RARE
 
 
@@ -65,16 +67,21 @@ def _reroll(cat: _Cat, pool: tuple[str, ...]) -> _Cat:
     slot = cat.slot_seed % len(pool)
     name = ""
     steps = 0
+
     for step in range(1, pool.count(cat.name) + 1):
         seed = xorshift(seed)
         del slots[slot]
         steps = step
+
         if not slots:
             break
+
         slot = seed % len(slots)
         name = slots[slot]
+
         if name != cat.name:
             break
+
     return _Cat(cat.seq, cat.track, cat.rarity, 0, seed, name, steps=steps)
 
 
@@ -83,6 +90,7 @@ def _landing(grid: list[list[_Cat]], cat: _Cat) -> _Cat | None:
     steps = cat.rerolled.steps
     seq = cat.seq + (cat.track + steps) // 2 + 1
     track = ((cat.track + steps - 1) ^ 1) & 1
+
     return grid[seq][track] if 0 <= seq < len(grid) else None
 
 
@@ -97,6 +105,7 @@ def _build_grid(seed: int, banner: Banner, rows: int, last_cat: str = "") -> lis
     # of the last cell.
     values: list[int] = []
     state = seed
+
     for _ in range(2 * rows + 2):
         state = xorshift(state)
         values.append(state)
@@ -144,14 +153,17 @@ def _build_grid(seed: int, banner: Banner, rows: int, last_cat: str = "") -> lis
         for cat in row:
             if cat.rerolled is None:
                 continue
+
             landing = _landing(grid, cat)
             if landing is None:
                 continue
+
             if landing.duped(cat.rerolled):
                 cat.rerolled.next = landing.rerolled
                 landing.realized = landing.realized or cat.realized
             else:
                 cat.rerolled.next = landing
+
     return grid
 
 
@@ -161,6 +173,7 @@ def _follow(cat: _Cat, steps: int) -> _Cat | None:
         cat = cat.next
         if cat is None:
             return None
+
     return cat
 
 
@@ -186,12 +199,15 @@ def roll_banner(
 
     def guaranteed_from(cat: _Cat) -> TrackPull | None:
         last = _follow(cat, guaranteed_rolls - 1)
+
         if last is None:
             return None
+
         # A rerolled `last` shares its dupe cell's coordinates; the slot seed is
         # always the nominal cell's rarity seed (godfat digs the grid, not `last`).
         slot_seed = grid[last.seq][last.track].rarity_seed
         got = _pick(uber, slot_seed)
+
         return TrackPull(
             cat.seq + 1, _TRACKS[cat.track], got, Rarity.UBER_SUPER_RARE, seed=slot_seed
         )
@@ -205,11 +221,13 @@ def roll_banner(
     rerolls: list[TrackPull] = []
     guaranteed: list[TrackPull] = []
     guaranteed_rerolls: list[TrackPull] = []
+
     for seq in range(count):
         for track in (0, 1):
             cat = grid[seq][track]
             label = _TRACKS[track]
             pulls.append(TrackPull(seq + 1, label, cat.name, cat.rarity, seed=cat.slot_seed))
+
             if cat.rerolled is not None:
                 rerolls.append(
                     TrackPull(
@@ -222,12 +240,15 @@ def roll_banner(
                         realized=cat.realized,
                     )
                 )
+
             if guaranteed_rolls:
                 got = guaranteed_from(cat)
                 if got is not None:
                     guaranteed.append(got)
+
                 if cat.rerolled is not None:
                     got = guaranteed_from(cat.rerolled)
                     if got is not None:
                         guaranteed_rerolls.append(got)
+
     return BannerRolls(pulls, guaranteed, rerolls, guaranteed_rerolls)
