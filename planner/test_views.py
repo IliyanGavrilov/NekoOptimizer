@@ -18,11 +18,17 @@ def cat_with_unit(name, owned=False, wanted=False):
     return Cat.objects.create(name=name, unit=unit)
 
 
-def fixed_banners(*pulls):
-    def _fetch(seed, count=100):
-        return RollResult({"x": BannerRolls(list(pulls), [])}, {})
+def fixed_rolls(rolls):
+    """A fetch_banners stub always returning the given BannerRolls as banner "x"."""
+
+    def _fetch(seed, count=100, last_cat=""):
+        return RollResult({"x": rolls}, {})
 
     return _fetch
+
+
+def fixed_banners(*pulls):
+    return fixed_rolls(BannerRolls(list(pulls), []))
 
 
 @pytest.mark.django_db
@@ -74,7 +80,7 @@ def test_guaranteed_config_reaches_target(client, monkeypatch):
         {"x": BannerRolls([TrackPull(1, "A", "Filler", U)], [TrackPull(2, "A", "Target", U)])},
         {"x": [Multi(rolls=2, cost=300)]},
     )
-    monkeypatch.setattr("planner.views.fetch_banners", lambda seed, count=100: result)
+    monkeypatch.setattr("planner.views.fetch_banners", lambda seed, count=100, last_cat="": result)
     response = client.post("/plan/", {"seed": 7, "tickets": 0, "catfood": 300, "targets": [cat.pk]})
     assert b"Target" in response.content
 
@@ -84,7 +90,7 @@ def test_selected_banners_use_chosen_rolls(client, monkeypatch):
     cat = Cat.objects.create(name="Bahamut")
     called = {}
 
-    def fake_for_banners(seed, names, count=100):
+    def fake_for_banners(seed, names, count=100, last_cat=""):
         called["names"] = list(names)
         return RollResult({"Pick": BannerRolls([TrackPull(1, "A", "Bahamut", U)], [])}, {})
 
@@ -102,7 +108,7 @@ def test_platinum_legend_cap_zero_excludes_the_banner(client, monkeypatch):
     result = RollResult(
         {"Platinum Capsules": BannerRolls([TrackPull(1, "A", "Bahamut", U)], [])}, {}
     )
-    monkeypatch.setattr("planner.views.fetch_banners", lambda seed, count=100: result)
+    monkeypatch.setattr("planner.views.fetch_banners", lambda seed, count=100, last_cat="": result)
     response = client.post(
         "/plan/",
         {"seed": 7, "tickets": 1, "catfood": 0, "targets": [cat.pk], "platinum_legend_cap": 0},
@@ -117,7 +123,7 @@ def test_platinum_legend_allowed_by_default(client, monkeypatch):
     result = RollResult(
         {"Platinum Capsules": BannerRolls([TrackPull(1, "A", "Bahamut", U)], [])}, {}
     )
-    monkeypatch.setattr("planner.views.fetch_banners", lambda seed, count=100: result)
+    monkeypatch.setattr("planner.views.fetch_banners", lambda seed, count=100, last_cat="": result)
     response = client.post("/plan/", {"seed": 7, "tickets": 1, "catfood": 0, "targets": [cat.pk]})
     assert b"Bahamut" in response.content
 
@@ -171,7 +177,7 @@ def test_explore_mode_rolls_to_the_horizon(client, monkeypatch):
     cat = Cat.objects.create(name="Bahamut")
     seen = {}
 
-    def fake(seed, count=100):
+    def fake(seed, count=100, last_cat=""):
         seen["count"] = count
         return RollResult({"x": BannerRolls([TrackPull(1, "A", "Bahamut", U)], [])}, {})
 
@@ -276,9 +282,7 @@ def test_tracks_endpoint_renders_the_guaranteed_column(client, monkeypatch):
     rolls = BannerRolls(
         [TrackPull(1, "A", "Shaman Cat", R)], [TrackPull(1, "A", "Trixi the Merc", U)]
     )
-    monkeypatch.setattr(
-        "planner.views.fetch_banners", lambda seed, count=100: RollResult({"x": rolls}, {})
-    )
+    monkeypatch.setattr("planner.views.fetch_banners", fixed_rolls(rolls))
     response = client.post("/tracks/", {"seed": 7})
     assert b"Guaranteed" in response.content
     assert b"Trixi the Merc" in response.content
@@ -302,9 +306,7 @@ def test_tracks_endpoint_renders_a_dice_per_branch_of_a_dupe_cell(client, monkey
         [],
         [TrackPull(2, "A", "Jurassic Cat", R, seed=9, steps=1)],
     )
-    monkeypatch.setattr(
-        "planner.views.fetch_banners", lambda seed, count=100: RollResult({"x": rolls}, {})
-    )
+    monkeypatch.setattr("planner.views.fetch_banners", fixed_rolls(rolls))
     html = client.post("/tracks/", {"seed": 7}).content.decode()
     assert "if dupe:" in html
     assert 'data-seed="9"' in html  # the branch dice: jump past the reroll (Jurassic Cat)
@@ -332,9 +334,7 @@ def test_tracks_endpoint_renders_a_dice_on_the_guaranteed_cell(client, monkeypat
     rolls = BannerRolls(
         [TrackPull(1, "A", "Shaman Cat", R)], [TrackPull(1, "A", "Trixi the Merc", U, seed=42)]
     )
-    monkeypatch.setattr(
-        "planner.views.fetch_banners", lambda seed, count=100: RollResult({"x": rolls}, {})
-    )
+    monkeypatch.setattr("planner.views.fetch_banners", fixed_rolls(rolls))
     assert b'data-seed="42"' in client.post("/tracks/", {"seed": 7}).content
 
 
