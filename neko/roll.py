@@ -86,8 +86,12 @@ def _landing(grid: list[list[_Cat]], cat: _Cat) -> _Cat | None:
     return grid[seq][track] if 0 <= seq < len(grid) else None
 
 
-def _build_grid(seed: int, banner: Banner, rows: int) -> list[list[_Cat]]:
-    """Roll ``rows`` positions into a grid[seq][track], filling rare-dupe rerolls."""
+def _build_grid(seed: int, banner: Banner, rows: int, last_cat: str = "") -> list[list[_Cat]]:
+    """Roll ``rows`` positions into a grid[seq][track], filling rare-dupe rerolls.
+
+    ``last_cat`` is the cat obtained just before this view was anchored (a dice jump,
+    an applied plan): when the very first cell repeats it, that cell arrives as a dupe,
+    realizing its reroll - and, through the bounce pass, any chain it sets off."""
     # godfat's Gacha advances the seed once before the first roll, so value j of the stream
     # is advance^{j+1}(seed). Two values per position across both tracks, +2 for the slot
     # of the last cell.
@@ -126,6 +130,12 @@ def _build_grid(seed: int, banner: Banner, rows: int) -> list[list[_Cat]]:
             cur.realized = cur.duped(prev)
             prev.next = cur.rerolled if cur.realized else cur
 
+    # The remembered pull that anchored this view plays the predecessor of the very
+    # first roll: repeating it makes 1A itself arrive as a dupe.
+    first = grid[0][0]
+    if last_cat and first.rarity is Rarity.RARE and first.name and first.name == last_cat:
+        first.realized = True
+
     # A reroll's extra step continues on the landing cell (godfat's finish_rerolled_links);
     # a landing that repeats the rerolled cat "bounces" into the landing's own reroll. A
     # bounce also realizes the landing's reroll when the chain that reaches it is itself
@@ -154,8 +164,11 @@ def _follow(cat: _Cat, steps: int) -> _Cat | None:
     return cat
 
 
-def roll_banner(seed: int, banner: Banner, count: int, guaranteed_rolls: int = 0) -> BannerRolls:
+def roll_banner(
+    seed: int, banner: Banner, count: int, guaranteed_rolls: int = 0, last_cat: str = ""
+) -> BannerRolls:
     """Roll ``count`` positions of ``banner`` from ``seed``, mirroring godfat's grid.
+    ``last_cat`` (the pull obtained just before this view) can dupe the very first cell.
 
     Returns every A/B cell as a normal pull, the reroll cell of every named rare (what a
     dupe arrival there obtains; ``realized`` marks the ones the straight chains actually
@@ -168,7 +181,7 @@ def roll_banner(seed: int, banner: Banner, count: int, guaranteed_rolls: int = 0
     column for a start whose first roll arrives as a dupe: the reroll's chain ends on a
     different cell, so the awarded uber can differ.
     """
-    grid = _build_grid(seed, banner, count + _LANDING_BUFFER + 2 * guaranteed_rolls)
+    grid = _build_grid(seed, banner, count + _LANDING_BUFFER + 2 * guaranteed_rolls, last_cat)
     uber = banner.pool(Rarity.UBER_SUPER_RARE)
 
     def guaranteed_from(cat: _Cat) -> TrackPull | None:

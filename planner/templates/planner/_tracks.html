@@ -3,9 +3,14 @@
     <p><strong>Track A</strong> and <strong>Track B</strong> are alternate timelines. Duplicate cats are
       auto-rerolled and switch tracks. A <span class="new-swatch">green name</span> is an Uber or
       Legend cat missing from your collection; <span class="mark-owned">&#10003;</span> marks cats
-      you own and <span class="mark-wanted">&#9733;</span> ones on your wishlist.{% if track.has_guaranteed %}
+      you own and <span class="mark-wanted">&#9733;</span> ones on your wishlist.
+      A cell's right-hand dice marks it rolled: the seed jumps to just after its normal
+      pull. A dupe's "if dupe" branch lands on a different seed and position, so it has
+      its own small dice. The app remembers what your last jump obtained - a following
+      dupe is flagged even on the first row, and revisiting a seed keeps its memory.{% if track.has_guaranteed %}
       A <strong>Guaranteed</strong> column shows the Uber the banner's guaranteed multi awards when
-      it is <em>started</em> on that cell (the multi's final draw is swapped for it).{% endif %}{% if track.has_shared %}
+      it is <em>started</em> on that cell (the multi's final draw is swapped for it); its dice
+      jumps to just after the multi.{% endif %}{% if track.has_shared %}
       A <span class="shared-swatch">dashed stripe</span> marks another banner one of the plan's
       pulls can be rolled on instead &mdash; you may get a different cat there, but the rest of
       the plan is unaffected.{% endif %}</p>
@@ -35,9 +40,9 @@
       {% for row in track.rows %}
         <tr>
           <th scope="row" class="pos">{{ row.pos }}</th>
-          {% include "planner/_track_cell.html" with entries=row.a multi=track.legend|length cell_seed=row.a_seed %}
+          {% include "planner/_track_cell.html" with entries=row.a multi=track.legend|length cell_seed=row.a_seed cell_cat=row.a_cat cell_track="A" %}
           {% if track.has_guaranteed %}{% include "planner/_track_cell.html" with entries=row.ga multi=track.legend|length cell_class="guaranteed-col" %}{% endif %}
-          {% include "planner/_track_cell.html" with entries=row.b multi=track.legend|length cell_seed=row.b_seed %}
+          {% include "planner/_track_cell.html" with entries=row.b multi=track.legend|length cell_seed=row.b_seed cell_cat=row.b_cat cell_track="B" %}
           {% if track.has_guaranteed %}{% include "planner/_track_cell.html" with entries=row.gb multi=track.legend|length cell_class="guaranteed-col" %}{% endif %}
         </tr>
       {% endfor %}

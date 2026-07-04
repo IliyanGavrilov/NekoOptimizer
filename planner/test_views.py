@@ -294,6 +294,51 @@ def test_tracks_endpoint_hides_the_guaranteed_column_without_a_guarantee(client,
 
 
 @pytest.mark.django_db
+def test_tracks_endpoint_renders_a_dice_per_branch_of_a_dupe_cell(client, monkeypatch):
+    # A dupe cell has two outcomes (reroll on a dupe arrival, nominal on a clean one),
+    # each landing on a different seed - both must be shown and both dice-jumpable.
+    rolls = BannerRolls(
+        [TrackPull(1, "A", "Pogo", R, seed=3), TrackPull(2, "A", "Pogo", R, seed=5)],
+        [],
+        [TrackPull(2, "A", "Jurassic Cat", R, seed=9, steps=1)],
+    )
+    monkeypatch.setattr(
+        "planner.views.fetch_banners", lambda seed, count=100: RollResult({"x": rolls}, {})
+    )
+    html = client.post("/tracks/", {"seed": 7}).content.decode()
+    assert "if dupe:" in html
+    assert 'data-seed="9"' in html  # the branch dice: jump past the reroll (Jurassic Cat)
+    assert 'data-seed="5"' in html  # the docked dice: jump past the nominal pull (Pogo)
+    assert 'data-cat="Pogo"' in html  # what the docked dice obtained (the dupe memory)
+
+
+@pytest.mark.django_db
+def test_tracks_endpoint_forwards_the_dupe_memory(client, monkeypatch):
+    # last_cat (what the previous jump obtained) must reach the roll engine, where it
+    # can dupe the very first cell.
+    seen = {}
+
+    def fake(seed, count, last_cat=""):
+        seen["last_cat"] = last_cat
+        return RollResult({"x": BannerRolls([TrackPull(1, "A", "Pogo", R)], [])}, {})
+
+    monkeypatch.setattr("planner.views.fetch_banners", fake)
+    client.post("/tracks/", {"seed": 7, "last_cat": "Pogo"})
+    assert seen["last_cat"] == "Pogo"
+
+
+@pytest.mark.django_db
+def test_tracks_endpoint_renders_a_dice_on_the_guaranteed_cell(client, monkeypatch):
+    rolls = BannerRolls(
+        [TrackPull(1, "A", "Shaman Cat", R)], [TrackPull(1, "A", "Trixi the Merc", U, seed=42)]
+    )
+    monkeypatch.setattr(
+        "planner.views.fetch_banners", lambda seed, count=100: RollResult({"x": rolls}, {})
+    )
+    assert b'data-seed="42"' in client.post("/tracks/", {"seed": 7}).content
+
+
+@pytest.mark.django_db
 def test_unit_info_lists_a_units_forms(client):
     Unit.objects.create(
         unit_id=25, name="Bahamut", rarity="Uber Super Rare", forms=["Bahamut", "Aqua Bahamut"]

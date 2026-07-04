@@ -5,6 +5,9 @@
 
   <form method="post" id="plannerForm" novalidate>
     {% csrf_token %}
+    {# Dupe memory: what the pull just before the current seed obtained (set by the #}
+    {# app's dice jumps / applied plans) - the server dupes a first cell repeating it. #}
+    <input type="hidden" name="last_cat" id="lastCat">
 
     <div class="field-grid">
       <label><span class="label-row">{{ form.seed.label_tag }} <span class="req" title="required">*</span></span><span class="seed-row">{{ form.seed }}<button type="button" id="seedUndo" class="seed-undo" hidden>&#8630; undo</button></span><span class="field-error" id="seedError" aria-live="polite"></span></label>

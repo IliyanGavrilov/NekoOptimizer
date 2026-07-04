@@ -439,7 +439,7 @@ if (picker) {
     // solution stays on screen (its steps still need doing in game), and the Rolls
     // track re-rolls from the new seed so it shows what comes next.
     if (btn.dataset.seedAfter) {
-      setSeed(btn.dataset.seedAfter);
+      setSeed(btn.dataset.seedAfter, btn.dataset.lastCat || "");
       browseTrack.hidden = false;
       refreshTracks();
     }
@@ -474,6 +474,9 @@ if (picker) {
     trackTimer = setTimeout(requestTracks, 400);
   };
   seedEl.addEventListener("input", () => {
+    // A hand-typed seed may be one the app has visited before (copied back from
+    // notes, say) - restore its remembered pull so dupes still flag.
+    applyLastCat(seedEl.value.trim(), "");
     save();
     scheduleTracks();
   });
@@ -495,11 +498,38 @@ if (picker) {
       return [];
     }
   })();
+  // Dupe memory: what the pull just before each visited seed obtained. A dice jump
+  // or applied plan knows what it rolled, so remember it per seed - landing on a
+  // seed any way at all (dice, undo, retyping it, a reload) then restores the cat,
+  // and the server can dupe a first cell repeating it. Recency-capped pairs, not a
+  // plain object: seeds are numeric keys, which objects reorder.
+  const SEED_CATS_KEY = "nekoSeedCats";
+  const lastCatEl = document.getElementById("lastCat");
+  const seedCats = (() => {
+    try {
+      return JSON.parse(localStorage.getItem(SEED_CATS_KEY)) || [];
+    } catch {
+      return [];
+    }
+  })();
+  const recallCat = (seed) => (seedCats.find(([s]) => s === String(seed)) || [])[1] || "";
+  // Set the dupe memory for a seed just landed on: the cat its jump obtained when
+  // known, else whatever an earlier visit recorded for that seed.
+  function applyLastCat(seed, cat) {
+    if (cat) {
+      const idx = seedCats.findIndex(([s]) => s === String(seed));
+      if (idx !== -1) seedCats.splice(idx, 1);
+      seedCats.push([String(seed), cat]);
+      while (seedCats.length > 200) seedCats.shift();
+      localStorage.setItem(SEED_CATS_KEY, JSON.stringify(seedCats));
+    }
+    lastCatEl.value = cat || recallCat(seed);
+  }
   function syncUndo() {
     seedUndo.hidden = undoStack.length === 0;
     if (undoStack.length) seedUndo.title = `Back to seed ${undoStack[undoStack.length - 1]}`;
   }
-  function setSeed(value) {
+  function setSeed(value, cat) {
     const prev = seedEl.value.trim();
     if (prev && prev !== String(value)) {
       undoStack.push(prev);
@@ -507,6 +537,7 @@ if (picker) {
       localStorage.setItem(UNDO_KEY, JSON.stringify(undoStack));
     }
     seedEl.value = value;
+    applyLastCat(value, cat || "");
     syncUndo();
     save();
   }
@@ -514,16 +545,19 @@ if (picker) {
     if (!undoStack.length) return;
     seedEl.value = undoStack.pop();
     localStorage.setItem(UNDO_KEY, JSON.stringify(undoStack));
+    applyLastCat(seedEl.value, "");
     syncUndo();
     save();
     requestTracks();
   });
-  // "Roll to here" on any track cell (browsing or inside a solution): the seed
-  // becomes the state just after that pull, so the next roll is the new 1A.
+  // Seed dice (browsing or inside a solution). Two kinds share the handler, each
+  // carrying its seed in data-seed: a cell's docked dice re-anchors so that cell is
+  // the next pull; an inline dice beside a cat (either branch of a dupe reroll, or a
+  // guaranteed multi's award) jumps to just AFTER obtaining it.
   resultsRegion.addEventListener("click", (e) => {
     const btn = e.target.closest(".reseed");
     if (!btn) return;
-    setSeed(btn.dataset.seed);
+    setSeed(btn.dataset.seed, btn.dataset.cat || "");
     requestTracks();
   });
   syncUndo();
@@ -592,7 +626,10 @@ if (picker) {
     }
   });
 
-  if (seedEl.value.trim()) requestTracks();
+  if (seedEl.value.trim()) {
+    applyLastCat(seedEl.value.trim(), ""); // the restored seed's remembered pull
+    requestTracks();
+  }
 }
 
 // ---- Collection: views, filters, instant owned / wishlist toggles ----

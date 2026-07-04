@@ -109,6 +109,7 @@ def _result(
     units: Mapping[int, tuple[str, str]],
     count: int,
     rules: Iterable[GachaRule],
+    last_cat: str = "",
 ) -> RollResult:
     """Roll each event and key it by banner name, keeping a recurring banner's latest run."""
     latest: dict[str, GachaEventRow] = {}
@@ -121,7 +122,9 @@ def _result(
     for name, event in latest.items():
         banner = build_banner(event, pools, units)
         guaranteed_rolls = _guaranteed_rolls(event)
-        banners[name] = roll_banner(seed, banner, count, guaranteed_rolls=guaranteed_rolls)
+        banners[name] = roll_banner(
+            seed, banner, count, guaranteed_rolls=guaranteed_rolls, last_cat=last_cat
+        )
         if event.event_id in configs:
             multis[name] = _event_multis(configs[event.event_id], guaranteed_rolls)
         dates[name] = (event.start, event.end)
@@ -147,10 +150,12 @@ def roll_active(
     pools: Mapping[int, list[int]] | None = None,
     units: Mapping[int, tuple[str, str]] | None = None,
     rules: Iterable[GachaRule] | None = None,
+    last_cat: str = "",
 ) -> RollResult:
-    """Roll the banners active on ``today`` (defaults to the real date)."""
+    """Roll the banners active on ``today`` (defaults to the real date). ``last_cat`` is
+    the pull obtained just before this view - it can dupe each banner's first cell."""
     events, pools, units, rules = _load(events, pools, units, rules)
-    return _result(seed, active_events(events, today), pools, units, count, rules)
+    return _result(seed, active_events(events, today), pools, units, count, rules, last_cat)
 
 
 def roll_selected(
@@ -163,11 +168,13 @@ def roll_selected(
     pools: Mapping[int, list[int]] | None = None,
     units: Mapping[int, tuple[str, str]] | None = None,
     rules: Iterable[GachaRule] | None = None,
+    last_cat: str = "",
 ) -> RollResult:
     """Roll the selected banners: each "start|name" its pinned run, each bare name its
-    current run (see [select_events])."""
+    current run (see [select_events]). ``last_cat`` as in [roll_active]."""
     events, pools, units, rules = _load(events, pools, units, rules)
-    return _result(seed, select_events(events, names, today), pools, units, count, rules)
+    chosen = select_events(events, names, today)
+    return _result(seed, chosen, pools, units, count, rules, last_cat)
 
 
 def catalogue_banners(

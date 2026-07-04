@@ -736,7 +736,7 @@ table.track .entry.wanted .catlink::after,
    a small fixed-size button docked right and vertically centred, à la ubercarry.
    Kept dim so a whole track of them doesn't shout; hovering lights it up. */
 table.track td.cell { position: relative; }
-table.track td.cell:has(.reseed) { padding-right: 2.2rem; }
+table.track td.cell:has(> .reseed) { padding-right: 2.2rem; }
 table.track .reseed {
   position: absolute;
   top: 0;
@@ -763,6 +763,19 @@ table.track .reseed:hover, table.track .reseed:focus-visible {
   background: color-mix(in srgb, var(--accent) 12%, transparent);
   filter: none;
 }
+/* Branch dice: "jump to just after obtaining THIS cat/multi", inline beside its name.
+   One per branch on dual-outcome cells (a dupe's reroll lands on a different seed and
+   position than the clean roll) and one per guaranteed award. Smaller than the docked
+   roll-to-here dice so the line still reads as text first. */
+table.track .reseed.inline {
+  position: static;
+  display: inline-flex;
+  width: 1.35rem;
+  height: 1.2rem;
+  vertical-align: middle;
+  margin-left: 0.05rem;
+}
+table.track .reseed.inline svg { width: 13px; height: 13px; }
 
 /* godfat-style guaranteed columns: the uber a guaranteed multi awards when its last draw
    lands on that cell. Tinted and dash-separated so they read as auxiliary to their track. */
