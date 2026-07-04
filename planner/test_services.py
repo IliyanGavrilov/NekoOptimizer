@@ -368,43 +368,43 @@ def test_build_tracks_flags_a_rare_dupe_switch():
     assert build_tracks(banner_pulls, rerolls, {})["rows"][1]["a"][0]["switch"] is True
 
 
-def test_build_tracks_cell_shows_the_rerolled_cat_not_the_dupe():
-    # On a rare-dupe reroll the cell must show the cat you actually obtain (Jurassic Cat),
-    # not the pre-reroll dupe (Pogo), so the target highlight lands on the right name.
+def test_build_tracks_dupe_cell_reads_nominal_first():
+    # A rare-dupe cell shows the nominal roll first (what a clean arrival obtains) with
+    # the reroll beneath as its "if dupe" branch - the same format as a bounce cell.
     banner_pulls = {"X": [TrackPull(1, "A", "Pogo", R), TrackPull(2, "A", "Pogo", R)]}
     rerolls = {"X": [TrackPull(2, "A", "Jurassic Cat", R)]}
     cell = build_tracks(banner_pulls, rerolls, {})["rows"][1]["a"][0]
-    assert cell["cat"] == "Jurassic Cat"
-    assert cell["arrow"]["to"] == "3B"
+    assert (cell["cat"], cell["switch"]) == ("Pogo", True)
+    assert (cell["alt"]["cat"], cell["alt"]["to"]) == ("Jurassic Cat", "3B")
 
 
-def test_build_tracks_arrow_only_when_switched():
-    # A normal (non-dupe) pull continues on its own track, so no jump arrow is shown.
+def test_build_tracks_no_branch_on_a_normal_pull():
+    # A normal (non-dupe) pull continues on its own track: no "if dupe" branch.
     banner_pulls = {"X": [TrackPull(1, "A", "Bahamut", U)]}
-    assert build_tracks(banner_pulls, {}, {})["rows"][0]["a"][0]["arrow"] is None
+    assert build_tracks(banner_pulls, {}, {})["rows"][0]["a"][0]["alt"] is None
 
 
-def test_build_tracks_a_track_dupe_arrow_points_right_towards_b():
+def test_build_tracks_a_track_dupe_branch_points_right_towards_b():
     banner_pulls = {"X": [TrackPull(1, "A", "Pogo", R), TrackPull(2, "A", "Pogo", R)]}
     rerolls = {"X": [TrackPull(2, "A", "Jurassic Cat", R)]}
-    assert build_tracks(banner_pulls, rerolls, {})["rows"][1]["a"][0]["arrow"]["left"] is False
+    assert build_tracks(banner_pulls, rerolls, {})["rows"][1]["a"][0]["alt"]["left"] is False
 
 
-def test_build_tracks_b_track_dupe_arrow_points_left_towards_a():
+def test_build_tracks_b_track_dupe_branch_points_left_towards_a():
     banner_pulls = {"X": [TrackPull(1, "B", "Pogo", R), TrackPull(2, "B", "Pogo", R)]}
     rerolls = {"X": [TrackPull(2, "B", "Jurassic Cat", R)]}
-    assert build_tracks(banner_pulls, rerolls, {})["rows"][1]["b"][0]["arrow"]["left"] is True
+    assert build_tracks(banner_pulls, rerolls, {})["rows"][1]["b"][0]["alt"]["left"] is True
 
 
 def test_build_tracks_shows_a_conditional_reroll_on_a_realized_bounce_cell():
     # The 62AR shape: 2A is no dupe on its own track, but a bounce path arrives holding
-    # Onmyoji and rerolls it - the cell keeps its nominal cat and adds the conditional
-    # value with its own landing.
+    # Onmyoji and rerolls it - the cell keeps its nominal cat and adds the dupe branch
+    # with its own landing and its own after-seed (the reroll's).
     banner_pulls = {"X": [TrackPull(1, "A", "Aset", U), TrackPull(2, "A", "Onmyoji", R)]}
-    rerolls = {"X": [TrackPull(2, "A", "Pirate", R, steps=1, realized=True)]}
+    rerolls = {"X": [TrackPull(2, "A", "Pirate", R, seed=9, steps=1, realized=True)]}
     cell = build_tracks(banner_pulls, rerolls, {})["rows"][1]["a"][0]
     assert (cell["cat"], cell["switch"]) == ("Onmyoji", False)
-    assert cell["cond"] == {"cat": "Pirate", "to": "3B", "left": False}
+    assert cell["alt"] == {"cat": "Pirate", "to": "3B", "left": False, "seed": 9, "target": False}
 
 
 def test_build_tracks_keeps_unrealized_conditional_rerolls_quiet():
@@ -412,20 +412,59 @@ def test_build_tracks_keeps_unrealized_conditional_rerolls_quiet():
     # actually bounces into (godfat's extra R cells) earn a badge.
     banner_pulls = {"X": [TrackPull(1, "A", "Aset", U), TrackPull(2, "A", "Onmyoji", R)]}
     rerolls = {"X": [TrackPull(2, "A", "Pirate", R, steps=1)]}
-    assert build_tracks(banner_pulls, rerolls, {})["rows"][1]["a"][0]["cond"] is None
+    assert build_tracks(banner_pulls, rerolls, {})["rows"][1]["a"][0]["alt"] is None
+
+
+def test_build_tracks_switch_cell_keeps_both_branch_seeds():
+    # Both outcomes of a dupe cell can be dice-jumped: the docked dice carries the
+    # nominal pull's after-seed (and its cat, feeding the dupe memory), the "if dupe"
+    # branch its reroll's - the branch lands on a different seed and position.
+    banner_pulls = {"X": [TrackPull(1, "A", "Pogo", R), TrackPull(2, "A", "Pogo", R, seed=5)]}
+    rerolls = {"X": [TrackPull(2, "A", "Jurassic Cat", R, seed=9, steps=1)]}
+    row = build_tracks(banner_pulls, rerolls, {})["rows"][1]
+    cell = row["a"][0]
+    assert (cell["cat"], cell["switch"]) == ("Pogo", True)
+    assert cell["alt"] == {
+        "cat": "Jurassic Cat",
+        "to": "3B",
+        "left": False,
+        "seed": 9,
+        "target": False,
+    }
+    assert (row["a_seed"], row["a_cat"]) == (5, "Pogo")
+
+
+def test_build_tracks_guaranteed_entry_carries_its_after_seed():
+    # The guaranteed cell's dice jumps to just after the multi's final draw.
+    banner_pulls = {"X": [TrackPull(1, "A", "Pogo", R)]}
+    guaranteed = {"X": [TrackPull(1, "A", "Kasli", U, seed=42)]}
+    track = build_tracks(banner_pulls, {}, {}, guaranteed=guaranteed)
+    assert track["rows"][0]["ga"][0]["seed"] == 42
 
 
 def test_build_tracks_highlights_the_path_and_target():
     banner_pulls = {"X": [TrackPull(1, "A", "Bahamut", U)]}
-    track = build_tracks(banner_pulls, {}, {}, path={"X": {0}}, targets={"X": {0}})
+    track = build_tracks(banner_pulls, {}, {}, path={"X": {0}}, targets={"X": {0: "Bahamut"}})
     entry = track["rows"][0]["a"][0]
     assert (entry["on_path"], entry["target"]) == (True, True)
+
+
+def test_build_tracks_target_pill_follows_the_dupe_branch():
+    # A target the plan collects VIA the reroll lights the "if dupe" name, not the
+    # nominal one - the obtained cat is recorded per lit index.
+    banner_pulls = {"X": [TrackPull(1, "A", "Pogo", R), TrackPull(2, "A", "Pogo", R)]}
+    rerolls = {"X": [TrackPull(2, "A", "Jurassic Cat", R)]}
+    track = build_tracks(
+        banner_pulls, rerolls, {}, path={"X": {2}}, targets={"X": {2: "Jurassic Cat"}}
+    )
+    cell = track["rows"][1]["a"][0]
+    assert (cell["target"], cell["alt"]["target"]) == (False, True)
 
 
 def test_plan_highlight_keys_indices_by_representative_banner():
     option = SubsetPlan(frozenset({"Bahamut"}), Path((Pull(0, "Y", "Bahamut", U),), 1, 0))
     path, targets, gpath, gtargets = plan_highlight(option, {"X": ["X", "Y"], "Y": ["X", "Y"]})
-    assert (path, targets) == ({"X": {0}}, {"X": {0}})
+    assert (path, targets) == ({"X": {0}}, {"X": {0: "Bahamut"}})
     assert (gpath, gtargets) == ({}, {})
 
 
@@ -436,7 +475,7 @@ def test_plan_highlight_routes_guaranteed_pulls_to_the_guaranteed_column():
     option = SubsetPlan(frozenset({"Mecha"}), Path(pulls, 0, 3))
     path, targets, gpath, gtargets = plan_highlight(option, {})
     assert (path, targets) == ({"X": {0}}, {})
-    assert (gpath, gtargets) == ({"X": {0}}, {"X": {0}})
+    assert (gpath, gtargets) == ({"X": {0}}, {"X": {0: "Mecha"}})
 
 
 def test_build_tracks_flags_unowned_uber_as_new():
@@ -490,7 +529,7 @@ def test_build_tracks_highlights_the_guaranteed_column_cell():
         path={"X": {0}},
         guaranteed=guaranteed,
         gpath={"X": {0}},
-        gtargets={"X": {0}},
+        gtargets={"X": {0: "Trixi the Merc"}},
     )
     entry = track["rows"][0]["ga"][0]
     assert (entry["on_path"], entry["target"]) == (True, True)
@@ -548,23 +587,29 @@ def test_build_tracks_skips_an_empty_guaranteed_cell():
     assert track["rows"][0]["ga"] == []
 
 
-def test_build_tracks_row_carries_the_cell_dice_seed():
-    banner_pulls = {"X": [TrackPull(1, "A", "Bahamut", U, seed_before=111)]}
-    assert build_tracks(banner_pulls, {}, {})["rows"][0]["a_seed"] == 111
+def test_build_tracks_row_carries_the_cell_dice_seed_and_cat():
+    # The docked dice: the state just after the cell's nominal pull, plus what it
+    # obtained (the dupe memory the frontend remembers for that seed).
+    banner_pulls = {"X": [TrackPull(1, "A", "Bahamut", U, seed=111)]}
+    row = build_tracks(banner_pulls, {}, {})["rows"][0]
+    assert (row["a_seed"], row["a_cat"]) == (111, "Bahamut")
 
 
 def test_build_tracks_cell_dice_reads_any_banner_rolled_there():
-    # The anchor is banner-independent (pure stream position), so a banner that wasn't
-    # rolled at the cell doesn't blank its dice - another banner's pull supplies it.
+    # The after-seed is banner-independent (a clean roll consumes the same two stream
+    # values whatever the pool), so a banner that wasn't rolled at the cell doesn't
+    # blank its dice - another banner's pull supplies it. The obtained CAT does depend
+    # on the pool, so it blanks when the stacked banners disagree.
     banner_pulls = {
-        "X": [TrackPull(1, "A", "Pogo", R, seed_before=5)],
+        "X": [TrackPull(1, "A", "Pogo", R, seed=5)],
         "Y": [
-            TrackPull(1, "A", "Kasli", U, seed_before=5),
-            TrackPull(2, "A", "Pogo", R, seed_before=7),
+            TrackPull(1, "A", "Kasli", U, seed=5),
+            TrackPull(2, "A", "Pogo", R, seed=7),
         ],
     }
     track = build_tracks(banner_pulls, {}, {})
     assert (track["rows"][0]["a_seed"], track["rows"][1]["a_seed"]) == (5, 7)
+    assert (track["rows"][0]["a_cat"], track["rows"][1]["a_cat"]) == ("", "Pogo")
 
 
 def test_plan_seed_is_the_state_after_the_last_pull():
@@ -864,6 +909,25 @@ def test_subset_solutions_marks_interchangeable_steps_on_the_track():
         ("Bahamut", False),
         ("Kasli", False),
     ]
+
+
+def test_subset_solutions_remembers_the_plans_final_pull():
+    # Applying a plan advances to seed_after WITH last_cat: the advanced view can then
+    # dupe its own first cell if it repeats the plan's final draw.
+    pulls = {"X": [TrackPull(1, "A", "Pogo", R), TrackPull(2, "A", "Bahamut", U, seed=8)]}
+    (solution,) = subset_solutions(pulls, {}, {}, {"Bahamut"}, tickets=2, catfood=0)
+    assert (solution["seed_after"], solution["last_cat"]) == (8, "Bahamut")
+
+
+def test_subset_solutions_start_dupe_memory_reaches_the_search():
+    # A first cell repeating the remembered pull arrives as a dupe: the plan collects
+    # the reroll's cat, not the nominal one.
+    pulls = {"X": [TrackPull(1, "A", "Pogo", R)]}
+    rerolls = {"X": [TrackPull(1, "A", "Jurassic Cat", R, steps=1)]}
+    (solution,) = subset_solutions(
+        pulls, rerolls, {}, {"Jurassic Cat"}, tickets=1, catfood=0, last_cat="Pogo"
+    )
+    assert solution["found"] is True and solution["last_cat"] == "Jurassic Cat"
 
 
 @pytest.mark.parametrize(

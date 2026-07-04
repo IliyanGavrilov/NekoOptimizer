@@ -25,6 +25,18 @@ def test_dupe_reroll_target_is_credited():
     assert result.cats == ("Cat", "Bahamut")
 
 
+def test_start_dupe_memory_rerolls_the_first_pull():
+    # The start state's last_cat (what the pull just before the search obtained - the
+    # app's dupe memory) makes a first roll repeating it arrive as a dupe.
+    g = BannerGraph(
+        "x",
+        [TrackPull(1, "A", "Cat", R)],
+        rerolls=[TrackPull(1, "A", "Bahamut", R, steps=1)],
+    )
+    plan = astar([g], {"Bahamut"}, State(0, 1, 0, frozenset(), last_cat="Cat"))
+    assert plan.cats == ("Bahamut",)
+
+
 def test_static_dupe_cell_rolls_normally_on_a_clean_arrival():
     # Starting AT a cell that statically repeats its predecessor: nothing was obtained
     # before it on this path, so it rolls its nominal cat and walks straight on.

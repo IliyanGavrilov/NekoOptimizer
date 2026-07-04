@@ -59,10 +59,13 @@ def picker_past(request):
     return render(request, "planner/_picker_rows.html", {"sections": groups.get("Past", [])})
 
 
-def _roll(seed, chosen_banners, count):
+def _roll(seed, chosen_banners, count, last_cat=""):
+    # last_cat only travels when set, so the many tests stubbing fetch_* with
+    # (seed, count) lambdas keep working.
+    extra = {"last_cat": last_cat} if last_cat else {}
     if chosen_banners:
-        return fetch_for_banners(seed, chosen_banners, count)
-    return fetch_banners(seed, count)
+        return fetch_for_banners(seed, chosen_banners, count, **extra)
+    return fetch_banners(seed, count, **extra)
 
 
 def _owned_names():
@@ -77,12 +80,16 @@ def _wanted_names():
 
 @require_POST
 def tracks(request):
-    """A/B track tables for the current seed + banners, before any plan is run."""
+    """A/B track tables for the current seed + banners, before any plan is run.
+
+    ``last_cat`` is the dupe memory: the cat the previous pull obtained (a dice jump,
+    an applied plan, or a revisited seed) - it can dupe the very first cell."""
     try:
         seed = int(request.POST.get("seed", ""))
     except ValueError:
         return HttpResponse("")
-    result = _roll(seed, request.POST.getlist("banners"), DEFAULT_COUNT)
+    last_cat = request.POST.get("last_cat", "").strip()
+    result = _roll(seed, request.POST.getlist("banners"), DEFAULT_COUNT, last_cat)
     equivalents = equivalent_banners(result.banners)
     pulls = {name: rolls.pulls for name, rolls in result.banners.items()}
     guaranteed = {name: rolls.guaranteed for name, rolls in result.banners.items()}
@@ -112,7 +119,8 @@ def find_plan(request):
         targets |= _wanted_names()
     explore = form.cleaned_data["explore"]
     count = form.cleaned_data["horizon"] if explore else DEFAULT_COUNT
-    result = _roll(seed, request.POST.getlist("banners"), count)
+    last_cat = request.POST.get("last_cat", "").strip()
+    result = _roll(seed, request.POST.getlist("banners"), count, last_cat)
     equivalents = equivalent_banners(result.banners)
     pulls = {name: rolls.pulls for name, rolls in result.banners.items()}
     guaranteed_pulls = {name: rolls.guaranteed for name, rolls in result.banners.items()}
@@ -143,6 +151,7 @@ def find_plan(request):
         wanted=_wanted_names(),
         titles=display_titles(),
         guaranteed_rerolls=guaranteed_rerolls,
+        last_cat=last_cat,
     )
     return JsonResponse(
         {
