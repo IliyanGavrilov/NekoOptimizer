@@ -35,8 +35,10 @@ def plan(
         ticket_value=ticket_value,
         banner_limits=banner_limits,
     )
+
     if full is not None:
         return [SubsetPlan(targets, full)]
+
     return solve_subsets(
         graphs,
         targets,

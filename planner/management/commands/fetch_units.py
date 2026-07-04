@@ -12,6 +12,7 @@ class Command(BaseCommand):
         version, catalogue = download_catalogue()
         records = catalogue_records(catalogue)
         UNITS_PATH.write_text(json.dumps(records, indent=2), encoding="utf-8")
+
         self.stdout.write(
             self.style.SUCCESS(f"Wrote {len(records)} units (game {version}) to {UNITS_PATH}.")
         )

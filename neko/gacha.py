@@ -22,6 +22,7 @@ class GachaRule:
 
 def load_rules(path: Path = _CONFIG_PATH) -> list[GachaRule]:
     data = json.loads(path.read_text(encoding="utf-8"))
+
     return [
         GachaRule(
             tuple(kw.lower() for kw in rule["keywords"]),
@@ -47,6 +48,7 @@ def match_rule(
                 return rule.multis
         elif not step_up and (not rule.keywords or any(kw in lowered for kw in rule.keywords)):
             return rule.multis
+
     return None
 
 
@@ -58,9 +60,12 @@ def multi_configs(
     (godfat's pool.guaranteed_rolls checks guaranteed first)."""
     rules = list(rules) if rules is not None else load_rules()
     configs = {}
+
     for event in events:
         step_up = event.step_up and not event.guaranteed
         multis = match_rule(event.name, rules, step_up=step_up)
+
         if multis is not None:
             configs[event.event_id] = multis
+
     return configs

@@ -35,11 +35,13 @@ def catalogue_from_tarball(raw: bytes) -> dict[int, Unit]:
         rarities = parse_rarities(_member(tar, "DataLocal/unitbuy.csv"))
         picture_book = _member(tar, "resLocal/nyankoPictureBook_en.csv", optional=True)
         sets = parse_sets(picture_book) if picture_book else {}
+
         forms = {}
         for unit_id in rarities:
             text = _member(tar, f"resLocal/Unit_Explanation{unit_id + 1}_en.csv", optional=True)
             if text is not None:
                 forms[unit_id] = parse_forms(text)
+
     return build_catalogue(rarities, forms, sets)
 
 
@@ -49,10 +51,12 @@ def _member(tar: tarfile.TarFile, path: str, optional: bool = False) -> str | No
         handle = tar.extractfile(f"./{path}")
     except KeyError:
         handle = None
+
     if handle is None:
         if optional:
             return None
         raise KeyError(path)
+
     return handle.read().decode("utf-8", "replace")
 
 
@@ -73,6 +77,7 @@ def catalogue_records(catalogue: Mapping[int, Unit]) -> list[dict]:
 def _get(url: str) -> bytes:
     if not url.startswith(("http://", "https://")):
         raise ValueError(f"refusing to fetch non-HTTP URL: {url!r}")
+
     request = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
     with urllib.request.urlopen(request, timeout=60) as response:  # nosec B310
         return response.read()
@@ -83,6 +88,7 @@ def download_catalogue(country: str = "en") -> tuple[str, dict[int, Unit]]:
     metadata = json.loads(_get(METADATA_URL))
     version = latest_version(metadata, country)
     raw = _get(release_url(metadata, version, country))
+
     return version, catalogue_from_tarball(raw)
 
 

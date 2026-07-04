@@ -9,4 +9,5 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         result = fetch_catalogue()
         created = import_cats(result.banners, result.dates)
+
         self.stdout.write(self.style.SUCCESS(f"Imported {created} new cats."))

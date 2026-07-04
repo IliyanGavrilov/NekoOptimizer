@@ -54,6 +54,7 @@ def _parse_date(text: str) -> date | None:
     text = text.strip()
     if len(text) != 8 or not text.isdigit():
         return None
+
     return date(int(text[:4]), int(text[4:6]), int(text[6:8]))
 
 
@@ -63,6 +64,7 @@ def parse_gacha_pools(r1_text: str) -> dict[int, list[int]]:
     for index, line in enumerate(r1_text.splitlines()):
         if not line[:1].isdigit():  # godfat: line =~ /\A\d+/
             continue
+
         ids: list[int] = []
         for cell in line.split(","):
             cell = cell.strip()
@@ -70,10 +72,14 @@ def parse_gacha_pools(r1_text: str) -> dict[int, list[int]]:
                 value = int(cell)
             except ValueError:
                 break
+
             if value == -1:
                 break
+
             ids.append(value)
+
         pools[index] = ids
+
     return pools
 
 
@@ -88,13 +94,16 @@ def parse_series(option_text: str) -> dict[int, list[int]]:
     header = next(rows, None)
     if header is None:
         return series
+
     columns = [header.index(name) for name in ("GatyaSetID", "seriesID", "ItemID_Ticket")]
     for row in rows:
         try:
             set_id, series_id, ticket = (int(row[column]) for column in columns)
         except IndexError, ValueError:
             continue
+
         series[set_id] = [series_id, ticket]
+
     return series
 
 
@@ -104,25 +113,32 @@ def parse_events(tsv_text: str) -> list[GachaEventRow]:
     for line in tsv_text.splitlines():
         if line.startswith("[") or not line.strip():  # [start]/[end] markers
             continue
+
         row = line.split("\t")
         if len(row) <= _POOL_OFFSET:
             continue
+
         try:
             if int(row[8]) != _RARE_GACHA:  # 'type' field
                 continue
+
             offset = int(row[_POOL_OFFSET])
         except ValueError:
             continue
+
         start, end = _parse_date(row[0]), _parse_date(row[2])
         if start is None or end is None:
             continue
+
         blocks = row[_POOL_OFFSET + 1 :]
         pools = [blocks[i : i + _POOL_FIELDS] for i in range(0, len(blocks), _POOL_FIELDS)]
         if not 1 <= offset <= len(pools):
             continue
+
         pool = pools[offset - 1]
         if len(pool) < _POOL_FIELDS:
             continue
+
         try:
             pool_id = int(pool[0])
             rare, supa, uber = int(pool[6]), int(pool[8]), int(pool[10])
@@ -131,8 +147,10 @@ def parse_events(tsv_text: str) -> list[GachaEventRow]:
             step_up = int(pool[3]) & 4 == 4
         except ValueError:
             continue
+
         if pool_id <= 0:
             continue
+
         events.append(
             GachaEventRow(
                 f"{start.isoformat()}_{pool_id}",
@@ -148,6 +166,7 @@ def parse_events(tsv_text: str) -> list[GachaEventRow]:
                 step_up,
             )
         )
+
     return events
 
 
@@ -157,6 +176,7 @@ def merge_events(event_lists: list[list[GachaEventRow]]) -> list[GachaEventRow]:
     for events in event_lists:
         for event in events:
             merged[event.event_id] = event
+
     return sorted(merged.values(), key=lambda e: (e.start, e.pool_id))
 
 
@@ -174,13 +194,16 @@ def build_banner(
         Rarity.UBER_SUPER_RARE: event.uber,
         Rarity.LEGEND_RARE: event.legend,
     }
+
     grouped: dict[Rarity, list[str]] = {rarity: [] for rarity in _RARITY_ORDER}
     for unit_id in pools.get(event.pool_id, ()):
         entry = units.get(unit_id)
         if entry is None:
             continue
+
         name, rarity = entry
         grouped.setdefault(Rarity(rarity), []).append(name)
+
     return Banner(
         event.event_id, event.name, "", rates, {r: tuple(names) for r, names in grouped.items()}
     )
@@ -190,11 +213,13 @@ def _event_files(lang: str) -> list[str]:
     """List every event-TSV filename in godfat's repo (paginated gitlab tree)."""
     names: list[str] = []
     page = 1
+
     while True:
         batch = json.loads(_get(_EVENTS_TREE.format(lang=lang, page=page)))
         names += [entry["name"] for entry in batch if entry["name"].endswith(".tsv")]
         if len(batch) < 100:
             return names
+
         page += 1
 
 
@@ -204,6 +229,7 @@ def download_events(lang: str = "en") -> list[GachaEventRow]:
         parse_events(_get(_EVENTS_RAW.format(lang=lang, name=name)).decode("utf-8", "replace"))
         for name in _event_files(lang)
     ]
+
     return merge_events(lists)
 
 
@@ -212,9 +238,11 @@ def download_gatya(country: str = "en") -> tuple[dict[int, list[int]], dict[int,
     file into the pool->series map (network)."""
     metadata = json.loads(_get(METADATA_URL))
     raw = _get(release_url(metadata, latest_version(metadata, country), country))
+
     with tarfile.open(fileobj=io.BytesIO(raw), mode="r:xz") as tar:
         r1 = tar.extractfile("./DataLocal/GatyaDataSetR1.csv").read().decode("utf-8", "replace")
         opt = tar.extractfile("./DataLocal/GatyaData_Option_SetR.tsv").read()
+
     return parse_gacha_pools(r1), parse_series(opt.decode("utf-8", "replace"))
 
 
@@ -241,12 +269,14 @@ def event_records(events: Iterable[GachaEventRow]) -> list[dict]:
 def pool_records(pools: Mapping[int, list[int]], event_rows: Iterable[GachaEventRow]) -> dict:
     """Only the pools referenced by an event, as {str(pool_id): [ids]} for gacha_pools.json."""
     referenced = {e.pool_id for e in event_rows}
+
     return {str(pid): pools[pid] for pid in sorted(referenced) if pid in pools}
 
 
 def series_records(series: Mapping[int, list[int]], event_rows: Iterable[GachaEventRow]) -> dict:
     """Only the referenced pools' entries, as {str(pool_id): [series_id, ticket_id]}."""
     referenced = {e.pool_id for e in event_rows}
+
     return {str(pid): series[pid] for pid in sorted(referenced) if pid in series}
 
 
@@ -291,7 +321,9 @@ def refresh(lang: str = "en") -> tuple[int, int]:
     events = download_events(lang)
     pools, series = download_gatya(lang)
     kept = pool_records(pools, events)
+
     EVENTS_PATH.write_text(json.dumps(event_records(events), ensure_ascii=False), encoding="utf-8")
     POOLS_PATH.write_text(json.dumps(kept), encoding="utf-8")
     SERIES_PATH.write_text(json.dumps(series_records(series, events)), encoding="utf-8")
+
     return len(events), len(kept)

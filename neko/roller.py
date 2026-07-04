@@ -31,12 +31,14 @@ def active_events(
     events: Iterable[GachaEventRow], today: date | None = None
 ) -> list[GachaEventRow]:
     today = today or date.today()
+
     return [event for event in events if event.start <= today <= event.end]
 
 
 def units_from_records(records: Iterable[Mapping] | None = None) -> dict[int, tuple[str, str]]:
     """The catalogue as {unit_id: (name, rarity)} for pool resolution."""
     records = records if records is not None else load_records()
+
     return {r["id"]: (r["name"], r["rarity"]) for r in records}
 
 
@@ -46,12 +48,15 @@ def _current_run(runs: list[GachaEventRow], today: date) -> GachaEventRow | None
     recurring name (e.g. the Platinum Capsules) reruns with a DIFFERENT pool."""
     if not runs:
         return None
+
     live = [e for e in runs if e.start <= today <= e.end]
     if live:
         return max(live, key=lambda e: e.start)
+
     started = [e for e in runs if e.start <= today]
     if started:
         return max(started, key=lambda e: e.start)
+
     return min(runs, key=lambda e: e.start)
 
 
@@ -62,23 +67,29 @@ def select_events(
     ``name`` starting that day (the picker posts per-run rows); a bare name resolves via
     [_current_run]. Unknown selections are dropped."""
     today = today or date.today()
+
     by_name: dict[str, list[GachaEventRow]] = {}
     for event in events:
         by_name.setdefault(event.name, []).append(event)
+
     chosen: dict[str, GachaEventRow] = {}
     for selection in selections:
         dated = _DATED.match(selection)
         run = None
+
         if dated:
             name = selection[dated.end() :]
             start = date.fromisoformat(dated.group(1))
             run = next((e for e in by_name.get(name, ()) if e.start == start), None)
         else:
             name = selection
+
         if run is None:  # bare name, or a pinned date the (resynced) schedule lost
             run = _current_run(by_name.get(name, []), today)
+
         if run is not None:
             chosen[run.event_id] = run
+
     return list(chosen.values())
 
 
@@ -89,6 +100,7 @@ def _guaranteed_rolls(event: GachaEventRow) -> int:
         return 11
     if event.step_up:
         return 15
+
     return 0
 
 
@@ -109,6 +121,7 @@ def _latest_runs(events: Iterable[GachaEventRow]) -> dict[str, GachaEventRow]:
         current = latest.get(event.name)
         if current is None or event.start > current.start:
             latest[event.name] = event
+
     return latest
 
 
@@ -125,15 +138,19 @@ def _roll_events(
     latest = _latest_runs(events)
     configs = multi_configs(latest.values(), rules)
     banners, multis, dates = {}, {}, {}
+
     for name, event in latest.items():
         banner = build_banner(event, pools, units)
         guaranteed_rolls = _guaranteed_rolls(event)
         banners[name] = roll_banner(
             seed, banner, count, guaranteed_rolls=guaranteed_rolls, last_cat=last_cat
         )
+
         if event.event_id in configs:
             multis[name] = _event_multis(configs[event.event_id], guaranteed_rolls)
+
         dates[name] = (event.start, event.end)
+
     return RollResult(banners, multis, dates)
 
 
@@ -161,6 +178,7 @@ def roll_active(
     """Roll the banners active on ``today`` (defaults to the real date). ``last_cat`` is
     the pull obtained just before this view - it can dupe each banner's first cell."""
     events, pools, units, rules = _load(events, pools, units, rules)
+
     return _roll_events(seed, active_events(events, today), pools, units, count, rules, last_cat)
 
 
@@ -180,6 +198,7 @@ def roll_selected(
     current run (see [select_events]). ``last_cat`` as in [roll_active]."""
     events, pools, units, rules = _load(events, pools, units, rules)
     chosen = select_events(events, names, today)
+
     return _roll_events(seed, chosen, pools, units, count, rules, last_cat)
 
 
@@ -194,6 +213,7 @@ def catalogue_banners(
     events, pools, units, _ = _load(events, pools, units, [])
     banners, dates = {}, {}
     latest = _latest_runs(events)
+
     for name, event in latest.items():
         banner = build_banner(event, pools, units)
         cats = [
@@ -201,4 +221,5 @@ def catalogue_banners(
         ]
         banners[name] = BannerRolls(cats, [])
         dates[name] = (event.start, event.end)
+
     return RollResult(banners, {}, dates)

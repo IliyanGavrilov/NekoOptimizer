@@ -9,6 +9,8 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         matches, unmatched = unit_match_report()
         total = len(matches) + len(unmatched)
+
         self.stdout.write(self.style.SUCCESS(f"Matched {len(matches)}/{total} cat names to units."))
+
         for name in unmatched:
             self.stdout.write(f"  unmatched: {name}")

@@ -41,6 +41,7 @@ def wiki_url(name: str, rarity: str = "") -> str:
     the bare, undisambiguated name."""
     label = _WIKI_RARITY.get(rarity)
     title = f"{name} ({label})" if label else name
+
     return WIKI_BASE + quote(title.replace(" ", "_"), safe="()'")
 
 
@@ -80,6 +81,7 @@ def _by_rarity(cats: Iterable[Cat], reverse: bool = False) -> list[tuple[str, li
     bins: dict[str, list[Cat]] = {}
     for cat in cats:
         bins.setdefault(cat.rarity or "Unknown", []).append(cat)
+
     rank = {name: i for i, name in enumerate(RARITY_ORDER)}
     unknown = len(rank)
     ordered = sorted(bins.items(), key=lambda kv: (rank.get(kv[0], unknown), kv[0]))
@@ -87,6 +89,7 @@ def _by_rarity(cats: Iterable[Cat], reverse: bool = False) -> list[tuple[str, li
         known = [kv for kv in ordered if kv[0] in rank]
         rest = [kv for kv in ordered if kv[0] not in rank]
         ordered = known[::-1] + rest
+
     return ordered
 
 
@@ -169,7 +172,9 @@ def _series_pools(events, pools, series):
         current = latest.get(sid)
         if sid is not None and (current is None or event.start > current.start):
             latest[sid] = event
+
     members = {sid: set(pools.get(event.pool_id, ())) for sid, event in latest.items()}
+
     return latest, members
 
 
@@ -186,23 +191,28 @@ def series_names(units, events=None, pools=None, series=None, tickets=None) -> d
     series = series if series is not None else load_series()
     tickets = tickets if tickets is not None else load_tickets()
     latest, members = _series_pools(events, pools, series)
+
     by_set: dict[str, set[int]] = {}
     for unit in units:
         if unit.set_name:
             by_set.setdefault(unit.set_name, set()).add(unit.unit_id)
+
     names: dict[int, str] = {}
     # Biggest set first, so it wins if two sets share a home pool.
     for name, ids in sorted(by_set.items(), key=lambda kv: -len(kv[1])):
         carriers = [sid for sid, member in members.items() if len(member & ids) * 2 >= len(ids)]
         if carriers:
             names.setdefault(min(carriers, key=lambda sid: len(members[sid])), _display(name))
+
     for sid in latest:
         if sid in FEST_SERIES:
             names.setdefault(sid, FEST_SERIES[sid])
+
     for sid, event in latest.items():
         ticket = tickets.get(event.pool_id)
         if ticket in _TICKET_NAMES:
             names[sid] = _TICKET_NAMES[ticket]
+
     return names
 
 
@@ -212,6 +222,7 @@ def banner_titles(units=None, events=None, pools=None, series=None, tickets=None
     units = units if units is not None else Unit.objects.exclude(set_name="")
     series = series if series is not None else load_series()
     names = series_names(units, events, pools, series, tickets)
+
     return {pid: names[sid] for pid, sid in series.items() if sid in names}
 
 
@@ -222,6 +233,7 @@ def display_titles(events=None) -> dict[str, str]:
     fall back to the name itself)."""
     events = events if events is not None else load_events()
     titles = banner_titles(events=events)
+
     return {event.name: titles[event.pool_id] for event in events if event.pool_id in titles}
 
 
@@ -287,9 +299,11 @@ def set_sections(
         if unit.set_name:
             named.setdefault(_display(unit.set_name), {})[unit.unit_id] = unit
             continue
+
         candidates = [sid for sid, ids in members.items() if unit.unit_id in ids]
         if not candidates:
             continue
+
         specific = [sid for sid in candidates if sid not in umbrella]
         if not specific:
             # Fest exclusives have no banner of their own; they live on every fest
@@ -297,15 +311,19 @@ def set_sections(
             carried = [sid for sid in candidates if sid in fests]
             for sid in carried:
                 fests[sid][unit.unit_id] = unit
+
             if not carried:
                 addons.append(unit)
             continue
+
         if unit.rarity == Rarity.LEGEND_RARE.value:
             standard_legends.add(unit.unit_id)
+
         if len(specific) > _REGULAR_SERIES_LIMIT:
             shared = len(candidates) >= _REGULAR_CARRY * len(members)
             (regulars if shared else addons).append(unit)
             continue
+
         home = min(specific, key=lambda sid: len(members[sid]))
         if home in series_set:
             named.setdefault(_display(series_set[home]), {})[unit.unit_id] = unit
@@ -316,18 +334,21 @@ def set_sections(
     by_set: dict[str, set[int]] = {}
     for uid, name in unit_sets.items():
         by_set.setdefault(name, set()).add(uid)
+
     for ids in by_set.values():
         carriers = [sid for sid in fests if len(members[sid] & ids) >= _FEST_COVER * len(ids)]
         if 0 < len(carriers) <= _FEST_SET_CAP:
             for sid in carriers:
                 for uid in sorted(members[sid] & ids):
                     fests[sid][uid] = by_id[uid]
+
     if standard_legends:
         for sid in fests:
             hit = members[sid] & standard_legends
             if len(hit) >= _FEST_COVER * len(standard_legends):
                 for uid in sorted(hit):
                     fests[sid][uid] = by_id[uid]
+
     # A fest sharing its label with a Cat Guide set (UBER FEST, EPICFEST, Royalfest) IS
     # that set's banner, so merging by label folds the extras into the named section.
     for sid, extras in fests.items():
@@ -347,6 +368,7 @@ def set_sections(
         (latest[sid].name, homed[sid])
         for sid in sorted(homed, key=lambda sid: latest[sid].start, reverse=True)
     ]
+
     return [(label, _by_rarity(cats)) for label, cats in sections]
 
 
@@ -358,12 +380,14 @@ def _effective_runs(events) -> list[tuple[GachaEventRow, date, date]]:
     by_name: dict[str, list] = {}
     for event in events:
         by_name.setdefault(event.name, []).append(event)
+
     capped = []
     for runs in by_name.values():
         runs.sort(key=lambda e: e.start)
         for event, successor in zip(runs, runs[1:] + [None], strict=True):
             end = min(event.end, successor.start - timedelta(days=1)) if successor else event.end
             capped.append((event, event.start, end))
+
     return sorted(capped, key=lambda run: run[1])
 
 
@@ -381,15 +405,19 @@ def picker_groups(
     without one fall back to the run's marketing text. Returns
     ``[(label, [(name, title, (start, end), rarities)])]``."""
     today = today or date.today()
+
     if events is None:
         events = load_events()
+
     titles = titles or {}
+
     by_name: dict[str, list[Cat]] = {}
     other: list[Cat] = []
     for cat in cats:
         names = [banner.name for banner in cat.banners.all()]
         for name in names:
             by_name.setdefault(name, []).append(cat)
+
         if not names:
             other.append(cat)
 
@@ -406,11 +434,13 @@ def picker_groups(
     past_runs = sorted(
         (run for run in runs if run[2] < today), key=lambda run: run[1], reverse=True
     )
+
     carried: set[str] = set()
     past = []
     for event, start, end in past_runs:
         past.append(run_row(event, start, end, with_cats=event.name not in carried))
         carried.add(event.name)
+
     # DB-dated banners the schedule doesn't know (old godfat-era names) still get a row.
     scheduled = {event.name for event, _start, _end in runs}
     banners = {b.name: b for b in Banner.objects.filter(name__in=by_name)}
@@ -424,12 +454,14 @@ def picker_groups(
     leftovers = [row(name, None) for name in sorted(by_name) if name not in dated]
     if other:
         leftovers.append(("Other", "Other", None, _by_rarity(other, reverse=True)))
+
     groups = [
         ("Available now", now),
         ("Upcoming", upcoming),
         ("Past", past),
         ("Other", leftovers),
     ]
+
     return [group for group in groups if group[1]]
 
 
@@ -441,6 +473,7 @@ def equivalent_banners(banners: Mapping[str, BannerRolls]) -> dict[str, list[str
     for name, rolls in banners.items():
         key = (tuple(rolls.pulls), tuple(rolls.guaranteed))
         groups.setdefault(key, []).append(name)
+
     return {name: names for names in groups.values() for name in names}
 
 
@@ -454,10 +487,12 @@ def cost_label(tickets, catfood):
     """Spell out a plan's price in both currencies; pulls are ticket-funded first,
     so a plan can be pure tickets, pure catfood, or a mix."""
     parts = []
+
     if tickets:
         parts.append(f"{tickets} ticket{'s' if tickets != 1 else ''}")
     if catfood:
         parts.append(f"{catfood} catfood")
+
     return " + ".join(parts) or "free"
 
 
@@ -516,11 +551,13 @@ def _banner_groups(banner_pulls, rerolls, equivalents, guaranteed=None):
     guaranteed = guaranteed or {}
     groups = []
     seen = set()
+
     for name, pulls in banner_pulls.items():
         names = sorted(equivalents.get(name, [name]))
         rep = names[0]
         if rep in seen:
             continue
+
         seen.add(rep)
         grid = {stream_index(p.position, p.track): p for p in pulls}
         graph = BannerGraph(rep, pulls, rerolls=rerolls.get(name, ()))
@@ -536,6 +573,7 @@ def _banner_groups(banner_pulls, rerolls, equivalents, guaranteed=None):
                 },
             }
         )
+
     return groups
 
 
@@ -579,11 +617,13 @@ def build_tracks(
             tp = group["grid"].get(index)
             if tp is None:
                 continue
+
             graph = group["graph"]
             outcome = graph.outcome(index)
             switched = bool(outcome and outcome.switched)
             rarity = str(tp.rarity)
             on_path = index in marks.path.get(group["rep"], ())
+
             # Every cell reads nominal-first: the cat a clean arrival rolls. Its dupe
             # branch - a rare repeating the previous pull rerolls and jumps tracks -
             # renders beneath as one uniform "if dupe" line, whether the straight chain
@@ -596,6 +636,7 @@ def build_tracks(
                 reroll = graph.reroll(index)
                 if reroll is not None and reroll.cat:
                     branch = reroll
+
             # The cat the plan obtained here, if lit: the gold pill follows the branch
             # the plan actually pulls (a dupe-collected target lights the "if dupe"
             # name, not the nominal one).
@@ -613,6 +654,7 @@ def build_tracks(
                     **_collection_marks(tp.cat, rarity, owned, wanted),
                 }
             )
+
         return cells
 
     def cell_seed(index):
@@ -625,12 +667,14 @@ def build_tracks(
             tp = group["grid"].get(index)
             if tp is not None:
                 return tp.seed
+
         return 0
 
     def cell_cat(index):
         # What the docked dice obtained, feeding the dupe memory - only knowable when
         # every banner stacked in the cell rolls the same name there.
         names = {g["grid"][index].cat for g in groups if index in g["grid"]}
+
         return names.pop() if len(names) == 1 else ""
 
     def guaranteed_entries(index):
@@ -639,6 +683,7 @@ def build_tracks(
             tp = group["guaranteed"].get(index)
             if tp is None or not tp.cat:  # no guarantee on this banner, or an empty uber pool
                 continue
+
             rarity = str(tp.rarity)
             on_path = index in marks.gpath.get(group["rep"], ())
             cells.append(
@@ -656,6 +701,7 @@ def build_tracks(
                     **_collection_marks(tp.cat, rarity, owned, wanted),
                 }
             )
+
         return cells
 
     has_guaranteed = any(group["guaranteed"] for group in groups)
@@ -674,6 +720,7 @@ def build_tracks(
         for pos in range(1, max_pos + 1)
     ]
     legend = [{"tag": g["tag"], "names": _titled(g["names"], titles)} for g in groups]
+
     return {
         "legend": legend,
         "rows": rows,
@@ -696,6 +743,7 @@ def plan_highlight(option, equivalents):
         path.setdefault(rep, set()).add(pull.position)
         if pull.cat in option.targets:
             targets.setdefault(rep, {})[pull.position] = pull.cat
+
     return marks
 
 
@@ -709,6 +757,7 @@ def _move_walk(graph, move, last):
     first = graph.resolve(move.pulls[0].position, last)
     if first is None:
         return None
+
     outcomes = []
     for pull in move.pulls:
         if pull.guaranteed:
@@ -717,8 +766,10 @@ def _move_walk(graph, move, last):
             outcome = graph.resolve(pull.position, last)
         if outcome is None:
             return None
+
         outcomes.append(outcome)
         last = outcome.cat
+
     return outcomes, last
 
 
@@ -736,15 +787,18 @@ def _serves_move(other, other_names, own_outcomes, move, targets, multis, last):
             for m in offered
         ):
             return None
+
     walk = _move_walk(other, move, last)
     if walk is None:
         return None
+
     outcomes, end = walk
     for pull, own, mine in zip(move.pulls, own_outcomes, outcomes, strict=True):
         if not pull.guaranteed and mine.next_position != own.next_position:
             return None
         if pull.cat in targets and mine.cat != pull.cat:
             return None
+
     return end
 
 
@@ -768,9 +822,11 @@ def plan_shared(option, graphs, equivalents, multis=None, exclude=()):
     representative banner - normal cells and guaranteed columns."""
     multis = multis or {}
     by_name = {graph.banner_id: graph for graph in graphs}
+
     groups: dict[str, list[str]] = {}
     for name in by_name:
         groups.setdefault(_representative(name, equivalents), []).append(name)
+
     excluded = {rep for rep, names in groups.items() if any(name in exclude for name in names)}
     shared: dict[str, set[int]] = {}
     gshared: dict[str, set[int]] = {}
@@ -781,25 +837,31 @@ def plan_shared(option, graphs, equivalents, multis=None, exclude=()):
         walk = _move_walk(by_name[move.banner_id], move, last)
         if walk is None:  # can't happen for a plan the search produced; stay safe
             break
+
         own_outcomes, own_end = walk
         follow = moves[index + 1] if index + 1 < len(moves) else None
         for rep, names in groups.items():
             if rep == own or rep in excluded:
                 continue
+
             end = _serves_move(
                 by_name[rep], names, own_outcomes, move, option.targets, multis, last
             )
             if end is None:
                 continue
+
             if follow is not None and end != own_end:
                 nxt = by_name[follow.banner_id]
                 start = follow.pulls[0].position
                 if nxt.resolve(start, own_end) != nxt.resolve(start, end):
                     continue
+
             for pull in move.pulls:
                 into = gshared if pull.guaranteed else shared
                 into.setdefault(rep, set()).add(pull.position)
+
         last = own_end
+
     return shared, gshared
 
 
@@ -812,10 +874,12 @@ def plan_seed(plan, graphs):
     when the graph's data can't say (a plan replayed without its history)."""
     if not plan.pulls:
         return None
+
     last = plan.pulls[-1]
     graph = next((g for g in graphs if g.banner_id == last.banner_id), None)
     if graph is None:
         return None
+
     if last.guaranteed:
         # The multi started duped iff its first roll (the recorded pull at the same
         # position) obtained the reroll rather than the nominal cat.
@@ -832,12 +896,15 @@ def plan_seed(plan, graphs):
         nominal = graph.resolve(last.position)
         duped = inner is not None and nominal is not None and inner.cat != nominal.cat
         forced = graph.guaranteed(last.position, duped=duped) or graph.guaranteed(last.position)
+
         return forced.seed if forced else None
+
     before = plan.pulls[-2].cat if len(plan.pulls) > 1 else ""
     resolved = graph.resolve(last.position, before)
     for outcome in (resolved, graph.reroll(last.position)):
         if outcome is not None and outcome.cat == last.cat:
             return outcome.seed
+
     return resolved.seed if resolved else None
 
 
@@ -849,9 +916,11 @@ def plan_summary(plans, equivalents, owned=None, wanted=None, titles=None):
     wanted = wanted or set()
     titles = titles or {}
     summaries = []
+
     for option in plans:
         legs = []
         last_banner = None
+
         for leg in option.plan.legs:
             rolls = len(leg.pulls)
             # Single pulls are paid per draw with a ticket (free) or 150 catfood;
@@ -876,6 +945,7 @@ def plan_summary(plans, equivalents, owned=None, wanted=None, titles=None):
                 }
             )
             last_banner = leg.banner_id
+
         summaries.append(
             {
                 "targets": sorted(option.targets),
@@ -886,6 +956,7 @@ def plan_summary(plans, equivalents, owned=None, wanted=None, titles=None):
                 "legs": legs,
             }
         )
+
     return summaries
 
 
@@ -926,6 +997,7 @@ def _wishlist_plans(graphs, wanted, start, multis, ticket_value, banner_limits):
     )
     if full is not None:
         found.append(SubsetPlan(frozenset(wanted), full))
+
     for cat in wanted:
         single = astar(
             graphs,
@@ -937,7 +1009,9 @@ def _wishlist_plans(graphs, wanted, start, multis, ticket_value, banner_limits):
         )
         if single is not None:
             found.append(SubsetPlan(frozenset({cat}), single))
+
     found.sort(key=lambda sp: (-len(sp.targets), sp.plan.cost))
+
     return found
 
 
@@ -951,12 +1025,14 @@ def _subset_plans(graphs, targets, start, multis, ticket_value, banner_limits):
     target goes straight to missing."""
     search = dict(multis=multis, ticket_value=ticket_value, banner_limits=banner_limits)
     items = sorted(set(targets))
+
     if len(items) <= SUBSET_TARGET_LIMIT:
         pool, unobtainable = items, []
     else:
         pool = sorted(obtainable(graphs, targets))
         pooled = set(pool)
         unobtainable = [[cat] for cat in items if cat not in pooled]
+
     if len(pool) <= SUBSET_TARGET_LIMIT:
         found = solve_subsets(graphs, pool, start, **search)
         missing = _missing_subsets(pool, {sp.targets for sp in found})
@@ -965,6 +1041,7 @@ def _subset_plans(graphs, targets, start, multis, ticket_value, banner_limits):
         found_keys = {sp.targets for sp in found}
         missing = [pool] if frozenset(pool) not in found_keys else []
         missing += [[cat] for cat in pool if frozenset({cat}) not in found_keys]
+
     return found, missing + unobtainable
 
 
@@ -997,6 +1074,7 @@ def subset_solutions(
     start = State(0, tickets, catfood // CATFOOD_PER_DRAW, frozenset(), last_cat=last_cat)
     found, missing = _subset_plans(graphs, targets, start, multis, ticket_value, banner_limits)
     solutions = []
+
     for sp in found:
         marks = plan_highlight(sp, equivalents)
         marks.shared, marks.gshared = plan_shared(
@@ -1019,8 +1097,10 @@ def subset_solutions(
             titles=titles,
         )
         solutions.append(solution)
+
     for row in missing:
         solutions.append({"targets": row, "found": False})
+
     return solutions
 
 
@@ -1044,6 +1124,7 @@ def import_units(records: Iterable[Mapping]) -> int:
             },
         )
         created += int(was_created)
+
     return created
 
 
@@ -1053,11 +1134,13 @@ def reconcile_provisional_units() -> tuple[int, list[str]]:
     merged and the names of any provisionals with no canonical match yet (left in place)."""
     merged = 0
     orphaned = []
+
     for prov in Unit.objects.filter(canonical=False):
         canonical = Unit.objects.filter(canonical=True, name=prov.name).order_by("unit_id").first()
         if canonical is None:
             orphaned.append(prov.name)
             continue
+
         Cat.objects.filter(unit=prov).update(unit=canonical)
         carried = [
             flag
@@ -1067,9 +1150,12 @@ def reconcile_provisional_units() -> tuple[int, list[str]]:
         if carried:
             for flag in carried:
                 setattr(canonical, flag, True)
+
             canonical.save(update_fields=carried)
+
         prov.delete()
         merged += 1
+
     return merged, orphaned
 
 
@@ -1084,6 +1170,7 @@ def unit_for_cat(name: str, rarity: str = "") -> Unit:
         last = Unit.objects.filter(unit_id__gte=PROVISIONAL_BASE).order_by("-unit_id").first()
         next_id = (last.unit_id + 1) if last else PROVISIONAL_BASE
         unit = Unit.objects.create(unit_id=next_id, name=name, rarity=rarity, canonical=False)
+
     return unit
 
 
@@ -1094,22 +1181,28 @@ def import_cats(
     """Add rolled cats and their banner membership to the catalogue; return new-cat count."""
     dates = dates or {}
     created = 0
+
     for banner_name, rolls in banners.items():
         banner, _ = Banner.objects.get_or_create(name=banner_name)
         run = dates.get(banner_name)
         if run and (banner.start, banner.end) != run:
             banner.start, banner.end = run
             banner.save(update_fields=["start", "end"])
+
         for pull in (*rolls.pulls, *rolls.guaranteed):
             cat, was_created = Cat.objects.get_or_create(
                 name=pull.cat, defaults={"rarity": pull.rarity.value}
             )
             created += int(was_created)
+
             if not was_created and pull.rarity.value and cat.rarity != pull.rarity.value:
                 cat.rarity = pull.rarity.value
                 cat.save(update_fields=["rarity"])
+
             if cat.unit_id is None:
                 cat.unit = unit_for_cat(pull.cat, pull.rarity.value)
                 cat.save(update_fields=["unit"])
+
             banner.cats.add(cat)
+
     return created

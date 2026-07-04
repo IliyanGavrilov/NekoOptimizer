@@ -8,6 +8,7 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         events, pools = refresh()
+
         self.stdout.write(
             self.style.SUCCESS(f"Wrote {events} events and {pools} pools to {EVENTS_PATH.parent}.")
         )

@@ -87,6 +87,7 @@ class Seed(models.Model):
     @classmethod
     def current(cls) -> int | None:
         row = cls.objects.first()
+
         return row.value if row else None
 
     @classmethod
