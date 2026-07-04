@@ -78,6 +78,26 @@ def test_deterministic():
     assert a.pulls == b.pulls and a.rerolls == b.rerolls
 
 
+def test_last_cat_dupes_the_first_cell():
+    # The remembered pull that anchored this view (the app's dupe memory) plays the
+    # predecessor of 1A: repeating it realizes 1A's reroll, as if the previous view's
+    # chain continued straight into this one.
+    def reroll_at_1a(rolls):
+        return next(r for r in rolls.rerolls if (r.position, r.track) == (1, "A"))
+
+    clean = roll_banner(42, TWO_UNIT_RARE, 5)
+    first = next(p for p in clean.pulls if (p.position, p.track) == (1, "A"))
+    assert not reroll_at_1a(clean).realized
+    duped = roll_banner(42, TWO_UNIT_RARE, 5, last_cat=first.cat)
+    assert reroll_at_1a(duped).realized
+
+
+def test_last_cat_not_repeated_changes_nothing():
+    a = roll_banner(42, TWO_UNIT_RARE, 5, last_cat="Some Other Cat")
+    b = roll_banner(42, TWO_UNIT_RARE, 5)
+    assert a.pulls == b.pulls and a.rerolls == b.rerolls
+
+
 def test_no_guaranteed_column_without_a_roll_count():
     assert roll_banner(42, FOUR_BAND, 50).guaranteed == []
 
