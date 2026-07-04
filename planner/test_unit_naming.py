@@ -20,7 +20,6 @@ def test_unnamed_selects_only_id_only_names():
 
 @pytest.mark.django_db
 def test_real_names_with_digits_are_kept():
-    # Names that merely contain a dash/number but read as words must stay listed.
     for name in ["EVA Unit-01", "SV-001", "Mer-Cat", "Ancient Egg: N001", "Happy 100"]:
         Unit.objects.create(unit_id=hash(name) % 100000, name=name)
     assert Unit.objects.named().count() == Unit.objects.count()

@@ -2,7 +2,7 @@ from neko.rng import MASK, XorShift32, xorshift
 
 
 def test_known_vector():
-    assert xorshift(1) == 0x1000A001  # hand-derived from the spec
+    assert xorshift(1) == 0x1000A001
 
 
 def test_zero_is_fixed_point():

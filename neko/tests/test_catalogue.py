@@ -40,11 +40,11 @@ def test_catalogue_name_is_the_base_form():
 
 PICTURE_BOOK = "\n".join(
     [
-        "＠|＠|＠|EVOLVE at Level 10",  # 0: a Normal cat, no set
-        "From Rare Capsule Event|The Dynamites|＠|EVOLVE at Level 10",  # 1
-        "Collect from limited event stage|Horde of Cats|＠",  # 2: stage name, not a set
-        "Collect from Limited Rare Capsules|Xmas Gals|＠",  # 3
-        "From Rare Capsule Event|＠|＠",  # 4: capsule cat without a set name
+        "＠|＠|＠|EVOLVE at Level 10",
+        "From Rare Capsule Event|The Dynamites|＠|EVOLVE at Level 10",
+        "Collect from limited event stage|Horde of Cats|＠",
+        "Collect from Limited Rare Capsules|Xmas Gals|＠",
+        "From Rare Capsule Event|＠|＠",
     ]
 )
 

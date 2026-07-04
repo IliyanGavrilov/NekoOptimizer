@@ -19,8 +19,6 @@ def cat_with_unit(name, owned=False, wanted=False):
 
 
 def fixed_rolls(rolls):
-    """A fetch_banners stub always returning the given BannerRolls as banner "x"."""
-
     def _fetch(seed, count=100, last_cat=""):
         return RollResult({"x": rolls}, {})
 
@@ -113,7 +111,6 @@ def test_platinum_legend_cap_zero_excludes_the_banner(client, monkeypatch):
         "/plan/",
         {"seed": 7, "tickets": 1, "catfood": 0, "targets": [cat.pk], "platinum_legend_cap": 0},
     )
-    # Capped out, the only target is unreachable: it shows as a "Not found" subset row.
     assert b"Not found" in response.content
 
 
@@ -135,7 +132,6 @@ def test_explore_mode_funds_single_pulls_with_tickets(client, monkeypatch):
         "planner.views.fetch_banners",
         fixed_banners(TrackPull(1, "A", "Filler", R), TrackPull(2, "A", "Bahamut", U)),
     )
-    # Two single pulls reach Bahamut: explore must bill them as tickets, not catfood.
     response = client.post(
         "/plan/", {"seed": 7, "tickets": 0, "catfood": 0, "targets": [cat.pk], "explore": "on"}
     )
@@ -154,7 +150,6 @@ def test_multiple_targets_list_every_subset(client, monkeypatch):
         "/plan/", {"seed": 7, "tickets": 5, "catfood": 0, "targets": [a.pk, b.pk]}
     )
     html = response.json()["solutions_html"]
-    # Powerset of two reachable targets: {Aaa}, {Bbb}, {Aaa, Bbb}.
     assert html.count("<details") == 3
     assert "Aaa, Bbb" in html
 
@@ -163,7 +158,6 @@ def test_multiple_targets_list_every_subset(client, monkeypatch):
 def test_unreachable_subset_is_listed_not_found(client, monkeypatch):
     a = Cat.objects.create(name="Aaa")
     b = Cat.objects.create(name="Bbb")
-    # Only Aaa is on the banner; Bbb (and the pair) can't be reached.
     monkeypatch.setattr("planner.views.fetch_banners", fixed_banners(TrackPull(1, "A", "Aaa", U)))
     response = client.post(
         "/plan/", {"seed": 7, "tickets": 5, "catfood": 0, "targets": [a.pk, b.pk]}
@@ -209,7 +203,6 @@ def test_apply_plan_owns_cats_and_clears_wishlist(client):
 
 @pytest.mark.django_db
 def test_apply_plan_advances_the_stored_seed(client):
-    # Applying means "you rolled it": the plan's seed-after becomes the stored seed.
     Seed.store(7)
     client.post("/apply/", {"cats": ["Bahamut"], "seed_after": 12345})
     assert Seed.current() == 12345
@@ -217,7 +210,6 @@ def test_apply_plan_advances_the_stored_seed(client):
 
 @pytest.mark.django_db
 def test_apply_plan_without_a_seed_after_keeps_the_stored_seed(client):
-    # A plan whose final draw ran off the rolled grid has no seed-after to advance to.
     Seed.store(7)
     client.post("/apply/", {"cats": ["Bahamut"]})
     assert Seed.current() == 7
@@ -238,7 +230,6 @@ def test_negative_resources_rejected(client):
 
 @pytest.mark.django_db
 def test_blank_budget_is_treated_as_zero(client, monkeypatch):
-    # Explore hides the budget fields, so they submit blank; that must not 400.
     cat = Cat.objects.create(name="Bahamut")
     monkeypatch.setattr(
         "planner.views.fetch_banners", fixed_banners(TrackPull(1, "A", "Bahamut", U))
@@ -265,7 +256,6 @@ def test_tracks_endpoint_blank_seed_renders_nothing(client):
 
 @pytest.mark.django_db
 def test_planner_ships_the_past_group_as_a_lazy_shell(client):
-    # The ~2000 Past rows are nearly all of the page; they must not render inline.
     html = client.get("/").content
     assert b'id="pastGroup"' in html
     assert html.count(b"banner-include") < 100
@@ -290,7 +280,6 @@ def test_tracks_endpoint_renders_the_guaranteed_column(client, monkeypatch):
 
 @pytest.mark.django_db
 def test_tracks_endpoint_hides_the_guaranteed_column_without_a_guarantee(client, monkeypatch):
-    # No selected banner runs a guarantee, so the extra columns stay out of the table.
     monkeypatch.setattr(
         "planner.views.fetch_banners", fixed_banners(TrackPull(1, "A", "Bahamut", U))
     )
@@ -299,8 +288,6 @@ def test_tracks_endpoint_hides_the_guaranteed_column_without_a_guarantee(client,
 
 @pytest.mark.django_db
 def test_tracks_endpoint_renders_a_dice_per_branch_of_a_dupe_cell(client, monkeypatch):
-    # A dupe cell has two outcomes (reroll on a dupe arrival, nominal on a clean one),
-    # each landing on a different seed - both must be shown and both dice-jumpable.
     rolls = BannerRolls(
         [TrackPull(1, "A", "Pogo", R, seed=3), TrackPull(2, "A", "Pogo", R, seed=5)],
         [],
@@ -309,15 +296,13 @@ def test_tracks_endpoint_renders_a_dice_per_branch_of_a_dupe_cell(client, monkey
     monkeypatch.setattr("planner.views.fetch_banners", fixed_rolls(rolls))
     html = client.post("/tracks/", {"seed": 7}).content.decode()
     assert "if dupe:" in html
-    assert 'data-seed="9"' in html  # the branch dice: jump past the reroll (Jurassic Cat)
-    assert 'data-seed="5"' in html  # the docked dice: jump past the nominal pull (Pogo)
-    assert 'data-cat="Pogo"' in html  # what the docked dice obtained (the dupe memory)
+    assert 'data-seed="9"' in html
+    assert 'data-seed="5"' in html
+    assert 'data-cat="Pogo"' in html
 
 
 @pytest.mark.django_db
 def test_tracks_endpoint_forwards_the_dupe_memory(client, monkeypatch):
-    # last_cat (what the previous jump obtained) must reach the roll engine, where it
-    # can dupe the very first cell.
     seen = {}
 
     def fake(seed, count, last_cat=""):

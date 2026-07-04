@@ -116,8 +116,6 @@ def test_set_sections_homes_an_unnamed_legend_with_its_set():
         _run(date(2026, 1, 1), date(2026, 1, 5), 1, "Dynamites are back!"),
         _run(date(2026, 2, 1), date(2026, 2, 5), 2, "UBERFEST!"),
     ]
-    # The fest pool mixes both sets evenly (an umbrella), so the legend homes to the
-    # Dynamites' own banner and joins their named section.
     pools = {1: [42, 43, 600], 2: [42, 43, 71, 72, 600]}
     sections = set_sections([*dyna, *vaji, legend], events, pools, {1: 1, 2: 19})
     assert ("Legend Rare", [legend]) in dict(sections)["The Dynamites"]
@@ -136,7 +134,6 @@ def test_set_sections_splits_shared_cats_missing_from_most_banners_into_addons()
     rover = Unit(unit_id=50, name="Rover Cat", rarity="Rare")
     neneko = Unit(unit_id=60, name="Neneko", rarity="Super Rare")
     events = [_run(date(2026, 1, 1), date(2026, 1, 5), i, f"Set {i}") for i in range(1, 11)]
-    # Rover rides every banner; Neneko only 4 of 10 (fests and collabs skip her).
     pools = {i: [50, 60] if i <= 4 else [50] for i in range(1, 11)}
     sections = set_sections([rover, neneko], events, pools, {i: i for i in range(1, 11)})
     assert [label for label, _ in sections] == [REGULARS_LABEL, ADDONS_LABEL]
@@ -144,9 +141,6 @@ def test_set_sections_splits_shared_cats_missing_from_most_banners_into_addons()
 
 
 def _fest_fixture():
-    """Three fests over two exclusive fest sets, a classic set, and a fest-only legend:
-    Uberfest (19) and Epicfest (27) each carry the classics plus their own set, and
-    Superfest (42) carries both fest sets; Izanagi drops on Uberfest and Superfest."""
     dyna = [_uber(100, "The Dynamites"), _uber(101, "The Dynamites")]
     uf = [_uber(200, "UBER FEST"), _uber(201, "UBER FEST")]
     ef = [_uber(300, "EPICFEST"), _uber(301, "EPICFEST")]
@@ -172,7 +166,6 @@ def test_set_sections_lists_a_fest_exclusive_on_every_fest_that_carries_it():
     sections = dict(set_sections(units, events, pools, series))
     assert REGULARS_LABEL not in sections
     izanagi = units[-1]
-    # The guide's "UBER FEST" set and the fest series label the same section, respelled.
     assert ("Legend Rare", [izanagi]) in sections["UBERFEST"]
     assert ("Legend Rare", [izanagi]) in sections["SUPERFEST"]
     assert ("Legend Rare", [izanagi]) not in sections["EPICFEST"]
@@ -182,8 +175,6 @@ def test_set_sections_bundles_covered_sets_but_not_the_general_uber_pool():
     units, events, pools, series = _fest_fixture()
     sections = dict(set_sections(units, events, pools, series))
     superfest = [u.name for _, bin in sections["SUPERFEST"] for u in bin]
-    # Both fest sets combine on Superfest; the classics drop on every fest, so they
-    # stay under their own set only.
     assert superfest == ["U200", "U201", "U300", "U301", "Izanagi"]
     assert [u.name for _, bin in sections["The Dynamites"] for u in bin] == ["U100", "U101"]
 
@@ -200,7 +191,6 @@ def test_set_sections_lists_the_standard_legends_on_legend_rate_fests():
         _run(date(2026, 2, 1), date(2026, 2, 5), 2, "Vajiras!"),
         _run(date(2026, 3, 1), date(2026, 3, 5), 3, "Royal Fest!"),
     ]
-    # Each legend homes to its set's banner; Royal Fest (a mixed pool) carries them all.
     pools = {1: [100, 101, 700], 2: [110, 111, 701], 3: [100, 110, 700, 701]}
     sections = dict(set_sections([*dyna, *vaji, *legends], events, pools, {1: 1, 2: 2, 3: 50}))
     assert ("Legend Rare", legends) in sections["RoyalFest"]
@@ -213,8 +203,6 @@ def test_series_names_pick_each_sets_smallest_carrier():
         _run(date(2026, 1, 1), date(2026, 1, 5), 1, "Dynamites!"),
         _run(date(2026, 2, 1), date(2026, 2, 5), 2, "UBERFEST!"),
     ]
-    # Both pools carry the whole set; the smaller one is its own banner. The fest
-    # series keeps its fest name.
     pools = {1: [42, 43], 2: [42, 43, 71, 72]}
     names = series_names(dyna, events, pools, {1: 1, 2: 19}, tickets={})
     assert names == {1: "The Dynamites", 19: "UBERFEST"}
@@ -261,8 +249,6 @@ def _run(start, end, pool_id, name):
 
 @pytest.mark.django_db
 def test_picker_groups_lists_each_scheduled_run_separately():
-    # A recurring name (Platinum Capsules) gets one row per run: the current run's 2030
-    # sentinel end is capped by its July rerun, and the rerun shows under Upcoming.
     today = date(2026, 7, 3)
     sentinel = date(2030, 1, 1)
     events = [
@@ -280,7 +266,6 @@ def test_picker_groups_lists_each_scheduled_run_separately():
     ]
     upcoming = [(n, d) for n, _t, d, _ in groups["Upcoming"]]
     assert upcoming == [("Platinum", (date(2026, 7, 11), sentinel))]
-    # both Platinum rows carry the same cats, joined by name
     assert groups["Available now"][0][3] == [("Uber Super Rare", [cat])]
     assert groups["Upcoming"][0][3] == [("Uber Super Rare", [cat])]
 
@@ -363,15 +348,12 @@ def test_build_tracks_places_each_roll_on_its_track():
 
 
 def test_build_tracks_flags_a_rare_dupe_switch():
-    # 1A and 2A are the same rare cat -> godfat rerolls 2A and jumps tracks.
     banner_pulls = {"X": [TrackPull(1, "A", "Pogo", R), TrackPull(2, "A", "Pogo", R)]}
     rerolls = {"X": [TrackPull(2, "A", "Jurassic Cat", R)]}
     assert build_tracks(banner_pulls, rerolls, {})["rows"][1]["a"][0]["switch"] is True
 
 
 def test_build_tracks_dupe_cell_reads_nominal_first():
-    # A rare-dupe cell shows the nominal roll first (what a clean arrival obtains) with
-    # the reroll beneath as its "if dupe" branch - the same format as a bounce cell.
     banner_pulls = {"X": [TrackPull(1, "A", "Pogo", R), TrackPull(2, "A", "Pogo", R)]}
     rerolls = {"X": [TrackPull(2, "A", "Jurassic Cat", R)]}
     cell = build_tracks(banner_pulls, rerolls, {})["rows"][1]["a"][0]
@@ -380,7 +362,6 @@ def test_build_tracks_dupe_cell_reads_nominal_first():
 
 
 def test_build_tracks_no_branch_on_a_normal_pull():
-    # A normal (non-dupe) pull continues on its own track: no "if dupe" branch.
     banner_pulls = {"X": [TrackPull(1, "A", "Bahamut", U)]}
     assert build_tracks(banner_pulls, {}, {})["rows"][0]["a"][0]["alt"] is None
 
@@ -398,9 +379,6 @@ def test_build_tracks_b_track_dupe_branch_points_left_towards_a():
 
 
 def test_build_tracks_shows_a_conditional_reroll_on_a_realized_bounce_cell():
-    # The 62AR shape: 2A is no dupe on its own track, but a bounce path arrives holding
-    # Onmyoji and rerolls it - the cell keeps its nominal cat and adds the dupe branch
-    # with its own landing and its own after-seed (the reroll's).
     banner_pulls = {"X": [TrackPull(1, "A", "Aset", U), TrackPull(2, "A", "Onmyoji", R)]}
     rerolls = {"X": [TrackPull(2, "A", "Pirate", R, seed=9, steps=1, realized=True)]}
     cell = build_tracks(banner_pulls, rerolls, {})["rows"][1]["a"][0]
@@ -409,17 +387,12 @@ def test_build_tracks_shows_a_conditional_reroll_on_a_realized_bounce_cell():
 
 
 def test_build_tracks_keeps_unrealized_conditional_rerolls_quiet():
-    # Every rare cell carries a conditional reroll now; only the ones a straight chain
-    # actually bounces into (godfat's extra R cells) earn a badge.
     banner_pulls = {"X": [TrackPull(1, "A", "Aset", U), TrackPull(2, "A", "Onmyoji", R)]}
     rerolls = {"X": [TrackPull(2, "A", "Pirate", R, steps=1)]}
     assert build_tracks(banner_pulls, rerolls, {})["rows"][1]["a"][0]["alt"] is None
 
 
 def test_build_tracks_switch_cell_keeps_both_branch_seeds():
-    # Both outcomes of a dupe cell can be dice-jumped: the docked dice carries the
-    # nominal pull's after-seed (and its cat, feeding the dupe memory), the "if dupe"
-    # branch its reroll's - the branch lands on a different seed and position.
     banner_pulls = {"X": [TrackPull(1, "A", "Pogo", R), TrackPull(2, "A", "Pogo", R, seed=5)]}
     rerolls = {"X": [TrackPull(2, "A", "Jurassic Cat", R, seed=9, steps=1)]}
     row = build_tracks(banner_pulls, rerolls, {})["rows"][1]
@@ -436,7 +409,6 @@ def test_build_tracks_switch_cell_keeps_both_branch_seeds():
 
 
 def test_build_tracks_guaranteed_entry_carries_its_after_seed():
-    # The guaranteed cell's dice jumps to just after the multi's final draw.
     banner_pulls = {"X": [TrackPull(1, "A", "Pogo", R)]}
     guaranteed = {"X": [TrackPull(1, "A", "Kasli", U, seed=42)]}
     track = build_tracks(banner_pulls, {}, {}, guaranteed=guaranteed)
@@ -452,8 +424,6 @@ def test_build_tracks_highlights_the_path_and_target():
 
 
 def test_build_tracks_target_pill_follows_the_dupe_branch():
-    # A target the plan collects VIA the reroll lights the "if dupe" name, not the
-    # nominal one - the obtained cat is recorded per lit index.
     banner_pulls = {"X": [TrackPull(1, "A", "Pogo", R), TrackPull(2, "A", "Pogo", R)]}
     rerolls = {"X": [TrackPull(2, "A", "Jurassic Cat", R)]}
     marks = TrackMarks(path={"X": {2}}, targets={"X": {2: "Jurassic Cat"}})
@@ -470,8 +440,6 @@ def test_plan_highlight_keys_indices_by_representative_banner():
 
 
 def test_plan_highlight_routes_guaranteed_pulls_to_the_guaranteed_column():
-    # The guaranteed uber lights the guaranteed COLUMN at the multi's first roll, not the
-    # track cell of some later position.
     pulls = (Pull(0, "X", "Cat", R), Pull(0, "X", "Mecha", U, guaranteed=True))
     option = SubsetPlan(frozenset({"Mecha"}), Path(pulls, 0, 3))
     marks = plan_highlight(option, {})
@@ -519,8 +487,6 @@ def test_build_tracks_guaranteed_uber_can_be_wishlisted():
 
 
 def test_build_tracks_highlights_the_guaranteed_column_cell():
-    # A plan that starts a guaranteed multi at 1A lights 1A's guaranteed-column cell (the
-    # uber it awards); the normal track cell keeps its normal roll.
     banner_pulls = {"X": [TrackPull(1, "A", "Shaman Cat", R)]}
     guaranteed = {"X": [TrackPull(1, "A", "Trixi the Merc", U)]}
     marks = TrackMarks(path={"X": {0}}, gpath={"X": {0}}, gtargets={"X": {0: "Trixi the Merc"}})
@@ -556,7 +522,6 @@ def test_build_tracks_without_a_guarantee_omits_the_columns():
 
 
 def test_build_tracks_guaranteed_cell_stacks_only_guaranteed_banners():
-    # Banner Y runs no guarantee, so the guaranteed cell holds X's uber alone.
     banner_pulls = {
         "X": [TrackPull(1, "A", "Shaman Cat", R)],
         "Y": [TrackPull(1, "A", "Pogo", R)],
@@ -574,7 +539,6 @@ def test_build_tracks_guaranteed_uber_can_be_new():
 
 
 def test_build_tracks_skips_an_empty_guaranteed_cell():
-    # An empty uber pool rolls "" (godfat's id -1); the cell renders nothing for it.
     banner_pulls = {"X": [TrackPull(1, "A", "Shaman Cat", R)]}
     guaranteed = {"X": [TrackPull(1, "A", "", U)]}
     track = build_tracks(banner_pulls, {}, {}, guaranteed=guaranteed)
@@ -582,18 +546,12 @@ def test_build_tracks_skips_an_empty_guaranteed_cell():
 
 
 def test_build_tracks_row_carries_the_cell_dice_seed_and_cat():
-    # The docked dice: the state just after the cell's nominal pull, plus what it
-    # obtained (the dupe memory the frontend remembers for that seed).
     banner_pulls = {"X": [TrackPull(1, "A", "Bahamut", U, seed=111)]}
     row = build_tracks(banner_pulls, {}, {})["rows"][0]
     assert (row["a_seed"], row["a_cat"]) == (111, "Bahamut")
 
 
 def test_build_tracks_cell_dice_reads_any_banner_rolled_there():
-    # The after-seed is banner-independent (a clean roll consumes the same two stream
-    # values whatever the pool), so a banner that wasn't rolled at the cell doesn't
-    # blank its dice - another banner's pull supplies it. The obtained CAT does depend
-    # on the pool, so it blanks when the stacked banners disagree.
     banner_pulls = {
         "X": [TrackPull(1, "A", "Pogo", R, seed=5)],
         "Y": [
@@ -637,8 +595,6 @@ def test_plan_seed_empty_plan_is_none():
 
 
 def test_plan_seed_resolves_a_conditional_dupe_by_the_walk():
-    # The final pull lands on a cell that is no dupe on its own track, but the plan's
-    # walk arrives holding that very cat (a bounce) - the state is the reroll's.
     graphs = build_graphs(
         {
             "X": [
@@ -707,7 +663,7 @@ def test_plan_summary_counts_ticket_funded_single_pulls():
 
 def test_plan_summary_splits_a_mixed_single_pull_leg_into_tickets_and_catfood():
     pulls = tuple(Pull(i, "X", "Bahamut", U) for i in range(3))
-    leg = Leg("X", "Single pull", 150, pulls)  # two ticket draws + one catfood draw
+    leg = Leg("X", "Single pull", 150, pulls)
     option = SubsetPlan(frozenset({"Bahamut"}), Path(pulls, 2, 1, (leg,)))
     assert plan_summary([option], {"X": ["X"]})[0]["legs"][0]["tickets"] == 2
 
@@ -729,8 +685,6 @@ def _plan(targets, moves, tickets=0, catfood=0):
 
 
 def test_plan_shared_marks_a_filler_pull_even_when_the_cat_differs():
-    # 1A drops a different rare on each banner, but both walk straight on, so the step
-    # is interchangeable; the target uber at 2A differs, which pins that step.
     graphs = build_graphs(
         {
             "X": [TrackPull(1, "A", "Pogo", R), TrackPull(2, "A", "Bahamut", U)],
@@ -753,8 +707,6 @@ def test_plan_shared_marks_a_target_pull_where_the_same_cat_drops():
 
 
 def test_plan_shared_rejects_a_pull_whose_walk_diverges():
-    # Y's 2A is a rare-dupe reroll that jumps tracks - rolling that step on Y walks on
-    # differently, so it can't serve the plan even though a cat still comes out.
     graphs = build_graphs(
         {
             "X": [TrackPull(1, "A", "Bahamut", U), TrackPull(2, "A", "Jurassic Cat", R)],
@@ -768,9 +720,6 @@ def test_plan_shared_rejects_a_pull_whose_walk_diverges():
 
 
 def test_plan_shared_rejects_a_filler_swap_that_would_dupe_the_next_pull():
-    # Y's 1A drops the very cat the plan's NEXT pull rolls at 2A: rolled on Y, that
-    # next pull would arrive as a dupe and jump tracks, derailing everything after.
-    # Z's different filler leaves the next pull untouched, so Z still counts.
     graphs = build_graphs(
         {
             "X": [TrackPull(1, "A", "Ape", R), TrackPull(2, "A", "Bee", R)],
@@ -806,8 +755,6 @@ def _guaranteed_multi_fixture(y_uber="Mecha"):
 
 
 def test_plan_shared_multi_needs_only_the_walk_and_the_targeted_uber():
-    # The chain cats differ, but the walk matches and Y's guarantee awards the same
-    # target uber for the same price - the whole multi can be rolled on Y.
     graphs, option = _guaranteed_multi_fixture()
     multis = {"X": [Multi(3, 450)], "Y": [Multi(3, 450)]}
     shared, gshared = plan_shared(option, graphs, {}, multis)
@@ -827,8 +774,6 @@ def test_plan_shared_multi_missing_the_targeted_uber_is_not_interchangeable():
 
 
 def test_plan_shared_never_offers_a_capped_ticket_gacha_as_an_alternative():
-    # Platinum/Legend pulls cost their own scarce tickets, not a draw - a matching
-    # outcome there is not the same price, so it never counts as interchangeable.
     pulls = [TrackPull(1, "A", "Pogo", R)]
     graphs = build_graphs({"X": list(pulls), "Platinum Capsules": list(pulls)})
     option = _plan({"Pogo"}, (_single(0, "X", "Pogo", R),), 1)
@@ -889,8 +834,6 @@ def test_build_tracks_legend_uses_display_titles():
 
 
 def test_subset_solutions_marks_interchangeable_steps_on_the_track():
-    # Different filler rares at 1A still walk alike, so the step is marked on Y; the
-    # target uber at 2A only drops on X, so that step is not.
     pulls = {
         "X": [TrackPull(1, "A", "Pogo", R), TrackPull(2, "A", "Bahamut", U)],
         "Y": [TrackPull(1, "A", "Rover Cat", R), TrackPull(2, "A", "Kasli", U)],
@@ -906,16 +849,12 @@ def test_subset_solutions_marks_interchangeable_steps_on_the_track():
 
 
 def test_subset_solutions_remembers_the_plans_final_pull():
-    # Applying a plan advances to seed_after WITH last_cat: the advanced view can then
-    # dupe its own first cell if it repeats the plan's final draw.
     pulls = {"X": [TrackPull(1, "A", "Pogo", R), TrackPull(2, "A", "Bahamut", U, seed=8)]}
     (solution,) = subset_solutions(pulls, {}, {}, {"Bahamut"}, tickets=2, catfood=0)
     assert (solution["seed_after"], solution["last_cat"]) == (8, "Bahamut")
 
 
 def test_subset_solutions_start_dupe_memory_reaches_the_search():
-    # A first cell repeating the remembered pull arrives as a dupe: the plan collects
-    # the reroll's cat, not the nominal one.
     pulls = {"X": [TrackPull(1, "A", "Pogo", R)]}
     rerolls = {"X": [TrackPull(1, "A", "Jurassic Cat", R, steps=1)]}
     (solution,) = subset_solutions(

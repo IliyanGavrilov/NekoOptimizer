@@ -7,7 +7,6 @@ def banner(rates, pools) -> Banner:
     return Banner("test", "Test Banner", "", rates, pools)
 
 
-# A realistic-ish four-band split (sums to 10000) for the rarity walk.
 FOUR_BAND = banner(
     {
         Rarity.RARE: 6970,
@@ -27,7 +26,7 @@ ONE_UNIT_RARE = banner({Rarity.RARE: 10000}, {Rarity.RARE: ("Only",)})
 
 
 def test_pick_rarity_walks_cumulative_bands():
-    b = FOUR_BAND  # cumulative edges: 6970 / 9480 / 9970
+    b = FOUR_BAND
     assert pick_rarity(0, b) is Rarity.RARE
     assert pick_rarity(6969, b) is Rarity.RARE
     assert pick_rarity(6970, b) is Rarity.SUPER_RARE
@@ -37,7 +36,6 @@ def test_pick_rarity_walks_cumulative_bands():
 
 
 def test_pick_rarity_legend_is_the_catch_all():
-    # Everything past Uber's cumulative rate is Legend, even beyond the summed rates.
     assert pick_rarity(9970, FOUR_BAND) is Rarity.LEGEND_RARE
     assert pick_rarity(9999, FOUR_BAND) is Rarity.LEGEND_RARE
 
@@ -56,10 +54,8 @@ def test_cats_come_from_their_rarity_pool():
 
 
 def test_rare_dupe_rerolls_to_the_other_unit():
-    # With a two-unit rare pool, a dupe deletes that slot and the shrunk pool has exactly
-    # one unit left, so the reroll is deterministically the OTHER unit.
     rolls = roll_banner(1893568593, TWO_UNIT_RARE, 300)
-    assert rolls.rerolls  # dupes do occur over 300 positions
+    assert rolls.rerolls
     nominal = {(p.position, p.track): p.cat for p in rolls.pulls}
     for reroll in rolls.rerolls:
         other = "R2" if nominal[(reroll.position, reroll.track)] == "R1" else "R1"
@@ -67,7 +63,6 @@ def test_rare_dupe_rerolls_to_the_other_unit():
 
 
 def test_reroll_on_a_single_unit_pool_empties():
-    # Deleting the only slot leaves nothing to re-pick (godfat's id -1 -> "").
     rolls = roll_banner(1893568593, ONE_UNIT_RARE, 10)
     assert rolls.rerolls and all(r.cat == "" for r in rolls.rerolls)
 
@@ -79,9 +74,6 @@ def test_deterministic():
 
 
 def test_last_cat_dupes_the_first_cell():
-    # The remembered pull that anchored this view (the app's dupe memory) plays the
-    # predecessor of 1A: repeating it realizes 1A's reroll, as if the previous view's
-    # chain continued straight into this one.
     def reroll_at_1a(rolls):
         return next(r for r in rolls.rerolls if (r.position, r.track) == (1, "A"))
 
@@ -103,9 +95,6 @@ def test_no_guaranteed_column_without_a_roll_count():
 
 
 def test_guaranteed_column_is_an_uber_at_every_cell():
-    # An 11-roll guaranteed started at any cell awards an uber. We roll a buffer past the
-    # display so the forward follow always resolves (godfat drops trailing cells only
-    # because it has no data past its window; the RNG past it is still deterministic).
     rolls = roll_banner(1893568593, FOUR_BAND, 40, guaranteed_rolls=11)
     assert len(rolls.guaranteed) == 40 * 2
     assert {(p.position, p.track) for p in rolls.guaranteed} == {
@@ -123,11 +112,6 @@ ALL_UBER = banner(
 
 
 def test_guaranteed_follows_the_play_chain():
-    # godfat's fill_guaranteed: the column value at a cell is the uber picked by the
-    # rarity seed of the cell guaranteed_rolls - 1 chain steps FORWARD (the swapped final
-    # roll). With every roll an uber there are no rare dupes, so the chain never switches
-    # tracks and an 11-roll column must equal the 1-roll column (godfat's
-    # force_guaranteed=1, a 0-step follow) shifted 10 rows down the same track.
     eleven = roll_banner(97, ALL_UBER, 30, guaranteed_rolls=11)
     one = roll_banner(97, ALL_UBER, 45, guaranteed_rolls=1)
     single = {(p.position, p.track): p.cat for p in one.guaranteed}
@@ -137,8 +121,6 @@ def test_guaranteed_follows_the_play_chain():
 
 
 def test_pull_seed_is_its_slot_value():
-    # Cell j reads the stream at advance^{j+1}(seed) (rarity) and advance^{j+2}(seed)
-    # (slot); the state after obtaining a nominal pull is its slot value.
     rolls = roll_banner(42, FOUR_BAND, 2)
     stream = [42]
     for _ in range(5):
@@ -150,8 +132,6 @@ def test_pull_seed_is_its_slot_value():
 
 
 def test_reseeding_to_a_pull_makes_its_successor_the_new_1a():
-    # The apply-plan advance: entering a nominal pull's (after-)seed re-rolls the
-    # stream so its play successor (next position, same track) becomes the new 1A.
     rolls = roll_banner(1893568593, FOUR_BAND, 10)
     nominal = {(p.position, p.track): p.cat for p in rolls.pulls}
     duped = {(p.position, p.track) for p in rolls.rerolls}
@@ -159,16 +139,13 @@ def test_reseeding_to_a_pull_makes_its_successor_the_new_1a():
     for pull in rolls.pulls:
         successor = (pull.position + 1, pull.track)
         if (pull.position, pull.track) in duped or successor not in nominal:
-            continue  # a dupe's after-state is its reroll's, covered below
+            continue
         assert roll_banner(pull.seed, FOUR_BAND, 1).pulls[0].cat == nominal[successor]
         checked += 1
     assert checked
 
 
 def test_reseeding_to_a_reroll_continues_past_the_bounce():
-    # A dupe's reroll consumed one extra stream value (a two-unit pool always resolves
-    # in one step), so its seed re-rolls with the landing cell - half a row on, the
-    # other track (index + 3) - as the new 1A.
     rolls = roll_banner(1893568593, TWO_UNIT_RARE, 50)
     nominal = {(p.position, p.track): p.cat for p in rolls.pulls}
     assert rolls.rerolls
@@ -181,22 +158,15 @@ def test_reseeding_to_a_reroll_continues_past_the_bounce():
 
 
 def test_reseeding_to_a_guaranteed_pull_lands_one_past_the_multi():
-    # After a guaranteed multi the play continues half a row on, track flipped: the
-    # stored seed (the very value that picked the uber) makes that cell the new 1A.
     rolls = roll_banner(97, ALL_UBER, 30, guaranteed_rolls=11)
     nominal = {(p.position, p.track): p.cat for p in rolls.pulls}
     for pull in rolls.guaranteed[:10]:
-        # All-uber rolls never dupe, so the chain's last cell is 10 rows down the same
-        # track; the multi continues at the stream index right after it.
         last = 2 * (pull.position - 1) + (0 if pull.track == "A" else 1) + 20
         successor = ((last + 1) // 2 + 1, "AB"[(last + 1) % 2])
         assert roll_banner(pull.seed, ALL_UBER, 1).pulls[0].cat == nominal[successor]
 
 
 def test_every_named_rare_cell_carries_its_conditional_reroll():
-    # Any path can make any rare cell a dupe (a bounce landing or a mid-stream start
-    # changes the previously obtained cat), so every named rare cell carries what a
-    # dupe there would reroll into, with the extra steps the reroll would consume.
     rolls = roll_banner(1893568593, FOUR_BAND, 50)
     rare = {(p.position, p.track) for p in rolls.pulls if p.rarity is Rarity.RARE and p.cat}
     assert {(r.position, r.track) for r in rolls.rerolls} == rare
@@ -204,10 +174,6 @@ def test_every_named_rare_cell_carries_its_conditional_reroll():
 
 
 def test_realized_rerolls_are_the_straight_chain_dupes_and_their_bounces():
-    # godfat renders an R cell exactly where a straight chain hits a dupe: a cell that
-    # repeats its same-track predecessor, or the landing of a realized reroll that
-    # repeats the rerolled cat (a bounce, which rerolls again). Everything else stays
-    # a conditional cell other paths can trigger.
     rolls = roll_banner(1893568593, TWO_UNIT_RARE, 300)
     nominal = {(p.position, p.track): p.cat for p in rolls.pulls}
     static = {
@@ -219,10 +185,9 @@ def test_realized_rerolls_are_the_straight_chain_dupes_and_their_bounces():
     realized = {spot for spot, reroll in rerolls.items() if reroll.realized}
     assert static <= realized
     bounces = realized - static
-    assert bounces  # this seed does bounce
+    assert bounces
     for pos, track in bounces:
         index = 2 * (pos - 1) + (track == "B")
-        # some realized reroll lands exactly here holding this cell's nominal cat
         assert any(
             reroll.realized
             and 2 * (p - 1) + (t == "B") + 2 + reroll.steps == index
@@ -232,9 +197,6 @@ def test_realized_rerolls_are_the_straight_chain_dupes_and_their_bounces():
 
 
 def test_guaranteed_reroll_column_diverges_where_the_chains_do():
-    # A multi started on a dupe walks the reroll's chain (an extra step from the very
-    # first roll), so its final cell - and the awarded uber - can differ from a clean
-    # start's. The duped column covers every reroll cell rolled with a guarantee.
     dupey = banner(
         {Rarity.RARE: 9000, Rarity.UBER_SUPER_RARE: 1000},
         {
@@ -250,8 +212,6 @@ def test_guaranteed_reroll_column_diverges_where_the_chains_do():
 
 
 def test_guaranteed_chain_crosses_tracks_on_a_dupe():
-    # With rare dupes in play the chain switches tracks mid-follow, so the 11-roll column
-    # cannot be a plain same-track shift of the 1-roll column.
     dupey = banner(
         {Rarity.RARE: 9000, Rarity.UBER_SUPER_RARE: 1000},
         {
@@ -260,7 +220,7 @@ def test_guaranteed_chain_crosses_tracks_on_a_dupe():
         },
     )
     rolls = roll_banner(1893568593, dupey, 100, guaranteed_rolls=11)
-    assert rolls.rerolls  # dupes (and thus track switches) do occur on this seed
+    assert rolls.rerolls
     one = roll_banner(1893568593, dupey, 130, guaranteed_rolls=1)
     single = {(p.position, p.track): p.cat for p in one.guaranteed}
     assert any(pull.cat != single[(pull.position + 10, pull.track)] for pull in rolls.guaranteed)

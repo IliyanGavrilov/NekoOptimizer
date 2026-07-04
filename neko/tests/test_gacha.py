@@ -37,8 +37,6 @@ def test_match_is_case_insensitive():
 
 
 def test_step_up_name_without_the_flag_is_ordinary():
-    # The schedule flag is authoritative: a marketing name saying "Step Up" alone
-    # doesn't trigger the ladder rule.
     assert match_rule("Step Up Festival", rules()) == ELEVEN
 
 
@@ -61,8 +59,6 @@ def test_configs_skip_unmatched_events():
 
 
 def test_step_up_flag_picks_the_step_rule_regardless_of_name():
-    # In game a step-up event has NO ordinary 11-roll - the forced 3/5/7 ladder replaces
-    # it - and its marketing name rarely says "step up", so the schedule flag decides.
     row = scheduled("ev2", "Mighty Morta-Loncha, with Explosive attacks!", step_up=True)
     assert multi_configs([row], rules()) == {"ev2": STEP_UP}
 
@@ -73,8 +69,6 @@ def test_step_up_event_never_takes_the_ordinary_multis():
 
 
 def test_guaranteed_takes_precedence_over_step_up():
-    # godfat's pool.guaranteed_rolls checks guaranteed first, so a both-flagged event is
-    # an 11-roll guarantee, not a step-up ladder.
     row = scheduled("ev3", "Anything", guaranteed=True, step_up=True)
     assert multi_configs([row], rules()) == {"ev3": ELEVEN}
 
