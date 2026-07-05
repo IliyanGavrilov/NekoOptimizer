@@ -19,18 +19,19 @@ class Rarity(StrEnum):
 
 @dataclass(frozen=True, slots=True)
 class TrackPull:
-    """A pull outcome on track "A" or "B" at a 1-based position.
+    """A pull result on track "A" or "B" at a 1-based position.
 
-    ``seed`` is the RNG state after obtaining this pull: entering it as the input
-    seed makes the play chain's next cell the new 1A (what "apply plan" advances to,
-    and what a cell's dice jumps to). It is banner-independent for a nominal pull (a
-    clean roll consumes the same two stream values whatever the pool).
+    ``seed`` is the RNG state right after you get this pull. Feed it back in as the
+    input seed and the next cell in the play chain becomes the new 1A - that's what
+    "apply plan" jumps to, and what a cell's dice button jumps to. For a normal pull
+    it doesn't depend on the banner: a clean roll uses the same two stream values no
+    matter what's in the pool.
 
-    Reroll cells (a rare arriving as a dupe of the previous pull) also carry
-    ``steps``, the extra seed values the reroll consumed - the pull then continues
-    2 + steps stream positions on, flipping the track - and ``realized``, whether
-    the straight play chains actually hit this reroll (godfat renders exactly
-    those; the rest are conditional cells only other arrival paths can trigger)."""
+    Reroll cells (a rare that comes up as a dupe of the previous pull) also carry
+    ``steps``, the extra seed values the reroll used up - the pull then moves on
+    2 + steps positions instead of 2, flipping the track - and ``realized``, whether
+    the straight play chain actually hits this reroll. godfat only draws those; the
+    rest are "what if" cells that only some other arrival paths can trigger."""
 
     position: int
     track: str
@@ -45,9 +46,9 @@ class TrackPull:
 class BannerRolls:
     """A banner's normal pulls, its guaranteed-uber column, and its rare-dupe rerolls.
 
-    ``guaranteed_rerolls`` is the guaranteed column for multis whose FIRST roll
-    arrives as a dupe: the reroll jumps the chain, so the multi ends on a different
-    cell and can award a different uber than ``guaranteed`` at the same position."""
+    ``guaranteed_rerolls`` is the guaranteed column for multis whose FIRST roll comes
+    up as a dupe. The reroll jumps the chain, so the multi ends on a different cell and
+    can hand you a different uber than ``guaranteed`` does at the same position."""
 
     pulls: list[TrackPull]
     guaranteed: list[TrackPull]
@@ -74,7 +75,7 @@ class Banner:
 
 @dataclass(frozen=True, slots=True)
 class Pull:
-    """A single pull outcome. A guaranteed pull is the uber a guaranteed multi awards;
+    """A single pull result. A guaranteed pull is the uber a guaranteed multi gives you;
     its position is the multi's FIRST roll (where godfat's guaranteed column shows it)."""
 
     position: int
@@ -94,7 +95,7 @@ class State:
     found: frozenset[str]
     last_banner: str = ""  # banner of the previous pull, to count banner switches
     banner_pulls: frozenset[tuple[str, int]] = frozenset()  # pulls so far on capped banners
-    last_cat: str = ""  # what the previous pull obtained: a rare repeating it rerolls
+    last_cat: str = ""  # what the previous pull got: a rare that repeats it will reroll
 
 
 @dataclass(frozen=True, slots=True)

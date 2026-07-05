@@ -12,8 +12,8 @@ def stream_index(position: int, track: str) -> int:
 @dataclass(frozen=True, slots=True)
 class Outcome:
     """Result of pulling a banner at one stream position. ``seed`` is the RNG state
-    after the pull (the reroll's on a dupe) - what "apply plan" advances to when this
-    is the plan's final draw."""
+    after the pull (the reroll's seed on a dupe) - what "apply plan" jumps to when this
+    is the plan's last draw."""
 
     cat: str
     rarity: Rarity
@@ -23,12 +23,12 @@ class Outcome:
 
 
 class BannerGraph:
-    """A banner's pulls indexed by shared-seed position, with track switches resolved.
+    """A banner's pulls indexed by shared-seed position, with track switches worked out.
 
-    A rare cell's result depends on the path: repeating the cat obtained just before
-    it rerolls and jumps the track. ``resolve`` takes that previous cat; ``outcome``
-    is the static straight-chain view (the previous cat is the same-track
-    predecessor's nominal roll), which is what godfat renders."""
+    A rare cell's result depends on how you got there: if it repeats the cat you got
+    just before it, it rerolls and jumps the track. ``resolve`` takes that previous
+    cat. ``outcome`` is the plain straight-chain view (the previous cat is just the
+    same-track cell before it), which is what godfat draws."""
 
     def __init__(
         self,
@@ -47,11 +47,11 @@ class BannerGraph:
         self._rerolls: dict[int, TrackPull] = {
             stream_index(pull.position, pull.track): pull for pull in rerolls
         }
-        # Guaranteed columns are keyed by the multi's FIRST roll (godfat semantics): the
-        # uber awarded when a guaranteed multi STARTS here - one column for a clean
-        # arrival, one for a dupe arrival (the reroll's chain ends elsewhere). The true
-        # landing depends on the multi's length (the search walks the chain and lands
-        # one step past the final roll, track flipped), so next_position is a placeholder.
+        # Guaranteed columns are keyed by the multi's FIRST roll, like godfat: the uber
+        # you get when a guaranteed multi STARTS here - one column for a clean arrival,
+        # one for a dupe arrival (the reroll's chain ends somewhere else). The real
+        # landing depends on how long the multi is (the search walks the chain and lands
+        # one step past the last roll, track flipped), so next_position here is a stand-in.
         self._guaranteed: dict[int, Outcome] = self._column(guaranteed)
         self._guaranteed_rerolls: dict[int, Outcome] = self._column(guaranteed_rerolls)
 
@@ -69,9 +69,9 @@ class BannerGraph:
         }
 
     def resolve(self, position: int, last_cat: str = "") -> Outcome | None:
-        """The pull at ``position`` on a path whose previous pull obtained ``last_cat``:
-        a rare repeating it rerolls (the extra steps push the continue point past the
-        usual +2, flipping the track); anything else rolls the nominal cat."""
+        """The pull at ``position`` when the previous pull got ``last_cat``: a rare that
+        repeats it rerolls (the extra steps push where it continues from past the usual
+        +2, flipping the track); anything else just rolls the normal cat."""
         pull = self._pulls.get(position)
         if pull is None:
             return None
@@ -87,14 +87,14 @@ class BannerGraph:
         return Outcome(pull.cat, pull.rarity, position + 2, False, pull.seed)
 
     def outcome(self, position: int) -> Outcome | None:
-        """The static straight-chain view of ``position`` (godfat's grid)."""
+        """The plain straight-chain view of ``position`` (what godfat's grid shows)."""
         prev = self._pulls.get(position - 2)
 
         return self.resolve(position, prev.cat if prev else "")
 
     def reroll(self, position: int) -> Outcome | None:
-        """The conditional reroll at ``position``: what a dupe arrival there obtains,
-        whether or not the straight chain realizes it."""
+        """The maybe-reroll at ``position``: what you get if a dupe lands here, whether
+        or not the straight chain actually hits it."""
         reroll = self._rerolls.get(position)
         if reroll is None:
             return None
@@ -104,15 +104,15 @@ class BannerGraph:
         )
 
     def realized(self, position: int) -> bool:
-        """Whether the straight play chains actually hit the reroll at ``position``
-        (godfat renders exactly those R cells)."""
+        """Whether the straight play chain actually hits the reroll at ``position``
+        (godfat draws exactly those R cells)."""
         reroll = self._rerolls.get(position)
 
         return reroll is not None and reroll.realized
 
     def guaranteed(self, position: int, duped: bool = False) -> Outcome | None:
-        """The uber a guaranteed multi started at ``position`` awards; ``duped`` reads
-        the column for a start whose first roll arrives as a dupe."""
+        """The uber you get from a guaranteed multi started at ``position``; ``duped``
+        reads the column for a start whose first roll comes up as a dupe."""
         column = self._guaranteed_rerolls if duped else self._guaranteed
 
         return column.get(position)

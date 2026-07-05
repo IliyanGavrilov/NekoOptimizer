@@ -37,8 +37,8 @@ _WIKI_RARITY = {
 
 
 def wiki_url(name: str, rarity: str = "") -> str:
-    """The unit's Battle Cats Wiki (Miraheze) page URL; an unknown rarity falls back to
-    the bare, undisambiguated name."""
+    """The unit's Battle Cats Wiki (Miraheze) page URL; if the rarity is unknown it falls
+    back to just the name, with no rarity in brackets."""
     label = _WIKI_RARITY.get(rarity)
     title = f"{name} ({label})" if label else name
 
@@ -57,7 +57,7 @@ def capped_banner_limits(names: Iterable[str], cap: int) -> dict[str, int]:
 
 def fetch_banners(seed: int, count: int = DEFAULT_COUNT, last_cat: str = "") -> RollResult:
     """Roll the active banners for a seed locally (no godfat). ``last_cat`` is the pull
-    obtained just before this view (the dupe memory) - it can dupe a first cell."""
+    you got just before this view (the dupe memory) - it can dupe a first cell."""
     return roll_active(seed, count=count, last_cat=last_cat)
 
 
@@ -69,7 +69,7 @@ def fetch_catalogue() -> RollResult:
 def fetch_for_banners(
     seed: int, names: Iterable[str], count: int = DEFAULT_COUNT, last_cat: str = ""
 ) -> RollResult:
-    """Roll just the chosen banners for a seed locally. ``last_cat`` as in [fetch_banners]."""
+    """Roll just the chosen banners for a seed locally. ``last_cat`` works like in fetch_banners."""
     return roll_selected(seed, names, count=count, last_cat=last_cat)
 
 
@@ -181,11 +181,11 @@ def _series_pools(events, pools, series):
 def series_names(units, events=None, pools=None, series=None, tickets=None) -> dict[int, str]:
     """The official display name per series id, e.g. {1: 'The Dynamites'}.
 
-    Each Cat Guide set names its HOME series: the smallest pool carrying most of the
-    set's units - its own banner, not a fest/Platinum umbrella that also has them all.
-    Recurring fests get their [FEST_SERIES] name, ticket gachas (Platinum/Legend
-    Capsules) their ticket's; series the game data doesn't name (collabs) are absent,
-    so callers fall back to the run's marketing text."""
+    Each Cat Guide set names its HOME series: the smallest pool that carries most of the
+    set's units - the set's own banner, not a fest/Platinum umbrella that also happens to
+    have them all. Recurring fests get their FEST_SERIES name, ticket gachas
+    (Platinum/Legend Capsules) get their ticket's name; series the game data doesn't name
+    (collabs) aren't here, so callers fall back to the run's marketing text."""
     events = events if events is not None else load_events()
     pools = pools if pools is not None else load_pools()
     series = series if series is not None else load_series()
@@ -245,30 +245,30 @@ def _titled(names, titles):
 def set_sections(
     units: Iterable[Unit], events=None, pools=None, series=None
 ) -> list[tuple[str, list[tuple[str, list[Unit]]]]]:
-    """The by-gacha-set view: every gacha unit under its home set(s), subdivided by
-    rarity - ``[(set_label, [(rarity, [unit, ...]), ...]), ...]``.
+    """The by-gacha-set view: every gacha unit under its home set(s), split by rarity -
+    ``[(set_label, [(rarity, [unit, ...]), ...]), ...]``.
 
     A unit's home is its official Cat Guide set name (The Dynamites, Iron Legion, ...).
-    Units the guide doesn't place fall to the banner series that carries them - reruns
-    share a series id, so a returning set never repeats. A series whose pool's named
-    members mostly share one set (a set's own banner) counts as that set, so its unnamed
-    legend joins them; a mixed pool (fest/Platinum umbrella) never claims a home. What's
-    left homes to its smallest carrier's series, labelled by the latest run's text.
-    Units in more specific series than [_REGULAR_SERIES_LIMIT] are the shared pool that
-    leads the page: true regulars (carried near-everywhere) under [REGULARS_LABEL],
-    the rest - banner add-ons that fests skip - under [ADDONS_LABEL]. Units in no pool
-    (Normal/Special/story cats) are left to the rarity view.
+    Units the guide doesn't place fall back to the banner series that carries them -
+    reruns share a series id, so a returning set never shows up twice. A series whose
+    pool's named members mostly belong to one set (that set's own banner) counts as that
+    set, so its unnamed legend joins them; a mixed pool (a fest/Platinum umbrella) never
+    claims a home. Whatever's left homes to its smallest carrier's series, labelled by
+    the latest run's text. Units in more series than _REGULAR_SERIES_LIMIT are the shared
+    pool that leads the page: true regulars (carried almost everywhere) under
+    REGULARS_LABEL, the rest - banner add-ons that fests skip - under ADDONS_LABEL. Units
+    in no pool (Normal/Special/story cats) are left to the rarity view.
 
-    The recurring fests ([FEST_SERIES]) get their own sections, and unlike homes they
-    repeat units - it's the same cat everywhere, so its marks stay linked. A fest lists
-    its exclusives (umbrella-only units like Izanagi, on EVERY fest carrying them), any
-    set it (almost) wholly bundles - Superfest = Uberfest + Epicfest, Dynasty Fest = the
-    seasonal sets, Busterfest = the Busters - unless every fest carries that set anyway
-    (the classic sets), and the standard legends where it carries virtually all of them
-    (the legend-rate fests: Royalfest, the Milestone capsules).
+    The recurring fests (FEST_SERIES) get their own sections, and unlike homes they can
+    repeat units - it's the same cat everywhere, so its marks stay in sync. A fest lists
+    its exclusives (umbrella-only units like Izanagi, on EVERY fest that carries them),
+    any set it (almost) fully bundles - Superfest = Uberfest + Epicfest, Dynasty Fest =
+    the seasonal sets, Busterfest = the Busters - unless every fest carries that set
+    anyway (the classic sets), and the standard legends when it carries nearly all of
+    them (the legend-rate fests: Royalfest, the Milestone capsules).
 
-    After the regulars and add-ons, named sets and fests in dictionary order (lowest
-    unit id), then series groups, newest run first.
+    Order: regulars and add-ons first, then named sets and fests by dictionary order
+    (lowest unit id), then series groups, newest run first.
     """
     events = events if events is not None else load_events()
     pools = pools if pools is not None else load_pools()
@@ -373,10 +373,10 @@ def set_sections(
 
 
 def _effective_runs(events) -> list[tuple[GachaEventRow, date, date]]:
-    """Schedule runs with overlapping same-name reruns resolved: a rerun supersedes its
-    predecessor (permanent banners carry a 2030 sentinel end, so the Platinum Capsules'
-    April run really ends the day before the July rerun starts). Sorted by start;
-    ends are inclusive."""
+    """Schedule runs with overlapping same-name reruns sorted out: a rerun replaces the
+    one before it (permanent banners carry a placeholder 2030 end, so the Platinum
+    Capsules' April run really ends the day before the July rerun starts). Sorted by
+    start; ends are inclusive."""
     by_name: dict[str, list] = {}
     for event in events:
         by_name.setdefault(event.name, []).append(event)
@@ -394,14 +394,14 @@ def _effective_runs(events) -> list[tuple[GachaEventRow, date, date]]:
 def picker_groups(
     cats: Iterable[Cat], today: date | None = None, events=None, titles: Mapping[int, str] = ()
 ) -> list:
-    """The target picker's banner sections, one row per SCHEDULED RUN, godfat-style: every
+    """The target picker's banner sections, one row per SCHEDULED RUN, like godfat: every
     rerun of every gacha, past and future. A recurring name (Platinum/Legend Capsules,
-    reruns) gets a separate row per run, each with its own dates, so picking one names an
-    exact session. Cats are joined onto rows by banner name from the roll-derived
-    catalogue; only a name's newest past row carries them, so ~2000 historical rows stay
-    light (a brand-new banner shows without cats until imported).
+    reruns) gets its own row per run, each with its own dates, so picking one names an
+    exact session. Cats are matched onto rows by banner name from the roll-derived
+    catalogue; only a name's newest past row carries them, so the ~2000 old rows stay
+    light (a brand-new banner shows up without cats until it's imported).
 
-    ``titles`` maps a run's pool id to its set's display name ([banner_titles]); rows
+    ``titles`` maps a run's pool id to its set's display name (banner_titles); rows
     without one fall back to the run's marketing text. Returns
     ``[(label, [(name, title, (start, end), rarities)])]``."""
     today = today or date.today()
@@ -466,9 +466,9 @@ def picker_groups(
 
 
 def equivalent_banners(banners: Mapping[str, BannerRolls]) -> dict[str, list[str]]:
-    """Map each banner to every banner (itself included) with an identical roll
-    sequence. Same seed + same pool = same pulls, so those banners are
-    interchangeable for any plan rolled on them."""
+    """Map each banner to every banner (itself included) with the exact same roll
+    sequence. Same seed + same pool = same pulls, so those banners are swappable for any
+    plan rolled on them."""
     groups: dict[tuple, list[str]] = {}
     for name, rolls in banners.items():
         key = (tuple(rolls.pulls), tuple(rolls.guaranteed))
@@ -512,9 +512,9 @@ def _collection_marks(cat, rarity, owned, wanted):
 
 
 def _dupe_branch(outcome, obtained):
-    """A cell's "if dupe" line: the reroll a dupe arrival obtains, where it jumps, and
-    the seed just after it (its own dice). ``obtained`` - the cat the plan pulled at
-    this cell, if lit - puts the gold target pill on this branch when it collected it."""
+    """A cell's "if dupe" line: the reroll you get when a dupe lands here, where it jumps
+    to, and the seed just after it (its own dice). ``obtained`` - the cat the plan pulled
+    at this cell, if lit - puts the gold target pill on this branch when it collected it."""
     return {
         "cat": outcome.cat,
         "to": _pos_label(outcome.next_position),
@@ -526,11 +526,11 @@ def _dupe_branch(outcome, obtained):
 
 @dataclass(slots=True)
 class TrackMarks:
-    """Where a plan lights the track, each keyed by representative banner: the lit
-    stream indices (``path``), the cat obtained at each lit index (``targets`` - the
-    gold pill follows the branch actually pulled), and the indices another banner can
-    serve instead (``shared``, [plan_shared]); ``g*`` twins mark the guaranteed
-    columns. Defaults render an unhighlighted track (the browse view)."""
+    """Where a plan lights up the track, each keyed by its representative banner: the lit
+    stream indices (``path``), the cat you get at each lit index (``targets`` - the gold
+    pill follows the branch actually pulled), and the indices another banner can do
+    instead (``shared``, plan_shared); ``g*`` twins mark the guaranteed columns. Defaults
+    give an unhighlighted track (the browse view)."""
 
     path: dict[str, set[int]] = field(default_factory=dict)
     targets: dict[str, dict[int, str]] = field(default_factory=dict)
@@ -588,17 +588,17 @@ def build_tracks(
     titles=None,
 ):
     """One merged A/B table over every selected banner: each cell stacks each banner's
-    cat at that shared stream position (à la ubercarry), with rare-dupe switch arrows
+    cat at that shared stream position (like ubercarry), with rare-dupe switch arrows
     and the plan's path highlighted. Returns ``{"legend": [...], "rows": [...]}``.
 
-    ``marks`` ([TrackMarks]) is the plan's highlighting; omitted for the browse view.
-    ``owned``/``wanted`` are the cat names you already have / wishlisted, shown as the
+    ``marks`` (TrackMarks) is the plan's highlighting; leave it out for the browse view.
+    ``owned``/``wanted`` are the cat names you already have / wishlisted, shown with the
     same ✓ / ★ marks the picker uses (``new`` flags Uber/Legend cats missing from your
-    collection). ``guaranteed`` maps a banner to its guaranteed-uber
-    column (godfat's: the uber a guaranteed multi awards when STARTED on that cell);
-    banners without a guaranteed multi have none, and when no selected banner has any the
-    columns are omitted entirely (``has_guaranteed``). ``titles`` ([display_titles])
-    shortens the legend's banner names.
+    collection). ``guaranteed`` maps a banner to its guaranteed-uber column (godfat's:
+    the uber a guaranteed multi gives you when STARTED on that cell); banners without a
+    guaranteed multi have none, and when no selected banner has any, the columns are left
+    out entirely (``has_guaranteed``). ``titles`` (display_titles) shortens the legend's
+    banner names.
     """
     marks = marks or TrackMarks()
     owned = owned or set()
@@ -624,11 +624,11 @@ def build_tracks(
             rarity = str(tp.rarity)
             on_path = index in marks.path.get(group["rep"], ())
 
-            # Every cell reads nominal-first: the cat a clean arrival rolls. Its dupe
-            # branch - a rare repeating the previous pull rerolls and jumps tracks -
-            # renders beneath as one uniform "if dupe" line, whether the straight chain
-            # takes it (a static dupe, `switch`), only a bounce path does (godfat's
-            # extra R cells), or the remembered last pull dupes the very first cell.
+            # Every cell shows the clean roll first: the cat you get if you arrive
+            # cleanly. Its dupe branch - a rare that repeats the previous pull rerolls
+            # and jumps tracks - shows underneath as one "if dupe" line, whether the
+            # straight chain takes it (a static dupe, `switch`), only a bounce path does
+            # (godfat's extra R cells), or the remembered last pull dupes the first cell.
             branch = None
             if switched:
                 branch = outcome
@@ -637,9 +637,9 @@ def build_tracks(
                 if reroll is not None and reroll.cat:
                     branch = reroll
 
-            # The cat the plan obtained here, if lit: the gold pill follows the branch
-            # the plan actually pulls (a dupe-collected target lights the "if dupe"
-            # name, not the nominal one).
+            # The cat the plan got here, if lit: the gold pill follows the branch the
+            # plan actually pulls (a dupe-collected target lights the "if dupe" name,
+            # not the clean one).
             obtained = marks.targets.get(group["rep"], {}).get(index)
             cells.append(
                 {
@@ -658,11 +658,11 @@ def build_tracks(
         return cells
 
     def cell_seed(index):
-        # The cell's docked dice: "I rolled this cell" - the state just after its
-        # nominal pull, so the next cell becomes the new 1A. Banner-independent (a
-        # clean roll consumes the same two stream values whatever the pool), so one
-        # dice serves the whole cell - read it off any banner rolled there. The dupe
-        # branch's differing state lives on the branch dice.
+        # The cell's docked dice: "I rolled this cell" - the state just after its normal
+        # pull, so the next cell becomes the new 1A. It doesn't depend on the banner (a
+        # clean roll uses the same two stream values whatever the pool), so one dice
+        # serves the whole cell - read it off any banner rolled there. The dupe branch's
+        # different state lives on the branch dice.
         for group in groups:
             tp = group["grid"].get(index)
             if tp is not None:
@@ -671,8 +671,8 @@ def build_tracks(
         return 0
 
     def cell_cat(index):
-        # What the docked dice obtained, feeding the dupe memory - only knowable when
-        # every banner stacked in the cell rolls the same name there.
+        # What the docked dice got, feeding the dupe memory - we only know it when every
+        # banner stacked in the cell rolls the same name there.
         names = {g["grid"][index].cat for g in groups if index in g["grid"]}
 
         return names.pop() if len(names) == 1 else ""
@@ -730,10 +730,10 @@ def build_tracks(
 
 
 def plan_highlight(option, equivalents):
-    """The plan's [TrackMarks]: a normal pull lights its track cell, a guaranteed pull
-    the guaranteed COLUMN at the multi's first roll (where godfat shows the awarded
-    uber). The interchangeable-banner marks (``shared``/``gshared``, [plan_shared])
-    are left empty for the caller to fill."""
+    """The plan's TrackMarks: a normal pull lights its track cell, a guaranteed pull the
+    guaranteed COLUMN at the multi's first roll (where godfat shows the uber you get). The
+    swappable-banner marks (``shared``/``gshared``, plan_shared) are left empty for the
+    caller to fill in."""
     marks = TrackMarks()
     for pull in option.plan.pulls:
         rep = _representative(pull.banner_id, equivalents)
@@ -748,12 +748,11 @@ def plan_highlight(option, equivalents):
 
 
 def _move_walk(graph, move, last):
-    """Replay one plan move on ``graph``, threading the previously obtained cat
-    ``last`` the way the search walked it: a rare repeating it rerolls, and a
-    guaranteed multi whose first roll arrives as a dupe awards the duped column's
-    uber. Returns (outcomes aligned with move.pulls, the cat obtained after the
-    move), or None when the walk runs off the rolled window or the guaranteed
-    column is missing."""
+    """Replay one plan move on ``graph``, carrying the cat you got last (``last``) the
+    same way the search walked it: a rare that repeats it rerolls, and a guaranteed multi
+    whose first roll comes up as a dupe gives the duped column's uber. Returns (outcomes
+    lined up with move.pulls, the cat you have after the move), or None when the walk runs
+    off the end of the rolled window or the guaranteed column is missing."""
     first = graph.resolve(move.pulls[0].position, last)
     if first is None:
         return None
@@ -774,11 +773,11 @@ def _move_walk(graph, move, last):
 
 
 def _serves_move(other, other_names, own_outcomes, move, targets, multis, last):
-    """The cat banner ``other`` would leave as "last obtained" after rolling this whole
-    move, or None when the move doesn't fit there: the multi must be on offer at the
-    same size and price, every pull must keep the original walk's continue point (a
-    dupe on one side steps differently), and a pull that collects a target must still
-    yield that exact cat - a filler pull may yield a different one."""
+    """The cat banner ``other`` would end up holding after rolling this whole move, or
+    None when the move doesn't fit there: the multi must be on offer at the same size and
+    price, every pull must land where the original walk did (a dupe on one side steps
+    differently), and a pull that collects a target must still give that exact cat - a
+    filler pull is allowed to give a different one."""
     if move.kind != "Single pull":
         guaranteed = any(pull.guaranteed for pull in move.pulls)
         offered = (m for name in other_names for m in multis.get(name, ()))
@@ -804,22 +803,22 @@ def _serves_move(other, other_names, own_outcomes, move, targets, multis, last):
 
 def plan_shared(option, graphs, equivalents, multis=None, exclude=()):
     """Which OTHER selected banners each of a plan's moves can be rolled on without
-    derailing it - the interchangeable steps. Finer than [equivalent_banners]: only
-    the pulls the plan actually makes must line up, not the whole rolled window, and
-    a filler pull only has to keep the walk (the cat there may differ); a pull that
-    collects a target must still yield it.
+    breaking the plan - the swappable steps. Stricter than equivalent_banners in one way
+    and looser in another: only the pulls the plan actually makes have to line up, not
+    the whole rolled window, and a filler pull just has to keep the same walk (the cat
+    there can differ); but a pull that collects a target still has to give that cat.
 
-    A move is one in-game action: a single pull matches where the walk holds; a
-    multi needs its whole chain to walk alike and the same multi on offer at the same
-    price. The plan's walk is replayed path-aware ([_move_walk]): the cat obtained
-    before each move decides its dupes. A swapped move that ends on a different
-    filler cat is only shared when the plan's NEXT pull still resolves identically -
-    a dupe triggered on one side only would derail everything after it. Banners
-    named in ``exclude`` (the capped Platinum/Legend gachas - they run on their own
-    scarce tickets, a different price altogether) never count.
+    A move is one in-game action: a single pull matches where the walk holds; a multi
+    needs its whole chain to walk the same way and the same multi on offer at the same
+    price. The plan's walk is replayed path-aware (_move_walk): the cat you got before
+    each move decides its dupes. A swapped move that ends on a different filler cat is
+    only shared when the plan's NEXT pull still comes out the same - a dupe that fires on
+    one side only would break everything after it. Banners named in ``exclude`` (the
+    capped Platinum/Legend gachas - they run on their own scarce tickets, a totally
+    different price) never count.
 
-    Returns ``(shared, gshared)``: the stream indices to mark, per other
-    representative banner - normal cells and guaranteed columns."""
+    Returns ``(shared, gshared)``: the stream indices to mark, per other representative
+    banner - normal cells and guaranteed columns."""
     multis = multis or {}
     by_name = {graph.banner_id: graph for graph in graphs}
 
@@ -866,12 +865,12 @@ def plan_shared(option, graphs, equivalents, multis=None, exclude=()):
 
 
 def plan_seed(plan, graphs):
-    """The RNG state after a plan's final draw - what the seed becomes once the plan is
-    actually rolled ("apply plan" advances to it). The plan records its whole walk, so
-    the final pull resolves against the cat obtained just before it: a dupe - even one
-    only this path triggers - lands on its reroll's seed, and a guaranteed multi whose
-    first roll arrived duped reads the duped column's. The recorded cat arbitrates
-    when the graph's data can't say (a plan replayed without its history)."""
+    """The RNG state after a plan's last draw - what the seed becomes once the plan is
+    actually rolled ("apply plan" jumps to it). The plan records its whole walk, so the
+    last pull is worked out from the cat you got just before it: a dupe - even one only
+    this path triggers - lands on its reroll's seed, and a guaranteed multi whose first
+    roll came up duped reads the duped column's. The recorded cat decides it when the
+    graph's data can't say on its own (a plan replayed without its history)."""
     if not plan.pulls:
         return None
 
@@ -882,7 +881,7 @@ def plan_seed(plan, graphs):
 
     if last.guaranteed:
         # The multi started duped iff its first roll (the recorded pull at the same
-        # position) obtained the reroll rather than the nominal cat.
+        # position) got the reroll rather than the clean cat.
         inner = next(
             (
                 p
@@ -911,7 +910,7 @@ def plan_seed(plan, graphs):
 def plan_summary(plans, equivalents, owned=None, wanted=None, titles=None):
     """Per-option summary: targets, cost, and per-banner-leg rolls + cat sequence.
     Each cat carries the same marks as its track cell (target / owned / wanted / new).
-    ``titles`` ([display_titles]) shortens the leg headers' banner names."""
+    ``titles`` (display_titles) shortens the leg headers' banner names."""
     owned = owned or set()
     wanted = wanted or set()
     titles = titles or {}
@@ -971,8 +970,8 @@ _WISHLIST_BEAM_WIDTH = 200
 
 
 def _missing_subsets(items, found_keys):
-    """Every non-found subset of ``items``, biggest first. Exponential in ``items`` -
-    callers keep it under [SUBSET_TARGET_LIMIT]."""
+    """Every not-yet-found subset of ``items``, biggest first. Exponential in ``items`` -
+    callers keep it under SUBSET_TARGET_LIMIT."""
     return [
         sorted(combo)
         for size in range(len(items), 0, -1)
@@ -982,9 +981,10 @@ def _missing_subsets(items, found_keys):
 
 
 def _wishlist_plans(graphs, wanted, start, multis, ticket_value, banner_limits):
-    """Bounded plans when even the obtainable targets are too many to enumerate: the
-    whole set in one beam search (fast, not guaranteed optimal) plus each target alone,
-    exactly. Linear in the wishlist where the full breakdown is exponential."""
+    """Bounded plans for when even the obtainable targets are too many to list out one by
+    one: the whole set in a single beam search (fast, not guaranteed optimal) plus each
+    target on its own, exactly. Linear in the wishlist where the full breakdown would be
+    exponential."""
     found = []
     full = beam_search(
         graphs,
@@ -1016,13 +1016,13 @@ def _wishlist_plans(graphs, wanted, start, multis, ticket_value, banner_limits):
 
 
 def _subset_plans(graphs, targets, start, multis, ticket_value, banner_limits):
-    """The plan rows behind [subset_solutions]: ``(found plans, missing target-lists)``.
+    """The plan rows behind subset_solutions: ``(found plans, missing target-lists)``.
 
-    Up to [SUBSET_TARGET_LIMIT] targets get the exact per-subset breakdown. Past that
-    the subset space is unenumerable (a 100-cat wishlist is 2^100 rows), so it narrows
-    to the targets obtainable in the selected banners - still per-subset when few, else
-    the bounded whole-set + per-cat view ([_wishlist_plans]) - and every unobtainable
-    target goes straight to missing."""
+    Up to SUBSET_TARGET_LIMIT targets get the exact per-subset breakdown. Past that there
+    are too many subsets to list (a 100-cat wishlist is 2^100 rows), so it narrows down to
+    the targets you can actually get on the selected banners - still per-subset when there
+    are few, otherwise the bounded whole-set + per-cat view (_wishlist_plans) - and every
+    target you can't get goes straight to missing."""
     search = dict(multis=multis, ticket_value=ticket_value, banner_limits=banner_limits)
     items = sorted(set(targets))
 
@@ -1067,9 +1067,9 @@ def subset_solutions(
     unreachable subsets listed after. Reachable ones carry the steps + highlighted track
     to render on demand; unreachable ones are flagged so the UI can say "Not found".
 
-    ``last_cat`` is the pull obtained just before this view (the dupe memory): the
-    search's first roll on a cell repeating it arrives as a dupe. The subset/plan
-    breakdown itself is [_subset_plans]."""
+    ``last_cat`` is the pull you got just before this view (the dupe memory): if the
+    search's first roll lands on a cell that repeats it, it comes up as a dupe. The
+    subset/plan breakdown itself is _subset_plans."""
     graphs = build_graphs(pulls, guaranteed_pulls, rerolls, guaranteed_rerolls)
     start = State(0, tickets, catfood // CATFOOD_PER_DRAW, frozenset(), last_cat=last_cat)
     found, missing = _subset_plans(graphs, targets, start, multis, ticket_value, banner_limits)
@@ -1129,9 +1129,10 @@ def import_units(records: Iterable[Mapping]) -> int:
 
 
 def reconcile_provisional_units() -> tuple[int, list[str]]:
-    """Fold each provisional unit into its now-canonical namesake: move its cats and
-    owned/wishlist flags onto the canonical unit, then delete the stand-in. Returns the count
-    merged and the names of any provisionals with no canonical match yet (left in place)."""
+    """Merge each provisional unit into its now-canonical version by the same name: move
+    its cats and owned/wishlist flags onto the canonical unit, then delete the stand-in.
+    Returns how many were merged and the names of any provisionals that still have no
+    canonical match (left in place)."""
     merged = 0
     orphaned = []
 
