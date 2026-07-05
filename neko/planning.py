@@ -18,12 +18,12 @@ def plan(
     rerolls: Mapping[str, Iterable[TrackPull]] | None = None,
     guaranteed_rerolls: Mapping[str, Iterable[TrackPull]] | None = None,
 ) -> list[SubsetPlan]:
-    """Best plan for the wishlist. Returns the single full plan if reachable,
-    else the per-subset fallback breakdown (biggest-then-cheapest).
+    """Best plan for the wishlist. Returns the one full plan if it's reachable, else
+    the per-subset breakdown to fall back on (biggest first, then cheapest).
 
-    Pass guaranteed_pulls (the guaranteed-column outcomes per banner) and multis
-    (each banner's multi-roll options) to also consider multi-rolls. ticket_value
-    prices a rare ticket in catfood (tickets are spent first unless dearer)."""
+    Pass guaranteed_pulls (each banner's guaranteed-column results) and multis (each
+    banner's multi-roll options) to let it use multi-rolls too. ticket_value is what a
+    rare ticket is worth in catfood (tickets get spent first unless they're pricier)."""
     targets = frozenset(targets)
     start = State(0, tickets, catfood // CATFOOD_PER_DRAW, frozenset())
     graphs = build_graphs(pulls_by_banner, guaranteed_pulls, rerolls, guaranteed_rerolls)
