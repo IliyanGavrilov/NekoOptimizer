@@ -29,7 +29,7 @@ def planner(request):
     """The planner shell: the form plus empty hosts that JS fills with tracks/plan.
 
     The Past picker group is ~2000 per-run rows (nearly all of the page's bytes and
-    render time), so it ships as a count only; JS fetches [picker_past] on first open.
+    render time), so it ships as a count only; JS fetches picker_past on first open.
     """
     # select_related("unit"): the owned/wanted chip marks read cat.unit, one query per
     # chip otherwise.
@@ -71,8 +71,8 @@ def _roll(seed, chosen_banners, count, last_cat=""):
 
 
 def _rolls_by_banner(result):
-    """A roll result split into the per-banner maps [build_tracks] and
-    [subset_solutions] take: (pulls, guaranteed, rerolls, guaranteed_rerolls)."""
+    """A roll result split into the per-banner maps build_tracks and subset_solutions
+    take: (pulls, guaranteed, rerolls, guaranteed_rerolls)."""
     banners = result.banners
 
     return (
@@ -97,8 +97,8 @@ def _wanted_names():
 def tracks(request):
     """A/B track tables for the current seed + banners, before any plan is run.
 
-    ``last_cat`` is the dupe memory: the cat the previous pull obtained (a dice jump,
-    an applied plan, or a revisited seed) - it can dupe the very first cell."""
+    ``last_cat`` is the dupe memory: the cat the previous pull got (a dice jump, an
+    applied plan, or a seed you came back to) - it can dupe the very first cell."""
     try:
         seed = int(request.POST.get("seed", ""))
     except ValueError:
@@ -217,7 +217,7 @@ def collection(request):
 
 @require_POST
 def apply_plan(request):
-    """Mark a plan's obtained cats as owned and drop them from the wishlist. Applying
+    """Mark the cats a plan gets you as owned and drop them from the wishlist. Applying
     means "you rolled it", so the plan's seed-after becomes the stored seed."""
     names = request.POST.getlist("cats")
     applied = Unit.objects.filter(name__in=names).update(owned=True, wanted=False)
@@ -225,7 +225,7 @@ def apply_plan(request):
     try:
         Seed.store(int(request.POST["seed_after"]))
     except KeyError, ValueError:
-        pass  # a plan whose seed-after ran off the rolled grid doesn't advance the seed
+        pass
 
     return JsonResponse({"applied": applied})
 

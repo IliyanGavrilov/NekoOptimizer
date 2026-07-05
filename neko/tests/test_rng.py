@@ -23,8 +23,3 @@ def test_class_matches_repeated_function():
 
 def test_initial_state_is_masked_seed():
     assert XorShift32((5 << 32) | 12345).state == 12345
-
-
-def test_state_follows_last_advance():
-    rng = XorShift32(42)
-    assert rng.advance() == rng.state

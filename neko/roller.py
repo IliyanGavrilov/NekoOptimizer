@@ -63,9 +63,9 @@ def _current_run(runs: list[GachaEventRow], today: date) -> GachaEventRow | None
 def select_events(
     events: Iterable[GachaEventRow], selections: Iterable[str], today: date | None = None
 ) -> list[GachaEventRow]:
-    """Resolve picker selections to concrete runs. "YYYY-MM-DD|name" pins the run of
-    ``name`` starting that day (the picker posts per-run rows); a bare name resolves via
-    [_current_run]. Unknown selections are dropped."""
+    """Turn picker selections into concrete runs. "YYYY-MM-DD|name" pins the run of
+    ``name`` starting that day (the picker posts one row per run); a bare name is
+    resolved by _current_run. Selections we don't recognise are dropped."""
     today = today or date.today()
 
     by_name: dict[str, list[GachaEventRow]] = {}
@@ -105,9 +105,9 @@ def _guaranteed_rolls(event: GachaEventRow) -> int:
 
 
 def _event_multis(multis: tuple[Multi, ...], guaranteed_rolls: int) -> tuple[Multi, ...]:
-    """The config's multis adjusted to the event: a multi only awards the guaranteed uber
-    when the event actually runs a guarantee of that length (the config matches by name
-    and can't know)."""
+    """The config's multis adjusted for the event: a multi only gives the guaranteed uber
+    when the event actually runs a guarantee of that length (the config matches by name,
+    so it can't know on its own)."""
     return tuple(
         m if not m.guaranteed or m.rolls == guaranteed_rolls else Multi(m.rolls, m.cost, False)
         for m in multis
@@ -176,7 +176,7 @@ def roll_active(
     last_cat: str = "",
 ) -> RollResult:
     """Roll the banners active on ``today`` (defaults to the real date). ``last_cat`` is
-    the pull obtained just before this view - it can dupe each banner's first cell."""
+    the pull you got just before this view - it can dupe each banner's first cell."""
     events, pools, units, rules = _load(events, pools, units, rules)
 
     return _roll_events(seed, active_events(events, today), pools, units, count, rules, last_cat)
@@ -194,8 +194,8 @@ def roll_selected(
     rules: Iterable[GachaRule] | None = None,
     last_cat: str = "",
 ) -> RollResult:
-    """Roll the selected banners: each "start|name" its pinned run, each bare name its
-    current run (see [select_events]). ``last_cat`` as in [roll_active]."""
+    """Roll the selected banners: each "start|name" is its pinned run, each bare name its
+    current run (see select_events). ``last_cat`` works as in roll_active."""
     events, pools, units, rules = _load(events, pools, units, rules)
     chosen = select_events(events, names, today)
 

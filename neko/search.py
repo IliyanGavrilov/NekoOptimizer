@@ -20,11 +20,11 @@ class Multi:
 
 
 def _occurrences(graphs: Iterable[BannerGraph], targets: frozenset[str]) -> dict[str, list[int]]:
-    # A target counts wherever SOME path can obtain it: a cell's nominal roll, its
-    # conditional reroll (a dupe arrival really obtains that cat), and the guaranteed
-    # columns for both kinds of start - a guaranteed multi can obtain a target that
-    # never appears as a normal roll, and its spot is where the multi must START.
-    # Extra spots only weaken the lower bound; missing ones would break admissibility.
+    # A target counts wherever SOME path can get it: a cell's normal roll, its
+    # maybe-reroll (a dupe landing here really does give that cat), and the guaranteed
+    # columns for both kinds of start - a guaranteed multi can give a target that never
+    # shows up as a normal roll, and its spot is where the multi has to START. Extra
+    # spots only weaken the lower bound; missing ones would break admissibility.
     spots: dict[str, list[int]] = {target: [] for target in targets}
     for graph in graphs:
         for position in graph.positions():
@@ -49,10 +49,10 @@ def _occurrences(graphs: Iterable[BannerGraph], targets: frozenset[str]) -> dict
 
 
 def obtainable(graphs: Iterable[BannerGraph], targets: Iterable[str]) -> frozenset[str]:
-    """The targets that occur anywhere in the graphs - as a nominal roll, a conditional
-    reroll, or a guaranteed-column uber. A target with no occurrence can never be
-    collected whatever the budget, so callers can drop it before searching: every such
-    target DOUBLES a subset enumeration without ever contributing a plan."""
+    """The targets that show up anywhere in the graphs - as a normal roll, a maybe-reroll,
+    or a guaranteed-column uber. A target that shows up nowhere can never be collected no
+    matter the budget, so callers can drop it before searching: every one of them DOUBLES
+    the number of subsets to try without ever giving a plan."""
     graphs = list(graphs)
     spots = _occurrences(graphs, frozenset(targets))
 
@@ -62,8 +62,8 @@ def obtainable(graphs: Iterable[BannerGraph], targets: Iterable[str]) -> frozens
 def _all_occur_ahead(
     occurrences: dict[str, list[int]], targets: frozenset[str], position: int
 ) -> bool:
-    """Does every target still occur at or past ``position``? The cheap necessary
-    condition for collectability - a target with no spot ahead is a plain "no"."""
+    """Does every target still show up at or past ``position``? A quick check to run
+    before the real one - if a target has no spot ahead, it's a plain "no"."""
     return all(
         bisect_left(occurrences[target], position) < len(occurrences[target]) for target in targets
     )
@@ -85,8 +85,8 @@ def _multi_landing(graph: BannerGraph, position: int, rolls: int, last_cat: str 
 
 
 def _canon_last(graphs: Iterable[BannerGraph], position: int, last_cat: str) -> str:
-    """The previously obtained cat only matters where the next roll could repeat it;
-    dropping it everywhere else lets converging search paths share one state."""
+    """The cat we got last only matters where the next roll could repeat it; dropping it
+    everywhere else lets search paths that meet up share one state."""
     if not last_cat:
         return ""
 
@@ -112,16 +112,16 @@ def _collectable(
     last_cat: str = "",
     occurrences: dict[str, list[int]] | None = None,
 ) -> bool:
-    """Ignoring budget, can every target still be collected from ``position``? BFS over
-    (position, last cat, found) using the graphs' real step structure - rare-dupe
-    rerolls force extra steps, so a spot's parity can make it genuinely unreachable, and
-    the full search would only prove that after exhausting every budget split of the
-    whole state space. Guaranteed multis are modelled with their real landing so their
-    off-parity continue points stay reachable.
+    """Forget the budget for a moment - can every target still be collected from
+    ``position``? A BFS over (position, last cat, found) that uses the graphs' real
+    step structure. Rare-dupe rerolls add extra steps, so a spot's parity can make it
+    actually unreachable, and the full search would only find that out after trying
+    every budget split of the whole state space. Guaranteed multis use their real
+    landing here so their off-parity continue points stay reachable.
 
-    Pass ``occurrences`` (each target's obtain spots, as [_occurrences] returns them)
-    to reuse the caller's; a target with no spot at or past ``position`` is a plain
-    "no" without any BFS."""
+    Pass ``occurrences`` (each target's spots, the way _occurrences returns them) to
+    reuse the caller's; a target with no spot at or past ``position`` is a plain "no"
+    without running any BFS."""
     if not targets:
         return True
 
@@ -134,10 +134,10 @@ def _collectable(
         for banner_id, ms in (multis or {}).items()
     }
     start = (position, _canon_last(graphs, position, last_cat))
-    # Per (position, last cat), only the maximal found-sets: a path arriving with a
-    # subset of another's finds can do nothing the other can't (moves depend only on
-    # position and last cat, and found only grows), so the whole 2^targets lattice
-    # never needs walking. Without this the BFS itself explodes past ~8 targets.
+    # Per (position, last cat), keep only the biggest found-sets: a path that arrives
+    # with a subset of another path's finds can't do anything the other can't (moves
+    # depend only on position and last cat, and found only grows), so we never have to
+    # walk all 2^targets found-sets. Without this the BFS itself explodes past ~8 targets.
     seen: dict[tuple[int, str], list[frozenset[str]]] = {start: [frozenset()]}
     frontier = [(*start, frozenset())]
 
@@ -177,8 +177,8 @@ def _collectable(
 
 
 def _multi_floor(multis: Mapping[str, Sequence[Multi]] | None) -> float:
-    """The cheapest per-pull catfood any multi achieves (INF when there are none) -
-    the floor a multi-using plan can undercut single-pull prices to."""
+    """The cheapest per-pull catfood any multi gets you (INF when there are none) - the
+    floor a plan using multis can push single-pull prices down to."""
     return min((m.cost / m.rolls for ms in (multis or {}).values() for m in ms), default=INF)
 
 
@@ -191,9 +191,9 @@ def _heuristic(
     multi_floor: float = INF,
     advance: int = 3,
 ) -> float:
-    # Lower-bound the pulls to the farthest still-needed target: each pull advances the
-    # position by at most `advance` (+2 nominal, +2+steps on the banners' worst reroll),
-    # so reaching a target d away costs at least d // advance + 1 pulls.
+    # Put a floor on how many pulls it takes to reach the farthest target we still need:
+    # each pull moves the position by at most `advance` (+2 normally, +2+steps on the
+    # banners' worst reroll), so a target d away is at least d // advance + 1 pulls.
     worst = 0
     for cat in remaining:
         spots = occurrences[cat]
@@ -206,9 +206,9 @@ def _heuristic(
     if worst == 0:
         return 0.0
 
-    # The cheapest any pull can be: a multi's per-roll price when that undercuts a full
-    # draw, and for up to tickets_left of them a ticket priced at min(value, draw).
-    # Capping the ticket price keeps this a true lower bound even when tickets are dear.
+    # The cheapest any pull can be: a multi's per-roll price when that beats a full draw,
+    # and for up to tickets_left of them a ticket priced at min(value, draw). Capping the
+    # ticket price keeps this a true lower bound even when tickets are expensive.
     floor = min(CATFOOD_PER_DRAW, multi_floor)
     cheapest = min(ticket_value, floor)
     ticketed = min(worst, tickets_left)
@@ -297,11 +297,11 @@ def _pull_variants(
     can_ticket = state.tickets_left > 0
     can_catfood = state.catfood_draws > 0
 
-    # Funding order never changes a finished plan's totals (a single costs one ticket or
-    # one draw whenever it happens, and budgets only shrink), and hoarding catfood can
-    # only help later multis - so when tickets aren't dearer than a draw, spend them
-    # first and don't fork the search into every ticket/catfood split (which explodes
-    # the state space). Dearer tickets really trade off against future multis, so those
+    # The order you pay in never changes a finished plan's totals (a single costs one
+    # ticket or one draw whenever it happens, and budgets only shrink), and saving catfood
+    # only helps later multis - so when a ticket isn't pricier than a draw, spend tickets
+    # first and don't split the search into every ticket/catfood combo (that blows up the
+    # state space). Pricier tickets really do trade off against future multis, so those
     # keep both branches.
     if can_ticket and can_catfood and ticket_value <= CATFOOD_PER_DRAW:
         can_catfood = False
@@ -336,11 +336,11 @@ def _pull_variants(
 def _multi_move(
     state: State, graph: BannerGraph, multi: Multi, targets: frozenset[str], limit: int | None
 ):
-    # `rolls` normal pulls (the last swapped for the guaranteed uber if guaranteed),
+    # `rolls` normal pulls (the last one swapped for the guaranteed uber if guaranteed),
     # for a fixed catfood cost. The guaranteed uber is the column value at the multi's
-    # FIRST roll (godfat semantics) - the duped column when the first roll arrives as a
+    # FIRST roll (godfat's rule) - the duped column when the first roll comes up as a
     # dupe, since the reroll's chain ends on a different cell; the multi then continues
-    # one half-step past where the swapped final roll would have been, flipping the track.
+    # one half-step past where the swapped last roll would have been, flipping the track.
     draws = multi.cost // CATFOOD_PER_DRAW
     if state.catfood_draws < draws:
         return None
@@ -417,11 +417,12 @@ def _candidate_moves(state, graph, targets, multis, banner_limits, ticket_value)
 
 
 def _step_cost(state: State, nxt: State, leg: Leg, ticket_value: int):
-    """Lexicographic cost of one move: (catfood-equivalent, switches, catfood spent).
+    """Cost of one move, compared field by field: (catfood-equivalent, switches, catfood
+    spent).
 
-    Tickets and catfood are folded into one number via ticket_value; remaining ties go
-    to the plan spending less catfood (tickets only fund singles, catfood also funds
-    multis, so catfood is the resource worth keeping)."""
+    Tickets and catfood get combined into one number via ticket_value; when that ties,
+    the plan spending less catfood wins (tickets only pay for singles, catfood also pays
+    for multis, so catfood is the resource worth holding on to)."""
     tickets = state.tickets_left - nxt.tickets_left
     catfood = (state.catfood_draws - nxt.catfood_draws) * CATFOOD_PER_DRAW
     equivalent = catfood + tickets * ticket_value
@@ -440,10 +441,10 @@ def astar(
 ) -> Path | None:
     """Cheapest pull plan collecting all targets, or None. A* over states.
 
-    Pass upper_bound (e.g. a beam-search cost) to prune branches that cannot beat it.
-    Pass multis to also consider each banner's multi-roll options. ticket_value prices a
-    rare ticket in catfood: tickets are spent first unless dearer than a draw.
-    banner_limits caps the total pulls allowed on a banner (0 excludes it entirely).
+    Pass upper_bound (e.g. a beam-search cost) to cut off branches that can't beat it.
+    Pass multis to let it use each banner's multi-roll options too. ticket_value is what
+    a rare ticket is worth in catfood: tickets get spent first unless they cost more than
+    a draw. banner_limits caps the total pulls allowed on a banner (0 leaves it out).
     """
     graphs = list(graphs)
     targets = frozenset(targets)
@@ -455,8 +456,9 @@ def astar(
 
     floor = _multi_floor(multis)
     advance = max((graph.max_advance() for graph in graphs), default=3)
-    # Lexicographic g (catfood-equivalent, switches, catfood spent): cheapest first,
-    # then fewest banner switches, then the least catfood (it also funds multis).
+    # g is a 3-tuple compared field by field (catfood-equivalent, switches, catfood
+    # spent): cheapest first, then fewest banner switches, then least catfood (catfood
+    # also pays for multis, so it's worth keeping).
     g_score: dict[State, tuple[int, int, int]] = {start: (0, 0, 0)}
     came_from: dict[State, tuple] = {}
     counter = count()
@@ -507,16 +509,16 @@ def beam_search(
         return _reconstruct(start, {}, start)
 
     occurrences = _occurrences(graphs, targets)
-    # Only the cheap "does every target still occur ahead" guard here, not the exact
-    # reachability BFS: the frontier is width-capped, so an uncollectable target set
-    # just runs off the rolled window and returns None anyway - the exact pre-check
-    # can cost more than the whole beam.
+    # Only the cheap "does every target still show up ahead" check here, not the full
+    # reachability BFS: the frontier is width-capped, so a target set that can't be
+    # collected just runs off the end of the rolled window and returns None anyway - the
+    # full pre-check can cost more than the whole beam search.
     if not _all_occur_ahead(occurrences, targets - start.found, start.position):
         return None
 
     floor = _multi_floor(multis)
     advance = max((graph.max_advance() for graph in graphs), default=3)
-    # Lexicographic g (catfood-equivalent, switches, catfood spent); see astar.
+    # g compared field by field (catfood-equivalent, switches, catfood spent); see astar.
     best_cost: dict[State, tuple[int, int, int]] = {start: (0, 0, 0)}
     came_from: dict[State, tuple] = {}
     best_goal: State | None = None

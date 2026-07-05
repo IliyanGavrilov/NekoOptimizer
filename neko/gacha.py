@@ -11,9 +11,9 @@ _CONFIG_PATH = Path(__file__).parent / "data" / "gacha_configs.json"
 
 @dataclass(frozen=True, slots=True)
 class GachaRule:
-    """The multi-roll options for a class of banners. A ``step_up`` rule is for step-up
-    events (the forced 3/5/7 ladder); others match banners whose name holds any keyword
-    (empty = any)."""
+    """The multi-roll options for a group of banners. A ``step_up`` rule is for step-up
+    events (the forced 3/5/7 ladder); others match banners whose name contains any of
+    the keywords (empty = matches anything)."""
 
     keywords: tuple[str, ...]
     multis: tuple[Multi, ...]
@@ -55,9 +55,9 @@ def match_rule(
 def multi_configs(
     events: Iterable[GachaEventRow], rules: Iterable[GachaRule] | None = None
 ) -> dict[str, tuple[Multi, ...]]:
-    """Map each event id to its multi-roll options. The schedule's flags pick the rule
-    class - a guaranteed event is NOT treated as step-up even when both flags are set
-    (godfat's pool.guaranteed_rolls checks guaranteed first)."""
+    """Map each event id to its multi-roll options. The schedule's flags pick which kind
+    of rule to use - a guaranteed event is NOT treated as step-up even when both flags
+    are set (godfat's pool.guaranteed_rolls checks guaranteed first)."""
     rules = list(rules) if rules is not None else load_rules()
     configs = {}
 

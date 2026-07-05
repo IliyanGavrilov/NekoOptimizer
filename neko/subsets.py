@@ -22,18 +22,20 @@ def solve_subsets(
     ticket_value: int = CATFOOD_PER_DRAW,
     banner_limits: Mapping[str, int] | None = None,
 ) -> list[SubsetPlan]:
-    """Best plan for every reachable non-empty target subset, biggest-then-cheapest.
+    """Best plan for every reachable non-empty target subset, biggest first then cheapest.
 
-    Targets that occur nowhere in the graphs are dropped up front: no subset holding
-    one can ever have a plan, yet each would DOUBLE the enumeration (a wishlist of
-    them used to hang the solve outright). One search per remaining subset ->
-    O(2^k) searches in the k obtainable targets, so warn the caller for large k.
+    Targets that can't drop on any of these banners are thrown out up front: no subset
+    that includes one can ever have a plan, but each one still DOUBLES the number of
+    subsets to try (a wishlist full of them used to hang the solve completely). That
+    leaves one search per subset -> 2^k searches for k reachable targets, so tell the
+    caller to be careful with large k.
     """
     graphs = list(graphs)
     items = sorted(obtainable(graphs, targets))
     plans = []
-    # A superset's plan also collects every subset, so its cost bounds the subset's
-    # optimum - passing it as upper_bound prunes the smaller searches hard.
+    # A plan for a bigger set already collects every subset of it, so its cost is a
+    # ceiling for the subset's best cost - passing it as upper_bound cuts the smaller
+    # searches down hard.
     bounds: dict[frozenset[str], float] = {}
 
     for size in range(len(items), 0, -1):

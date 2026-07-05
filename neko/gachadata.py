@@ -85,9 +85,10 @@ def parse_gacha_pools(r1_text: str) -> dict[int, list[int]]:
 
 def parse_series(option_text: str) -> dict[int, list[int]]:
     """Map each pool id (GatyaSetID) to its [seriesID, ItemID_Ticket] from
-    GatyaData_Option_SetR.tsv. The series id is the stable identity of a recurring gacha
-    set, unchanged across reruns whose pools and marketing subtitles both differ; the
-    ticket item tells the special capsules (Platinum/Legend) apart from rare-ticket ones.
+    GatyaData_Option_SetR.tsv. The series id is the stable id of a recurring gacha set -
+    it stays the same across reruns even when the pool and the marketing subtitle both
+    change; the ticket item tells the special capsules (Platinum/Legend) apart from
+    rare-ticket ones.
     """
     series: dict[int, list[int]] = {}
     rows = csv.reader(option_text.splitlines(), delimiter="\t")
@@ -130,8 +131,8 @@ def parse_events(tsv_text: str) -> list[GachaEventRow]:
         if start is None or end is None:
             continue
 
-        blocks = row[_POOL_OFFSET + 1 :]
-        pools = [blocks[i : i + _POOL_FIELDS] for i in range(0, len(blocks), _POOL_FIELDS)]
+        blocks = row[_POOL_OFFSET + 1:]
+        pools = [blocks[i: i + _POOL_FIELDS] for i in range(0, len(blocks), _POOL_FIELDS)]
         if not 1 <= offset <= len(pools):
             continue
 
@@ -171,7 +172,8 @@ def parse_events(tsv_text: str) -> list[GachaEventRow]:
 
 
 def merge_events(event_lists: list[list[GachaEventRow]]) -> list[GachaEventRow]:
-    """Union events across dated TSV snapshots, one per event id (godfat's EventsReader)."""
+    """Combine the dated TSV snapshots into one list, keeping one row per event id
+    (godfat's EventsReader)."""
     merged: dict[str, GachaEventRow] = {}
     for events in event_lists:
         for event in events:
@@ -181,13 +183,13 @@ def merge_events(event_lists: list[list[GachaEventRow]]) -> list[GachaEventRow]:
 
 
 def build_banner(
-    event: GachaEventRow,
-    pools: Mapping[int, list[int]],
-    units: Mapping[int, tuple[str, str]],
+        event: GachaEventRow,
+        pools: Mapping[int, list[int]],
+        units: Mapping[int, tuple[str, str]],
 ) -> Banner:
-    """Assemble a rollable Banner: rates from the event, pools from its GatyaDataSet row
-    grouped by rarity in row order, unit ids resolved to names via ``units`` (id -> name,
-    rarity). godfat's legend rate is the remainder, so uber gets whatever the event omits."""
+    """Build a rollable Banner: rates from the event, pools from its GatyaDataSet row
+    grouped by rarity in row order, unit ids turned into names via ``units`` (id -> name,
+    rarity). godfat's legend rate is whatever's left over after the other three."""
     rates = {
         Rarity.RARE: event.rare,
         Rarity.SUPER_RARE: event.supa,
