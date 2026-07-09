@@ -30,6 +30,8 @@ from planner.services import (
     series_names,
     set_sections,
     subset_solutions,
+    tier_badges,
+    tier_list_rows,
     trace_marks,
     wiki_url,
 )
@@ -1237,3 +1239,51 @@ def test_wiki_url_keeps_an_apostrophe_literal():
 
 def test_wiki_url_falls_back_to_the_bare_name_for_an_unknown_rarity():
     assert wiki_url("Doge", "") == WIKI_BASE + "Doge"
+
+
+def _tier_doc(*rows):
+    """A tiers.json doc from (tier, [(unit_id, boost), ...]) rows."""
+    return {
+        "tiers": [
+            {"tier": tier, "entries": [{"name": str(uid), "unit_id": uid, "boost": boost}
+                                       for uid, boost in entries]}
+            for tier, entries in rows
+        ]
+    }
+
+
+def test_tier_badges_carry_the_units_base_placement():
+    badges = tier_badges(_tier_doc(("S", [(5, None)])))
+    assert badges[5] == {"tier": "S", "up": None, "up_note": ""}
+
+
+def test_tier_badges_note_a_higher_boosted_placement():
+    doc = _tier_doc(("B", [(5, None)]), ("SS", [(5, "UF")]))
+    assert tier_badges(doc)[5] == {"tier": "B", "up": "SS", "up_note": "SS with Ultra Form"}
+
+
+def test_tier_badges_ignore_a_boost_that_does_not_rank_higher():
+    doc = _tier_doc(("S", [(5, None)]), ("A", [(5, "UT")]))
+    assert tier_badges(doc)[5] == {"tier": "S", "up": None, "up_note": ""}
+
+
+def test_tier_badges_skip_unresolved_entries():
+    assert tier_badges(_tier_doc(("S", [(None, None)]))) == {}
+
+
+def test_tier_list_rows_tag_each_row_with_its_band_letter():
+    rows = tier_list_rows(_tier_doc(("S+", [(5, None)])))
+    assert rows[0]["band"] == "S" and rows[0]["tier"] == "S+"
+
+
+def test_tier_list_rows_dim_a_base_entry_that_ranks_higher_when_boosted():
+    doc = _tier_doc(("SS", [(5, "UF")]), ("B", [(5, None)]))
+    rows = tier_list_rows(doc)
+    dimmed = {entry["unit_id"]: entry["dimmed"] for row in rows for entry in row["entries"]}
+    assert dimmed == {5: True}  # the boosted SS entry is kept, the base B one dimmed
+
+
+def test_tier_list_rows_keep_a_boosted_entry_undimmed():
+    doc = _tier_doc(("SS", [(5, "UF")]), ("B", [(5, None)]))
+    boosted = next(e for row in tier_list_rows(doc) for e in row["entries"] if e["boost"] == "UF")
+    assert boosted["dimmed"] is False

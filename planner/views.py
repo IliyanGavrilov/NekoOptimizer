@@ -8,6 +8,7 @@ from django.views.decorators.http import require_POST
 from neko.models import CATFOOD_PER_DRAW
 from neko.rng import backtrack
 from neko.roller import DEFAULT_COUNT, GUARANTEED_OPTIONS
+from neko.tierdata import load_tiers
 from planner.forms import MAX_FUTURE_UBERS, MAX_TRACK_LENGTH, PlannerForm
 from planner.models import Cat, Seed, Unit
 from planner.services import (
@@ -25,9 +26,23 @@ from planner.services import (
     picker_groups,
     set_sections,
     subset_solutions,
+    tier_badges,
+    tier_list_rows,
     trace_marks,
     wiki_url,
 )
+
+
+def _picker_cats():
+    """Cats for the target picker, each carrying its tier badge (if the tier list ranks
+    it). select_related("unit"): the owned/wanted chip marks read cat.unit, one query
+    per chip otherwise."""
+    cats = list(Cat.objects.select_related("unit").prefetch_related("banners"))
+    badges = tier_badges()
+    for cat in cats:
+        cat.tier_badge = badges.get(cat.unit.unit_id) if cat.unit else None
+
+    return cats
 
 
 def planner(request):
@@ -36,9 +51,7 @@ def planner(request):
     The Past picker group is ~2000 per-run rows (nearly all of the page's bytes and
     render time), so it ships as a count only; JS fetches picker_past on first open.
     """
-    # select_related("unit"): the owned/wanted chip marks read cat.unit, one query per
-    # chip otherwise.
-    cats = list(Cat.objects.select_related("unit").prefetch_related("banners"))
+    cats = _picker_cats()
     rank = {name: i for i, name in enumerate(RARITY_ORDER)}
     target_flat = sorted(cats, key=lambda cat: (-rank.get(cat.rarity, -1), cat.name))
 
@@ -62,8 +75,7 @@ def planner(request):
 
 def picker_past(request):
     """The Past picker rows, fetched when the group is first opened."""
-    cats = list(Cat.objects.select_related("unit").prefetch_related("banners"))
-    groups = dict(picker_groups(cats, titles=banner_titles()))
+    groups = dict(picker_groups(_picker_cats(), titles=banner_titles()))
 
     return render(request, "planner/_picker_rows.html", {"sections": groups.get("Past", [])})
 
@@ -323,6 +335,7 @@ def unit_info(request):
             "rarity": unit.rarity,
             "forms": unit.forms,
             "wiki": wiki_url(unit.name, unit.rarity),
+            "tier": tier_badges().get(unit.unit_id),
         }
     )
 
@@ -338,6 +351,9 @@ def collection(request):
     browsable by rarity or by gacha set. A unit can sit in several set sections (fests
     repeat their cats) - the marks are per unit, so every copy stays in step."""
     units = list(Unit.objects.named())
+    badges = tier_badges()
+    for unit in units:
+        unit.tier_badge = badges.get(unit.unit_id)
     context = {
         # Both views share the section partial, so a rarity bin becomes a one-row section.
         "rarity_sections": [(r, "", [(r, bin)]) for r, bin in collection_sections(units)],
@@ -348,6 +364,18 @@ def collection(request):
     }
 
     return render(request, "planner/collection.html", context)
+
+
+def tier_list(request):
+    """The cumulative uber tier list, tier by tier, with catalogue names and icons."""
+    doc = load_tiers()
+    context = {
+        "rows": tier_list_rows(doc),
+        "source": doc["source"],
+        "fetched": doc["fetched"],
+    }
+
+    return render(request, "planner/tiers.html", context)
 
 
 @require_POST

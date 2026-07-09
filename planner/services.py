@@ -29,6 +29,7 @@ from neko.roller import (
 )
 from neko.search import astar, beam_search, obtainable
 from neko.subsets import SubsetPlan, solve_subsets
+from neko.tierdata import TIER_ORDER, load_tiers
 from planner.models import Banner, Cat, Unit
 
 RARITY_ORDER = ["Normal", "Special", "Rare", "Super Rare", "Uber Super Rare", "Legend Rare"]
@@ -54,6 +55,72 @@ def wiki_url(name: str, rarity: str = "") -> str:
     title = f"{name} ({label})" if label else name
 
     return WIKI_BASE + quote(title.replace(" ", "_"), safe="()'")
+
+
+_TIER_RANK = {tier: rank for rank, tier in enumerate(TIER_ORDER)}
+
+_BOOST_LABEL = {"UF": "Ultra Form", "UT": "Ultra Talents"}
+
+
+def tier_badges(doc=None) -> dict[int, dict]:
+    """{unit_id: badge} from the committed tier list. A badge is the unit's base
+    placement plus, when the Ultra Form / Ultra Talents entry ranks strictly higher,
+    that placement as the "up" hint ("B, but SS with Ultra Form")."""
+    doc = load_tiers() if doc is None else doc
+    base: dict[int, str] = {}
+    boosted: dict[int, tuple[str, str]] = {}
+    for row in doc["tiers"]:
+        for entry in row["entries"]:
+            unit_id = entry["unit_id"]
+            if unit_id is None:
+                continue
+            if entry["boost"] is None:
+                base.setdefault(unit_id, row["tier"])
+            else:
+                held = boosted.get(unit_id)
+                if held is None or _TIER_RANK[row["tier"]] < _TIER_RANK[held[0]]:
+                    boosted[unit_id] = (row["tier"], entry["boost"])
+
+    badges = {}
+    for unit_id, tier in base.items():
+        badge = {"tier": tier, "up": None, "up_note": ""}
+        up = boosted.get(unit_id)
+        if up is not None and _TIER_RANK[up[0]] < _TIER_RANK[tier]:
+            badge["up"] = up[0]
+            badge["up_note"] = f"{up[0]} with {_BOOST_LABEL[up[1]]}"
+        badges[unit_id] = badge
+
+    return badges
+
+
+def tier_list_rows(doc=None) -> list[dict]:
+    """The tier-list page rows: tiers.json in page order, each entry gaining a dimmed
+    flag when the same unit ranks strictly higher through a UF/UT entry (the source
+    list greys those out)."""
+    doc = load_tiers() if doc is None else doc
+    best_boost: dict[int, int] = {}
+    for row in doc["tiers"]:
+        for entry in row["entries"]:
+            if entry["unit_id"] is not None and entry["boost"] is not None:
+                rank = _TIER_RANK[row["tier"]]
+                best_boost[entry["unit_id"]] = min(rank, best_boost.get(entry["unit_id"], rank))
+
+    return [
+        {
+            "tier": row["tier"],
+            "band": row["tier"][0],
+            "entries": [
+                {
+                    **entry,
+                    "dimmed": entry["boost"] is None
+                    and best_boost.get(entry["unit_id"], len(TIER_ORDER))
+                    < _TIER_RANK[row["tier"]],
+                }
+                for entry in row["entries"]
+            ],
+        }
+        for row in doc["tiers"]
+    ]
 
 
 # Platinum/Legend run on scarce tickets, not catfood, so the optimizer treats them as

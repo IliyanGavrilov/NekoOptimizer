@@ -9,6 +9,7 @@ from planner.views import (
     picker_past,
     planner,
     seed_backtrack,
+    tier_list,
     tracks,
     unit_forms,
     unit_info,
@@ -24,6 +25,7 @@ urlpatterns = [
     path("unit/info/", unit_info, name="unit_info"),
     path("unit/forms/", unit_forms, name="unit_forms"),
     path("collection/", collection, name="collection"),
+    path("tiers/", tier_list, name="tier_list"),
     path("collection/toggle/", collection_toggle, name="collection_toggle"),
     path("collection/bulk/", collection_bulk, name="collection_bulk"),
 ]

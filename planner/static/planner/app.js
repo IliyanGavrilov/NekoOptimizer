@@ -1103,6 +1103,7 @@ if (catPopup) {
   const infoUrl = document.body.dataset.unitInfoUrl;
   const nameEl = catPopup.querySelector(".cat-popup-name");
   const rarityEl = catPopup.querySelector(".cat-popup-head .rarity");
+  const tierEl = catPopup.querySelector(".cat-popup-tier");
   const formsEl = catPopup.querySelector(".cat-popup-forms");
   const wikiEl = catPopup.querySelector(".cat-popup-wiki");
   const cache = new Map(); // name -> Promise<info | null>
@@ -1127,6 +1128,13 @@ if (catPopup) {
     rarityEl.textContent = info.rarity;
     rarityEl.dataset.rarity = info.rarity;
     rarityEl.hidden = !info.rarity;
+    tierEl.hidden = !info.tier;
+    if (info.tier) {
+      tierEl.dataset.band = info.tier.tier[0];
+      tierEl.textContent = info.tier.up
+        ? `Tier ${info.tier.tier} · ${info.tier.up_note}`
+        : `Tier ${info.tier.tier}`;
+    }
     wikiEl.href = info.wiki;
     formsEl.replaceChildren();
     (info.forms || []).forEach((form, i) => {
@@ -1147,7 +1155,7 @@ if (catPopup) {
 
   document.addEventListener("click", (e) => {
     const trigger = e.target.closest(
-      ".catlink[data-name], .catinfo[data-name], .cat-pill[data-name]",
+      ".catlink[data-name], .catinfo[data-name], .cat-pill[data-name], .tier-unit[data-name]",
     );
     if (!trigger) return;
     e.preventDefault();

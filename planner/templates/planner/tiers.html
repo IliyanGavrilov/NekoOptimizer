@@ -1,0 +1,33 @@
+{% extends "planner/base.html" %}
+
+{% block title %}Tier List &mdash; Neko Optimizer{% endblock %}
+
+{% block content %}
+  <h1>Uber Tier List</h1>
+  <p class="muted">
+    The cumulative ranking from <a href="{{ source }}" target="_blank" rel="noopener">The Battle Cats Tier List</a>,
+    matched to the catalogue (fetched {{ fetched }}). <strong>UF</strong> ranks a unit's Ultra Form,
+    <strong>UT</strong> its Ultra Talents; a dimmed cat ranks higher up through one of those.
+    Click a cat for its forms and wiki page.
+  </p>
+
+  <div class="tier-table">
+    {% for row in rows %}
+      <div class="tier-row">
+        <span class="tier-label" data-band="{{ row.band }}">{{ row.tier }}</span>
+        <div class="tier-units">
+          {% for entry in row.entries %}
+            <button type="button" class="tier-unit{% if entry.dimmed %} dimmed{% endif %}"
+                    {% if entry.unit_id is not None %}data-name="{{ entry.name }}"{% endif %}>
+              {% if entry.unit_id is not None %}
+                <img loading="lazy" src="https://battlecatsinfo.github.io/img/u/{{ entry.unit_id }}/0.png" alt="">
+              {% endif %}
+              <span class="tier-unit-name">{{ entry.name }}</span>
+              {% if entry.boost %}<span class="boost">{{ entry.boost }}</span>{% endif %}
+            </button>
+          {% endfor %}
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+{% endblock %}

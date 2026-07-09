@@ -19,7 +19,7 @@
       <div class="chips">
         {% for cat in cats %}
           <button type="button" class="chip{% if cat.owned %} owned{% endif %}{% if cat.wanted %} wanted{% endif %}" data-pk="{{ cat.pk }}"
-                  data-name="{{ cat.name }}" data-rarity="{{ cat.rarity }}">{{ cat.name }}</button>
+                  data-name="{{ cat.name }}" data-rarity="{{ cat.rarity }}">{{ cat.name }}{% if cat.tier_badge %}<span class="tier-badge" data-band="{{ cat.tier_badge.tier.0 }}">{{ cat.tier_badge.tier }}{% if cat.tier_badge.up %}<span class="tier-up" title="{{ cat.tier_badge.up_note }}">&#9650;{{ cat.tier_badge.up }}</span>{% endif %}</span>{% endif %}</button>
         {% endfor %}
       </div>
     </div>
