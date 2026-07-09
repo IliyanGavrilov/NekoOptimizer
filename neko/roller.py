@@ -93,15 +93,21 @@ def select_events(
     return list(chosen.values())
 
 
-def _guaranteed_rolls(event: GachaEventRow) -> int:
+# The guaranteed-multi sizes the UI can simulate, matching godfat's dropdown.
+GUARANTEED_OPTIONS = (2, 7, 11, 15)
+
+
+def _guaranteed_rolls(event: GachaEventRow, force: int = 0) -> int:
     """godfat's pool.guaranteed_rolls: 11 for a guaranteed event, 15 for a step-up, else 0
-    - most banners run NO guaranteed multi, so their guaranteed column must stay empty."""
+    - most banners run NO guaranteed multi, so their guaranteed column must stay empty.
+    ``force`` (a roll count) simulates a guaranteed multi of that size on a banner that has
+    none (the "what if this banner had a guarantee" toggle), leaving real guarantees be."""
     if event.guaranteed:
         return 11
     if event.step_up:
         return 15
 
-    return 0
+    return force
 
 
 def _event_multis(multis: tuple[Multi, ...], guaranteed_rolls: int) -> tuple[Multi, ...]:
@@ -133,6 +139,7 @@ def _roll_events(
     count: int,
     rules: Iterable[GachaRule],
     last_cat: str = "",
+    simulate_guaranteed: int = 0,
 ) -> RollResult:
     """Roll each event and key it by banner name, keeping a recurring banner's latest run."""
     latest = _latest_runs(events)
@@ -141,7 +148,7 @@ def _roll_events(
 
     for name, event in latest.items():
         banner = build_banner(event, pools, units)
-        guaranteed_rolls = _guaranteed_rolls(event)
+        guaranteed_rolls = _guaranteed_rolls(event, force=simulate_guaranteed)
         banners[name] = roll_banner(
             seed, banner, count, guaranteed_rolls=guaranteed_rolls, last_cat=last_cat
         )
@@ -174,12 +181,24 @@ def roll_active(
     units: Mapping[int, tuple[str, str]] | None = None,
     rules: Iterable[GachaRule] | None = None,
     last_cat: str = "",
+    simulate_guaranteed: int = 0,
 ) -> RollResult:
     """Roll the banners active on ``today`` (defaults to the real date). ``last_cat`` is
-    the pull you got just before this view - it can dupe each banner's first cell."""
+    the pull you got just before this view - it can dupe each banner's first cell.
+    ``simulate_guaranteed`` (a roll count) forces a guaranteed column of that size onto
+    banners without one."""
     events, pools, units, rules = _load(events, pools, units, rules)
 
-    return _roll_events(seed, active_events(events, today), pools, units, count, rules, last_cat)
+    return _roll_events(
+        seed,
+        active_events(events, today),
+        pools,
+        units,
+        count,
+        rules,
+        last_cat,
+        simulate_guaranteed,
+    )
 
 
 def roll_selected(
@@ -193,13 +212,15 @@ def roll_selected(
     units: Mapping[int, tuple[str, str]] | None = None,
     rules: Iterable[GachaRule] | None = None,
     last_cat: str = "",
+    simulate_guaranteed: int = 0,
 ) -> RollResult:
     """Roll the selected banners: each "start|name" is its pinned run, each bare name its
-    current run (see select_events). ``last_cat`` works as in roll_active."""
+    current run (see select_events). ``last_cat`` and ``simulate_guaranteed`` work as in
+    roll_active."""
     events, pools, units, rules = _load(events, pools, units, rules)
     chosen = select_events(events, names, today)
 
-    return _roll_events(seed, chosen, pools, units, count, rules, last_cat)
+    return _roll_events(seed, chosen, pools, units, count, rules, last_cat, simulate_guaranteed)
 
 
 def catalogue_banners(

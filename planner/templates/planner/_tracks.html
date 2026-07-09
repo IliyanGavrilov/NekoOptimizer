@@ -40,9 +40,9 @@
       {% for row in track.rows %}
         <tr>
           <th scope="row" class="pos">{{ row.pos }}</th>
-          {% include "planner/_track_cell.html" with entries=row.a multi=track.legend|length cell_seed=row.a_seed cell_cat=row.a_cat cell_track="A" %}
+          {% include "planner/_track_cell.html" with entries=row.a multi=track.legend|length cell_seed=row.a_seed cell_cat=row.a_cat cell_track="A" details=row.a_details %}
           {% if track.has_guaranteed %}{% include "planner/_track_cell.html" with entries=row.ga multi=track.legend|length cell_class="guaranteed-col" %}{% endif %}
-          {% include "planner/_track_cell.html" with entries=row.b multi=track.legend|length cell_seed=row.b_seed cell_cat=row.b_cat cell_track="B" %}
+          {% include "planner/_track_cell.html" with entries=row.b multi=track.legend|length cell_seed=row.b_seed cell_cat=row.b_cat cell_track="B" details=row.b_details %}
           {% if track.has_guaranteed %}{% include "planner/_track_cell.html" with entries=row.gb multi=track.legend|length cell_class="guaranteed-col" %}{% endif %}
         </tr>
       {% endfor %}

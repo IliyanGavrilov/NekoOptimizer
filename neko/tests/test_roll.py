@@ -131,6 +131,18 @@ def test_pull_seed_is_its_slot_value():
     assert seeds[(2, "A")] == stream[4]
 
 
+def test_pull_carries_the_rarity_seed_one_step_before_its_slot_seed():
+    rolls = roll_banner(42, FOUR_BAND, 2)
+    stream = [42]
+    for _ in range(5):
+        stream.append(xorshift(stream[-1]))
+    rarity_seeds = {(p.position, p.track): p.rarity_seed for p in rolls.pulls}
+    assert rarity_seeds[(1, "A")] == stream[1]
+    assert rarity_seeds[(1, "B")] == stream[2]
+    # The rarity seed is exactly the slot seed's predecessor in the stream.
+    assert all(xorshift(p.rarity_seed) == p.seed for p in rolls.pulls)
+
+
 def test_reseeding_to_a_pull_makes_its_successor_the_new_1a():
     rolls = roll_banner(1893568593, FOUR_BAND, 10)
     nominal = {(p.position, p.track): p.cat for p in rolls.pulls}

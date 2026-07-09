@@ -131,8 +131,8 @@ def parse_events(tsv_text: str) -> list[GachaEventRow]:
         if start is None or end is None:
             continue
 
-        blocks = row[_POOL_OFFSET + 1:]
-        pools = [blocks[i: i + _POOL_FIELDS] for i in range(0, len(blocks), _POOL_FIELDS)]
+        blocks = row[_POOL_OFFSET + 1 :]
+        pools = [blocks[i : i + _POOL_FIELDS] for i in range(0, len(blocks), _POOL_FIELDS)]
         if not 1 <= offset <= len(pools):
             continue
 
@@ -183,9 +183,9 @@ def merge_events(event_lists: list[list[GachaEventRow]]) -> list[GachaEventRow]:
 
 
 def build_banner(
-        event: GachaEventRow,
-        pools: Mapping[int, list[int]],
-        units: Mapping[int, tuple[str, str]],
+    event: GachaEventRow,
+    pools: Mapping[int, list[int]],
+    units: Mapping[int, tuple[str, str]],
 ) -> Banner:
     """Build a rollable Banner: rates from the event, pools from its GatyaDataSet row
     grouped by rarity in row order, unit ids turned into names via ``units`` (id -> name,

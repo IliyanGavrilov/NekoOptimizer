@@ -10,7 +10,7 @@
     <input type="hidden" name="last_cat" id="lastCat">
 
     <div class="field-grid">
-      <label><span class="label-row">{{ form.seed.label_tag }} <span class="req" title="required">*</span></span><span class="seed-row">{{ form.seed }}<button type="button" id="seedUndo" class="seed-undo" hidden>&#8630; undo</button></span><span class="field-error" id="seedError" aria-live="polite"></span></label>
+      <label><span class="label-row">{{ form.seed.label_tag }} <span class="req" title="required">*</span></span><span class="seed-row">{{ form.seed }}<button type="button" id="seedBack" class="seed-back" title="Step the seed back one roll">&#9665; back</button><button type="button" id="seedUndo" class="seed-undo" hidden>&#8630; undo</button></span><span class="field-error" id="seedError" aria-live="polite"></span></label>
       <div class="budget-fields">
         <label>{{ form.tickets.label_tag }} {{ form.tickets }}</label>
         <label>{{ form.catfood.label_tag }} {{ form.catfood }}</label>
@@ -41,6 +41,7 @@
       <p class="field-error" id="targetsError" aria-live="polite"></p>
       <p class="muted hint">Tap <span class="key">&plus;</span> on a banner to roll its whole session; click a banner to open its cats. <button type="button" id="bannerCount" class="banner-count" title="Show me the selected banners"></button></p>
       <div class="banner-chips" id="bannerChips" hidden></div>
+      <p class="field-warning" id="bannerWarn" role="alert" aria-live="polite" hidden></p>
 
       <div class="selected-panel" id="selectedPanel" hidden>
         <div class="selected-head">Selected <span class="count" id="selectedCount">0</span></div>
@@ -104,8 +105,25 @@
 
   <div id="resultsRegion" class="results-region" hidden>
     <div id="browseTrack">
-      <h2 class="results-h">Rolls</h2>
-      <div id="trackHost" data-tracks-url="{% url 'tracks' %}" data-plan-url="{% url 'find_plan' %}"></div>
+      {# Live display controls for the Rolls table - they re-roll it as you change them, #}
+      {# like the seed. They sit OUTSIDE the form, so app.js posts them explicitly. #}
+      <div class="rolls-head">
+        <h2 class="results-h">Rolls</h2>
+        <div class="rolls-controls">
+          <label class="ctrl">Show <input type="number" id="id_track_length" value="100" min="1" max="999" title="How many rolls the table shows (up to 999)"> rolls</label>
+          <label class="ctrl" title="Reveal each cell's rarity and slot seed, for cross-checking against godfat"><input type="checkbox" id="detailsToggle"> Details</label>
+          <label class="ctrl" title="Force a guaranteed multi of this size onto every banner, to preview the uber each cell's guaranteed draw would give">Guaranteed
+            <select id="simGuaranteed">
+              <option value="">None</option>
+              <option value="2">2</option>
+              <option value="7">7</option>
+              <option value="11">11</option>
+              <option value="15">15</option>
+            </select>
+          </label>
+        </div>
+      </div>
+      <div id="trackHost" data-tracks-url="{% url 'tracks' %}" data-plan-url="{% url 'find_plan' %}" data-backtrack-url="{% url 'seed_backtrack' %}"></div>
     </div>
     <div id="solutions" aria-live="polite"></div>
   </div>

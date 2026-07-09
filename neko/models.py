@@ -31,7 +31,12 @@ class TrackPull:
     ``steps``, the extra seed values the reroll used up - the pull then moves on
     2 + steps positions instead of 2, flipping the track - and ``realized``, whether
     the straight play chain actually hits this reroll. godfat only draws those; the
-    rest are "what if" cells that only some other arrival paths can trigger."""
+    rest are "what if" cells that only some other arrival paths can trigger.
+
+    ``rarity_seed`` is the RNG state the cell's roll started from (the value the rarity
+    band is read off; the slot seed is one step on). It's the cell's stream position -
+    surfaced only for the details view - and, unlike the pool-dependent name, is the
+    same for every banner rolled at that cell."""
 
     position: int
     track: str
@@ -40,6 +45,7 @@ class TrackPull:
     seed: int = 0
     steps: int = 0
     realized: bool = False
+    rarity_seed: int = 0
 
 
 @dataclass(frozen=True, slots=True)

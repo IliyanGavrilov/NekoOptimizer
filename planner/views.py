@@ -4,8 +4,9 @@ from django.template.loader import render_to_string
 from django.views.decorators.http import require_POST
 
 from neko.models import CATFOOD_PER_DRAW
-from neko.roller import DEFAULT_COUNT
-from planner.forms import PlannerForm
+from neko.rng import backtrack
+from neko.roller import DEFAULT_COUNT, GUARANTEED_OPTIONS
+from planner.forms import MAX_TRACK_LENGTH, PlannerForm
 from planner.models import Cat, Seed, Unit
 from planner.services import (
     RARITY_ORDER,
@@ -18,6 +19,7 @@ from planner.services import (
     equivalent_banners,
     fetch_banners,
     fetch_for_banners,
+    newly_added_ubers,
     picker_groups,
     set_sections,
     subset_solutions,
@@ -63,11 +65,46 @@ def picker_past(request):
     return render(request, "planner/_picker_rows.html", {"sections": groups.get("Past", [])})
 
 
-def _roll(seed, chosen_banners, count, last_cat=""):
+def _roll(seed, chosen_banners, count, last_cat="", simulate_guaranteed=0):
     if chosen_banners:
-        return fetch_for_banners(seed, chosen_banners, count, last_cat=last_cat)
+        return fetch_for_banners(
+            seed, chosen_banners, count, last_cat=last_cat, simulate_guaranteed=simulate_guaranteed
+        )
 
-    return fetch_banners(seed, count, last_cat=last_cat)
+    return fetch_banners(seed, count, last_cat=last_cat, simulate_guaranteed=simulate_guaranteed)
+
+
+def _track_length(request):
+    """Rows to roll for the Rolls table (godfat's unit count), clamped to [1, MAX]."""
+    try:
+        n = int(request.POST.get("track_length", DEFAULT_COUNT))
+    except ValueError:
+        return DEFAULT_COUNT
+
+    return max(1, min(n, MAX_TRACK_LENGTH))
+
+
+def _simulate_guaranteed(request):
+    """The guaranteed-multi size to force onto every banner (godfat's dropdown), or 0 for
+    off. Values outside the offered set are ignored, so a stray post can't balloon the grid."""
+    try:
+        n = int(request.POST.get("simulate_guaranteed", 0))
+    except ValueError:
+        return 0
+
+    return n if n in GUARANTEED_OPTIONS else 0
+
+
+@require_POST
+def seed_backtrack(request):
+    """Step the seed back one roll (godfat's Backtrack): the pull just before the current
+    first cell becomes the new first cell. Returns the earlier seed as JSON."""
+    try:
+        seed = int(request.POST.get("seed", ""))
+    except ValueError:
+        return HttpResponseBadRequest("seed must be an integer")
+
+    return JsonResponse({"seed": backtrack(seed)})
 
 
 def _rolls_by_banner(result):
@@ -105,7 +142,14 @@ def tracks(request):
         return HttpResponse("")
 
     last_cat = request.POST.get("last_cat", "").strip()
-    result = _roll(seed, request.POST.getlist("banners"), DEFAULT_COUNT, last_cat)
+    count = _track_length(request)
+    result = _roll(
+        seed,
+        request.POST.getlist("banners"),
+        count,
+        last_cat,
+        simulate_guaranteed=_simulate_guaranteed(request),
+    )
     equivalents = equivalent_banners(result.banners)
     pulls, guaranteed, rerolls, _ = _rolls_by_banner(result)
     track = build_tracks(
@@ -116,6 +160,8 @@ def tracks(request):
         guaranteed=guaranteed,
         wanted=_wanted_names(),
         titles=display_titles(),
+        rows=count,
+        debuts=newly_added_ubers(),
     )
 
     return render(request, "planner/_tracks.html", {"track": track})
@@ -168,6 +214,7 @@ def find_plan(request):
         titles=display_titles(),
         guaranteed_rerolls=guaranteed_rerolls,
         last_cat=last_cat,
+        debuts=newly_added_ubers(),
     )
 
     return JsonResponse(

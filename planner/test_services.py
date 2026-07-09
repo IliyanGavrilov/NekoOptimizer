@@ -2,6 +2,7 @@ from datetime import date
 
 import pytest
 
+from neko.gachadata import GachaEventRow
 from neko.graph import build_graphs
 from neko.models import BannerRolls, Leg, Path, Pull, Rarity, TrackPull
 from neko.search import Multi
@@ -18,6 +19,7 @@ from planner.services import (
     collection_sections,
     cost_label,
     equivalent_banners,
+    newly_added_ubers,
     picker_groups,
     plan_highlight,
     plan_seed,
@@ -240,8 +242,6 @@ def test_picker_groups_titles_rows_from_their_pool():
 
 
 def _run(start, end, pool_id, name):
-    from neko.gachadata import GachaEventRow
-
     return GachaEventRow(
         f"{start}_{pool_id}", name, start, end, pool_id, 7000, 2500, 500, 0, False, False
     )
@@ -332,6 +332,39 @@ def test_build_tracks_merges_equivalent_banners_into_one_legend_entry():
     assert len(track["legend"]) == 1
 
 
+def test_newly_added_ubers_are_the_ubers_a_banner_added_since_its_last_run():
+    def ev(eid, start, pool_id):
+        return GachaEventRow(eid, eid, start, start, pool_id, 7, 2, 1, 0, False, False)
+
+    # Same series (1) reruns; the newer run's pool gains uber 20. A one-off series (2)
+    # has no prior run, so nothing counts as newly added there.
+    events = [
+        ev("old", date(2025, 1, 1), 10),
+        ev("new", date(2025, 6, 1), 11),
+        ev("solo", date(2025, 3, 1), 20),
+    ]
+    pools = {10: [1], 11: [1, 2], 20: [1, 3]}
+    series = {10: 1, 11: 1, 20: 2}
+    units = {1: ("Old Uber", U.value), 2: ("Added Uber", U.value), 3: ("Solo Uber", U.value)}
+    added = newly_added_ubers(events=events, pools=pools, series=series, units=units)
+    assert added == {"new": {"Added Uber"}}
+
+
+def test_build_tracks_flags_an_uber_new_to_its_banner():
+    pulls = [TrackPull(1, "A", "Added Uber", U)]
+    debuts = {"X": {"Added Uber"}}
+    cell = build_tracks({"X": pulls}, {}, {}, debuts=debuts)["rows"][0]["a"][0]
+    assert cell["debut"] is True
+    # Not flagged on a banner the uber isn't new to.
+    assert build_tracks({"Y": pulls}, {}, {}, debuts=debuts)["rows"][0]["a"][0]["debut"] is False
+
+
+def test_build_tracks_renders_up_to_the_requested_row_count():
+    pulls = [TrackPull(pos, track, "Bahamut", U) for pos in range(1, 151) for track in ("A", "B")]
+    assert len(build_tracks({"X": pulls}, {}, {})["rows"]) == 100  # default cap
+    assert len(build_tracks({"X": pulls}, {}, {}, rows=140)["rows"]) == 140
+
+
 def test_build_tracks_stacks_each_banners_cat_in_one_cell():
     banner_pulls = {
         "X": [TrackPull(1, "A", "Bahamut", U)],
@@ -364,6 +397,18 @@ def test_build_tracks_dupe_cell_reads_nominal_first():
 def test_build_tracks_no_branch_on_a_normal_pull():
     banner_pulls = {"X": [TrackPull(1, "A", "Bahamut", U)]}
     assert build_tracks(banner_pulls, {}, {})["rows"][0]["a"][0]["alt"] is None
+
+
+def test_build_tracks_exposes_each_cells_seeds_for_the_details_view():
+    banner_pulls = {
+        "X": [
+            TrackPull(1, "A", "Bahamut", U, seed=222, rarity_seed=111),
+            TrackPull(1, "B", "Kasli", U, seed=444, rarity_seed=333),
+        ]
+    }
+    row = build_tracks(banner_pulls, {}, {})["rows"][0]
+    assert row["a_details"] == {"rarity_seed": 111, "slot_seed": 222}
+    assert row["b_details"] == {"rarity_seed": 333, "slot_seed": 444}
 
 
 def test_build_tracks_a_track_dupe_branch_points_right_towards_b():

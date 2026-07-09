@@ -1,8 +1,12 @@
 import json
 from pathlib import Path
 
+from neko.bcdata import load_records
+from neko.gachadata import build_banner, load_events, load_pools
 from neko.graph import build_graphs, stream_index
 from neko.models import CATFOOD_PER_DRAW, BannerRolls, Rarity, State, TrackPull
+from neko.roll import roll_banner
+from neko.roller import roll_selected
 from neko.search import Multi, astar
 
 FIXTURE = Path(__file__).parent / "fixtures" / "godfat_seed_1893568593_trixi.json"
@@ -23,17 +27,12 @@ def load_rolls() -> BannerRolls:
 
 
 def local_banner():
-    from neko.bcdata import load_records
-    from neko.gachadata import build_banner, load_events, load_pools
-
     units = {r["id"]: (r["name"], r["rarity"]) for r in load_records()}
     trixi = next(e for e in load_events() if e.event_id == "2026-06-26_1052")
     return build_banner(trixi, load_pools(), units)
 
 
 def graph():
-    from neko.roll import roll_banner
-
     rolls = roll_banner(1893568593, local_banner(), 1000, guaranteed_rolls=11)
     graphs = build_graphs(
         {BANNER: rolls.pulls},
@@ -45,8 +44,6 @@ def graph():
 
 
 def test_local_roll_reproduces_the_capture_byte_for_byte():
-    from neko.roll import roll_banner
-
     fixture = load_rolls()
     count = max(p.position for p in fixture.pulls)
     mine = roll_banner(1893568593, local_banner(), count, guaranteed_rolls=1)
@@ -61,9 +58,6 @@ def test_local_roll_reproduces_the_capture_byte_for_byte():
 
 
 def test_trixi_banner_rolls_without_a_guarantee():
-    from neko.gachadata import load_events
-    from neko.roller import roll_selected
-
     trixi = next(e for e in load_events() if e.event_id == "2026-06-26_1052")
     assert (trixi.guaranteed, trixi.step_up) == (False, False)
     res = roll_selected(1893568593, [trixi.name], count=30)

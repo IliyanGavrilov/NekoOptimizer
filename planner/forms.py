@@ -4,6 +4,7 @@ from neko.models import CATFOOD_PER_DRAW
 from planner.models import Cat, Unit
 
 EXPLORE_HORIZON = 1000  # default rolls to look ahead per banner in explore mode
+MAX_TRACK_LENGTH = 999  # godfat's unit-count ceiling for the Rolls table
 
 
 class PlannerForm(forms.Form):

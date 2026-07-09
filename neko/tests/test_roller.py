@@ -86,6 +86,30 @@ def test_plain_banner_gets_no_guaranteed_column_and_its_multi_is_demoted():
     assert res.multis["Plain Banner"] == (Multi(11, 1500, False),)
 
 
+def test_simulate_guaranteed_forces_the_column_on_a_plain_banner():
+    plain = [
+        event(
+            "2025-03-01_44",
+            "Plain Banner",
+            date(2025, 3, 1),
+            date(2025, 3, 10),
+            42,
+            guaranteed=False,
+        )
+    ]
+    kw = dict(events=plain, pools=POOLS, units=UNITS, rules=[])
+    assert roll_selected(123, ["Plain Banner"], **kw).banners["Plain Banner"].guaranteed == []
+    forced = roll_selected(123, ["Plain Banner"], simulate_guaranteed=11, **kw)
+    assert len(forced.banners["Plain Banner"].guaranteed) > 1
+
+
+def test_simulate_guaranteed_leaves_a_real_guarantee_unchanged():
+    kw = dict(events=EVENTS, pools=POOLS, units=UNITS, rules=[])
+    real = roll_selected(123, ["Alpha Banner"], **kw).banners["Alpha Banner"].guaranteed
+    forced = roll_selected(123, ["Alpha Banner"], simulate_guaranteed=7, **kw)
+    assert forced.banners["Alpha Banner"].guaranteed == real
+
+
 def test_step_up_guarantee_lands_only_on_the_15_roll_multi():
     step = [
         event(

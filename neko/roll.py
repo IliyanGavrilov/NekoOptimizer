@@ -52,10 +52,10 @@ class _Cat:
     def duped(self, prev: _Cat | None) -> bool:
         """godfat's cat.rb duped?: a rare whose id repeats the previous same-track cat."""
         return (
-                prev is not None
-                and self.rarity is Rarity.RARE
-                and self.name != ""
-                and self.name == prev.name
+            prev is not None
+            and self.rarity is Rarity.RARE
+            and self.name != ""
+            and self.name == prev.name
         )
 
 
@@ -178,7 +178,7 @@ def _follow(cat: _Cat, steps: int) -> _Cat | None:
 
 
 def roll_banner(
-        seed: int, banner: Banner, count: int, guaranteed_rolls: int = 0, last_cat: str = ""
+    seed: int, banner: Banner, count: int, guaranteed_rolls: int = 0, last_cat: str = ""
 ) -> BannerRolls:
     """Roll ``count`` positions of ``banner`` from ``seed``, matching godfat's grid.
     ``last_cat`` (the pull you got just before this view) can dupe the very first cell.
@@ -226,7 +226,16 @@ def roll_banner(
         for track in (0, 1):
             cat = grid[seq][track]
             label = _TRACKS[track]
-            pulls.append(TrackPull(seq + 1, label, cat.name, cat.rarity, seed=cat.slot_seed))
+            pulls.append(
+                TrackPull(
+                    seq + 1,
+                    label,
+                    cat.name,
+                    cat.rarity,
+                    seed=cat.slot_seed,
+                    rarity_seed=cat.rarity_seed,
+                )
+            )
 
             if cat.rerolled is not None:
                 rerolls.append(
