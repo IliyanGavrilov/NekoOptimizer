@@ -422,6 +422,21 @@ def test_tracks_endpoint_renders_a_trace_click_as_plan_marks(client, monkeypatch
 
 
 @pytest.mark.django_db
+def test_tracks_endpoint_traces_a_guaranteed_column_click(client, monkeypatch):
+    rolls = BannerRolls(
+        [TrackPull(1, "A", "Shaman Cat", R)], [TrackPull(1, "A", "Trixi the Merc", U)]
+    )
+    monkeypatch.setattr("planner.views.fetch_banners", fixed_rolls(rolls))
+    traced = client.post(
+        "/tracks/", {"seed": 7, "trace_tag": "1", "trace_idx": "0", "trace_guaranteed": "1"}
+    ).content.decode()
+    # The guaranteed uber wears the gold pill; a plain (non-guaranteed) click at the same
+    # cell would instead mark Shaman Cat in the normal column.
+    assert "entry on-path target" in traced
+    assert "Trixi the Merc" in traced
+
+
+@pytest.mark.django_db
 def test_tracks_endpoint_renders_a_dice_on_the_guaranteed_cell(client, monkeypatch):
     rolls = BannerRolls(
         [TrackPull(1, "A", "Shaman Cat", R)], [TrackPull(1, "A", "Trixi the Merc", U, seed=42)]

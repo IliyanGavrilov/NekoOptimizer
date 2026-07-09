@@ -133,15 +133,19 @@ def _future_ubers(request):
 
 
 def _trace(request):
-    """The cell a trace click picked (godfat's pick), as (legend tag, stream index) - or
-    None when nothing was clicked or the post is malformed."""
+    """The cell a trace click picked (godfat's pick), as (legend tag, stream index,
+    guaranteed) - or None when nothing was clicked or the post is malformed. ``guaranteed``
+    is set for a click in the guaranteed column."""
     tag = request.POST.get("trace_tag", "")
     try:
         index = int(request.POST.get("trace_idx", ""))
     except ValueError:
         return None
 
-    return (tag, index) if tag.isdigit() and index >= 0 else None
+    if not (tag.isdigit() and index >= 0):
+        return None
+
+    return (tag, index, request.POST.get("trace_guaranteed") == "1")
 
 
 @require_POST
@@ -213,7 +217,15 @@ def tracks(request):
     marks = None
     if trace is not None:
         marks = trace_marks(
-            pulls, rerolls, equivalents, trace[0], trace[1], last_cat, result.multis
+            pulls,
+            rerolls,
+            equivalents,
+            trace[0],
+            trace[1],
+            last_cat,
+            result.multis,
+            guaranteed_pulls=guaranteed,
+            guaranteed=trace[2],
         )
     track = build_tracks(
         pulls,

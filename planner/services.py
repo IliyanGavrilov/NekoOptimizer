@@ -994,19 +994,43 @@ def plan_shared(option, graphs, equivalents, multis=None, exclude=()):
     return shared, gshared
 
 
-def trace_marks(banner_pulls, rerolls, equivalents, tag, index, last_cat="", multis=None):
-    """Plan-style marks for a clicked cell (godfat's pick): the single-pull walk from the
-    table start UP TO the cell, on the clicked banner (its legend ``tag``), with the gold
-    target pill on the cell itself - plus plan_shared's dashes on every walked step that
-    another selected banner could roll without changing the path. A dupe hop that jumps
-    the walk past the cell leaves the tail unlit (straight singles can't reach it), and a
-    stale click (unknown tag, cell beyond the rolled window) marks nothing."""
-    groups = _banner_groups(banner_pulls, rerolls, equivalents)
+def trace_marks(
+    banner_pulls,
+    rerolls,
+    equivalents,
+    tag,
+    index,
+    last_cat="",
+    multis=None,
+    guaranteed_pulls=None,
+    guaranteed=False,
+):
+    """Plan-style marks for a clicked cell (godfat's pick), on the clicked banner (its
+    legend ``tag``). The single-pull walk from the table start (1A) tries to reach the
+    cell:
+
+    - **Reachable** - the clean chain of singles lands on it: light that whole walk, drop
+      the gold target pill on the cell, and add plan_shared's dashes on every walked step
+      another selected banner could roll without changing the path.
+    - **Unreachable** - a dupe/track-change stands between 1A and the cell on this seed, so
+      no run of straight singles gets there: mark ONLY the clicked cat, nothing before it
+      (godfat's behaviour). No path, no shared dashes.
+
+    ``guaranteed`` marks the guaranteed COLUMN instead (``trace_guaranteed`` from the
+    click): the uber a guaranteed multi awards if started on that cell, needing
+    ``guaranteed_pulls`` for the grid. A stale click (unknown tag, cell beyond the rolled
+    window, or a guaranteed click on a banner with no guarantee there) marks nothing."""
+    groups = _banner_groups(banner_pulls, rerolls, equivalents, guaranteed_pulls)
     picked = next((g for g in groups if g["tag"] == str(tag)), None)
     if picked is None or index not in picked["grid"]:
         return TrackMarks()
 
     graph, rep = picked["graph"], picked["rep"]
+    # A guaranteed click needs the column's uber; bail when this banner has none there.
+    gpull = picked["guaranteed"].get(index) if guaranteed else None
+    if guaranteed and (gpull is None or not gpull.cat):
+        return TrackMarks()
+
     walk, last, at = [], last_cat, 0
     while at <= index:
         outcome = graph.resolve(at, last)
@@ -1019,16 +1043,29 @@ def trace_marks(banner_pulls, rerolls, equivalents, tag, index, last_cat="", mul
         last, at = outcome.cat, outcome.next_position
 
     reached = bool(walk) and walk[-1][0] == index
-    target = walk[-1][1].cat if reached else picked["grid"][index].cat
+
+    if guaranteed:
+        # The gold pill sits on the guaranteed uber; when the start cell is reachable, the
+        # singles that get there light too, otherwise it stands alone (unreachable start).
+        marks = TrackMarks(gtargets={rep: {index: gpull.cat}})
+        if reached:
+            marks.path = {rep: {step for step, _ in walk}}
+            marks.gpath = {rep: {index}}
+        return marks
+
+    if not reached:
+        # No clean-singles route to the cell: mark just the cat that lands here.
+        return TrackMarks(targets={rep: {index: picked["grid"][index].cat}})
+
+    target = walk[-1][1].cat
     marks = TrackMarks(
         path={rep: {step for step, _ in walk}},
         targets={rep: {index: target}},
     )
-
     # The walk replayed as a plan of single pulls: exactly what plan_shared swaps.
     pulls = tuple(Pull(step, rep, outcome.cat, outcome.rarity) for step, outcome in walk)
     moves = tuple(Leg(rep, "Single pull", 0, (pull,)) for pull in pulls)
-    option = SubsetPlan(frozenset({target} if reached else ()), Path(pulls, 0, 0, moves))
+    option = SubsetPlan(frozenset({target}), Path(pulls, 0, 0, moves))
     graphs = [group["graph"] for group in groups]
     marks.shared, marks.gshared = plan_shared(option, graphs, equivalents, multis)
 

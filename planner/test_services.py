@@ -618,10 +618,49 @@ def test_trace_marks_stop_when_a_hop_jumps_past_the_cell():
     }
     rerolls = {"X": [TrackPull(2, "A", "Sniper Cat", R, steps=1, realized=True)]}
     marks = trace_marks(banner_pulls, rerolls, {}, "1", 4)
-    # The reroll at 2A hops to 3B, so 3A is unreachable by straight singles: only the
-    # reachable prefix lights up, and the clicked cell still gets its target pill.
-    assert marks.path == {"X": {0, 2}}
+    # The reroll at 2A hops to 3B, so 3A is unreachable by straight singles on this seed:
+    # nothing before it lights up - just the clicked cat gets its pill (godfat's pick).
+    assert marks.path == {}
     assert marks.targets == {"X": {4: "Bahamut"}}
+    assert marks.shared == {}
+
+
+def test_trace_marks_guaranteed_click_marks_the_column_uber():
+    banner_pulls = {"X": [TrackPull(1, "A", "Pogo", R), TrackPull(2, "A", "Kasa Jizo", U)]}
+    guaranteed = {"X": [TrackPull(1, "A", "Bahamut", U), TrackPull(2, "A", "Kasli", U)]}
+    marks = trace_marks(banner_pulls, {}, {}, "1", 2, guaranteed_pulls=guaranteed, guaranteed=True)
+    # The singles that reach 2A light, and the guaranteed column's uber there is the pill.
+    assert marks.path == {"X": {0, 2}}
+    assert marks.gpath == {"X": {2}}
+    assert marks.gtargets == {"X": {2: "Kasli"}}
+    assert marks.targets == {}
+
+
+def test_trace_marks_guaranteed_click_on_unreachable_cell_marks_only_the_uber():
+    banner_pulls = {
+        "X": [TrackPull(1, "A", "Pogo", R), TrackPull(2, "A", "Pogo", R), TrackPull(3, "A", "X", U)]
+    }
+    guaranteed = {
+        "X": [
+            TrackPull(1, "A", "G1", U),
+            TrackPull(2, "A", "G2", U),
+            TrackPull(3, "A", "G3", U),
+        ]
+    }
+    rerolls = {"X": [TrackPull(2, "A", "Sniper Cat", R, steps=1, realized=True)]}
+    marks = trace_marks(
+        banner_pulls, rerolls, {}, "1", 4, guaranteed_pulls=guaranteed, guaranteed=True
+    )
+    # 3A's start is unreachable, so the guaranteed uber stands alone - no lit path.
+    assert marks.path == {}
+    assert marks.gpath == {}
+    assert marks.gtargets == {"X": {4: "G3"}}
+
+
+def test_trace_marks_guaranteed_click_without_a_guarantee_marks_nothing():
+    banner_pulls = {"X": [TrackPull(1, "A", "Pogo", R), TrackPull(2, "A", "Kasa Jizo", U)]}
+    marks = trace_marks(banner_pulls, {}, {}, "1", 2, guaranteed_pulls={}, guaranteed=True)
+    assert marks == TrackMarks()
 
 
 def test_trace_marks_share_steps_with_walk_alike_banners():
