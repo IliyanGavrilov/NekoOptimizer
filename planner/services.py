@@ -747,6 +747,7 @@ def build_tracks(
     debuts=None,
     future=None,
     unit_ids=None,
+    tiers=None,
 ):
     """One merged A/B table over every selected banner: each cell stacks each banner's
     cat at that shared stream position (like ubercarry), with rare-dupe switch arrows
@@ -766,6 +767,9 @@ def build_tracks(
     it out (plan tracks) and no steppers render. ``unit_ids`` ({cat name: unit_id}) tags
     each cell with its catalogue id so the Rolls display-mode toggle can hotlink a form
     icon; names with no catalogued unit (or an empty map) just fall back to text.
+    ``tiers`` ({unit_id: badge}, tier_badges) tags each cell with its tier-list placement
+    so the track shows the same rank chip the picker does; uncatalogued or unranked cats
+    carry none.
     """
     marks = marks or TrackMarks()
     owned = owned or set()
@@ -773,6 +777,7 @@ def build_tracks(
     titles = titles or {}
     debuts = debuts or {}
     unit_ids = unit_ids or {}
+    tiers = tiers or {}
     groups = _banner_groups(banner_pulls, rerolls, equivalents, guaranteed)
     # "New to this banner" is per banner (newly_added_ubers keys by name); a group merges
     # equivalent banners, so its debut set is the union over the names it stands for.
@@ -824,6 +829,7 @@ def build_tracks(
                     "idx": index,
                     "cat": tp.cat,
                     "uid": unit_ids.get(tp.cat),
+                    "tier": tiers.get(unit_ids.get(tp.cat)),
                     "rarity": rarity,
                     "switch": switched,
                     "alt": _dupe_branch(branch, obtained) if branch is not None else None,
@@ -884,6 +890,7 @@ def build_tracks(
                     "idx": index,
                     "cat": tp.cat,
                     "uid": unit_ids.get(tp.cat),
+                    "tier": tiers.get(unit_ids.get(tp.cat)),
                     "rarity": rarity,
                     # The state after the multi's final (guaranteed) draw - "as if you
                     # rolled this multi": what its dice jumps to. Rolling TO the multi
@@ -1423,6 +1430,7 @@ def subset_solutions(
     last_cat="",
     debuts=None,
     unit_ids=None,
+    tiers=None,
 ):
     """Every non-empty target subset and its best plan, biggest-then-cheapest, with the
     unreachable subsets listed after. Reachable ones carry the steps + highlighted track
@@ -1463,6 +1471,7 @@ def subset_solutions(
             titles=titles,
             debuts=debuts,
             unit_ids=unit_ids,
+            tiers=tiers,
         )
         solutions.append(solution)
 

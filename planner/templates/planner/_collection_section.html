@@ -20,7 +20,7 @@
         {% for unit in units %}
           <span class="own-chip{% if unit.owned %} owned{% endif %}{% if unit.wanted %} wanted{% endif %}"
                 data-pk="{{ unit.pk }}" data-name="{{ unit.name }}">
-            <button type="button" class="chip chip-own">{{ unit.name }}{% if unit.tier_badge %}<span class="tier-badge" data-band="{{ unit.tier_badge.tier.0 }}">{{ unit.tier_badge.tier }}{% if unit.tier_badge.up %}<span class="tier-up" title="{{ unit.tier_badge.up_note }}">&#9650;{{ unit.tier_badge.up }}</span>{% endif %}</span>{% endif %}</button>
+            <button type="button" class="chip chip-own">{{ unit.name }}{% include "planner/_tier_badge.html" with badge=unit.tier_badge %}</button>
             <button type="button" class="chip-star" title="Wishlist" aria-label="Toggle wishlist">&#9733;</button>
             <button type="button" class="catinfo" data-name="{{ unit.name }}" title="Forms &amp; wiki" aria-label="Cat details">&#9432;</button>
           </span>
