@@ -327,6 +327,12 @@ def unit_info(request):
     )
 
 
+def unit_forms(request):
+    """{unit_id: form names} for every catalogued unit, in one payload: the Rolls form
+    picker renames the cells client-side, without refetching the table."""
+    return JsonResponse(dict(Unit.objects.values_list("unit_id", "forms")))
+
+
 def collection(request):
     """The whole cat dictionary in one page with the player's owned/wishlist marks,
     browsable by rarity or by gacha set. A unit can sit in several set sections (fests

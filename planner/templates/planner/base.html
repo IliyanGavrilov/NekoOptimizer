@@ -21,7 +21,7 @@
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&display=swap">
   <link rel="stylesheet" href="{% static 'planner/style.css' %}">
 </head>
-<body data-unit-info-url="{% url 'unit_info' %}">
+<body data-unit-info-url="{% url 'unit_info' %}" data-unit-forms-url="{% url 'unit_forms' %}">
   <header class="site-header">
     <div class="bar">
       <a class="brand" href="{% url 'planner' %}">🐾 Neko Optimizer</a>
