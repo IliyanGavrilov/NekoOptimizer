@@ -684,6 +684,18 @@ tbody tr:hover, table tr:hover { background: var(--panel-2); }
   z-index: 3;
   background: var(--bg);
 }
+/* Each banner's future-ubers stepper, right-aligned so they line up in a column
+   whatever the name lengths: a compact number box drag-scrubbed up/down like the
+   other number fields (app.js re-wires each one as the fragment arrives). */
+.track-legend li { display: flex; align-items: center; gap: 0.35rem; flex-wrap: wrap; }
+.track-legend .future-ctl { margin-left: auto; white-space: nowrap; }
+.track-legend .future-ubers {
+  width: 3.2rem;
+  margin-left: 0.3rem;
+  padding: 0.1rem 0.4rem;
+  border-radius: 6px;
+  font-size: 0.75rem;
+}
 .tag {
   display: inline-block;
   min-width: 1.1rem;
@@ -732,7 +744,7 @@ table.track .entry {
 /* Two-level highlight: the whole on-path cell greys out, and inside it the exact
    banner+unit you pull lights up gold (target units, below, glow brightest). */
 table.track td.cell:has(.entry.on-path) { background: var(--panel-2); }
-table.track .entry.on-path {
+.entry.on-path {
   color: var(--ink);
   background: color-mix(in srgb, var(--accent) 12%, transparent);
   box-shadow: inset 3px 0 0 var(--accent);
@@ -751,26 +763,30 @@ table.track .entry.target .catlink {
 /* Another banner giving the identical cat at one of the plan's pulls: that step is
    interchangeable - roll it on either. A dashed echo of the on-path stripe (border,
    not box-shadow: shadows can't dash; the padding offsets the added width). */
-table.track .entry.shared {
+.entry.shared {
   color: var(--ink);
   background: color-mix(in srgb, var(--accent) 6%, transparent);
   border-left: 3px dashed color-mix(in srgb, var(--accent) 60%, transparent);
   padding-left: calc(0.5rem - 3px);
   border-radius: 2px;
 }
+/* Click-to-trace renders as ordinary plan marks (on-path + target pill + shared);
+   the cell's empty space is the click target (names/dice have their own). */
+table.track td.cell:not(.guaranteed-col) .entry { cursor: pointer; }
 /* Rare-dupe reroll: show where the slot jumps (to the other track) on its own line.
    Dimmed accent so it reads as a branch note, not a pull of its own. */
-table.track .arrow {
+.arrow {
   display: block;
   color: color-mix(in srgb, var(--accent) 45%, var(--muted));
   font-size: 0.78rem;
   font-weight: 400;
 }
 /* Collection marks, matching the picker chips: a green name is an Uber/Legend you
-   don't own yet, ✓ = owned (the line dims), ★ = wishlisted. */
-table.track .entry.new .catlink, .cat-pill.new { color: var(--new); }
+   don't own yet, ✓ = owned (the line dims), ★ = wishlisted. Left unscoped so the
+   Rolls guide's samples reuse them verbatim and always match the cells. */
+.entry.new .catlink, .cat-pill.new { color: var(--new); }
 /* Brand-new Uber (first appears on an upcoming banner) - a small accent "new" pill. */
-table.track .entry .debut {
+.debut {
   font-size: 0.6rem;
   font-weight: 700;
   text-transform: uppercase;
@@ -782,10 +798,10 @@ table.track .entry .debut {
   vertical-align: middle;
 }
 /* Owned lines dim - except a searched-for target, whose gold pill must stay lit. */
-table.track .entry.owned:not(.target), .cat-pill.owned:not(.target) { opacity: 0.6; }
-table.track .entry.owned .catlink::after,
+.entry.owned:not(.target), .cat-pill.owned:not(.target) { opacity: 0.6; }
+.entry.owned .catlink::after,
 .cat-pill.owned::after { content: " \2713"; color: var(--accent); font-weight: 700; }
-table.track .entry.wanted .catlink::after,
+.entry.wanted .catlink::after,
 .cat-pill.wanted::after { content: " \2605"; color: var(--r-super); }
 /* "Roll to here": one dice per track cell (the anchor seed is banner-independent),
    a small fixed-size button docked right and vertically centred, à la ubercarry.
@@ -881,6 +897,9 @@ table.track th.guaranteed-col, table.track td.guaranteed-col {
   line-height: 1.35;
 }
 .symbol-legend li { display: flex; gap: 0.4rem; align-items: baseline; }
+/* A guide sample built from the track's own entry/mark classes: give it the little
+   box the table cell normally provides, and undo the arrow's block display. */
+.symbol-legend .sample { display: inline-block; padding: 0 0.35rem; border-radius: 4px; }
 .symbol-legend .sym {
   flex: 0 0 auto;
   color: var(--ink);
@@ -889,13 +908,6 @@ table.track th.guaranteed-col, table.track td.guaranteed-col {
 }
 .symbol-legend .dice-sym svg { width: 14px; height: 14px; vertical-align: -2px; }
 .symbol-legend .sep { color: var(--line); }
-.new-swatch { color: var(--new); font-weight: 600; }
-.shared-swatch {
-  border-left: 3px dashed color-mix(in srgb, var(--accent) 60%, transparent);
-  padding-left: 0.25rem;
-}
-.mark-owned { color: var(--accent); font-weight: 700; }
-.mark-wanted { color: var(--r-super); }
 .rarity-legend { display: flex; flex-wrap: wrap; gap: 0.4rem; }
 
 .banner-group + .banner-group { margin-top: 0.9rem; }
@@ -1101,6 +1113,11 @@ table.track th.guaranteed-col, table.track td.guaranteed-col {
   text-underline-offset: 2px;
 }
 .catlink:hover { color: var(--accent); text-decoration-color: currentColor; filter: none; }
+
+/* A future-uber placeholder: italic (not a real unit) with no popup, but its green
+   uncollected colour stays - hovering mustn't fake a link. */
+.catlink.future { cursor: default; font-style: italic; }
+.catlink.future:hover { color: inherit; text-decoration-color: transparent; }
 
 /* The small "ⓘ" opener on collection + picker chips (they toggle on their main click,
    so the forms/wiki popup gets its own affordance). */

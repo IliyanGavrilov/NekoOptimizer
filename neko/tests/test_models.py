@@ -1,4 +1,12 @@
-from neko.models import CATFOOD_PER_DRAW, Path, State
+from neko.models import (
+    CATFOOD_PER_DRAW,
+    Banner,
+    Path,
+    Rarity,
+    State,
+    future_uber_names,
+    is_future_uber,
+)
 
 
 def test_equal_states_collapse_when_hashed():
@@ -14,3 +22,30 @@ def test_state_found_set_affects_identity():
 def test_path_cost_counts_catfood_not_tickets():
     path = Path(pulls=(), tickets_used=5, catfood_draws_used=2)
     assert path.cost == 2 * CATFOOD_PER_DRAW
+
+
+def test_future_uber_names_run_up_to_the_pool_front():
+    assert future_uber_names(3) == ("Future Uber 3", "Future Uber 2", "Future Uber 1")
+    assert future_uber_names(0) == ()
+
+
+def test_is_future_uber_matches_only_the_placeholders():
+    assert is_future_uber("Future Uber 1")
+    assert is_future_uber("Future Uber 12")
+    assert not is_future_uber("Baby Gao")
+    assert not is_future_uber("Future Uber 1 Cat")
+
+
+def test_with_future_ubers_prepends_placeholders_and_leaves_the_rest():
+    banner = Banner(
+        "id",
+        "name",
+        "",
+        {Rarity.UBER_SUPER_RARE: 500},
+        {Rarity.UBER_SUPER_RARE: ("U1", "U2"), Rarity.RARE: ("R1",)},
+    )
+    padded = banner.with_future_ubers(2)
+    assert padded.pool(Rarity.UBER_SUPER_RARE) == ("Future Uber 2", "Future Uber 1", "U1", "U2")
+    assert padded.pool(Rarity.RARE) == ("R1",)
+    assert padded.rates == banner.rates
+    assert banner.with_future_ubers(0) is banner
