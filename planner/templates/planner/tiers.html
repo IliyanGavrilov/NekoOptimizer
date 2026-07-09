@@ -1,12 +1,14 @@
 {% extends "planner/base.html" %}
 
-{% block title %}Tier List &mdash; Neko Optimizer{% endblock %}
+{% block title %}Uber &amp; Legend Tier List &mdash; Neko Optimizer{% endblock %}
 
 {% block content %}
-  <h1>Uber Tier List</h1>
+  <h1>Uber &amp; Legend Tier List</h1>
   <p class="muted">
-    The cumulative ranking from <a href="{{ source }}" target="_blank" rel="noopener">The Battle Cats Tier List</a>,
-    matched to the catalogue (fetched {{ fetched }}). <strong>UF</strong> ranks a unit's Ultra Form,
+    The cumulative Uber &amp; Legend Rare ranking from
+    <a href="{{ source }}" target="_blank" rel="noopener">The Battle Cats Tier List</a>,
+    matched to the catalogue (fetched {{ fetched }}). Collab and limited units are left out;
+    it ranks the standard permanent pool. <strong>UF</strong> ranks a unit's Ultra Form,
     <strong>UT</strong> its Ultra Talents; a dimmed cat ranks higher up through one of those.
     Click a cat for its forms and wiki page.
   </p>
@@ -30,4 +32,10 @@
       </div>
     {% endfor %}
   </div>
+
+  <p class="muted tier-more">
+    Want the collab and limited units too?
+    <a href="https://drive.google.com/drive/folders/12Iu_dv8AZWfU3ekRoA_km0dbJA9klNdC"
+       target="_blank" rel="noopener">Full Uber &amp; Legend reference, with collabs and limiteds &#8599;</a>
+  </p>
 {% endblock %}
