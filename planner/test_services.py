@@ -23,6 +23,7 @@ from planner.services import (
     newly_added_ubers,
     picker_groups,
     plan_highlight,
+    plan_landing,
     plan_seed,
     plan_shared,
     plan_summary,
@@ -592,6 +593,7 @@ def test_trace_marks_light_the_walk_up_to_the_clicked_cell():
     marks = trace_marks(banner_pulls, {}, {}, "1", 4)
     assert marks.path == {"X": {0, 2, 4}}
     assert marks.targets == {"X": {4: "Bahamut"}}
+    assert marks.nexts == {"X": {6}}  # the striped "you land here next" cell
 
 
 def test_trace_marks_follow_a_dupe_hop():
@@ -606,6 +608,7 @@ def test_trace_marks_follow_a_dupe_hop():
     marks = trace_marks(banner_pulls, rerolls, {}, "1", 5)
     assert marks.path == {"X": {0, 2, 5}}
     assert marks.targets == {"X": {5: "Kasa Jizo"}}
+    assert marks.nexts == {"X": {7}}
 
 
 def test_trace_marks_stop_when_a_hop_jumps_past_the_cell():
@@ -619,10 +622,12 @@ def test_trace_marks_stop_when_a_hop_jumps_past_the_cell():
     rerolls = {"X": [TrackPull(2, "A", "Sniper Cat", R, steps=1, realized=True)]}
     marks = trace_marks(banner_pulls, rerolls, {}, "1", 4)
     # The reroll at 2A hops to 3B, so 3A is unreachable by straight singles on this seed:
-    # nothing before it lights up - just the clicked cat gets its pill (godfat's pick).
+    # nothing before it lights up - just the clicked cat gets its pill (godfat's pick),
+    # and the nominal continuation (+2) is striped: got this cat somehow, you land there.
     assert marks.path == {}
     assert marks.targets == {"X": {4: "Bahamut"}}
     assert marks.shared == {}
+    assert marks.nexts == {"X": {6}}
 
 
 def test_trace_marks_guaranteed_click_marks_the_column_uber():
@@ -657,10 +662,12 @@ def test_trace_marks_guaranteed_click_lights_the_multis_own_draws():
         guaranteed_sizes={"X": 3},
     )
     # A 3-roll guaranteed started on 2A draws 2A and 3A; its last roll (4A) is swapped
-    # for the uber, so that cell stays unlit while the walk there (1A) lights as before.
+    # for the uber, so that cell stays unlit while the walk there (1A) lights as before,
+    # and the landing - one half-step past the swap, track flipped (4B) - is striped.
     assert marks.path == {"X": {0, 2, 4}}
     assert marks.gpath == {"X": {2}}
     assert marks.gtargets == {"X": {2: "G2"}}
+    assert marks.nexts == {"X": {7}}
 
 
 def test_trace_marks_guaranteed_draws_stop_at_the_rolled_window():
@@ -676,9 +683,11 @@ def test_trace_marks_guaranteed_draws_stop_at_the_rolled_window():
         guaranteed=True,
         guaranteed_sizes={"X": 11},
     )
-    # The 11-roll's later draws fall past the rolled cells: light what the window shows.
+    # The 11-roll's later draws fall past the rolled cells: light what the window shows,
+    # and skip the striped landing (it can't be placed without walking the whole chain).
     assert marks.path == {"X": {0, 2}}
     assert marks.gtargets == {"X": {2: "G2"}}
+    assert marks.nexts == {}
 
 
 def test_trace_marks_guaranteed_click_on_unreachable_cell_marks_only_the_uber():
@@ -702,6 +711,35 @@ def test_trace_marks_guaranteed_click_on_unreachable_cell_marks_only_the_uber():
     assert marks.gtargets == {"X": {4: "G3"}}
 
 
+def test_trace_marks_unreachable_guaranteed_still_stripes_the_landing():
+    banner_pulls = {
+        "X": [
+            TrackPull(1, "A", "Pogo", R),
+            TrackPull(2, "A", "Pogo", R),
+            TrackPull(3, "A", "X", U),
+            TrackPull(4, "A", "Bath Cat", R),
+        ]
+    }
+    guaranteed = {"X": [TrackPull(3, "A", "G3", U)]}
+    rerolls = {"X": [TrackPull(2, "A", "Sniper Cat", R, steps=1, realized=True)]}
+    marks = trace_marks(
+        banner_pulls,
+        rerolls,
+        {},
+        "1",
+        4,
+        guaranteed_pulls=guaranteed,
+        guaranteed=True,
+        guaranteed_sizes={"X": 2},
+    )
+    # No lit path to 3A, but starting a 2-roll guaranteed there still lands one
+    # half-step past the swapped 4A: stripe 4B, keeping the uber pill on its own.
+    assert marks.path == {}
+    assert marks.gpath == {}
+    assert marks.gtargets == {"X": {4: "G3"}}
+    assert marks.nexts == {"X": {7}}
+
+
 def test_trace_marks_guaranteed_click_without_a_guarantee_marks_nothing():
     banner_pulls = {"X": [TrackPull(1, "A", "Pogo", R), TrackPull(2, "A", "Kasa Jizo", U)]}
     marks = trace_marks(banner_pulls, {}, {}, "1", 2, guaranteed_pulls={}, guaranteed=True)
@@ -722,6 +760,22 @@ def test_trace_marks_ignore_a_stale_click():
     banner_pulls = {"X": [TrackPull(1, "A", "Pogo", R)]}
     assert trace_marks(banner_pulls, {}, {}, "9", 0).path == {}
     assert trace_marks(banner_pulls, {}, {}, "1", 400).path == {}
+
+
+def test_build_tracks_stripes_the_next_cell_and_extends_to_show_it():
+    banner_pulls = {
+        "X": [
+            TrackPull(1, "A", "Pogo", R),
+            TrackPull(2, "A", "Kasa Jizo", U),
+            TrackPull(3, "A", "Bahamut", U),
+        ]
+    }
+    marks = TrackMarks(nexts={"X": {4}})
+    track = build_tracks(banner_pulls, {}, {}, marks=marks, rows=1)
+    # The landing mark pulls the table out to its row, like path marks do.
+    assert len(track["rows"]) == 3
+    assert track["rows"][2]["a"][0]["next"] is True
+    assert track["rows"][0]["a"][0]["next"] is False
 
 
 def test_build_tracks_marks_an_owned_cat():
@@ -851,6 +905,42 @@ def test_plan_seed_guaranteed_pull_reads_the_guaranteed_column():
 
 def test_plan_seed_empty_plan_is_none():
     assert plan_seed(Path((), 0, 0), []) is None
+
+
+def test_plan_landing_is_the_cell_after_the_last_pull():
+    graphs = build_graphs(
+        {"X": [TrackPull(1, "A", "Cat", R, seed=7), TrackPull(2, "A", "Dog", R, seed=8)]}
+    )
+    plan = Path((Pull(0, "X", "Cat", R), Pull(2, "X", "Dog", R)), 2, 0)
+    assert plan_landing(plan, graphs) == 4
+
+
+def test_plan_landing_on_a_dupe_follows_the_hop():
+    graphs = build_graphs(
+        {"X": [TrackPull(1, "A", "Cat", R, seed=7), TrackPull(2, "A", "Cat", R, seed=8)]},
+        rerolls={"X": [TrackPull(2, "A", "Dog", R, seed=9, steps=1)]},
+    )
+    plan = Path((Pull(0, "X", "Cat", R), Pull(2, "X", "Dog", R)), 2, 0)
+    # The second pull dupes and rerolls: it continues 2 + steps on, flipping the track.
+    assert plan_landing(plan, graphs) == 5
+
+
+def test_plan_landing_guaranteed_multi_lands_past_the_swapped_roll():
+    graphs = build_graphs(
+        {"X": [TrackPull(1, "A", "Cat", R, seed=7), TrackPull(2, "A", "Dog", R, seed=8)]},
+        {"X": [TrackPull(1, "A", "Mecha", U, seed=10)]},
+    )
+    # A 2-roll guaranteed from 1A: draw 1A, swap 2A for the uber, land on 2B.
+    plan = Path(
+        (Pull(0, "X", "Cat", R), Pull(0, "X", "Mecha", U, guaranteed=True)),
+        0,
+        3,
+    )
+    assert plan_landing(plan, graphs) == 3
+
+
+def test_plan_landing_empty_plan_is_none():
+    assert plan_landing(Path((), 0, 0), []) is None
 
 
 def test_plan_seed_resolves_a_conditional_dupe_by_the_walk():
