@@ -518,6 +518,7 @@ if (picker) {
     if (traceState) {
       body.set("trace_tag", traceState.tag);
       body.set("trace_idx", traceState.idx);
+      if (traceState.guaranteed) body.set("trace_guaranteed", "1");
     }
     return fetch(url, { method: "POST", body, headers: { "X-CSRFToken": token } });
   };
@@ -621,10 +622,15 @@ if (picker) {
   trackHost.addEventListener("click", (e) => {
     if (e.target.closest("button, a, input, label, .arrow")) return;
     const entry = e.target.closest(".entry");
-    if (!entry || !entry.dataset.idx || entry.closest(".guaranteed-col")) return;
+    if (!entry || !entry.dataset.idx) return;
+    // A guaranteed-column click traces the uber that column's multi would award instead.
+    const guaranteed = !!entry.closest(".guaranteed-col");
     const same =
-      traceState && traceState.tag === entry.dataset.tag && traceState.idx === entry.dataset.idx;
-    traceState = same ? null : { tag: entry.dataset.tag, idx: entry.dataset.idx };
+      traceState &&
+      traceState.tag === entry.dataset.tag &&
+      traceState.idx === entry.dataset.idx &&
+      traceState.guaranteed === guaranteed;
+    traceState = same ? null : { tag: entry.dataset.tag, idx: entry.dataset.idx, guaranteed };
     refreshTracks(true);
   });
 
