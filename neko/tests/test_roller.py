@@ -2,6 +2,7 @@ from datetime import date
 
 from neko.gacha import GachaRule
 from neko.gachadata import GachaEventRow
+from neko.models import Rarity, future_uber_names
 from neko.roller import RollResult, active_events, catalogue_banners, roll_active, roll_selected
 from neko.search import Multi
 
@@ -101,6 +102,38 @@ def test_simulate_guaranteed_forces_the_column_on_a_plain_banner():
     assert roll_selected(123, ["Plain Banner"], **kw).banners["Plain Banner"].guaranteed == []
     forced = roll_selected(123, ["Plain Banner"], simulate_guaranteed=11, **kw)
     assert len(forced.banners["Plain Banner"].guaranteed) > 1
+
+
+def test_future_ubers_pad_the_pool_but_shift_only_uber_names():
+    kw = dict(events=EVENTS, pools=POOLS, units=UNITS, rules=[])
+    plain = roll_selected(123, ["Alpha Banner"], **kw).banners["Alpha Banner"]
+    padded = roll_selected(123, ["Alpha Banner"], future_ubers={"Alpha Banner": 3}, **kw).banners[
+        "Alpha Banner"
+    ]
+    placeholders = set(future_uber_names(3))
+
+    for before, after in zip(plain.pulls, padded.pulls, strict=True):
+        assert (after.position, after.track, after.rarity, after.seed) == (
+            before.position,
+            before.track,
+            before.rarity,
+            before.seed,
+        )
+        if before.rarity is Rarity.UBER_SUPER_RARE:
+            assert after.cat in placeholders | {"U1"}
+        else:
+            assert after.cat == before.cat
+
+    # The padding must actually shift something, or the control would be a no-op.
+    assert any(a.cat != b.cat for a, b in zip(plain.pulls, padded.pulls, strict=True))
+
+
+def test_future_ubers_pad_only_the_named_banner():
+    kw = dict(events=EVENTS, pools=POOLS, units=UNITS, rules=[])
+    names = ["Alpha Banner", "Beta Banner"]
+    plain = roll_selected(123, names, **kw).banners
+    padded = roll_selected(123, names, future_ubers={"Alpha Banner": 3}, **kw).banners
+    assert padded["Beta Banner"].pulls == plain["Beta Banner"].pulls
 
 
 def test_simulate_guaranteed_leaves_a_real_guarantee_unchanged():

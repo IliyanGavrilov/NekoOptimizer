@@ -1,3 +1,5 @@
+import json
+
 from django.http import HttpResponse, HttpResponseBadRequest, JsonResponse
 from django.shortcuts import get_object_or_404, render
 from django.template.loader import render_to_string
@@ -6,7 +8,7 @@ from django.views.decorators.http import require_POST
 from neko.models import CATFOOD_PER_DRAW
 from neko.rng import backtrack
 from neko.roller import DEFAULT_COUNT, GUARANTEED_OPTIONS
-from planner.forms import MAX_TRACK_LENGTH, PlannerForm
+from planner.forms import MAX_FUTURE_UBERS, MAX_TRACK_LENGTH, PlannerForm
 from planner.models import Cat, Seed, Unit
 from planner.services import (
     RARITY_ORDER,
@@ -23,6 +25,7 @@ from planner.services import (
     picker_groups,
     set_sections,
     subset_solutions,
+    trace_marks,
     wiki_url,
 )
 
@@ -65,13 +68,24 @@ def picker_past(request):
     return render(request, "planner/_picker_rows.html", {"sections": groups.get("Past", [])})
 
 
-def _roll(seed, chosen_banners, count, last_cat="", simulate_guaranteed=0):
+def _roll(seed, chosen_banners, count, last_cat="", simulate_guaranteed=0, future_ubers=None):
     if chosen_banners:
         return fetch_for_banners(
-            seed, chosen_banners, count, last_cat=last_cat, simulate_guaranteed=simulate_guaranteed
+            seed,
+            chosen_banners,
+            count,
+            last_cat=last_cat,
+            simulate_guaranteed=simulate_guaranteed,
+            future_ubers=future_ubers,
         )
 
-    return fetch_banners(seed, count, last_cat=last_cat, simulate_guaranteed=simulate_guaranteed)
+    return fetch_banners(
+        seed,
+        count,
+        last_cat=last_cat,
+        simulate_guaranteed=simulate_guaranteed,
+        future_ubers=future_ubers,
+    )
 
 
 def _track_length(request):
@@ -93,6 +107,41 @@ def _simulate_guaranteed(request):
         return 0
 
     return n if n in GUARANTEED_OPTIONS else 0
+
+
+def _future_ubers(request):
+    """The per-banner future-uber padding (godfat's "Count of future ubers", one counter
+    per banner): a JSON {run name: count} posted by the legend steppers, counts clamped
+    to [0, MAX]. Anything malformed just means no padding."""
+    try:
+        raw = json.loads(request.POST.get("future_ubers", "") or "{}")
+    except json.JSONDecodeError:
+        return {}
+    if not isinstance(raw, dict):
+        return {}
+
+    counts = {}
+    for name, count in raw.items():
+        try:
+            count = int(count)
+        except TypeError, ValueError:
+            continue
+        if count > 0:
+            counts[str(name)] = min(count, MAX_FUTURE_UBERS)
+
+    return counts
+
+
+def _trace(request):
+    """The cell a trace click picked (godfat's pick), as (legend tag, stream index) - or
+    None when nothing was clicked or the post is malformed."""
+    tag = request.POST.get("trace_tag", "")
+    try:
+        index = int(request.POST.get("trace_idx", ""))
+    except ValueError:
+        return None
+
+    return (tag, index) if tag.isdigit() and index >= 0 else None
 
 
 @require_POST
@@ -143,25 +192,35 @@ def tracks(request):
 
     last_cat = request.POST.get("last_cat", "").strip()
     count = _track_length(request)
+    future_ubers = _future_ubers(request)
     result = _roll(
         seed,
         request.POST.getlist("banners"),
         count,
         last_cat,
         simulate_guaranteed=_simulate_guaranteed(request),
+        future_ubers=future_ubers,
     )
     equivalents = equivalent_banners(result.banners)
     pulls, guaranteed, rerolls, _ = _rolls_by_banner(result)
+    trace = _trace(request)
+    marks = None
+    if trace is not None:
+        marks = trace_marks(
+            pulls, rerolls, equivalents, trace[0], trace[1], last_cat, result.multis
+        )
     track = build_tracks(
         pulls,
         rerolls,
         equivalents,
+        marks=marks,
         owned=_owned_names(),
         guaranteed=guaranteed,
         wanted=_wanted_names(),
         titles=display_titles(),
         rows=count,
         debuts=newly_added_ubers(),
+        future=future_ubers,
     )
 
     return render(request, "planner/_tracks.html", {"track": track})

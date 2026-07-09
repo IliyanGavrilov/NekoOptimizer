@@ -140,14 +140,16 @@ def _roll_events(
     rules: Iterable[GachaRule],
     last_cat: str = "",
     simulate_guaranteed: int = 0,
+    future_ubers: Mapping[str, int] | None = None,
 ) -> RollResult:
     """Roll each event and key it by banner name, keeping a recurring banner's latest run."""
     latest = _latest_runs(events)
     configs = multi_configs(latest.values(), rules)
+    future_ubers = future_ubers or {}
     banners, multis, dates = {}, {}, {}
 
     for name, event in latest.items():
-        banner = build_banner(event, pools, units)
+        banner = build_banner(event, pools, units).with_future_ubers(future_ubers.get(name, 0))
         guaranteed_rolls = _guaranteed_rolls(event, force=simulate_guaranteed)
         banners[name] = roll_banner(
             seed, banner, count, guaranteed_rolls=guaranteed_rolls, last_cat=last_cat
@@ -182,11 +184,14 @@ def roll_active(
     rules: Iterable[GachaRule] | None = None,
     last_cat: str = "",
     simulate_guaranteed: int = 0,
+    future_ubers: Mapping[str, int] | None = None,
 ) -> RollResult:
     """Roll the banners active on ``today`` (defaults to the real date). ``last_cat`` is
     the pull you got just before this view - it can dupe each banner's first cell.
     ``simulate_guaranteed`` (a roll count) forces a guaranteed column of that size onto
-    banners without one."""
+    banners without one. ``future_ubers`` maps a banner name to how many
+    expected-but-unreleased placeholders pad ITS uber pool (godfat's "Count of future
+    ubers", but per banner)."""
     events, pools, units, rules = _load(events, pools, units, rules)
 
     return _roll_events(
@@ -198,6 +203,7 @@ def roll_active(
         rules,
         last_cat,
         simulate_guaranteed,
+        future_ubers,
     )
 
 
@@ -213,14 +219,17 @@ def roll_selected(
     rules: Iterable[GachaRule] | None = None,
     last_cat: str = "",
     simulate_guaranteed: int = 0,
+    future_ubers: Mapping[str, int] | None = None,
 ) -> RollResult:
     """Roll the selected banners: each "start|name" is its pinned run, each bare name its
-    current run (see select_events). ``last_cat`` and ``simulate_guaranteed`` work as in
-    roll_active."""
+    current run (see select_events). ``last_cat``, ``simulate_guaranteed`` and
+    ``future_ubers`` work as in roll_active."""
     events, pools, units, rules = _load(events, pools, units, rules)
     chosen = select_events(events, names, today)
 
-    return _roll_events(seed, chosen, pools, units, count, rules, last_cat, simulate_guaranteed)
+    return _roll_events(
+        seed, chosen, pools, units, count, rules, last_cat, simulate_guaranteed, future_ubers
+    )
 
 
 def catalogue_banners(

@@ -1,3 +1,4 @@
+import re
 from collections.abc import Mapping
 from dataclasses import dataclass, field
 from enum import StrEnum
@@ -62,6 +63,22 @@ class BannerRolls:
     guaranteed_rerolls: list[TrackPull] = field(default_factory=list)
 
 
+def future_uber_names(count: int) -> tuple[str, ...]:
+    """The placeholder names of ``count`` future ubers, in uber-pool order. godfat gives
+    them negative ids and unshifts each onto the pool front (its "(-n?)" cells), so the
+    pool reads Future Uber count, ..., Future Uber 2, Future Uber 1 before the real
+    ubers - our Future Uber n sits exactly where godfat shows (-n?)."""
+    return tuple(f"Future Uber {n}" for n in range(count, 0, -1))
+
+
+_FUTURE_UBER = re.compile(r"Future Uber \d+")
+
+
+def is_future_uber(cat: str) -> bool:
+    """Whether this cat is a future-uber placeholder rather than a real unit."""
+    return _FUTURE_UBER.fullmatch(cat) is not None
+
+
 @dataclass(frozen=True)
 class Banner:
     """A gacha banner: cats and drop rates (parts-per-10000) per rarity."""
@@ -77,6 +94,21 @@ class Banner:
 
     def pool(self, rarity: Rarity) -> tuple[str, ...]:
         return self.pools.get(rarity, ())
+
+    def with_future_ubers(self, count: int) -> Banner:
+        """This banner with ``count`` expected-but-unreleased ubers added, matching
+        godfat's add_future_ubers: placeholders are PREPENDED to the uber pool, so every
+        uber cell and guaranteed draw re-lands on `seed % (len + count)` exactly like
+        godfat with its "Count of future ubers" set. Rates are untouched (the pull's
+        rarity never depends on the pool)."""
+        if count <= 0:
+            return self
+
+        pools = dict(self.pools)
+        uber = Rarity.UBER_SUPER_RARE
+        pools[uber] = future_uber_names(count) + self.pool(uber)
+
+        return Banner(self.banner_id, self.name, self.url, self.rates, pools)
 
 
 @dataclass(frozen=True, slots=True)

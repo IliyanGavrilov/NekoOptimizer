@@ -57,9 +57,9 @@ if (picker) {
         platLegendCap: platLegendCapEl.value,
         explore: exploreEl.checked,
         horizon: horizonEl.value,
-        // The Rolls-table display controls (rolls-to-show, details, guaranteed) are
-        // deliberately NOT persisted - each visit starts at the defaults (100 rolls, no
-        // details, guaranteed off).
+        // The Rolls-table display controls (rolls-to-show, details, guaranteed,
+        // future ubers) are deliberately NOT persisted - each visit starts at the
+        // defaults (100 rolls, no details, guaranteed off, no future ubers).
       }),
     );
   }
@@ -466,6 +466,18 @@ if (picker) {
     const body = new FormData(plannerForm);
     body.set("track_length", trackLengthEl.value);
     body.set("simulate_guaranteed", simGuaranteedEl.value);
+    // Future-uber padding is per banner: each legend stepper covers the run names of
+    // the banner group it sits on (the server re-renders the values it applied).
+    const future = {};
+    trackHost.querySelectorAll(".future-ubers").forEach((input) => {
+      const count = Math.max(0, Math.min(99, Number(input.value) || 0));
+      for (const name of JSON.parse(input.dataset.names)) future[name] = count;
+    });
+    body.set("future_ubers", JSON.stringify(future));
+    if (traceState) {
+      body.set("trace_tag", traceState.tag);
+      body.set("trace_idx", traceState.idx);
+    }
     return fetch(url, { method: "POST", body, headers: { "X-CSRFToken": token } });
   };
 
@@ -505,6 +517,7 @@ if (picker) {
   // Needs a seed AND at least one selected banner; nothing selected => no track
   // (no implicit "current banners" fallback).
   let trackTimer;
+  let traceState = null; // the traced cell, kept only across its own re-render
   const anyBanner = () => includes.some((b) => b.getAttribute("aria-pressed") === "true");
   // The banner legend sticks under the site header; the sticky thead sits just below it,
   // so measure the visible legend's height into --legend-h whenever a track is (re)rendered.
@@ -513,7 +526,9 @@ if (picker) {
     document.documentElement.style.setProperty("--legend-h", legend ? `${legend.offsetHeight}px` : "0px");
   };
   addEventListener("resize", setLegendHeight);
-  async function refreshTracks() {
+  async function refreshTracks(keepTrace = false) {
+    // Any refresh besides a trace click means the rolls changed: drop the trace.
+    if (!keepTrace) traceState = null;
     if (!seedEl.value.trim() || !anyBanner()) {
       trackHost.innerHTML = "";
       resultsRegion.hidden = !solutions.firstElementChild;
@@ -523,6 +538,9 @@ if (picker) {
     if (!resp.ok) return;
     trackHost.innerHTML = await resp.text();
     resultsRegion.hidden = !trackHost.firstElementChild;
+    // These steppers are (re)rendered with the fragment, so wire up drag-to-scrub
+    // each time - the page-load pass never saw them.
+    trackHost.querySelectorAll(".future-ubers").forEach(scrubNumberInput);
     setLegendHeight();
   }
   async function requestTracks() {
@@ -545,6 +563,27 @@ if (picker) {
   });
   browser.addEventListener("click", (e) => {
     if (e.target.closest(".banner-include")) scheduleTracks();
+  });
+  // The per-banner future-ubers steppers live inside the server-rendered legend, so
+  // listen on the host; changing one re-rolls the table with the new padding.
+  trackHost.addEventListener("input", (e) => {
+    if (e.target.closest(".future-ubers")) scheduleTracks();
+  });
+
+  // ---- Click-to-trace: plan-style marks for the rolls UP TO a cell --------
+  // godfat's pick(): click a banner's line (its name-free space - names open the
+  // popup, dice jump the seed) and the server re-renders the table with the walk
+  // from 1A to that cell lit exactly like a plan: gold pill on the cell, and the
+  // shared dashes on other banners that could roll a step without changing the
+  // path. Clicking the same line again clears it.
+  trackHost.addEventListener("click", (e) => {
+    if (e.target.closest("button, a, input, label, .arrow")) return;
+    const entry = e.target.closest(".entry");
+    if (!entry || !entry.dataset.idx || entry.closest(".guaranteed-col")) return;
+    const same =
+      traceState && traceState.tag === entry.dataset.tag && traceState.idx === entry.dataset.idx;
+    traceState = same ? null : { tag: entry.dataset.tag, idx: entry.dataset.idx };
+    refreshTracks(true);
   });
 
   // ---- Seed navigation: "roll to here" + undo ---------------------------
@@ -856,9 +895,10 @@ if (collectionBrowser) {
 
 // ---- Drag-to-scrub number inputs -------------------------------------
 // Click-drag up/down anywhere on a number field to step it up/down; a plain
-// click (no vertical movement) still focuses the field for typing.
+// click (no vertical movement) still focuses the field for typing. Exposed so
+// the AJAX-rendered future-ubers steppers can be wired up as they arrive.
 const PX_PER_STEP = 7;
-document.querySelectorAll('input[type="number"]').forEach((input) => {
+function scrubNumberInput(input) {
   const step = Number(input.step) || 1;
   const min = input.min === "" ? -Infinity : Number(input.min);
   const max = input.max === "" ? Infinity : Number(input.max);
@@ -902,7 +942,8 @@ document.querySelectorAll('input[type="number"]').forEach((input) => {
   input.addEventListener("click", (e) => {
     if (moved) e.preventDefault();
   });
-});
+}
+document.querySelectorAll('input[type="number"]').forEach(scrubNumberInput);
 
 // ---- Sticky track headers pin below the site header ---------------------
 // The header's height varies (it wraps on narrow screens), so measure it into

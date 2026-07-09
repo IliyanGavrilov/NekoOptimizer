@@ -1,3 +1,4 @@
+import json
 from datetime import date
 
 import pytest
@@ -28,6 +29,7 @@ from planner.services import (
     series_names,
     set_sections,
     subset_solutions,
+    trace_marks,
     wiki_url,
 )
 
@@ -332,22 +334,33 @@ def test_build_tracks_merges_equivalent_banners_into_one_legend_entry():
     assert len(track["legend"]) == 1
 
 
-def test_newly_added_ubers_are_the_ubers_a_banner_added_since_its_last_run():
-    def ev(eid, start, pool_id):
-        return GachaEventRow(eid, eid, start, start, pool_id, 7, 2, 1, 0, False, False)
+def _gacha_event(name, start, pool_id):
+    return GachaEventRow(name, name, start, start, pool_id, 7, 2, 1, 0, False, False)
 
-    # Same series (1) reruns; the newer run's pool gains uber 20. A one-off series (2)
-    # has no prior run, so nothing counts as newly added there.
+
+def test_newly_added_ubers_are_the_ubers_debuting_with_a_banner_run():
+    # "Late Uber" premieres on the March festival; the June banner picks it up too,
+    # but only its own first-ever uber counts as new there.
     events = [
-        ev("old", date(2025, 1, 1), 10),
-        ev("new", date(2025, 6, 1), 11),
-        ev("solo", date(2025, 3, 1), 20),
+        _gacha_event("base", date(2025, 1, 1), 10),
+        _gacha_event("fest", date(2025, 3, 1), 20),
+        _gacha_event("rerun", date(2025, 6, 1), 11),
     ]
-    pools = {10: [1], 11: [1, 2], 20: [1, 3]}
-    series = {10: 1, 11: 1, 20: 2}
-    units = {1: ("Old Uber", U.value), 2: ("Added Uber", U.value), 3: ("Solo Uber", U.value)}
-    added = newly_added_ubers(events=events, pools=pools, series=series, units=units)
-    assert added == {"new": {"Added Uber"}}
+    pools = {10: [1], 20: [2], 11: [1, 2, 3]}
+    units = {1: ("Base Uber", U.value), 2: ("Late Uber", U.value), 3: ("June Uber", U.value)}
+    added = newly_added_ubers(events=events, pools=pools, units=units)
+    assert added == {"base": {"Base Uber"}, "fest": {"Late Uber"}, "rerun": {"June Uber"}}
+
+
+def test_newly_added_ubers_keys_a_rerun_name_by_its_latest_run():
+    # The banner reruns under the same name with the same pool: its January debuts
+    # must not resurface as "new" on the June run.
+    events = [
+        _gacha_event("fest", date(2025, 1, 1), 10),
+        _gacha_event("fest", date(2025, 6, 1), 10),
+    ]
+    units = {1: ("Old Uber", U.value)}
+    assert newly_added_ubers(events=events, pools={10: [1]}, units=units) == {}
 
 
 def test_build_tracks_flags_an_uber_new_to_its_banner():
@@ -508,6 +521,96 @@ def test_build_tracks_rare_cat_is_never_new():
     banner_pulls = {"X": [TrackPull(1, "A", "Pogo", R)]}
     entry = build_tracks(banner_pulls, {}, {}, owned=set())["rows"][0]["a"][0]
     assert entry["new"] is False
+
+
+def test_build_tracks_marks_a_future_uber_placeholder_green_and_new():
+    banner_pulls = {"X": [TrackPull(1, "A", "Future Uber 1", U)]}
+    entry = build_tracks(banner_pulls, {}, {}, owned=set())["rows"][0]["a"][0]
+    # A placeholder is by definition uncollected (green name) and new to the banner
+    # (the "new" pill); ``future`` renders it as plain text instead of a popup link.
+    assert entry["future"] is True
+    assert entry["new"] is True and entry["debut"] is True
+    assert entry["owned"] is False and entry["wanted"] is False
+
+
+def test_build_tracks_real_cats_are_not_future():
+    banner_pulls = {"X": [TrackPull(1, "A", "Bahamut", U)]}
+    entry = build_tracks(banner_pulls, {}, {}, owned=set())["rows"][0]["a"][0]
+    assert entry["future"] is False
+
+
+def test_build_tracks_future_map_fills_the_legend_steppers():
+    banner_pulls = {"X": [TrackPull(1, "A", "Pogo", R)]}
+    track = build_tracks(banner_pulls, {}, {}, future={"X": 2})
+    assert track["show_future"] is True and track["padded"] is True
+    assert track["legend"][0]["future"] == 2
+    assert json.loads(track["legend"][0]["keys"]) == ["X"]
+
+
+def test_build_tracks_without_a_future_map_renders_no_steppers():
+    banner_pulls = {"X": [TrackPull(1, "A", "Pogo", R)]}
+    track = build_tracks(banner_pulls, {}, {})
+    assert track["show_future"] is False and track["padded"] is False
+    assert "keys" not in track["legend"][0]
+
+
+def test_trace_marks_light_the_walk_up_to_the_clicked_cell():
+    banner_pulls = {
+        "X": [
+            TrackPull(1, "A", "Pogo", R),
+            TrackPull(2, "A", "Kasa Jizo", U),
+            TrackPull(3, "A", "Bahamut", U),
+        ]
+    }
+    marks = trace_marks(banner_pulls, {}, {}, "1", 4)
+    assert marks.path == {"X": {0, 2, 4}}
+    assert marks.targets == {"X": {4: "Bahamut"}}
+
+
+def test_trace_marks_follow_a_dupe_hop():
+    banner_pulls = {
+        "X": [
+            TrackPull(1, "A", "Pogo", R),
+            TrackPull(2, "A", "Pogo", R),
+            TrackPull(3, "B", "Kasa Jizo", U),
+        ]
+    }
+    rerolls = {"X": [TrackPull(2, "A", "Sniper Cat", R, steps=1, realized=True)]}
+    marks = trace_marks(banner_pulls, rerolls, {}, "1", 5)
+    assert marks.path == {"X": {0, 2, 5}}
+    assert marks.targets == {"X": {5: "Kasa Jizo"}}
+
+
+def test_trace_marks_stop_when_a_hop_jumps_past_the_cell():
+    banner_pulls = {
+        "X": [
+            TrackPull(1, "A", "Pogo", R),
+            TrackPull(2, "A", "Pogo", R),
+            TrackPull(3, "A", "Bahamut", U),
+        ]
+    }
+    rerolls = {"X": [TrackPull(2, "A", "Sniper Cat", R, steps=1, realized=True)]}
+    marks = trace_marks(banner_pulls, rerolls, {}, "1", 4)
+    # The reroll at 2A hops to 3B, so 3A is unreachable by straight singles: only the
+    # reachable prefix lights up, and the clicked cell still gets its target pill.
+    assert marks.path == {"X": {0, 2}}
+    assert marks.targets == {"X": {4: "Bahamut"}}
+
+
+def test_trace_marks_share_steps_with_walk_alike_banners():
+    banner_pulls = {
+        "X": [TrackPull(1, "A", "Pogo", R), TrackPull(2, "A", "Kasa Jizo", U)],
+        "Y": [TrackPull(1, "A", "Bath Cat", R), TrackPull(2, "A", "Kasa Jizo", U)],
+    }
+    marks = trace_marks(banner_pulls, {}, {}, "1", 2)
+    # Y walks the same path (a filler rare may differ) and gives the same target cat.
+    assert marks.shared == {"Y": {0, 2}}
+
+
+def test_trace_marks_ignore_a_stale_click():
+    banner_pulls = {"X": [TrackPull(1, "A", "Pogo", R)]}
+    assert trace_marks(banner_pulls, {}, {}, "9", 0).path == {}
+    assert trace_marks(banner_pulls, {}, {}, "1", 400).path == {}
 
 
 def test_build_tracks_marks_an_owned_cat():

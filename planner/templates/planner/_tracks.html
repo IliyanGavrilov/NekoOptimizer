@@ -1,15 +1,19 @@
 {% if track.rows %}
   <details class="track-guide">
     <summary>Legend</summary>
+    {# Each sample reuses the track cells' own classes, so the guide always looks #}
+    {# exactly like the rows below it. #}
     <ul class="symbol-legend">
       <li><span class="sym">A / B</span> alternate timelines; a dupe rerolls and switches track</li>
       <li><span class="sym dice-sym">{% include "planner/_dice_icon.html" %}</span> &ldquo;I rolled this cell&rdquo; &mdash; jumps the seed to just after it</li>
-      <li><span class="sym">&#8627; if dupe</span> the reroll branch (its own dice &amp; landing)</li>
-      <li><span class="new-swatch">green name</span> Uber/Legend not in your collection</li>
-      <li><span class="mark-owned">&#10003;</span> owned <span class="sep">&middot;</span> <span class="mark-wanted">&#9733;</span> wishlisted</li>
-      <li><span class="debut">new</span> Uber new to this banner (added since its last run)</li>
+      <li><span class="arrow sample">&#8627; if dupe</span> the reroll branch (its own dice &amp; landing)</li>
+      <li><span class="entry on-path sample">path</span> click a cell's name-free space: the rolls up to it light like a plan</li>
+      <li><span class="entry new sample"><span class="catlink">green name</span></span> Uber/Legend not in your collection</li>
+      <li><span class="entry owned sample"><span class="catlink"></span></span> owned <span class="sep">&middot;</span> <span class="entry wanted sample"><span class="catlink"></span></span> wishlisted</li>
+      <li><span class="debut">new</span> Uber debuting with this banner (its first event anywhere)</li>
+      {% if track.padded %}<li><span class="entry new sample"><span class="catlink future">Future Uber 1</span></span> an expected-but-unreleased Uber padding the pool</li>{% endif %}
       {% if track.has_guaranteed %}<li><span class="sym">Guaranteed</span> the Uber a guaranteed multi awards if started on that cell</li>{% endif %}
-      {% if track.has_shared %}<li><span class="shared-swatch">dashed</span> another banner this plan step can roll on instead</li>{% endif %}
+      {% if track.has_shared %}<li><span class="entry shared sample">dashed</span> another banner this plan step can roll on instead</li>{% endif %}
     </ul>
     <div class="rarity-legend">
       <span class="rarity" data-rarity="Rare">Rare</span>
@@ -18,10 +22,10 @@
       <span class="rarity" data-rarity="Legend Rare">Legend Rare</span>
     </div>
   </details>
-  {% if track.legend|length > 1 %}
+  {% if track.legend|length > 1 or track.show_future %}
     <ul class="track-legend">
       {% for b in track.legend %}
-        <li><span class="tag">{{ b.tag }}</span> {{ b.names|join:" · " }}</li>
+        <li><span class="tag">{{ b.tag }}</span> {{ b.names|join:" · " }}{% if track.show_future %} <label class="future-ctl" title="Pad this banner's uber pool with expected-but-unreleased ubers (godfat's Count of future ubers) - its uber cells land as if those units were already in the pool; drag the box up/down to adjust">Add future ubers <input type="number" class="future-ubers" value="{{ b.future }}" min="0" max="99" data-names="{{ b.keys }}"></label>{% endif %}</li>
       {% endfor %}
     </ul>
   {% endif %}
