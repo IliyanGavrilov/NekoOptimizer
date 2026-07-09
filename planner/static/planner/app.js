@@ -454,9 +454,9 @@ if (picker) {
   // only inject them once a mode that shows them is picked - text mode stays image-free.
   // Each cell carries its catalogue id (data-uid); loading="lazy" keeps off-screen rows
   // from fetching, and identical cats share one cached URL. The form picker chooses
-  // WHICH form's icon: a unit without the picked form steps down to the last one it
-  // has (404s are remembered, so a re-pick never re-probes), and a cell with no icon
-  // at all (an uncatalogued unit) falls back to its name.
+  // WHICH form shows, icon AND name (godfat's name=N): a unit without the picked form
+  // steps down to the last one it has (404s are remembered, so a re-pick never
+  // re-probes), and a cell with no icon at all (an uncatalogued unit) keeps its name.
   const ICON_BASE = "https://battlecatsinfo.github.io/img/u";
   const missingIcons = new Set(); // "uid/form" pairs that 404'd
   const bestForm = (uid, form) => {
@@ -503,12 +503,37 @@ if (picker) {
   const ROLL_FORM_KEY = "neko:rollForm";
   restorePick(rollDisplayEl, ROLL_DISPLAY_KEY);
   restorePick(rollFormEl, ROLL_FORM_KEY);
+  // Renaming needs each unit's form names: they come down once, lazily, the first
+  // time a non-base form is picked. Cells re-rendered later just reuse the map.
+  let formNames = null; // {unit_id: [form names]}, null until fetched
+  let formNamesRequest = null;
+  const loadFormNames = () => {
+    formNamesRequest =
+      formNamesRequest ||
+      fetch(document.body.dataset.unitFormsUrl)
+        .then((r) => (r.ok ? r.json() : {}))
+        .catch(() => ({}))
+        .then((names) => {
+          formNames = names;
+          applyFormNames(resultsRegion); // rename the cells already on screen
+        });
+  };
+  const applyFormNames = (root) => {
+    const form = Number(rollFormEl.value);
+    if (form > 0 && formNames === null) loadFormNames();
+    root.querySelectorAll(".entry > .catlink[data-uid] > .catname").forEach((span) => {
+      const btn = span.parentElement;
+      const forms = form > 0 && formNames ? formNames[btn.dataset.uid] : null;
+      span.textContent =
+        forms && forms.length ? forms[Math.min(form, forms.length - 1)] : btn.dataset.name;
+    });
+  };
   const syncRollDisplay = () => {
     const mode = rollDisplayEl.value;
     resultsRegion.classList.toggle("rolls-icons", mode === "icons");
     resultsRegion.classList.toggle("rolls-both", mode === "both");
-    rollFormEl.disabled = mode === "text"; // the form picker only drives icons
     if (mode !== "text") injectIcons(resultsRegion);
+    applyFormNames(resultsRegion);
   };
   syncRollDisplay();
   rollDisplayEl.addEventListener("change", () => {
