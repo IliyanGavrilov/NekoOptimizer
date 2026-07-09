@@ -5,6 +5,7 @@ from planner.models import Cat, Unit
 
 EXPLORE_HORIZON = 1000  # default rolls to look ahead per banner in explore mode
 MAX_TRACK_LENGTH = 999  # godfat's unit-count ceiling for the Rolls table
+MAX_FUTURE_UBERS = 99  # placeholder ubers the Rolls table will pad a pool with
 
 
 class PlannerForm(forms.Form):

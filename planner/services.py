@@ -1,3 +1,4 @@
+import json
 from collections import Counter
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass, field
@@ -8,7 +9,16 @@ from urllib.parse import quote
 from neko.catalogue import match_names, name_index
 from neko.gachadata import GachaEventRow, load_events, load_pools, load_series, load_tickets
 from neko.graph import BannerGraph, build_graphs, stream_index
-from neko.models import CATFOOD_PER_DRAW, BannerRolls, Rarity, State
+from neko.models import (
+    CATFOOD_PER_DRAW,
+    BannerRolls,
+    Leg,
+    Path,
+    Pull,
+    Rarity,
+    State,
+    is_future_uber,
+)
 from neko.roller import (
     DEFAULT_COUNT,
     RollResult,
@@ -57,13 +67,23 @@ def capped_banner_limits(names: Iterable[str], cap: int) -> dict[str, int]:
 
 
 def fetch_banners(
-    seed: int, count: int = DEFAULT_COUNT, last_cat: str = "", simulate_guaranteed: int = 0
+    seed: int,
+    count: int = DEFAULT_COUNT,
+    last_cat: str = "",
+    simulate_guaranteed: int = 0,
+    future_ubers: Mapping[str, int] | None = None,
 ) -> RollResult:
     """Roll the active banners for a seed locally (no godfat). ``last_cat`` is the pull
     you got just before this view (the dupe memory) - it can dupe a first cell.
-    ``simulate_guaranteed`` (a roll count) forces a guaranteed column onto banners without one."""
+    ``simulate_guaranteed`` (a roll count) forces a guaranteed column onto banners without
+    one; ``future_ubers`` maps a banner name to how many unreleased placeholders pad ITS
+    uber pool."""
     return roll_active(
-        seed, count=count, last_cat=last_cat, simulate_guaranteed=simulate_guaranteed
+        seed,
+        count=count,
+        last_cat=last_cat,
+        simulate_guaranteed=simulate_guaranteed,
+        future_ubers=future_ubers,
     )
 
 
@@ -78,23 +98,30 @@ def fetch_for_banners(
     count: int = DEFAULT_COUNT,
     last_cat: str = "",
     simulate_guaranteed: int = 0,
+    future_ubers: Mapping[str, int] | None = None,
 ) -> RollResult:
-    """Roll just the chosen banners for a seed locally. ``last_cat`` and
-    ``simulate_guaranteed`` work like in fetch_banners."""
+    """Roll just the chosen banners for a seed locally. ``last_cat``,
+    ``simulate_guaranteed`` and ``future_ubers`` work like in fetch_banners."""
     return roll_selected(
-        seed, names, count=count, last_cat=last_cat, simulate_guaranteed=simulate_guaranteed
+        seed,
+        names,
+        count=count,
+        last_cat=last_cat,
+        simulate_guaranteed=simulate_guaranteed,
+        future_ubers=future_ubers,
     )
 
 
-def newly_added_ubers(events=None, pools=None, series=None, units=None) -> dict[str, set[str]]:
-    """Per banner, the ubers ADDED in its latest run versus that banner's previous run of
-    the same series - the game's "New units added" set. Keyed by the latest run's name (how
-    the roller keys banners), so a track cell can flag an uber that's new to the banner it's
-    rolled on. Runs are matched by series id (a rerun reuses it even when its name changes),
-    so a set that's carried it all along never counts as newly added."""
+def newly_added_ubers(events=None, pools=None, units=None) -> dict[str, set[str]]:
+    """Per banner, the ubers making their game DEBUT with that run - the game's "New
+    units added" set. Debut means no event anywhere started earlier carrying the unit:
+    a returning banner absorbs whatever premiered elsewhere since its last run (festival
+    banners usually debut units months before a series banner picks them up), and none
+    of that counts as new here. Keyed by run name via each name's latest run (how the
+    roller keys banners), so a track cell can flag an uber that debuts on the banner
+    it's rolled on."""
     events = load_events() if events is None else events
     pools = load_pools() if pools is None else pools
-    series = load_series() if series is None else series
     units = units_from_records() if units is None else units
 
     def ubers(pool_id: int) -> set[str]:
@@ -104,22 +131,21 @@ def newly_added_ubers(events=None, pools=None, series=None, units=None) -> dict[
             if u in units and units[u][1] == Rarity.UBER_SUPER_RARE.value
         }
 
-    runs: dict[int, list[GachaEventRow]] = {}
+    debut: dict[str, date] = {}
+    latest: dict[str, GachaEventRow] = {}
     for event in events:
-        sid = series.get(event.pool_id)
-        if sid is not None:
-            runs.setdefault(sid, []).append(event)
+        for name in ubers(event.pool_id):
+            if name not in debut or event.start < debut[name]:
+                debut[name] = event.start
+        held = latest.get(event.name)
+        if held is None or event.start > held.start:
+            latest[event.name] = event
 
     added: dict[str, set[str]] = {}
-    for evs in runs.values():
-        if len(evs) < 2:  # a first-ever run has no previous pool to diff against
-            continue
-
-        evs.sort(key=lambda e: e.start)
-        latest = evs[-1]
-        new = ubers(latest.pool_id) - ubers(evs[-2].pool_id)
+    for event in latest.values():
+        new = {name for name in ubers(event.pool_id) if debut[name] == event.start}
         if new:
-            added[latest.name] = new
+            added[event.name] = new
 
     return added
 
@@ -555,12 +581,18 @@ def _pos_label(index):
 def _collection_marks(cat, rarity, owned, wanted, debuts=()):
     """The collection marks every rendered cat carries: ✓ owned, ★ wishlisted, a green
     "new" name for an Uber/Legend not yet in the collection, and a "debut" flag for an uber
-    making its first-ever appearance on an upcoming banner (``debuts``)."""
+    making its first-ever appearance on an upcoming banner (``debuts``). A future-uber
+    placeholder is by definition uncollected and new to the banner, so it's green and
+    "new"-pilled; ``future`` renders it as plain text (not a real unit - no popup)."""
+    if is_future_uber(cat):
+        return {"new": True, "owned": False, "wanted": False, "debut": True, "future": True}
+
     return {
         "new": rarity in _VALUABLE_RARITIES and cat not in owned,
         "owned": cat in owned,
         "wanted": cat in wanted,
         "debut": cat in debuts,
+        "future": False,
     }
 
 
@@ -641,6 +673,7 @@ def build_tracks(
     titles=None,
     rows=TRACK_ROW_CAP,
     debuts=None,
+    future=None,
 ):
     """One merged A/B table over every selected banner: each cell stacks each banner's
     cat at that shared stream position (like ubercarry), with rare-dupe switch arrows
@@ -655,6 +688,9 @@ def build_tracks(
     out entirely (``has_guaranteed``). ``titles`` (display_titles) shortens the legend's
     banner names. ``rows`` is how many A/B rows to render (the browse view passes the
     user's "rolls to show"); a plan always extends past it to reach its furthest lit cell.
+    ``future`` ({banner name: future-uber count}, browse view only) puts a per-banner
+    stepper in the legend, pre-filled with the counts the rolls were padded with; leave
+    it out (plan tracks) and no steppers render.
     """
     marks = marks or TrackMarks()
     owned = owned or set()
@@ -705,6 +741,7 @@ def build_tracks(
             cells.append(
                 {
                     "tag": group["tag"],
+                    "idx": index,
                     "cat": tp.cat,
                     "rarity": rarity,
                     "switch": switched,
@@ -762,6 +799,7 @@ def build_tracks(
             cells.append(
                 {
                     "tag": group["tag"],
+                    "idx": index,
                     "cat": tp.cat,
                     "rarity": rarity,
                     # The state after the multi's final (guaranteed) draw - "as if you
@@ -795,12 +833,21 @@ def build_tracks(
         for pos in range(1, max_pos + 1)
     ]
     legend = [{"tag": g["tag"], "names": _titled(g["names"], titles)} for g in groups]
+    if future is not None:
+        # The stepper posts its count for every run name its group merges (equivalent
+        # banners share one pool, so one padding count). ``keys`` carries the raw run
+        # names - the legend shows titles, but the roller keys banners by run name.
+        for entry, group in zip(legend, groups, strict=True):
+            entry["keys"] = json.dumps(group["names"])
+            entry["future"] = max((future.get(name, 0) for name in group["names"]), default=0)
 
     return {
         "legend": legend,
         "rows": rows,
         "has_guaranteed": has_guaranteed,
         "has_shared": bool(marks.shared or marks.gshared),
+        "show_future": future is not None,
+        "padded": bool(future) and any(future.values()),
     }
 
 
@@ -937,6 +984,47 @@ def plan_shared(option, graphs, equivalents, multis=None, exclude=()):
         last = own_end
 
     return shared, gshared
+
+
+def trace_marks(banner_pulls, rerolls, equivalents, tag, index, last_cat="", multis=None):
+    """Plan-style marks for a clicked cell (godfat's pick): the single-pull walk from the
+    table start UP TO the cell, on the clicked banner (its legend ``tag``), with the gold
+    target pill on the cell itself - plus plan_shared's dashes on every walked step that
+    another selected banner could roll without changing the path. A dupe hop that jumps
+    the walk past the cell leaves the tail unlit (straight singles can't reach it), and a
+    stale click (unknown tag, cell beyond the rolled window) marks nothing."""
+    groups = _banner_groups(banner_pulls, rerolls, equivalents)
+    picked = next((g for g in groups if g["tag"] == str(tag)), None)
+    if picked is None or index not in picked["grid"]:
+        return TrackMarks()
+
+    graph, rep = picked["graph"], picked["rep"]
+    walk, last, at = [], last_cat, 0
+    while at <= index:
+        outcome = graph.resolve(at, last)
+        if outcome is None:
+            break
+
+        walk.append((at, outcome))
+        if at == index:
+            break
+        last, at = outcome.cat, outcome.next_position
+
+    reached = bool(walk) and walk[-1][0] == index
+    target = walk[-1][1].cat if reached else picked["grid"][index].cat
+    marks = TrackMarks(
+        path={rep: {step for step, _ in walk}},
+        targets={rep: {index: target}},
+    )
+
+    # The walk replayed as a plan of single pulls: exactly what plan_shared swaps.
+    pulls = tuple(Pull(step, rep, outcome.cat, outcome.rarity) for step, outcome in walk)
+    moves = tuple(Leg(rep, "Single pull", 0, (pull,)) for pull in pulls)
+    option = SubsetPlan(frozenset({target} if reached else ()), Path(pulls, 0, 0, moves))
+    graphs = [group["graph"] for group in groups]
+    marks.shared, marks.gshared = plan_shared(option, graphs, equivalents, multis)
+
+    return marks
 
 
 def plan_seed(plan, graphs):
