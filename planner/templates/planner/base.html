@@ -39,6 +39,10 @@
   <main>
     {% block content %}{% endblock %}
   </main>
+  <footer class="site-footer">
+    <a href="{% url 'tier_list' %}">Uber tier list</a>
+    <span class="muted">rankings from The Battle Cats Tier List</span>
+  </footer>
   {% comment %}One shared popup for any cat name: its forms (icons hotlinked from
   battlecatsinfo) and a link to its Battle Cats Wiki page. Filled in by app.js.{% endcomment %}
   <dialog id="catPopup" class="cat-popup">
@@ -46,6 +50,7 @@
     <div class="cat-popup-head">
       <span class="cat-popup-name"></span>
       <span class="rarity"></span>
+      <span class="cat-popup-tier tier-badge" hidden></span>
     </div>
     <div class="cat-popup-forms"></div>
     <a class="cat-popup-wiki" target="_blank" rel="noopener">View on the Battle Cats Wiki &#8599;</a>

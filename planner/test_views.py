@@ -487,3 +487,34 @@ def test_unit_forms_maps_every_unit_in_one_payload(client):
         "25": ["Bahamut", "Aqua Bahamut"],
         "44": ["Kasa Jizo"],
     }
+
+
+def _tier_doc(unit_id):
+    return {
+        "source": "https://example.test/tiers",
+        "fetched": "2026-07-10",
+        "tiers": [
+            {"tier": "SS", "entries": [{"name": "Bahamut", "unit_id": unit_id, "boost": None}]}
+        ],
+    }
+
+
+@pytest.mark.django_db
+def test_unit_info_carries_the_units_tier_badge(client, monkeypatch):
+    Unit.objects.create(unit_id=25, name="Bahamut", rarity="Uber Super Rare")
+    monkeypatch.setattr("planner.services.load_tiers", lambda: _tier_doc(25))
+    assert client.get("/unit/info/", {"name": "Bahamut"}).json()["tier"]["tier"] == "SS"
+
+
+@pytest.mark.django_db
+def test_unit_info_omits_the_tier_for_an_unranked_unit(client, monkeypatch):
+    Unit.objects.create(unit_id=25, name="Bahamut", rarity="Uber Super Rare")
+    monkeypatch.setattr("planner.services.load_tiers", lambda: _tier_doc(999))
+    assert client.get("/unit/info/", {"name": "Bahamut"}).json()["tier"] is None
+
+
+@pytest.mark.django_db
+def test_tier_list_page_renders_a_ranked_unit(client, monkeypatch):
+    monkeypatch.setattr("planner.views.load_tiers", lambda: _tier_doc(25))
+    body = client.get("/tiers/").content
+    assert b"Bahamut" in body and b"SS" in body
