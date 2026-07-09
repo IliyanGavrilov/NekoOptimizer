@@ -1124,8 +1124,8 @@ table.track th.guaranteed-col, table.track td.guaranteed-col {
    #resultsRegion reveal it, and swap out the name in icons-only mode. */
 .cat-icon {
   display: none;
-  width: 1.4em;
-  height: 1.4em;
+  width: 2.2em;
+  height: 2.2em;
   vertical-align: middle;
   image-rendering: -webkit-optimize-contrast;
 }
