@@ -111,6 +111,11 @@
         <h2 class="results-h">Rolls</h2>
         <div class="rolls-controls">
           <label class="ctrl">Show <input type="number" id="id_track_length" value="100" min="1" max="999" title="How many rolls the table shows (up to 999)"> rolls</label>
+          <label class="ctrl" title="Show each roll cell as the cat's name, its form icon, or both"><select id="rollDisplay">
+              <option value="text">Names</option>
+              <option value="icons">Icons</option>
+              <option value="both">Both</option>
+            </select></label>
           <label class="ctrl" title="Reveal each cell's rarity and slot seed, for cross-checking against godfat"><input type="checkbox" id="detailsToggle"> Details</label>
           <label class="ctrl" title="Force a guaranteed multi of this size onto every banner, to preview the uber each cell's guaranteed draw would give">Guaranteed
             <select id="simGuaranteed">

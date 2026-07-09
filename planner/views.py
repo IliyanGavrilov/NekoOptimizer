@@ -179,6 +179,12 @@ def _wanted_names():
     return set(Unit.objects.wishlist().values_list("name", flat=True))
 
 
+def _unit_ids():
+    """{cat name: catalogue unit_id}, so the Rolls table can hotlink each cell's form
+    icon for the display-mode toggle."""
+    return dict(Unit.objects.values_list("name", "unit_id"))
+
+
 @require_POST
 def tracks(request):
     """A/B track tables for the current seed + banners, before any plan is run.
@@ -221,6 +227,7 @@ def tracks(request):
         rows=count,
         debuts=newly_added_ubers(),
         future=future_ubers,
+        unit_ids=_unit_ids(),
     )
 
     return render(request, "planner/_tracks.html", {"track": track})
@@ -274,6 +281,7 @@ def find_plan(request):
         guaranteed_rerolls=guaranteed_rerolls,
         last_cat=last_cat,
         debuts=newly_added_ubers(),
+        unit_ids=_unit_ids(),
     )
 
     return JsonResponse(

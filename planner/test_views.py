@@ -260,6 +260,16 @@ def test_tracks_endpoint_lists_the_rolls(client, monkeypatch):
 
 
 @pytest.mark.django_db
+def test_tracks_endpoint_tags_cells_with_the_unit_id_for_icons(client, monkeypatch):
+    monkeypatch.setattr(
+        "planner.views.fetch_banners", fixed_banners(TrackPull(1, "A", "Bahamut", U))
+    )
+    Unit.objects.create(unit_id=25, name="Bahamut")
+    response = client.post("/tracks/", {"seed": 7})
+    assert b'data-uid="25"' in response.content
+
+
+@pytest.mark.django_db
 def test_tracks_endpoint_blank_seed_renders_nothing(client):
     assert client.post("/tracks/", {}).content == b""
 
