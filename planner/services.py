@@ -57,12 +57,14 @@ def wiki_url(name: str, rarity: str = "") -> str:
 
 
 # Platinum/Legend run on scarce tickets, not catfood, so the optimizer treats them as
-# info-only: capped (0 by default) rather than modelled as ordinary catfood gacha.
-_CAPPED_KEYWORDS = ("platinum", "legend")
+# info-only: capped (0 by default) rather than modelled as ordinary catfood gacha. Match
+# the ticket-capsule PHRASE, not a bare "legend"/"platinum" - loads of ordinary banners
+# (Evangelion's "Limited Legend", the fests' "Legend Rare drop rate") mention the word.
+_CAPPED_KEYWORDS = ("platinum capsules", "legend capsules")
 
 
 def capped_banner_limits(names: Iterable[str], cap: int) -> dict[str, int]:
-    """Cap pulls on Platinum/Legend banners (matched by name) at `cap`."""
+    """Cap pulls on Platinum/Legend Capsule banners (matched by name) at `cap`."""
     return {name: cap for name in names if any(kw in name.lower() for kw in _CAPPED_KEYWORDS)}
 
 

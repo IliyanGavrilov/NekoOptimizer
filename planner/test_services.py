@@ -42,6 +42,25 @@ def test_capped_banner_limits_matches_only_platinum_and_legend():
     assert capped_banner_limits(names, 0) == {"Platinum Capsules": 0, "Legend Capsules": 0}
 
 
+def test_capped_banner_limits_matches_the_real_capsule_run_names():
+    names = [
+        "Get an Uber Rare Cat!! 100% Uber drop Rate in the PLATINUM CAPSULES!",
+        "Get a Guaranteed Uber or Legend Rare from the Legend Capsules!",
+    ]
+    assert capped_banner_limits(names, 0) == dict.fromkeys(names, 0)
+
+
+def test_capped_banner_limits_ignores_banners_that_merely_mention_legend():
+    # Collabs/fests name a "Limited Legend" or "Legend Rare drop rate" but roll on
+    # catfood like any banner - they must not be treated as scarce-ticket capsules.
+    names = [
+        "EVANGELION Collab Capsules with a Limited Legend and Mass Production EVA!",
+        "Increased Uber and Legend Rare drop rate! 90M DL Special Capsules!",
+        "Double the Uber / Legend chances! ★ Glorious gods of the Cat pantheon!",
+    ]
+    assert capped_banner_limits(names, 0) == {}
+
+
 def test_collection_sections_orders_rarities_cheapest_to_rarest():
     units = [Unit(rarity=r) for r in ("Uber Super Rare", "Special", "Normal")]
     assert [r for r, _ in collection_sections(units)] == ["Normal", "Special", "Uber Super Rare"]

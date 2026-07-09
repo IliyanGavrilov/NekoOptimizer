@@ -270,8 +270,10 @@ if (picker) {
     locateIdx += 1;
   });
   // Platinum/Legend capsules run on scarce tickets, so they're opt-in: never part
-  // of a session, and each toggles on its own.
-  const CAPPED = /platinum|legend/i;
+  // of a session, and each toggles on its own. Match the ticket-capsule PHRASE, not a
+  // bare "legend"/"platinum" - ordinary banners (Evangelion's "Limited Legend", the
+  // fests' "Legend Rare drop rate") mention the word without being capsule runs.
+  const CAPPED = /platinum capsules|legend capsules/i;
   const today = () => new Date().toISOString().slice(0, 10);
   const dayBefore = (iso) => {
     const d = new Date(`${iso}T00:00:00Z`);
@@ -465,6 +467,13 @@ if (picker) {
       btn.prepend(img);
     });
   };
+  // Unlike the other Rolls controls (which reset each visit by request), the display
+  // mode is a persisted preference - restore the last pick before the first render.
+  const ROLL_DISPLAY_KEY = "neko:rollDisplay";
+  const savedRollDisplay = localStorage.getItem(ROLL_DISPLAY_KEY);
+  if (savedRollDisplay && [...rollDisplayEl.options].some((o) => o.value === savedRollDisplay)) {
+    rollDisplayEl.value = savedRollDisplay;
+  }
   const syncRollDisplay = () => {
     const mode = rollDisplayEl.value;
     resultsRegion.classList.toggle("rolls-icons", mode === "icons");
@@ -472,7 +481,10 @@ if (picker) {
     if (mode !== "text") injectIcons(resultsRegion);
   };
   syncRollDisplay();
-  rollDisplayEl.addEventListener("change", syncRollDisplay);
+  rollDisplayEl.addEventListener("change", () => {
+    localStorage.setItem(ROLL_DISPLAY_KEY, rollDisplayEl.value);
+    syncRollDisplay();
+  });
 
   // ---- Track / Steps view switch, scoped to the opened subset solution -----
   solutions.addEventListener("click", (e) => {
