@@ -226,6 +226,9 @@ def tracks(request):
             result.multis,
             guaranteed_pulls=guaranteed,
             guaranteed=trace[2],
+            guaranteed_sizes={
+                name: rolls.guaranteed_rolls for name, rolls in result.banners.items()
+            },
         )
     track = build_tracks(
         pulls,
