@@ -760,6 +760,19 @@ table.track .entry.target .catlink {
   border-radius: 999px;
   padding: 0 0.45rem;
 }
+/* Where you land NEXT (godfat's next-position marker): the cell the seed continues on
+   after a traced pick or the plan's last draw. Striped, not solid - this cat isn't part
+   of the plan; it's what the first roll AFTER it would give. */
+.entry.next {
+  color: var(--ink);
+  background: repeating-linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--accent) 16%, transparent) 0 6px,
+    transparent 6px 12px
+  );
+  border-radius: 2px;
+}
+
 /* Another banner giving the identical cat at one of the plan's pulls: that step is
    interchangeable - roll it on either. A dashed echo of the on-path stripe (border,
    not box-shadow: shadows can't dash; the padding offsets the added width). */

@@ -615,9 +615,11 @@ def _dupe_branch(outcome, obtained):
 class TrackMarks:
     """Where a plan lights up the track, each keyed by its representative banner: the lit
     stream indices (``path``), the cat you get at each lit index (``targets`` - the gold
-    pill follows the branch actually pulled), and the indices another banner can do
-    instead (``shared``, plan_shared); ``g*`` twins mark the guaranteed columns. Defaults
-    give an unhighlighted track (the browse view)."""
+    pill follows the branch actually pulled), the indices another banner can do
+    instead (``shared``, plan_shared), and where the seed lands AFTER the last draw
+    (``nexts`` - striped, godfat's next-position marker: the first cat you'd get if you
+    kept rolling); ``g*`` twins mark the guaranteed columns. Defaults give an
+    unhighlighted track (the browse view)."""
 
     path: dict[str, set[int]] = field(default_factory=dict)
     targets: dict[str, dict[int, str]] = field(default_factory=dict)
@@ -625,6 +627,7 @@ class TrackMarks:
     gtargets: dict[str, dict[int, str]] = field(default_factory=dict)
     shared: dict[str, set[int]] = field(default_factory=dict)
     gshared: dict[str, set[int]] = field(default_factory=dict)
+    nexts: dict[str, set[int]] = field(default_factory=dict)
 
 
 def _representative(name, equivalents):
@@ -710,7 +713,11 @@ def build_tracks(
         group["debuts"] = set().union(*(debuts.get(name, set()) for name in group["names"]))
 
     avail = max((max(g["grid"]) for g in groups if g["grid"]), default=-1) // 2 + 1
-    lit = [index for indices in (*marks.path.values(), *marks.gpath.values()) for index in indices]
+    lit = [
+        index
+        for indices in (*marks.path.values(), *marks.gpath.values(), *marks.nexts.values())
+        for index in indices
+    ]
     needed = max((index // 2 + 1 for index in lit), default=0)
     max_pos = max(min(avail, max(rows, needed)), 0)
 
@@ -756,6 +763,7 @@ def build_tracks(
                     "on_path": on_path,
                     "target": obtained == tp.cat,
                     "shared": not on_path and index in marks.shared.get(group["rep"], ()),
+                    "next": index in marks.nexts.get(group["rep"], ()),
                     **_collection_marks(tp.cat, rarity, owned, wanted, group["debuts"]),
                 }
             )
@@ -1023,7 +1031,12 @@ def trace_marks(
     ``guaranteed_sizes`` ({banner name: multi length}) says how many singles the multi
     plays from the clicked cell before its last roll is swapped for the uber. A stale
     click (unknown tag, cell beyond the rolled window, or a guaranteed click on a banner
-    with no guarantee there) marks nothing."""
+    with no guarantee there) marks nothing.
+
+    Every trace also stripes the cell the seed continues on afterwards (``nexts``,
+    godfat's next position): the clicked pull's own continuation - nominal (+2) for an
+    unreachable cell - or the guaranteed multi's landing, one half-step past its
+    swapped final roll."""
     groups = _banner_groups(banner_pulls, rerolls, equivalents, guaranteed_pulls)
     picked = next((g for g in groups if g["tag"] == str(tag)), None)
     if picked is None or index not in picked["grid"]:
@@ -1052,35 +1065,47 @@ def trace_marks(
         # The gold pill sits on the guaranteed uber; when the start cell is reachable, the
         # singles that get there light too, otherwise it stands alone (unreachable start).
         marks = TrackMarks(gtargets={rep: {index: gpull.cat}})
-        if reached:
-            steps = {step for step, _ in walk}
-            # godfat lights what the multi itself draws as well: started on the clicked
-            # cell it plays size - 1 singles along the play chain (dupes hop like any
-            # single), and its final roll is swapped for the uber - that cell's shown
-            # cat is never obtained, so it stays unlit.
-            sizes = guaranteed_sizes or {}
-            size = max((sizes.get(name, 0) for name in picked["names"]), default=0)
-            last, at = walk[-1][1].cat, walk[-1][1].next_position
-            for _ in range(max(size - 2, 0)):
+        sizes = guaranteed_sizes or {}
+        size = max((sizes.get(name, 0) for name in picked["names"]), default=0)
+        # godfat lights what the multi itself draws as well: its first draw is the
+        # clicked cell (arriving as the walk did, or nominally for an unreachable
+        # start), then size - 2 more singles along the play chain (dupes hop like any
+        # single). The final roll is swapped for the uber - its cell's shown cat is
+        # never obtained, so it stays unlit - and the seed continues one half-step
+        # past it, track flipped: that landing cell gets the striped next mark.
+        steps = {step for step, _ in walk} if reached else set()
+        first = walk[-1][1] if reached else graph.resolve(index)
+        if size >= 2:
+            last, at = first.cat, first.next_position
+            for _ in range(size - 2):
                 outcome = graph.resolve(at, last)
                 if outcome is None:  # the multi runs off the rolled window
                     break
 
-                steps.add(at)
+                if reached:
+                    steps.add(at)
                 last, at = outcome.cat, outcome.next_position
+            else:
+                marks.nexts = {rep: {at + 1}}
 
+        if reached:
             marks.path = {rep: steps}
             marks.gpath = {rep: {index}}
         return marks
 
     if not reached:
-        # No clean-singles route to the cell: mark just the cat that lands here.
-        return TrackMarks(targets={rep: {index: picked["grid"][index].cat}})
+        # No clean-singles route to the cell: mark just the cat that lands here, and
+        # stripe where getting it would drop you (the nominal continuation, +2).
+        return TrackMarks(
+            targets={rep: {index: picked["grid"][index].cat}},
+            nexts={rep: {index + 2}},
+        )
 
     target = walk[-1][1].cat
     marks = TrackMarks(
         path={rep: {step for step, _ in walk}},
         targets={rep: {index: target}},
+        nexts={rep: {walk[-1][1].next_position}},
     )
     # The walk replayed as a plan of single pulls: exactly what plan_shared swaps.
     pulls = tuple(Pull(step, rep, outcome.cat, outcome.rarity) for step, outcome in walk)
@@ -1092,13 +1117,24 @@ def trace_marks(
     return marks
 
 
+def _walked_outcome(graph, pull, before):
+    """The outcome the plan's walk actually took at ``pull``: resolve with the cat got
+    just before it, and let the recorded cat pick the reroll branch when the graph's
+    data can't say on its own (a plan replayed without its history)."""
+    resolved = graph.resolve(pull.position, before)
+    for outcome in (resolved, graph.reroll(pull.position)):
+        if outcome is not None and outcome.cat == pull.cat:
+            return outcome
+
+    return resolved
+
+
 def plan_seed(plan, graphs):
     """The RNG state after a plan's last draw - what the seed becomes once the plan is
     actually rolled ("apply plan" jumps to it). The plan records its whole walk, so the
     last pull is worked out from the cat you got just before it: a dupe - even one only
     this path triggers - lands on its reroll's seed, and a guaranteed multi whose first
-    roll came up duped reads the duped column's. The recorded cat decides it when the
-    graph's data can't say on its own (a plan replayed without its history)."""
+    roll came up duped reads the duped column's."""
     if not plan.pulls:
         return None
 
@@ -1127,12 +1163,40 @@ def plan_seed(plan, graphs):
         return forced.seed if forced else None
 
     before = plan.pulls[-2].cat if len(plan.pulls) > 1 else ""
-    resolved = graph.resolve(last.position, before)
-    for outcome in (resolved, graph.reroll(last.position)):
-        if outcome is not None and outcome.cat == last.cat:
-            return outcome.seed
+    outcome = _walked_outcome(graph, last, before)
 
-    return resolved.seed if resolved else None
+    return outcome.seed if outcome is not None else None
+
+
+def plan_landing(plan, graphs):
+    """The stream index the seed sits on after the plan's last draw - the cell that
+    becomes the new 1A once the plan is applied, striped in the track as your next
+    pull. A normal last pull continues where its walked outcome says (a dupe hops
+    further, flipping the track); a guaranteed multi lands one half-step past its
+    swapped final roll - the cell after its last normal draw (the pull just before the
+    guaranteed one, which a guaranteed leg always records first). None when the plan is
+    empty or the landing can't be worked out."""
+    if not plan.pulls:
+        return None
+
+    last = plan.pulls[-1]
+    graph = next((g for g in graphs if g.banner_id == last.banner_id), None)
+    if graph is None:
+        return None
+
+    if last.guaranteed:
+        if len(plan.pulls) < 2:
+            return None
+
+        before = plan.pulls[-3].cat if len(plan.pulls) > 2 else ""
+        outcome = _walked_outcome(graph, plan.pulls[-2], before)
+
+        return outcome.next_position + 1 if outcome is not None else None
+
+    before = plan.pulls[-2].cat if len(plan.pulls) > 1 else ""
+    outcome = _walked_outcome(graph, last, before)
+
+    return outcome.next_position if outcome is not None else None
 
 
 def plan_summary(plans, equivalents, owned=None, wanted=None, titles=None):
@@ -1310,6 +1374,11 @@ def subset_solutions(
         marks.shared, marks.gshared = plan_shared(
             sp, graphs, equivalents, multis, exclude=banner_limits or ()
         )
+        # Stripe where the plan drops you: the cell the seed continues on after its
+        # last draw, on the banner that draw was rolled on.
+        landing = plan_landing(sp.plan, graphs)
+        if landing is not None:
+            marks.nexts = {_representative(sp.plan.pulls[-1].banner_id, equivalents): {landing}}
         solution = plan_summary([sp], equivalents, owned, wanted, titles)[0]
         solution["found"] = True
         solution["seed_after"] = plan_seed(sp.plan, graphs)
