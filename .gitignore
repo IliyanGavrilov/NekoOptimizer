@@ -219,3 +219,9 @@ __marimo__/
 
 # Neko Optimizer scrape cache
 rollcache/
+
+# graphify knowledge-graph output
+graphify-out/
+
+# Editor settings
+.vscode/

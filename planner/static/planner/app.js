@@ -19,6 +19,9 @@ if (picker) {
   const platLegendCapEl = document.getElementById("id_platinum_legend_cap");
   const exploreEl = document.getElementById("id_explore");
   const horizonEl = document.getElementById("id_horizon");
+  const trackLengthEl = document.getElementById("id_track_length");
+  const detailsToggleEl = document.getElementById("detailsToggle");
+  const simGuaranteedEl = document.getElementById("simGuaranteed");
   const horizonRow = document.querySelector(".explore-horizon");
   const budgetFields = document.querySelector(".budget-fields");
   const stored = (() => {
@@ -54,6 +57,9 @@ if (picker) {
         platLegendCap: platLegendCapEl.value,
         explore: exploreEl.checked,
         horizon: horizonEl.value,
+        // The Rolls-table display controls (rolls-to-show, details, guaranteed) are
+        // deliberately NOT persisted - each visit starts at the defaults (100 rolls, no
+        // details, guaranteed off).
       }),
     );
   }
@@ -217,6 +223,8 @@ if (picker) {
     bannerCount.textContent = n
       ? `Rolling ${n} banner${n === 1 ? "" : "s"}.`
       : "No banners selected.";
+    if (n === 0) sessionDayAnchor = null; // nothing selected -> the next pick sets the time
+    bannerWarn.hidden = true; // a valid change clears any capsule-mismatch warning
     locateIdx = 0;
     syncBannerChips();
     updateWarnings();
@@ -225,6 +233,7 @@ if (picker) {
   // One chip per selected banner under the hint, labelled with the banner's set
   // title; clicking a chip scrolls the picker to that banner.
   const bannerChips = document.getElementById("bannerChips");
+  const bannerWarn = document.getElementById("bannerWarn");
   function syncBannerChips() {
     bannerChips.replaceChildren();
     for (const btn of includes) {
@@ -281,19 +290,41 @@ if (picker) {
     }
     return now;
   }
+  // The day the current selection sits on. A capsule can only join a session it was
+  // actually live during, so every selected banner (regular or capsule) shares this day.
+  let sessionDayAnchor = null;
+  function rejectCapsule(group) {
+    bannerWarn.textContent =
+      "That Platinum/Legend Capsules run wasn't live during the selected banners' time. " +
+      "Pick the run that overlaps them, or clear the selection first.";
+    bannerWarn.hidden = false;
+    group.classList.remove("flash-blocked");
+    void group.offsetWidth; // restart the pulse on a repeat click
+    group.classList.add("flash-blocked");
+  }
   // Click an unselected banner -> select that banner's time period (every other
   // non-capsule banner live on its session day), replacing whatever period was
-  // selected before. Click a selected banner -> unselect just that one. Capsules
-  // are opt-in, toggled individually and left alone when a period is selected.
+  // selected before. Click a selected banner -> unselect just that one. Capsules are
+  // opt-in, toggled individually - but only the run live during the selected session,
+  // so you can't pair an upcoming banner with a stale (or future) capsule run.
   function toggleSession(btn) {
+    const range = rangeOf(btn);
     if (btn.getAttribute("aria-pressed") === "true") {
       setIncluded(btn, false);
     } else if (CAPPED.test(btn.dataset.banner)) {
+      const day = sessionDayAnchor ?? sessionDay(range);
+      if (!liveOn(range, day)) return rejectCapsule(btn.closest(".banner-group"));
+      sessionDayAnchor ??= day; // a lone capsule sets the session's time itself
       setIncluded(btn, true);
     } else {
-      const day = sessionDay(rangeOf(btn));
+      const day = sessionDay(range);
+      sessionDayAnchor = day;
       for (const other of includes) {
-        if (!CAPPED.test(other.dataset.banner)) setIncluded(other, liveOn(rangeOf(other), day));
+        const on = liveOn(rangeOf(other), day);
+        // Regulars: the whole concurrent session. Capsules: keep only if still live now,
+        // dropping a capsule left over from a different period.
+        if (!CAPPED.test(other.dataset.banner)) setIncluded(other, on);
+        else if (!on) setIncluded(other, false);
       }
     }
     syncBanners();
@@ -363,6 +394,8 @@ if (picker) {
   if (stored.platLegendCap != null) platLegendCapEl.value = stored.platLegendCap;
   if (stored.explore != null) exploreEl.checked = stored.explore; // else keep server default (on)
   if (stored.horizon != null) horizonEl.value = stored.horizon;
+  // Display controls keep their HTML defaults (100 rolls / no details / guaranteed off);
+  // they aren't persisted, so every refresh starts fresh.
   const syncExplore = () => {
     const on = exploreEl.checked;
     horizonRow.hidden = !on;
@@ -379,11 +412,17 @@ if (picker) {
     save();
   });
   horizonEl.addEventListener("input", save);
+  // Changing how many rolls to show only affects the Rolls table, so re-fetch it.
+  // (Wrapped so the reference to scheduleTracks - declared below - resolves at call time.)
+  trackLengthEl.addEventListener("input", () => scheduleTracks());
+  // Simulating a guaranteed multi changes the server-side roll, so re-fetch the table.
+  simGuaranteedEl.addEventListener("change", () => scheduleTracks());
 
   render();
 
   // Targets and banner selection aren't persisted: every visit starts from the
   // banners live today (capsules excluded - they're opt-in) and no targets.
+  sessionDayAnchor = today(); // the default selection sits on today
   for (const btn of includes) {
     if (!CAPPED.test(btn.dataset.banner) && liveOn(rangeOf(btn), today())) setIncluded(btn, true);
   }
@@ -397,6 +436,14 @@ if (picker) {
   const trackHost = document.getElementById("trackHost");
   const resultsRegion = document.getElementById("resultsRegion");
   const planLoading = document.getElementById("planLoading");
+
+  // ---- Details view: reveal each cell's raw RNG seeds -------------------
+  // Pure display toggle (the seeds are always in the rendered cells, hidden by
+  // CSS), so it just flips a class on the results region - no re-fetch needed,
+  // and it covers both the browse track and any solution's track.
+  const syncDetails = () => resultsRegion.classList.toggle("details", detailsToggleEl.checked);
+  syncDetails();
+  detailsToggleEl.addEventListener("change", syncDetails);
 
   // ---- Track / Steps view switch, scoped to the opened subset solution -----
   solutions.addEventListener("click", (e) => {
@@ -412,8 +459,14 @@ if (picker) {
       v.hidden = v.dataset.view !== btn.dataset.view;
     });
   });
-  const post = (url) =>
-    fetch(url, { method: "POST", body: new FormData(plannerForm), headers: { "X-CSRFToken": token } });
+  // The Rolls-table display controls live outside the form (they sit with the table),
+  // so fold their current values into every roll/plan post.
+  const post = (url) => {
+    const body = new FormData(plannerForm);
+    body.set("track_length", trackLengthEl.value);
+    body.set("simulate_guaranteed", simGuaranteedEl.value);
+    return fetch(url, { method: "POST", body, headers: { "X-CSRFToken": token } });
+  };
 
   // ---- Apply a plan (delegated; solutions are injected by AJAX) --------
   // Own its cats, drop them from the wishlist, and spend its tickets/catfood.
@@ -477,6 +530,7 @@ if (picker) {
     // A hand-typed seed may be one the app has visited before (copied back from
     // notes, say) - restore its remembered pull so dupes still flag.
     applyLastCat(seedEl.value.trim(), "");
+    syncBack();
     save();
     scheduleTracks();
   });
@@ -561,6 +615,28 @@ if (picker) {
     requestTracks();
   });
   syncUndo();
+
+  // ---- Backtrack: step the seed back one roll (godfat's Backtrack) --------
+  // Inverting the RNG is Python's job (one source of truth for the stream), so
+  // ask the server for the earlier seed, then land on it like any app-made seed
+  // change - onto the undo stack, dupe memory cleared (the pull before is now
+  // unknown). Enabled only when there's a seed to step back from.
+  const seedBack = document.getElementById("seedBack");
+  const syncBack = () => (seedBack.disabled = !seedEl.value.trim());
+  seedBack.addEventListener("click", async () => {
+    const seed = seedEl.value.trim();
+    if (!seed) return;
+    const body = new URLSearchParams({ seed, csrfmiddlewaretoken: token });
+    const resp = await fetch(trackHost.dataset.backtrackUrl, {
+      method: "POST",
+      headers: { "X-CSRFToken": token },
+      body,
+    });
+    if (!resp.ok) return;
+    setSeed(String((await resp.json()).seed), "");
+    requestTracks();
+  });
+  syncBack();
 
   // ---- Find plan: inline validation next to each field, then overlay the plan
   const flash = (el) => {

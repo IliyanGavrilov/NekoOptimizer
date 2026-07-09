@@ -1,3 +1,5 @@
+from datetime import date
+
 import pytest
 from django.core.management import call_command
 
@@ -58,8 +60,6 @@ def test_import_corrects_stale_rarity():
 
 @pytest.mark.django_db
 def test_import_stores_banner_dates():
-    from datetime import date
-
     run = (date(2026, 2, 1), date(2026, 2, 8))
     import_cats(banners(Epicfest=[TrackPull(1, "A", "Bahamut", U)]), {"Epicfest": run})
     banner = Banner.objects.get(name="Epicfest")

@@ -1,3 +1,4 @@
+import json
 from datetime import date
 
 from neko.gachadata import (
@@ -91,8 +92,6 @@ def test_merge_events_dedupes_by_event_id():
 
 def test_event_records_roundtrip(tmp_path):
     (event,) = parse_events(tsv_row(pools=[POOL]))
-    import json
-
     path = tmp_path / "events.json"
     path.write_text(json.dumps(event_records([event])), encoding="utf-8")
     assert load_events(path) == [event]
