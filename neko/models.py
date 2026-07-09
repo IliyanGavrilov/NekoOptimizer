@@ -55,12 +55,17 @@ class BannerRolls:
 
     ``guaranteed_rerolls`` is the guaranteed column for multis whose FIRST roll comes
     up as a dupe. The reroll jumps the chain, so the multi ends on a different cell and
-    can hand you a different uber than ``guaranteed`` does at the same position."""
+    can hand you a different uber than ``guaranteed`` does at the same position.
+
+    ``guaranteed_rolls`` is the multi length the guaranteed columns were rolled for
+    (11, 15, ...; 0 when the banner runs no guarantee) - a guaranteed trace needs it to
+    light the multi's own draws."""
 
     pulls: list[TrackPull]
     guaranteed: list[TrackPull]
     rerolls: list[TrackPull] = field(default_factory=list)
     guaranteed_rerolls: list[TrackPull] = field(default_factory=list)
+    guaranteed_rolls: int = 0
 
 
 def future_uber_names(count: int) -> tuple[str, ...]:

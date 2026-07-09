@@ -260,4 +260,6 @@ def roll_banner(
                     if got is not None:
                         guaranteed_rerolls.append(got)
 
-    return BannerRolls(pulls, guaranteed, rerolls, guaranteed_rerolls)
+    return BannerRolls(
+        pulls, guaranteed, rerolls, guaranteed_rerolls, guaranteed_rolls=guaranteed_rolls
+    )

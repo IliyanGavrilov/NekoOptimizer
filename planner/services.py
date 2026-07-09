@@ -1004,6 +1004,7 @@ def trace_marks(
     multis=None,
     guaranteed_pulls=None,
     guaranteed=False,
+    guaranteed_sizes=None,
 ):
     """Plan-style marks for a clicked cell (godfat's pick), on the clicked banner (its
     legend ``tag``). The single-pull walk from the table start (1A) tries to reach the
@@ -1018,8 +1019,11 @@ def trace_marks(
 
     ``guaranteed`` marks the guaranteed COLUMN instead (``trace_guaranteed`` from the
     click): the uber a guaranteed multi awards if started on that cell, needing
-    ``guaranteed_pulls`` for the grid. A stale click (unknown tag, cell beyond the rolled
-    window, or a guaranteed click on a banner with no guarantee there) marks nothing."""
+    ``guaranteed_pulls`` for the grid. Like godfat, the multi's own draws light too:
+    ``guaranteed_sizes`` ({banner name: multi length}) says how many singles the multi
+    plays from the clicked cell before its last roll is swapped for the uber. A stale
+    click (unknown tag, cell beyond the rolled window, or a guaranteed click on a banner
+    with no guarantee there) marks nothing."""
     groups = _banner_groups(banner_pulls, rerolls, equivalents, guaranteed_pulls)
     picked = next((g for g in groups if g["tag"] == str(tag)), None)
     if picked is None or index not in picked["grid"]:
@@ -1049,7 +1053,23 @@ def trace_marks(
         # singles that get there light too, otherwise it stands alone (unreachable start).
         marks = TrackMarks(gtargets={rep: {index: gpull.cat}})
         if reached:
-            marks.path = {rep: {step for step, _ in walk}}
+            steps = {step for step, _ in walk}
+            # godfat lights what the multi itself draws as well: started on the clicked
+            # cell it plays size - 1 singles along the play chain (dupes hop like any
+            # single), and its final roll is swapped for the uber - that cell's shown
+            # cat is never obtained, so it stays unlit.
+            sizes = guaranteed_sizes or {}
+            size = max((sizes.get(name, 0) for name in picked["names"]), default=0)
+            last, at = walk[-1][1].cat, walk[-1][1].next_position
+            for _ in range(max(size - 2, 0)):
+                outcome = graph.resolve(at, last)
+                if outcome is None:  # the multi runs off the rolled window
+                    break
+
+                steps.add(at)
+                last, at = outcome.cat, outcome.next_position
+
+            marks.path = {rep: steps}
             marks.gpath = {rep: {index}}
         return marks
 

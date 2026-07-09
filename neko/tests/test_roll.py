@@ -94,6 +94,11 @@ def test_no_guaranteed_column_without_a_roll_count():
     assert roll_banner(42, FOUR_BAND, 50).guaranteed == []
 
 
+def test_roll_banner_records_the_guaranteed_multi_length():
+    assert roll_banner(42, FOUR_BAND, 10).guaranteed_rolls == 0
+    assert roll_banner(42, FOUR_BAND, 10, guaranteed_rolls=11).guaranteed_rolls == 11
+
+
 def test_guaranteed_column_is_an_uber_at_every_cell():
     rolls = roll_banner(1893568593, FOUR_BAND, 40, guaranteed_rolls=11)
     assert len(rolls.guaranteed) == 40 * 2

@@ -636,6 +636,51 @@ def test_trace_marks_guaranteed_click_marks_the_column_uber():
     assert marks.targets == {}
 
 
+def test_trace_marks_guaranteed_click_lights_the_multis_own_draws():
+    banner_pulls = {
+        "X": [
+            TrackPull(1, "A", "Pogo", R),
+            TrackPull(2, "A", "Kasa Jizo", U),
+            TrackPull(3, "A", "Bath Cat", R),
+            TrackPull(4, "A", "Bahamut", U),
+        ]
+    }
+    guaranteed = {"X": [TrackPull(2, "A", "G2", U)]}
+    marks = trace_marks(
+        banner_pulls,
+        {},
+        {},
+        "1",
+        2,
+        guaranteed_pulls=guaranteed,
+        guaranteed=True,
+        guaranteed_sizes={"X": 3},
+    )
+    # A 3-roll guaranteed started on 2A draws 2A and 3A; its last roll (4A) is swapped
+    # for the uber, so that cell stays unlit while the walk there (1A) lights as before.
+    assert marks.path == {"X": {0, 2, 4}}
+    assert marks.gpath == {"X": {2}}
+    assert marks.gtargets == {"X": {2: "G2"}}
+
+
+def test_trace_marks_guaranteed_draws_stop_at_the_rolled_window():
+    banner_pulls = {"X": [TrackPull(1, "A", "Pogo", R), TrackPull(2, "A", "Kasa Jizo", U)]}
+    guaranteed = {"X": [TrackPull(2, "A", "G2", U)]}
+    marks = trace_marks(
+        banner_pulls,
+        {},
+        {},
+        "1",
+        2,
+        guaranteed_pulls=guaranteed,
+        guaranteed=True,
+        guaranteed_sizes={"X": 11},
+    )
+    # The 11-roll's later draws fall past the rolled cells: light what the window shows.
+    assert marks.path == {"X": {0, 2}}
+    assert marks.gtargets == {"X": {2: "G2"}}
+
+
 def test_trace_marks_guaranteed_click_on_unreachable_cell_marks_only_the_uber():
     banner_pulls = {
         "X": [TrackPull(1, "A", "Pogo", R), TrackPull(2, "A", "Pogo", R), TrackPull(3, "A", "X", U)]
