@@ -1122,17 +1122,19 @@ table.track th.guaranteed-col, table.track td.guaranteed-col {
 
 /* Rolls display-mode toggle: a cell's form icon, hotlinked and injected by app.js only
    once an icon mode is picked. Hidden by default (names mode); the mode classes on
-   #resultsRegion reveal it, and swap out the name in icons-only mode. */
+   #resultsRegion reveal it at the sprite's native size (104x79 - godfat's), letting the
+   rows and columns grow to fit. In "both" the name sits centred under its icon. */
 .cat-icon {
   display: none;
-  width: 2.2em;
-  height: 2.2em;
-  vertical-align: middle;
-  image-rendering: -webkit-optimize-contrast;
+  width: 104px;
+  max-width: 100%;
+  height: auto;
 }
+#resultsRegion.rolls-icons .entry > .catlink,
+#resultsRegion.rolls-both .entry > .catlink { display: inline-block; vertical-align: middle; }
+#resultsRegion.rolls-both .entry > .catlink { text-align: center; }
 #resultsRegion.rolls-icons .entry > .catlink .cat-icon,
-#resultsRegion.rolls-both .entry > .catlink .cat-icon { display: inline-block; }
-#resultsRegion.rolls-both .entry > .catlink .cat-icon { margin-right: 0.25em; }
+#resultsRegion.rolls-both .entry > .catlink .cat-icon { display: block; margin: 0 auto; }
 /* Icons-only: drop the name, but keep it as a fallback when the icon 404s. */
 #resultsRegion.rolls-icons .entry > .catlink:not(.no-icon) .catname { display: none; }
 #resultsRegion.rolls-icons .entry > .catlink.no-icon .cat-icon { display: none; }

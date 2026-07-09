@@ -23,6 +23,7 @@ if (picker) {
   const detailsToggleEl = document.getElementById("detailsToggle");
   const simGuaranteedEl = document.getElementById("simGuaranteed");
   const rollDisplayEl = document.getElementById("rollDisplay");
+  const rollFormEl = document.getElementById("rollForm");
   const horizonRow = document.querySelector(".explore-horizon");
   const budgetFields = document.querySelector(".budget-fields");
   const stored = (() => {
@@ -452,37 +453,70 @@ if (picker) {
   // The icons are hotlinked per-cell from battlecatsinfo (like the cat popup), so we
   // only inject them once a mode that shows them is picked - text mode stays image-free.
   // Each cell carries its catalogue id (data-uid); loading="lazy" keeps off-screen rows
-  // from fetching, and identical cats share one cached URL. A cell whose icon 404s (an
-  // uncatalogued unit) falls back to its name.
+  // from fetching, and identical cats share one cached URL. The form picker chooses
+  // WHICH form's icon: a unit without the picked form steps down to the last one it
+  // has (404s are remembered, so a re-pick never re-probes), and a cell with no icon
+  // at all (an uncatalogued unit) falls back to its name.
   const ICON_BASE = "https://battlecatsinfo.github.io/img/u";
+  const missingIcons = new Set(); // "uid/form" pairs that 404'd
+  const bestForm = (uid, form) => {
+    while (form > 0 && missingIcons.has(`${uid}/${form}`)) form -= 1;
+    return form;
+  };
+  const setIconForm = (btn, img) => {
+    const uid = btn.dataset.uid;
+    const form = bestForm(uid, Number(rollFormEl.value));
+    if (missingIcons.has(`${uid}/${form}`)) {
+      btn.classList.add("no-icon");
+      return;
+    }
+    if (img.dataset.form === String(form)) return;
+    img.dataset.form = form;
+    btn.classList.remove("no-icon");
+    img.src = `${ICON_BASE}/${uid}/${form}.png`;
+  };
   const injectIcons = (root) => {
     root.querySelectorAll(".entry > .catlink[data-uid]").forEach((btn) => {
-      if (btn.querySelector(".cat-icon")) return;
-      const img = document.createElement("img");
-      img.className = "cat-icon";
-      img.loading = "lazy";
-      img.alt = "";
-      img.src = `${ICON_BASE}/${btn.dataset.uid}/0.png`;
-      img.addEventListener("error", () => btn.classList.add("no-icon"));
-      btn.prepend(img);
+      let img = btn.querySelector(".cat-icon");
+      if (!img) {
+        img = document.createElement("img");
+        img.className = "cat-icon";
+        img.loading = "lazy";
+        img.alt = "";
+        img.addEventListener("error", () => {
+          missingIcons.add(`${btn.dataset.uid}/${img.dataset.form}`);
+          setIconForm(btn, img); // step down a form, or give up to the name
+        });
+        btn.prepend(img);
+      }
+      setIconForm(btn, img);
     });
   };
   // Unlike the other Rolls controls (which reset each visit by request), the display
-  // mode is a persisted preference - restore the last pick before the first render.
+  // mode and icon form are persisted preferences - restore the last picks before the
+  // first render.
+  const restorePick = (el, key) => {
+    const saved = localStorage.getItem(key);
+    if (saved && [...el.options].some((o) => o.value === saved)) el.value = saved;
+  };
   const ROLL_DISPLAY_KEY = "neko:rollDisplay";
-  const savedRollDisplay = localStorage.getItem(ROLL_DISPLAY_KEY);
-  if (savedRollDisplay && [...rollDisplayEl.options].some((o) => o.value === savedRollDisplay)) {
-    rollDisplayEl.value = savedRollDisplay;
-  }
+  const ROLL_FORM_KEY = "neko:rollForm";
+  restorePick(rollDisplayEl, ROLL_DISPLAY_KEY);
+  restorePick(rollFormEl, ROLL_FORM_KEY);
   const syncRollDisplay = () => {
     const mode = rollDisplayEl.value;
     resultsRegion.classList.toggle("rolls-icons", mode === "icons");
     resultsRegion.classList.toggle("rolls-both", mode === "both");
+    rollFormEl.disabled = mode === "text"; // the form picker only drives icons
     if (mode !== "text") injectIcons(resultsRegion);
   };
   syncRollDisplay();
   rollDisplayEl.addEventListener("change", () => {
     localStorage.setItem(ROLL_DISPLAY_KEY, rollDisplayEl.value);
+    syncRollDisplay();
+  });
+  rollFormEl.addEventListener("change", () => {
+    localStorage.setItem(ROLL_FORM_KEY, rollFormEl.value);
     syncRollDisplay();
   });
 
