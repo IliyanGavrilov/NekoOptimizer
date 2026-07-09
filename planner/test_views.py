@@ -3,8 +3,10 @@ from itertools import count
 import pytest
 
 from neko.models import BannerRolls, Rarity, TrackPull
-from neko.roller import RollResult
+from neko.rng import backtrack
+from neko.roller import DEFAULT_COUNT, RollResult
 from neko.search import Multi
+from planner.forms import MAX_TRACK_LENGTH
 from planner.models import Banner, Cat, Seed, Unit
 
 R = Rarity.RARE
@@ -18,11 +20,17 @@ def cat_with_unit(name, owned=False, wanted=False):
     return Cat.objects.create(name=name, unit=unit)
 
 
-def fixed_rolls(rolls):
-    def _fetch(seed, count=100, last_cat=""):
-        return RollResult({"x": rolls}, {})
+def returns(result):
+    """A fetch double that ignores its args and hands back a prebuilt RollResult."""
+
+    def _fetch(seed, count=100, last_cat="", simulate_guaranteed=0):
+        return result
 
     return _fetch
+
+
+def fixed_rolls(rolls):
+    return returns(RollResult({"x": rolls}, {}))
 
 
 def fixed_banners(*pulls):
@@ -78,7 +86,7 @@ def test_guaranteed_config_reaches_target(client, monkeypatch):
         {"x": BannerRolls([TrackPull(1, "A", "Filler", U)], [TrackPull(2, "A", "Target", U)])},
         {"x": [Multi(rolls=2, cost=300)]},
     )
-    monkeypatch.setattr("planner.views.fetch_banners", lambda seed, count=100, last_cat="": result)
+    monkeypatch.setattr("planner.views.fetch_banners", returns(result))
     response = client.post("/plan/", {"seed": 7, "tickets": 0, "catfood": 300, "targets": [cat.pk]})
     assert b"Target" in response.content
 
@@ -88,7 +96,7 @@ def test_selected_banners_use_chosen_rolls(client, monkeypatch):
     cat = Cat.objects.create(name="Bahamut")
     called = {}
 
-    def fake_for_banners(seed, names, count=100, last_cat=""):
+    def fake_for_banners(seed, names, count=100, last_cat="", simulate_guaranteed=0):
         called["names"] = list(names)
         return RollResult({"Pick": BannerRolls([TrackPull(1, "A", "Bahamut", U)], [])}, {})
 
@@ -106,7 +114,7 @@ def test_platinum_legend_cap_zero_excludes_the_banner(client, monkeypatch):
     result = RollResult(
         {"Platinum Capsules": BannerRolls([TrackPull(1, "A", "Bahamut", U)], [])}, {}
     )
-    monkeypatch.setattr("planner.views.fetch_banners", lambda seed, count=100, last_cat="": result)
+    monkeypatch.setattr("planner.views.fetch_banners", returns(result))
     response = client.post(
         "/plan/",
         {"seed": 7, "tickets": 1, "catfood": 0, "targets": [cat.pk], "platinum_legend_cap": 0},
@@ -120,7 +128,7 @@ def test_platinum_legend_allowed_by_default(client, monkeypatch):
     result = RollResult(
         {"Platinum Capsules": BannerRolls([TrackPull(1, "A", "Bahamut", U)], [])}, {}
     )
-    monkeypatch.setattr("planner.views.fetch_banners", lambda seed, count=100, last_cat="": result)
+    monkeypatch.setattr("planner.views.fetch_banners", returns(result))
     response = client.post("/plan/", {"seed": 7, "tickets": 1, "catfood": 0, "targets": [cat.pk]})
     assert b"Bahamut" in response.content
 
@@ -171,7 +179,7 @@ def test_explore_mode_rolls_to_the_horizon(client, monkeypatch):
     cat = Cat.objects.create(name="Bahamut")
     seen = {}
 
-    def fake(seed, count=100, last_cat=""):
+    def fake(seed, count=100, last_cat="", simulate_guaranteed=0):
         seen["count"] = count
         return RollResult({"x": BannerRolls([TrackPull(1, "A", "Bahamut", U)], [])}, {})
 
@@ -305,7 +313,7 @@ def test_tracks_endpoint_renders_a_dice_per_branch_of_a_dupe_cell(client, monkey
 def test_tracks_endpoint_forwards_the_dupe_memory(client, monkeypatch):
     seen = {}
 
-    def fake(seed, count, last_cat=""):
+    def fake(seed, count, last_cat="", simulate_guaranteed=0):
         seen["last_cat"] = last_cat
         return RollResult({"x": BannerRolls([TrackPull(1, "A", "Pogo", R)], [])}, {})
 
@@ -315,12 +323,69 @@ def test_tracks_endpoint_forwards_the_dupe_memory(client, monkeypatch):
 
 
 @pytest.mark.django_db
+def test_tracks_endpoint_uses_the_requested_track_length(client, monkeypatch):
+    seen = {}
+
+    def fake(seed, count, last_cat="", simulate_guaranteed=0):
+        seen["count"] = count
+        return RollResult({"x": BannerRolls([TrackPull(1, "A", "Pogo", R)], [])}, {})
+
+    monkeypatch.setattr("planner.views.fetch_banners", fake)
+    client.post("/tracks/", {"seed": 7, "track_length": 250})
+    assert seen["count"] == 250
+
+
+@pytest.mark.django_db
+def test_tracks_endpoint_clamps_the_track_length(client, monkeypatch):
+    seen = {}
+
+    def fake(seed, count, last_cat="", simulate_guaranteed=0):
+        seen["count"] = count
+        return RollResult({"x": BannerRolls([TrackPull(1, "A", "Pogo", R)], [])}, {})
+
+    monkeypatch.setattr("planner.views.fetch_banners", fake)
+    client.post("/tracks/", {"seed": 7, "track_length": 5000})
+    assert seen["count"] == MAX_TRACK_LENGTH
+    client.post("/tracks/", {"seed": 7, "track_length": "junk"})
+    assert seen["count"] == DEFAULT_COUNT
+
+
+@pytest.mark.django_db
+def test_tracks_endpoint_forwards_the_simulate_guaranteed_count(client, monkeypatch):
+    seen = {}
+
+    def fake(seed, count, last_cat="", simulate_guaranteed=0):
+        seen["simulate_guaranteed"] = simulate_guaranteed
+        return RollResult({"x": BannerRolls([TrackPull(1, "A", "Pogo", R)], [])}, {})
+
+    monkeypatch.setattr("planner.views.fetch_banners", fake)
+    client.post("/tracks/", {"seed": 7})
+    assert seen["simulate_guaranteed"] == 0
+    client.post("/tracks/", {"seed": 7, "simulate_guaranteed": 11})
+    assert seen["simulate_guaranteed"] == 11
+    # A size the dropdown doesn't offer is ignored, so it can't balloon the grid.
+    client.post("/tracks/", {"seed": 7, "simulate_guaranteed": 999})
+    assert seen["simulate_guaranteed"] == 0
+
+
+@pytest.mark.django_db
 def test_tracks_endpoint_renders_a_dice_on_the_guaranteed_cell(client, monkeypatch):
     rolls = BannerRolls(
         [TrackPull(1, "A", "Shaman Cat", R)], [TrackPull(1, "A", "Trixi the Merc", U, seed=42)]
     )
     monkeypatch.setattr("planner.views.fetch_banners", fixed_rolls(rolls))
     assert b'data-seed="42"' in client.post("/tracks/", {"seed": 7}).content
+
+
+@pytest.mark.django_db
+def test_seed_backtrack_steps_the_seed_back_one_roll(client):
+    seed = 1893568593
+    assert client.post("/seed/backtrack/", {"seed": seed}).json()["seed"] == backtrack(seed)
+
+
+@pytest.mark.django_db
+def test_seed_backtrack_rejects_a_non_integer_seed(client):
+    assert client.post("/seed/backtrack/", {"seed": "junk"}).status_code == 400
 
 
 @pytest.mark.django_db

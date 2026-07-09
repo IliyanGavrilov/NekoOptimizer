@@ -15,6 +15,7 @@ from neko.roller import (
     catalogue_banners,
     roll_active,
     roll_selected,
+    units_from_records,
 )
 from neko.search import astar, beam_search, obtainable
 from neko.subsets import SubsetPlan, solve_subsets
@@ -55,10 +56,15 @@ def capped_banner_limits(names: Iterable[str], cap: int) -> dict[str, int]:
     return {name: cap for name in names if any(kw in name.lower() for kw in _CAPPED_KEYWORDS)}
 
 
-def fetch_banners(seed: int, count: int = DEFAULT_COUNT, last_cat: str = "") -> RollResult:
+def fetch_banners(
+    seed: int, count: int = DEFAULT_COUNT, last_cat: str = "", simulate_guaranteed: int = 0
+) -> RollResult:
     """Roll the active banners for a seed locally (no godfat). ``last_cat`` is the pull
-    you got just before this view (the dupe memory) - it can dupe a first cell."""
-    return roll_active(seed, count=count, last_cat=last_cat)
+    you got just before this view (the dupe memory) - it can dupe a first cell.
+    ``simulate_guaranteed`` (a roll count) forces a guaranteed column onto banners without one."""
+    return roll_active(
+        seed, count=count, last_cat=last_cat, simulate_guaranteed=simulate_guaranteed
+    )
 
 
 def fetch_catalogue() -> RollResult:
@@ -67,10 +73,55 @@ def fetch_catalogue() -> RollResult:
 
 
 def fetch_for_banners(
-    seed: int, names: Iterable[str], count: int = DEFAULT_COUNT, last_cat: str = ""
+    seed: int,
+    names: Iterable[str],
+    count: int = DEFAULT_COUNT,
+    last_cat: str = "",
+    simulate_guaranteed: int = 0,
 ) -> RollResult:
-    """Roll just the chosen banners for a seed locally. ``last_cat`` works like in fetch_banners."""
-    return roll_selected(seed, names, count=count, last_cat=last_cat)
+    """Roll just the chosen banners for a seed locally. ``last_cat`` and
+    ``simulate_guaranteed`` work like in fetch_banners."""
+    return roll_selected(
+        seed, names, count=count, last_cat=last_cat, simulate_guaranteed=simulate_guaranteed
+    )
+
+
+def newly_added_ubers(events=None, pools=None, series=None, units=None) -> dict[str, set[str]]:
+    """Per banner, the ubers ADDED in its latest run versus that banner's previous run of
+    the same series - the game's "New units added" set. Keyed by the latest run's name (how
+    the roller keys banners), so a track cell can flag an uber that's new to the banner it's
+    rolled on. Runs are matched by series id (a rerun reuses it even when its name changes),
+    so a set that's carried it all along never counts as newly added."""
+    events = load_events() if events is None else events
+    pools = load_pools() if pools is None else pools
+    series = load_series() if series is None else series
+    units = units_from_records() if units is None else units
+
+    def ubers(pool_id: int) -> set[str]:
+        return {
+            units[u][0]
+            for u in pools.get(pool_id, ())
+            if u in units and units[u][1] == Rarity.UBER_SUPER_RARE.value
+        }
+
+    runs: dict[int, list[GachaEventRow]] = {}
+    for event in events:
+        sid = series.get(event.pool_id)
+        if sid is not None:
+            runs.setdefault(sid, []).append(event)
+
+    added: dict[str, set[str]] = {}
+    for evs in runs.values():
+        if len(evs) < 2:  # a first-ever run has no previous pool to diff against
+            continue
+
+        evs.sort(key=lambda e: e.start)
+        latest = evs[-1]
+        new = ubers(latest.pool_id) - ubers(evs[-2].pool_id)
+        if new:
+            added[latest.name] = new
+
+    return added
 
 
 def _by_rarity(cats: Iterable[Cat], reverse: bool = False) -> list[tuple[str, list[Cat]]]:
@@ -501,13 +552,15 @@ def _pos_label(index):
     return f"{index // 2 + 1}{'A' if index % 2 == 0 else 'B'}"
 
 
-def _collection_marks(cat, rarity, owned, wanted):
-    """The collection marks every rendered cat carries: ✓ owned, ★ wishlisted, and a
-    green "new" name for an Uber/Legend not yet in the collection."""
+def _collection_marks(cat, rarity, owned, wanted, debuts=()):
+    """The collection marks every rendered cat carries: ✓ owned, ★ wishlisted, a green
+    "new" name for an Uber/Legend not yet in the collection, and a "debut" flag for an uber
+    making its first-ever appearance on an upcoming banner (``debuts``)."""
     return {
         "new": rarity in _VALUABLE_RARITIES and cat not in owned,
         "owned": cat in owned,
         "wanted": cat in wanted,
+        "debut": cat in debuts,
     }
 
 
@@ -586,6 +639,8 @@ def build_tracks(
     guaranteed=None,
     wanted=None,
     titles=None,
+    rows=TRACK_ROW_CAP,
+    debuts=None,
 ):
     """One merged A/B table over every selected banner: each cell stacks each banner's
     cat at that shared stream position (like ubercarry), with rare-dupe switch arrows
@@ -598,18 +653,24 @@ def build_tracks(
     the uber a guaranteed multi gives you when STARTED on that cell); banners without a
     guaranteed multi have none, and when no selected banner has any, the columns are left
     out entirely (``has_guaranteed``). ``titles`` (display_titles) shortens the legend's
-    banner names.
+    banner names. ``rows`` is how many A/B rows to render (the browse view passes the
+    user's "rolls to show"); a plan always extends past it to reach its furthest lit cell.
     """
     marks = marks or TrackMarks()
     owned = owned or set()
     wanted = wanted or set()
     titles = titles or {}
+    debuts = debuts or {}
     groups = _banner_groups(banner_pulls, rerolls, equivalents, guaranteed)
+    # "New to this banner" is per banner (newly_added_ubers keys by name); a group merges
+    # equivalent banners, so its debut set is the union over the names it stands for.
+    for group in groups:
+        group["debuts"] = set().union(*(debuts.get(name, set()) for name in group["names"]))
 
     avail = max((max(g["grid"]) for g in groups if g["grid"]), default=-1) // 2 + 1
     lit = [index for indices in (*marks.path.values(), *marks.gpath.values()) for index in indices]
     needed = max((index // 2 + 1 for index in lit), default=0)
-    max_pos = max(min(avail, max(TRACK_ROW_CAP, needed)), 0)
+    max_pos = max(min(avail, max(rows, needed)), 0)
 
     def entries(index):
         cells = []
@@ -651,7 +712,7 @@ def build_tracks(
                     "on_path": on_path,
                     "target": obtained == tp.cat,
                     "shared": not on_path and index in marks.shared.get(group["rep"], ()),
-                    **_collection_marks(tp.cat, rarity, owned, wanted),
+                    **_collection_marks(tp.cat, rarity, owned, wanted, group["debuts"]),
                 }
             )
 
@@ -677,6 +738,18 @@ def build_tracks(
 
         return names.pop() if len(names) == 1 else ""
 
+    def cell_details(index):
+        # The cell's raw RNG values for the details view (godfat's seed column): the
+        # rarity seed the roll started from (the rarity band is read off it) and the slot
+        # seed that indexes the pool. Both are stream values, the same for every banner
+        # rolled here, so read them off any stacked pull.
+        for group in groups:
+            tp = group["grid"].get(index)
+            if tp is not None:
+                return {"rarity_seed": tp.rarity_seed, "slot_seed": tp.seed}
+
+        return None
+
     def guaranteed_entries(index):
         cells = []
         for group in groups:
@@ -698,7 +771,7 @@ def build_tracks(
                     "on_path": on_path,
                     "target": marks.gtargets.get(group["rep"], {}).get(index) == tp.cat,
                     "shared": not on_path and index in marks.gshared.get(group["rep"], ()),
-                    **_collection_marks(tp.cat, rarity, owned, wanted),
+                    **_collection_marks(tp.cat, rarity, owned, wanted, group["debuts"]),
                 }
             )
 
@@ -714,6 +787,8 @@ def build_tracks(
             "b_seed": cell_seed(2 * (pos - 1) + 1),
             "a_cat": cell_cat(2 * (pos - 1)),
             "b_cat": cell_cat(2 * (pos - 1) + 1),
+            "a_details": cell_details(2 * (pos - 1)),
+            "b_details": cell_details(2 * (pos - 1) + 1),
             "ga": guaranteed_entries(2 * (pos - 1)) if has_guaranteed else [],
             "gb": guaranteed_entries(2 * (pos - 1) + 1) if has_guaranteed else [],
         }
@@ -1062,6 +1137,7 @@ def subset_solutions(
     titles=None,
     guaranteed_rerolls=None,
     last_cat="",
+    debuts=None,
 ):
     """Every non-empty target subset and its best plan, biggest-then-cheapest, with the
     unreachable subsets listed after. Reachable ones carry the steps + highlighted track
@@ -1095,6 +1171,7 @@ def subset_solutions(
             guaranteed=guaranteed_pulls,
             wanted=wanted,
             titles=titles,
+            debuts=debuts,
         )
         solutions.append(solution)
 

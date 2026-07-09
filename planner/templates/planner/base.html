@@ -39,8 +39,8 @@
   <main>
     {% block content %}{% endblock %}
   </main>
-  {# One shared popup for any cat name: its forms (icons hotlinked from battlecatsinfo)
-     and a link to its Battle Cats Wiki page. Filled in by app.js. #}
+  {% comment %}One shared popup for any cat name: its forms (icons hotlinked from
+  battlecatsinfo) and a link to its Battle Cats Wiki page. Filled in by app.js.{% endcomment %}
   <dialog id="catPopup" class="cat-popup">
     <button type="button" class="cat-popup-close" data-close aria-label="Close">&times;</button>
     <div class="cat-popup-head">

@@ -10,6 +10,32 @@ def xorshift(state: int) -> int:
     return x
 
 
+def _undo_shift_xor(y: int, shift: int, left: bool) -> int:
+    """Invert one ``x ^= x << shift`` (or ``>>``) step. Each pass fixes another
+    ``shift`` bits, so ceil(32 / shift) passes recover x fully."""
+    x = y
+    for _ in range(0, 32, shift):
+        x = y ^ (((x << shift) & MASK) if left else (x >> shift))
+    return x & MASK
+
+
+def unxorshift(state: int) -> int:
+    """The inverse of ``xorshift``: undo each XOR-shift in reverse order. Stepping the
+    seed backward (godfat's Backtrack) rolls the stream in reverse. O(1)."""
+    x = _undo_shift_xor(state & MASK, 15, left=True)
+    x = _undo_shift_xor(x, 17, left=False)
+    return _undo_shift_xor(x, 13, left=True)
+
+
+def backtrack(seed: int, rolls: int = 1) -> int:
+    """The seed ``rolls`` pulls earlier in the stream. A pull advances the same track by
+    two stream values, so stepping the RNG back twice per roll makes the pull just before
+    the current first cell the new first cell (godfat's Backtrack)."""
+    for _ in range(2 * rolls):
+        seed = unxorshift(seed)
+    return seed
+
+
 class XorShift32:
     """Stateful wrapper over the shared seed."""
 

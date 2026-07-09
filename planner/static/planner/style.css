@@ -435,6 +435,13 @@ section > h3, .banner-group > summary {
 }
 .banner-group.flash-locate { animation: flash-locate 0.9s ease-out; }
 
+/* Rejected capsule pick (a run from a different time than the selected session). */
+@keyframes flash-blocked {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(255, 96, 96, 0); }
+  20% { box-shadow: 0 0 0 4px var(--r-legend); }
+}
+.banner-group.flash-blocked { animation: flash-blocked 0.7s ease-out; }
+
 /* The selected banners spelled out under the hint; each chip scrolls to its banner. */
 .banner-chips { display: flex; flex-wrap: wrap; gap: 0.35rem; margin: 0 0 0.6rem; }
 .banner-chip {
@@ -516,7 +523,34 @@ tbody tr:hover, table tr:hover { background: var(--panel-2); }
   transform: translateX(-50%);
   width: min(1200px, calc(100vw - 3.5rem));
 }
-.results-h { font-size: 1rem; margin: 0 0 0.3rem; }
+.results-h { font-size: 1rem; margin: 0; }
+
+/* The Rolls table's live display controls: title on the left, controls on the right,
+   wrapping under it on narrow screens. */
+.rolls-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.4rem 0.9rem;
+  margin: 0 0 0.3rem;
+}
+.rolls-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem 0.9rem;
+}
+.ctrl {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  color: var(--muted);
+  font-size: 0.82rem;
+  white-space: nowrap;
+}
+.ctrl input[type="number"] { width: 4.2rem; }
+.ctrl select { padding: 0.15rem 0.3rem; }
 
 .solution {
   border: 1px solid var(--line);
@@ -729,6 +763,18 @@ table.track .arrow {
 /* Collection marks, matching the picker chips: a green name is an Uber/Legend you
    don't own yet, ✓ = owned (the line dims), ★ = wishlisted. */
 table.track .entry.new .catlink, .cat-pill.new { color: var(--new); }
+/* Brand-new Uber (first appears on an upcoming banner) - a small accent "new" pill. */
+table.track .entry .debut {
+  font-size: 0.6rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--accent);
+  border: 1px solid var(--accent);
+  border-radius: 4px;
+  padding: 0 0.22rem;
+  vertical-align: middle;
+}
 /* Owned lines dim - except a searched-for target, whose gold pill must stay lit. */
 table.track .entry.owned:not(.target), .cat-pill.owned:not(.target) { opacity: 0.6; }
 table.track .entry.owned .catlink::after,
@@ -780,6 +826,20 @@ table.track .reseed.inline {
 }
 table.track .reseed.inline svg { width: 13px; height: 13px; }
 
+/* Details view: each cell's raw RNG seeds (the rarity seed it rolled from and the
+   slot seed that indexes the pool). Off by default; the "Show seeds" toggle adds
+   .details to the results region to reveal them. Monospace and dim so the numbers
+   read as a debug annotation under the cat name. */
+table.track .cell-seeds { display: none; }
+#resultsRegion.details table.track .cell-seeds {
+  display: block;
+  margin-top: 0.15rem;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.68rem;
+  color: var(--muted);
+  letter-spacing: -0.02em;
+}
+
 /* godfat-style guaranteed columns: the uber a guaranteed multi awards when its last draw
    lands on that cell. Tinted and dash-separated so they read as auxiliary to their track. */
 table.track th.guaranteed-col, table.track td.guaranteed-col {
@@ -823,7 +883,8 @@ table.track th.guaranteed-col, table.track td.guaranteed-col {
    it (a cell's ↻ or an applied plan); hidden while there's nothing to undo. */
 .seed-row { display: flex; align-items: center; gap: 0.4rem; }
 .seed-row input { min-width: 0; }
-.seed-undo {
+.seed-undo,
+.seed-back {
   flex: 0 0 auto;
   background: var(--bg-2);
   border: 1px solid var(--line);
@@ -835,7 +896,9 @@ table.track th.guaranteed-col, table.track td.guaranteed-col {
   margin: 0;
   white-space: nowrap;
 }
-.seed-undo:hover { color: var(--accent); border-color: var(--accent); filter: none; }
+.seed-undo:hover,
+.seed-back:not(:disabled):hover { color: var(--accent); border-color: var(--accent); filter: none; }
+.seed-back:disabled { opacity: 0.5; cursor: not-allowed; }
 .check-row { display: inline-flex; align-items: center; gap: 0.5rem; color: var(--ink); margin: 0.5rem 0; }
 .error { color: var(--r-legend); }
 
