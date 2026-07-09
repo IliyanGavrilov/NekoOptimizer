@@ -22,6 +22,7 @@ if (picker) {
   const trackLengthEl = document.getElementById("id_track_length");
   const detailsToggleEl = document.getElementById("detailsToggle");
   const simGuaranteedEl = document.getElementById("simGuaranteed");
+  const rollDisplayEl = document.getElementById("rollDisplay");
   const horizonRow = document.querySelector(".explore-horizon");
   const budgetFields = document.querySelector(".budget-fields");
   const stored = (() => {
@@ -445,6 +446,34 @@ if (picker) {
   syncDetails();
   detailsToggleEl.addEventListener("change", syncDetails);
 
+  // ---- Rolls display mode: names / form icons / both -------------------
+  // The icons are hotlinked per-cell from battlecatsinfo (like the cat popup), so we
+  // only inject them once a mode that shows them is picked - text mode stays image-free.
+  // Each cell carries its catalogue id (data-uid); loading="lazy" keeps off-screen rows
+  // from fetching, and identical cats share one cached URL. A cell whose icon 404s (an
+  // uncatalogued unit) falls back to its name.
+  const ICON_BASE = "https://battlecatsinfo.github.io/img/u";
+  const injectIcons = (root) => {
+    root.querySelectorAll(".entry > .catlink[data-uid]").forEach((btn) => {
+      if (btn.querySelector(".cat-icon")) return;
+      const img = document.createElement("img");
+      img.className = "cat-icon";
+      img.loading = "lazy";
+      img.alt = "";
+      img.src = `${ICON_BASE}/${btn.dataset.uid}/0.png`;
+      img.addEventListener("error", () => btn.classList.add("no-icon"));
+      btn.prepend(img);
+    });
+  };
+  const syncRollDisplay = () => {
+    const mode = rollDisplayEl.value;
+    resultsRegion.classList.toggle("rolls-icons", mode === "icons");
+    resultsRegion.classList.toggle("rolls-both", mode === "both");
+    if (mode !== "text") injectIcons(resultsRegion);
+  };
+  syncRollDisplay();
+  rollDisplayEl.addEventListener("change", syncRollDisplay);
+
   // ---- Track / Steps view switch, scoped to the opened subset solution -----
   solutions.addEventListener("click", (e) => {
     const btn = e.target.closest(".view-btn");
@@ -541,6 +570,7 @@ if (picker) {
     // These steppers are (re)rendered with the fragment, so wire up drag-to-scrub
     // each time - the page-load pass never saw them.
     trackHost.querySelectorAll(".future-ubers").forEach(scrubNumberInput);
+    syncRollDisplay(); // re-inject icons if the fresh cells need them
     setLegendHeight();
   }
   async function requestTracks() {
@@ -735,6 +765,7 @@ if (picker) {
         solutions.innerHTML = data.solutions_html;
         browseTrack.hidden = true;
         resultsRegion.hidden = !solutions.firstElementChild;
+        syncRollDisplay(); // the solution tracks carry icons too
         setLegendHeight();
       } else {
         const { errors = {} } = await resp.json().catch(() => ({}));
