@@ -477,3 +477,13 @@ def test_unit_info_links_to_the_wiki_page(client):
 @pytest.mark.django_db
 def test_unit_info_reports_an_unknown_cat_as_not_found(client):
     assert client.get("/unit/info/", {"name": "Nobody"}).json() == {"found": False}
+
+
+@pytest.mark.django_db
+def test_unit_forms_maps_every_unit_in_one_payload(client):
+    Unit.objects.create(unit_id=25, name="Bahamut", forms=["Bahamut", "Aqua Bahamut"])
+    Unit.objects.create(unit_id=44, name="Kasa Jizo", forms=["Kasa Jizo"])
+    assert client.get("/unit/forms/").json() == {
+        "25": ["Bahamut", "Aqua Bahamut"],
+        "44": ["Kasa Jizo"],
+    }

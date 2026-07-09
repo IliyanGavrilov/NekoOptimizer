@@ -10,6 +10,7 @@ from planner.views import (
     planner,
     seed_backtrack,
     tracks,
+    unit_forms,
     unit_info,
 )
 
@@ -21,6 +22,7 @@ urlpatterns = [
     path("plan/", find_plan, name="find_plan"),
     path("apply/", apply_plan, name="apply_plan"),
     path("unit/info/", unit_info, name="unit_info"),
+    path("unit/forms/", unit_forms, name="unit_forms"),
     path("collection/", collection, name="collection"),
     path("collection/toggle/", collection_toggle, name="collection_toggle"),
     path("collection/bulk/", collection_bulk, name="collection_bulk"),
