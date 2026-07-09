@@ -670,13 +670,19 @@ tbody tr:hover, table tr:hover { background: var(--panel-2); }
    shared position (à la ubercarry), with the plan's path lit up. */
 .track-legend {
   list-style: none;
-  margin: 0.2rem 0;
-  padding: 0;
+  margin: 0;
+  padding: 0.35rem 0;
   display: flex;
   flex-direction: column; /* one banner per line - the names are long marketing strings */
   gap: 0.25rem;
   font-size: 0.8rem;
   color: var(--muted);
+  /* Sticks under the site header so you can see which banner is 1/2/3 while the rows
+     scroll; the thead sits just below it (--legend-h is measured by app.js). */
+  position: sticky;
+  top: var(--header-h, 52px);
+  z-index: 3;
+  background: var(--bg);
 }
 .tag {
   display: inline-block;
@@ -705,7 +711,7 @@ table.track th, table.track td {
    (--header-h is measured by app.js - the site header wraps taller on phones). */
 table.track thead th {
   position: sticky;
-  top: var(--header-h, 52px);
+  top: calc(var(--header-h, 52px) + var(--legend-h, 0px));
   z-index: 2;
   background: var(--panel);
   color: var(--muted);
@@ -853,11 +859,36 @@ table.track th.guaranteed-col, table.track td.guaranteed-col {
   border: 1px solid var(--line);
   border-radius: 10px;
   background: var(--bg-2);
-  padding: 0.6rem 0.8rem;
+  padding: 0.5rem 0.8rem;
   margin-bottom: 0.75rem;
 }
-.track-guide p { margin: 0 0 0.5rem; color: var(--muted); font-size: 0.85rem; line-height: 1.5; }
-.track-guide strong { color: var(--ink); }
+.track-guide > summary {
+  cursor: pointer;
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+/* Symbol key: compact wrapping cards instead of a paragraph nobody reads. */
+.symbol-legend {
+  list-style: none;
+  margin: 0.6rem 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 0.3rem 0.9rem;
+  color: var(--muted);
+  font-size: 0.8rem;
+  line-height: 1.35;
+}
+.symbol-legend li { display: flex; gap: 0.4rem; align-items: baseline; }
+.symbol-legend .sym {
+  flex: 0 0 auto;
+  color: var(--ink);
+  font-weight: 600;
+  white-space: nowrap;
+}
+.symbol-legend .dice-sym svg { width: 14px; height: 14px; vertical-align: -2px; }
+.symbol-legend .sep { color: var(--line); }
 .new-swatch { color: var(--new); font-weight: 600; }
 .shared-swatch {
   border-left: 3px dashed color-mix(in srgb, var(--accent) 60%, transparent);

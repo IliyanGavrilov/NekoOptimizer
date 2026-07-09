@@ -1,26 +1,23 @@
 {% if track.rows %}
-  <div class="track-guide">
-    <p><strong>Track A</strong> and <strong>Track B</strong> are alternate timelines. Duplicate cats are
-      auto-rerolled and switch tracks. A <span class="new-swatch">green name</span> is an Uber or
-      Legend cat missing from your collection; <span class="mark-owned">&#10003;</span> marks cats
-      you own and <span class="mark-wanted">&#9733;</span> ones on your wishlist.
-      A cell's right-hand dice marks it rolled: the seed jumps to just after its normal
-      pull. A dupe's "if dupe" branch lands on a different seed and position, so it has
-      its own small dice. The app remembers what your last jump obtained - a following
-      dupe is flagged even on the first row, and revisiting a seed keeps its memory.{% if track.has_guaranteed %}
-      A <strong>Guaranteed</strong> column shows the Uber the banner's guaranteed multi awards when
-      it is <em>started</em> on that cell (the multi's final draw is swapped for it); its dice
-      jumps to just after the multi.{% endif %}{% if track.has_shared %}
-      A <span class="shared-swatch">dashed stripe</span> marks another banner one of the plan's
-      pulls can be rolled on instead &mdash; you may get a different cat there, but the rest of
-      the plan is unaffected.{% endif %}</p>
+  <details class="track-guide">
+    <summary>Legend</summary>
+    <ul class="symbol-legend">
+      <li><span class="sym">A / B</span> alternate timelines; a dupe rerolls and switches track</li>
+      <li><span class="sym dice-sym">{% include "planner/_dice_icon.html" %}</span> &ldquo;I rolled this cell&rdquo; &mdash; jumps the seed to just after it</li>
+      <li><span class="sym">&#8627; if dupe</span> the reroll branch (its own dice &amp; landing)</li>
+      <li><span class="new-swatch">green name</span> Uber/Legend not in your collection</li>
+      <li><span class="mark-owned">&#10003;</span> owned <span class="sep">&middot;</span> <span class="mark-wanted">&#9733;</span> wishlisted</li>
+      <li><span class="debut">new</span> Uber new to this banner (added since its last run)</li>
+      {% if track.has_guaranteed %}<li><span class="sym">Guaranteed</span> the Uber a guaranteed multi awards if started on that cell</li>{% endif %}
+      {% if track.has_shared %}<li><span class="shared-swatch">dashed</span> another banner this plan step can roll on instead</li>{% endif %}
+    </ul>
     <div class="rarity-legend">
       <span class="rarity" data-rarity="Rare">Rare</span>
       <span class="rarity" data-rarity="Super Rare">Super Rare</span>
       <span class="rarity" data-rarity="Uber Super Rare">Uber Super Rare</span>
       <span class="rarity" data-rarity="Legend Rare">Legend Rare</span>
     </div>
-  </div>
+  </details>
   {% if track.legend|length > 1 %}
     <ul class="track-legend">
       {% for b in track.legend %}
