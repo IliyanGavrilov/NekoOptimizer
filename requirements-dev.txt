@@ -1,0 +1,16 @@
+# Test + lint tooling. Runtime deps live in requirements.txt; install this file to
+# get everything (`pip install -r requirements-dev.txt`). CI-only security scanners
+# (pip-audit, bandit) stay pinned in the Security workflow, not here - see
+# .github/workflows/security.yml for why.
+-r requirements.txt
+
+pytest==9.1.1
+pytest-django==4.12.0
+ruff==0.15.20
+
+# Pulled in transitively by the above, pinned for reproducible dev installs.
+colorama==0.4.6
+iniconfig==2.3.0
+packaging==26.2
+pluggy==1.6.0
+Pygments==2.20.0

@@ -1,5 +1,11 @@
 # Neko Optimizer
 
+[![CI](https://github.com/IliyanGavrilov/NekoOptimizer/actions/workflows/ci.yml/badge.svg)](https://github.com/IliyanGavrilov/NekoOptimizer/actions/workflows/ci.yml)
+[![CodeQL](https://github.com/IliyanGavrilov/NekoOptimizer/actions/workflows/codeql.yml/badge.svg)](https://github.com/IliyanGavrilov/NekoOptimizer/actions/workflows/codeql.yml)
+[![Security](https://github.com/IliyanGavrilov/NekoOptimizer/actions/workflows/security.yml/badge.svg)](https://github.com/IliyanGavrilov/NekoOptimizer/actions/workflows/security.yml)
+![Python 3.14+](https://img.shields.io/badge/python-3.14%2B-blue)
+![Django 6.0](https://img.shields.io/badge/Django-6.0-092E20)
+
 A planning tool for *The Battle Cats* gacha. Given a set of target cats and a
 budget of tickets and catfood, it computes **where and when to pull, in which
 order, for the lowest resource cost**.
