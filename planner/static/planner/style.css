@@ -771,8 +771,9 @@ table.track .entry.target .catlink {
   border-radius: 2px;
 }
 /* Click-to-trace renders as ordinary plan marks (on-path + target pill + shared);
-   the cell's empty space is the click target (names/dice have their own). */
-table.track td.cell:not(.guaranteed-col) .entry { cursor: pointer; }
+   the cell's empty space is the click target (names/dice have their own). The guaranteed
+   column is clickable too - it traces the uber that column's multi would award. */
+table.track td.cell .entry { cursor: pointer; }
 /* Rare-dupe reroll: show where the slot jumps (to the other track) on its own line.
    Dimmed accent so it reads as a branch note, not a pull of its own. */
 .arrow {
