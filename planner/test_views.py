@@ -158,7 +158,7 @@ def test_multiple_targets_list_every_subset(client, monkeypatch):
         "/plan/", {"seed": 7, "tickets": 5, "catfood": 0, "targets": [a.pk, b.pk]}
     )
     html = response.json()["solutions_html"]
-    assert html.count("<details") == 3
+    assert html.count('<details class="solution"') == 3
     assert "Aaa, Bbb" in html
 
 

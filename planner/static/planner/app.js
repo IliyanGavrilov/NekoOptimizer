@@ -458,6 +458,7 @@ if (picker) {
     body.querySelectorAll(".view").forEach((v) => {
       v.hidden = v.dataset.view !== btn.dataset.view;
     });
+    setLegendHeight(); // Steps has no track legend; Track does - re-measure the sticky offset
   });
   // The Rolls-table display controls live outside the form (they sit with the table),
   // so fold their current values into every roll/plan post.
@@ -505,6 +506,13 @@ if (picker) {
   // (no implicit "current banners" fallback).
   let trackTimer;
   const anyBanner = () => includes.some((b) => b.getAttribute("aria-pressed") === "true");
+  // The banner legend sticks under the site header; the sticky thead sits just below it,
+  // so measure the visible legend's height into --legend-h whenever a track is (re)rendered.
+  const setLegendHeight = () => {
+    const legend = [...document.querySelectorAll(".track-legend")].find((el) => el.offsetParent);
+    document.documentElement.style.setProperty("--legend-h", legend ? `${legend.offsetHeight}px` : "0px");
+  };
+  addEventListener("resize", setLegendHeight);
   async function refreshTracks() {
     if (!seedEl.value.trim() || !anyBanner()) {
       trackHost.innerHTML = "";
@@ -515,6 +523,7 @@ if (picker) {
     if (!resp.ok) return;
     trackHost.innerHTML = await resp.text();
     resultsRegion.hidden = !trackHost.firstElementChild;
+    setLegendHeight();
   }
   async function requestTracks() {
     // Changing the seed/banners invalidates any plan: drop back to browsing the rolls.
@@ -687,6 +696,7 @@ if (picker) {
         solutions.innerHTML = data.solutions_html;
         browseTrack.hidden = true;
         resultsRegion.hidden = !solutions.firstElementChild;
+        setLegendHeight();
       } else {
         const { errors = {} } = await resp.json().catch(() => ({}));
         const field = Object.keys(errors).find((k) => k in fieldSlot);
