@@ -1,4 +1,4 @@
-from neko.tierdata import parse_tiers, resolve_names, tier_records
+from neko.tierdata import eligible_units, parse_tiers, resolve_names, tier_records
 
 
 def _records(*rows):
@@ -61,6 +61,38 @@ def test_longer_name_claims_its_unit_before_the_bare_one():
 
 def test_resolve_leaves_an_unknown_name_out():
     assert resolve_names(["Ghost Uber"], _records((1, "Bahamut Cat"))) == {}
+
+
+def _set_records(*rows):
+    """Records with a gacha set: (id, name, set, *forms)."""
+    return [
+        {"id": i, "name": name, "set": set_name, "forms": list(forms)}
+        for i, name, set_name, *forms in rows
+    ]
+
+
+def test_eligible_units_takes_units_with_a_gacha_set():
+    records = _set_records((5, "Bahamut Cat", "The Dynamites"))
+    assert eligible_units(records, {}) == {5}
+
+
+def test_eligible_units_take_a_pool_mate_of_a_set_named_unit():
+    # A fest column bundles set-less exclusives alongside their sets; those come along.
+    records = _set_records((5, "Bahamut Cat", "The Dynamites"), (9, "Izanagi", ""))
+    assert eligible_units(records, {1: [5, 9]}) == {5, 9}
+
+
+def test_eligible_units_drop_a_pure_collab_pool():
+    # A pool with no set-named unit is a collab banner; none of its guests qualify.
+    records = _set_records((5, "Bahamut Cat", "The Dynamites"), (9, "Balrog", ""))
+    assert eligible_units(records, {1: [9]}) == {5}
+
+
+def test_resolve_skips_an_ineligible_unit_so_the_standard_one_wins():
+    # "Balrog" is a collab guest (id 1) and the true form of a standard uber (id 2);
+    # excluding the collab lets the token-subset land on the standard unit.
+    records = _records((1, "Balrog"), (2, "Lesser Demon Cat", "Greater Balrog Cat"))
+    assert resolve_names(["Balrog"], records, eligible={2}) == {"Balrog": 2}
 
 
 def test_tier_records_keep_order_and_use_the_canonical_name():

@@ -9,6 +9,7 @@ from datetime import date
 from pathlib import Path
 
 from neko.bcdata import _get, load_records
+from neko.gachadata import load_pools
 
 TIER_LIST_URL = "https://www.battlecatstierlist.com/current-tier-list"
 TIERS_PATH = Path(__file__).parent / "data" / "tiers.json"
@@ -73,13 +74,38 @@ def parse_tiers(page: str) -> list[tuple[str, str, str | None]]:
     return rows
 
 
-def resolve_names(names: Iterable[str], records: Iterable[Mapping]) -> dict[str, int]:
+def eligible_units(records: Iterable[Mapping], pools: Mapping[int, Iterable[int]]) -> set[int]:
+    """The unit ids the tier list can rank: the standard permanent-capsule pool only,
+    never collab or one-off event guests. A unit qualifies if the Cat Guide gives it a
+    gacha set, or it shares a gacha pool with such a unit - fest columns bundle set-less
+    exclusives and legends alongside their sets, so those come along. Collab banners carry
+    only set-less guests (their picture-book source is the event, not a capsule), so
+    nothing in a pure-collab pool ever qualifies."""
+    setted = {record["id"] for record in records if record.get("set")}
+    eligible = set(setted)
+    for members in pools.values():
+        if any(unit_id in setted for unit_id in members):
+            eligible.update(members)
+
+    return eligible
+
+
+def resolve_names(
+    names: Iterable[str], records: Iterable[Mapping], eligible: set[int] | None = None
+) -> dict[str, int]:
     """Match community names onto catalogue unit ids: an exact name/form match first,
     then the alias table, then an unclaimed token-subset match ("Winter Kaihime" is a
     subset of "Winter General Kaihime"). Longer names resolve first and claim their
-    unit, so a bare "Keiji" falls to the base unit once "Keiji Claus" took the variant."""
+    unit, so a bare "Keiji" falls to the base unit once "Keiji Claus" took the variant.
+
+    ``eligible`` (from eligible_units) limits the index to the standard capsule pool, so
+    a name a collab unit shares - "Balrog" is a Street Fighter guest as well as the true
+    form of the Dynamites' Lesser Demon Cat - resolves to the standard unit the list
+    means."""
     index: dict[str, set[int]] = {}
     for record in records:
+        if eligible is not None and record["id"] not in eligible:
+            continue
         for label in (record["name"], *record["forms"]):
             if label:
                 index.setdefault(_normalize(label), set()).add(record["id"])
@@ -139,7 +165,8 @@ def refresh() -> tuple[int, list[str]]:
     count and the community names that didn't resolve."""
     rows = parse_tiers(_get(TIER_LIST_URL).decode("utf-8", "replace"))
     records = load_records()
-    resolution = resolve_names((name for _, name, _ in rows), records)
+    eligible = eligible_units(records, load_pools())
+    resolution = resolve_names((name for _, name, _ in rows), records, eligible)
     TIERS_PATH.write_text(
         json.dumps(tier_records(rows, resolution, records), ensure_ascii=False),
         encoding="utf-8",
