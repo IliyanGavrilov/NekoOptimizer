@@ -402,6 +402,18 @@ def test_build_tracks_tags_a_cell_with_its_catalogue_unit_id():
     assert build_tracks({"X": pulls}, {}, {})["rows"][0]["a"][0]["uid"] is None
 
 
+def test_build_tracks_tags_a_cell_with_its_tier_badge():
+    pulls = [TrackPull(1, "A", "Bahamut", U)]
+    badge = {"tier": "SS", "up": None, "up_note": ""}
+    cell = build_tracks(
+        {"X": pulls}, {}, {}, unit_ids={"Bahamut": 25}, tiers={25: badge}
+    )["rows"][0]["a"][0]
+    assert cell["tier"] == badge
+    # An unranked or uncatalogued cat carries no badge.
+    plain = build_tracks({"X": pulls}, {}, {}, unit_ids={"Bahamut": 25})
+    assert plain["rows"][0]["a"][0]["tier"] is None
+
+
 def test_build_tracks_renders_up_to_the_requested_row_count():
     pulls = [TrackPull(pos, track, "Bahamut", U) for pos in range(1, 151) for track in ("A", "B")]
     assert len(build_tracks({"X": pulls}, {}, {})["rows"]) == 100  # default cap

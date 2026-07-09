@@ -255,6 +255,7 @@ def tracks(request):
         debuts=newly_added_ubers(),
         future=future_ubers,
         unit_ids=_unit_ids(),
+        tiers=tier_badges(),
     )
 
     return render(request, "planner/_tracks.html", {"track": track})
@@ -309,6 +310,7 @@ def find_plan(request):
         last_cat=last_cat,
         debuts=newly_added_ubers(),
         unit_ids=_unit_ids(),
+        tiers=tier_badges(),
     )
 
     return JsonResponse(
