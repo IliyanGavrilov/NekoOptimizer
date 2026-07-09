@@ -23,6 +23,15 @@
   --r-legend: #ff6060;
   --new: #34d399;  /* Uber/Legend cats not yet in your collection */
 
+  /* Tier-list bands (S..F), one colour per letter */
+  --band-s: #ff5d5d;
+  --band-a: #ff9f43;
+  --band-b: #e8c33d;
+  --band-c: #34d399;
+  --band-d: #57b4ff;
+  --band-e: #b58cff;
+  --band-f: #a09a8e;
+
   --head-font: "Fredoka", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   --body-font: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
 }
@@ -51,6 +60,14 @@
   --r-uber: #8e3fd1;
   --r-legend: #d13a3a;
   --new: #0b8a5c;
+
+  --band-s: #d13a3a;
+  --band-a: #c76a10;
+  --band-b: #a67a00;
+  --band-c: #0b8a5c;
+  --band-d: #1d74c9;
+  --band-e: #7a3fd1;
+  --band-f: #7c7466;
 }
 
 * { box-sizing: border-box; }
@@ -1110,6 +1127,96 @@ table.track th.guaranteed-col, table.track td.guaranteed-col {
 }
 .own-chip.owned .chip { color: var(--accent); font-weight: 700; }
 .own-chip.wanted .chip-star { color: var(--r-super); text-shadow: 0 0 6px color-mix(in srgb, var(--r-super) 60%, transparent); }
+
+/* ---- Tier-list badges + page ------------------------------------------ */
+[data-band="S"] { --band: var(--band-s); }
+[data-band="A"] { --band: var(--band-a); }
+[data-band="B"] { --band: var(--band-b); }
+[data-band="C"] { --band: var(--band-c); }
+[data-band="D"] { --band: var(--band-d); }
+[data-band="E"] { --band: var(--band-e); }
+[data-band="F"] { --band: var(--band-f); }
+
+/* The little rank pill on picker/collection chips: the base placement, plus "▲SS"
+   when the Ultra Form / Ultra Talents placement ranks higher (the title says which). */
+.tier-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3em;
+  margin-left: 0.45em;
+  padding: 0 0.45em;
+  border-radius: 999px;
+  font-size: 0.72em;
+  font-weight: 700;
+  line-height: 1.6;
+  vertical-align: 0.1em;
+  color: var(--band);
+  background: color-mix(in srgb, var(--band) 14%, transparent);
+  border: 1px solid color-mix(in srgb, var(--band) 45%, transparent);
+}
+.tier-up { font-weight: 600; opacity: 0.85; }
+
+.tier-table { display: flex; flex-direction: column; gap: 0.45rem; margin-top: 1.25rem; }
+.tier-row {
+  display: flex;
+  align-items: stretch;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--panel);
+  overflow: hidden;
+}
+.tier-label {
+  flex: 0 0 3.6rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--head-font);
+  font-weight: 700;
+  font-size: 1.2rem;
+  color: var(--band);
+  background: color-mix(in srgb, var(--band) 15%, transparent);
+  border-right: 1px solid var(--line);
+}
+.tier-units { display: flex; flex-wrap: wrap; gap: 0.35rem; padding: 0.55rem; }
+.tier-unit {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font: inherit;
+  font-size: 0.9rem;
+  color: var(--ink);
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 0.15rem 0.6rem;
+  cursor: default;
+  line-height: 1.2;
+}
+.tier-unit[data-name] { cursor: pointer; }
+.tier-unit[data-name]:hover { border-color: var(--accent); }
+.tier-unit img { width: 42px; height: auto; }
+/* The source list greys a cat out where its UF/UT entry ranks higher up. */
+.tier-unit.dimmed { opacity: 0.45; }
+.tier-unit .boost {
+  font-size: 0.7em;
+  font-weight: 700;
+  color: var(--accent);
+  border: 1px solid color-mix(in srgb, var(--accent) 45%, transparent);
+  border-radius: 5px;
+  padding: 0 0.3em;
+}
+
+.site-footer {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 0.8rem 1.25rem 1.5rem;
+  border-top: 1px solid var(--line);
+  display: flex;
+  gap: 0.75rem;
+  align-items: baseline;
+  flex-wrap: wrap;
+  font-size: 0.9rem;
+}
 
 /* ---- Cat name -> forms + wiki popup ---------------------------------- */
 /* A cat name in a track cell: plain text that opens the popup on click. */
