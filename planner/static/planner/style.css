@@ -1119,6 +1119,23 @@ table.track th.guaranteed-col, table.track td.guaranteed-col {
 .catlink.future { cursor: default; font-style: italic; }
 .catlink.future:hover { color: inherit; text-decoration-color: transparent; }
 
+/* Rolls display-mode toggle: a cell's form icon, hotlinked and injected by app.js only
+   once an icon mode is picked. Hidden by default (names mode); the mode classes on
+   #resultsRegion reveal it, and swap out the name in icons-only mode. */
+.cat-icon {
+  display: none;
+  width: 1.4em;
+  height: 1.4em;
+  vertical-align: middle;
+  image-rendering: -webkit-optimize-contrast;
+}
+#resultsRegion.rolls-icons .entry > .catlink .cat-icon,
+#resultsRegion.rolls-both .entry > .catlink .cat-icon { display: inline-block; }
+#resultsRegion.rolls-both .entry > .catlink .cat-icon { margin-right: 0.25em; }
+/* Icons-only: drop the name, but keep it as a fallback when the icon 404s. */
+#resultsRegion.rolls-icons .entry > .catlink:not(.no-icon) .catname { display: none; }
+#resultsRegion.rolls-icons .entry > .catlink.no-icon .cat-icon { display: none; }
+
 /* The small "ⓘ" opener on collection + picker chips (they toggle on their main click,
    so the forms/wiki popup gets its own affordance). */
 .catinfo {

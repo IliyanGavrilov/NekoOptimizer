@@ -372,6 +372,14 @@ def test_build_tracks_flags_an_uber_new_to_its_banner():
     assert build_tracks({"Y": pulls}, {}, {}, debuts=debuts)["rows"][0]["a"][0]["debut"] is False
 
 
+def test_build_tracks_tags_a_cell_with_its_catalogue_unit_id():
+    pulls = [TrackPull(1, "A", "Bahamut", U)]
+    cell = build_tracks({"X": pulls}, {}, {}, unit_ids={"Bahamut": 25})["rows"][0]["a"][0]
+    assert cell["uid"] == 25
+    # A name with no catalogued unit (or no map at all) just falls back to text.
+    assert build_tracks({"X": pulls}, {}, {})["rows"][0]["a"][0]["uid"] is None
+
+
 def test_build_tracks_renders_up_to_the_requested_row_count():
     pulls = [TrackPull(pos, track, "Bahamut", U) for pos in range(1, 151) for track in ("A", "B")]
     assert len(build_tracks({"X": pulls}, {}, {})["rows"]) == 100  # default cap
