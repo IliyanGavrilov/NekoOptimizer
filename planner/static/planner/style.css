@@ -204,6 +204,21 @@ input[type="search"]::-webkit-search-cancel-button { appearance: none; -webkit-a
 /* Grand owned/total, sitting to the right of the collection controls. */
 .collection-total { margin-left: auto; font-weight: 700; white-space: nowrap; color: var(--ink); }
 
+/* Back up / restore the marks: quiet secondary actions, like the plan "Copy link". */
+.collection-io { display: inline-flex; gap: 0.4rem; }
+.io-btn {
+  display: inline-block;
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  color: var(--muted);
+  padding: 0.3rem 0.8rem;
+  font-weight: 600;
+  white-space: nowrap;
+  text-decoration: none;
+}
+.io-btn:hover { color: var(--accent); border-color: var(--accent); filter: none; }
+.io-msg { color: var(--muted); font-weight: 600; margin: 0 0 0.75rem; }
+
 /* Ownership + rarity pills: one pressed at a time, "All" by default. */
 .rarity-filter, .status-filter { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-bottom: 0.5rem; }
 .rarity-filter button, .status-filter button {
