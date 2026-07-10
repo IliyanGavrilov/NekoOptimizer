@@ -406,15 +406,13 @@ def apply_plan(request):
 @require_POST
 def collection_bulk(request):
     """Mark a whole section owned/wanted in one tap - or clear it when it's already all
-    marked. Wishlist marks skip owned units, like everywhere else."""
+    marked. Bulk wishlist stars owned units too, matching the per-cat star; the planner
+    still ignores wishlisted cats you own (_wanted_names excludes owned)."""
     field = request.POST.get("field")
     if field not in {"owned", "wanted"}:
         return HttpResponseBadRequest("field must be 'owned' or 'wanted'")
 
     units = Unit.objects.filter(pk__in=request.POST.getlist("pk"))
-    if field == "wanted":
-        units = units.filter(owned=False)
-
     value = units.filter(**{field: False}).exists()
     units.update(**{field: value})
 

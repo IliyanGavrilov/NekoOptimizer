@@ -201,9 +201,12 @@ input[type="search"]::-webkit-search-cancel-button { appearance: none; -webkit-a
 .collection-controls input[type="search"] { flex: 1 1 240px; width: auto; }
 .collection-controls button { margin: 0; white-space: nowrap; }
 
-/* Rarity pills: one pressed at a time, "All" by default. */
-.rarity-filter { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-bottom: 0.5rem; }
-.rarity-filter button {
+/* Grand owned/total, sitting to the right of the collection controls. */
+.collection-total { margin-left: auto; font-weight: 700; white-space: nowrap; color: var(--ink); }
+
+/* Ownership + rarity pills: one pressed at a time, "All" by default. */
+.rarity-filter, .status-filter { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-bottom: 0.5rem; }
+.rarity-filter button, .status-filter button {
   background: var(--bg-2);
   color: var(--muted);
   border: 1px solid var(--line);
@@ -211,8 +214,8 @@ input[type="search"]::-webkit-search-cancel-button { appearance: none; -webkit-a
   font-weight: 600;
   margin: 0;
 }
-.rarity-filter button:hover { color: var(--ink); border-color: var(--accent); filter: none; }
-.rarity-filter button[aria-pressed="true"] {
+.rarity-filter button:hover, .status-filter button:hover { color: var(--ink); border-color: var(--accent); filter: none; }
+.rarity-filter button[aria-pressed="true"], .status-filter button[aria-pressed="true"] {
   background: var(--accent);
   color: var(--accent-ink);
   border-color: var(--accent);
@@ -222,6 +225,26 @@ input[type="search"]::-webkit-search-cancel-button { appearance: none; -webkit-a
 .collection-section .set-name { min-width: 0; }
 .collection-section .owned-count { font-size: 0.78rem; font-weight: 600; white-space: nowrap; }
 .collection-section .section-note { margin: -0.3rem 0 0.5rem; font-size: 0.82rem; }
+
+/* Collapse toggle: a chevron that points down when open, right when folded. The
+   collapsed card hides its cats (and note) until a filter needs to reveal a match. */
+.section-toggle {
+  background: none;
+  border: 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+  line-height: 1;
+  padding: 0.15rem 0.3rem;
+  margin: 0;
+  cursor: pointer;
+  transition: transform 0.15s ease;
+}
+.section-toggle:hover { color: var(--accent); filter: none; }
+.collection-section.collapsed .section-toggle { transform: rotate(-90deg); }
+.collection-section.collapsed .rarity-row,
+.collection-section.collapsed .section-note { display: none; }
+.cat-browser.filtering .collection-section.collapsed .rarity-row,
+.cat-browser.filtering .collection-section.collapsed .section-note { display: revert; }
 
 /* Section-header bulk marks: own-all (✓) and wishlist-all (★) for the whole card. */
 .bulk-buttons { display: inline-flex; gap: 0.3rem; margin-left: auto; }
@@ -1136,6 +1159,12 @@ table.track th.guaranteed-col, table.track td.guaranteed-col {
 }
 .own-chip.owned .chip { color: var(--accent); font-weight: 700; }
 .own-chip.wanted .chip-star { color: var(--r-super); text-shadow: 0 0 6px color-mix(in srgb, var(--r-super) 60%, transparent); }
+/* A cat you still want (wishlisted, not yet owned) gets a star-coloured rim so it
+   stands out from the plain unowned crowd at a glance. */
+.own-chip.wanted:not(.owned) {
+  border-color: var(--r-super);
+  background: color-mix(in srgb, var(--r-super) 12%, transparent);
+}
 
 /* ---- Tier-list badges + page ------------------------------------------ */
 [data-band="S"] { --band: var(--band-s); }
