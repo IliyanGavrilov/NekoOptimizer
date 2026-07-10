@@ -27,6 +27,7 @@
       <a class="brand" href="{% url 'planner' %}">🐾 Neko Optimizer</a>
       <nav>
         <a href="{% url 'planner' %}">Planner</a>
+        <a href="{% url 'seed_finder' %}">Seed Finder</a>
         <a href="{% url 'collection' %}">Collection</a>
         <a href="{% url 'tier_list' %}">Tier List</a>
       </nav>
@@ -63,5 +64,6 @@
     <a class="cat-popup-wiki" target="_blank" rel="noopener">View on the Battle Cats Wiki &#8599;</a>
   </dialog>
   <script src="{% static 'planner/app.js' %}"></script>
+  {% block scripts %}{% endblock %}
 </body>
 </html>

@@ -7,10 +7,18 @@ from itertools import combinations
 from urllib.parse import quote
 
 from neko.catalogue import match_names, name_index
-from neko.gachadata import GachaEventRow, load_events, load_pools, load_series, load_tickets
+from neko.gachadata import (
+    GachaEventRow,
+    build_banner,
+    load_events,
+    load_pools,
+    load_series,
+    load_tickets,
+)
 from neko.graph import BannerGraph, build_graphs, stream_index
 from neko.models import (
     CATFOOD_PER_DRAW,
+    GACHA_RARITIES,
     BannerRolls,
     Leg,
     Path,
@@ -25,6 +33,7 @@ from neko.roller import (
     catalogue_banners,
     roll_active,
     roll_selected,
+    select_events,
     units_from_records,
 )
 from neko.search import astar, beam_search, obtainable
@@ -170,6 +179,70 @@ def fetch_banners(
 def fetch_catalogue() -> RollResult:
     """Every scheduled banner's droppable cats, straight from the gacha pools."""
     return catalogue_banners()
+
+
+# How far back Recently ended reaches in the seed finder's banner dropdown: far
+# enough to seek on a run that closed while you were noting your pulls down, without
+# shipping the ~2000-row full history the picker lazy-loads.
+_SEEK_PAST_DAYS = 120
+
+
+def seek_run_choices(events=None, today=None) -> list[tuple[str, list[tuple[str, str]]]]:
+    """The seed finder's banner dropdown as (group label, [(value, label)]) rows, one
+    pinned "start|name" per run. The pulls being entered were just made in-game, so
+    Available now leads; Upcoming covers pre-planning, and the recent past covers a
+    banner that ended between rolling and seeking."""
+    today = today or date.today()
+    events = events if events is not None else load_events()
+
+    cutoff = today - timedelta(days=_SEEK_PAST_DAYS)
+    live = [e for e in events if e.start <= today <= e.end]
+    upcoming = [e for e in events if e.start > today]
+    past = [e for e in events if cutoff <= e.end < today]
+
+    def rows(runs, key):
+        return [
+            (f"{e.start}|{e.name}", f"{e.name} ({e.start} - {e.end})")
+            for e in sorted(runs, key=key)
+        ]
+
+    # Newest first within each group: the run being sought is almost always the one
+    # that just started (or just ended), not a years-old permanent capsule.
+    return [
+        ("Available now", rows(live, lambda e: (-e.start.toordinal(), e.name))),
+        ("Upcoming", rows(upcoming, lambda e: (e.start, e.name))),
+        ("Recently ended", rows(past, lambda e: (-e.end.toordinal(), e.name))),
+    ]
+
+
+def seek_banner(selection: str, events=None, pools=None, units=None):
+    """The rollable banner a seed-finder selection means ("start|name" pins a run,
+    like the picker), or None when the schedule doesn't know it."""
+    events = events if events is not None else load_events()
+    chosen = select_events(events, [selection])
+    if not chosen:
+        return None
+
+    pools = pools if pools is not None else load_pools()
+    units = units if units is not None else units_from_records()
+
+    return build_banner(chosen[0], pools, units)
+
+
+def seek_pool_groups(banner) -> list[dict]:
+    """The banner's pools as the seed finder's roll options, one group per rollable
+    rarity: each option's value is the "rarity index:slot" pair a posted roll uses."""
+    return [
+        {
+            "rarity": str(rarity),
+            "options": [
+                {"value": f"{index}:{slot}", "label": name}
+                for slot, name in enumerate(banner.pool(rarity))
+            ],
+        }
+        for index, rarity in enumerate(GACHA_RARITIES)
+        if banner.pool(rarity)
+    ]
 
 
 def fetch_for_banners(

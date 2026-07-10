@@ -5,11 +5,18 @@ from django.shortcuts import get_object_or_404, render
 from django.template.loader import render_to_string
 from django.views.decorators.http import require_POST
 
-from neko.models import CATFOOD_PER_DRAW
+from neko.models import CATFOOD_PER_DRAW, GACHA_RARITIES
 from neko.rng import backtrack
 from neko.roller import DEFAULT_COUNT, GUARANTEED_OPTIONS
 from neko.tierdata import load_tiers
-from planner.forms import MAX_FUTURE_UBERS, MAX_TRACK_LENGTH, PlannerForm
+from planner import seekjobs
+from planner.forms import (
+    MAX_FUTURE_UBERS,
+    MAX_SEEK_ROLLS,
+    MAX_TRACK_LENGTH,
+    MIN_SEEK_ROLLS,
+    PlannerForm,
+)
 from planner.models import Cat, Seed, Unit
 from planner.services import (
     RARITY_ORDER,
@@ -26,6 +33,9 @@ from planner.services import (
     import_collection,
     newly_added_ubers,
     picker_groups,
+    seek_banner,
+    seek_pool_groups,
+    seek_run_choices,
     set_sections,
     subset_solutions,
     tier_badges,
@@ -350,6 +360,82 @@ def unit_forms(request):
     """{unit_id: form names} for every catalogued unit, in one payload: the Rolls form
     picker renames the cells client-side, without refetching the table."""
     return JsonResponse(dict(Unit.objects.values_list("unit_id", "forms")))
+
+
+def seed_finder(request):
+    """The seed finder: pick the banner you rolled on, enter the cats you got in
+    order, and a background search recovers your seed from them."""
+    return render(
+        request,
+        "planner/seek.html",
+        {
+            "run_groups": seek_run_choices(),
+            "min_rolls": MIN_SEEK_ROLLS,
+            "max_rolls": MAX_SEEK_ROLLS,
+        },
+    )
+
+
+def seek_pool(request):
+    """The chosen banner's rollable cats as grouped select options, so the finder can
+    build its roll pickers without shipping every pool up front."""
+    banner = seek_banner(request.GET.get("banner", ""))
+    if banner is None:
+        return HttpResponseBadRequest("unknown banner")
+
+    return JsonResponse({"name": banner.name, "groups": seek_pool_groups(banner)})
+
+
+def _observed_rolls(request, banner):
+    """The posted rolls as the (rarity, slot) pairs seek_seed takes, or None when
+    anything is malformed or points outside the banner's pools."""
+    observed = []
+    for value in request.POST.getlist("rolls"):
+        index, _, slot = value.partition(":")
+        try:
+            index, slot = int(index), int(slot)
+        except ValueError:
+            return None
+
+        if not 0 <= index < len(GACHA_RARITIES):
+            return None
+
+        rarity = GACHA_RARITIES[index]
+        if not 0 <= slot < len(banner.pool(rarity)):
+            return None
+
+        observed.append((rarity, slot))
+
+    return observed
+
+
+@require_POST
+def seek_start(request):
+    """Kick off a seed search for the posted banner + observed rolls; returns the job
+    key the page polls seek_status with."""
+    banner = seek_banner(request.POST.get("banner", ""))
+    if banner is None:
+        return HttpResponseBadRequest("unknown banner")
+
+    observed = _observed_rolls(request, banner)
+    if observed is None:
+        return HttpResponseBadRequest("malformed rolls")
+    if not MIN_SEEK_ROLLS <= len(observed) <= MAX_SEEK_ROLLS:
+        return HttpResponseBadRequest(f"enter between {MIN_SEEK_ROLLS} and {MAX_SEEK_ROLLS} rolls")
+
+    rarity, slot = observed[-1]
+    last_cat = banner.pool(rarity)[slot]
+
+    return JsonResponse({"job": seekjobs.start(banner, observed, last_cat)})
+
+
+def seek_status(request):
+    """One poll of a running search: progress while sieving, matches once done."""
+    job = seekjobs.get(request.GET.get("job", ""))
+    if job is None:
+        return HttpResponseBadRequest("unknown job")
+
+    return JsonResponse(job.snapshot())
 
 
 def collection(request):

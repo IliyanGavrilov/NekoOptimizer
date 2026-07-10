@@ -11,7 +11,7 @@ from datetime import date
 from pathlib import Path
 
 from neko.bcdata import METADATA_URL, _get, latest_version, release_url
-from neko.models import Banner, Rarity
+from neko.models import GACHA_RARITIES, Banner, Rarity
 
 # godfat's event schedule lives in its Apache-2.0 gitlab repo, one dated TSV per snapshot.
 _PROJECT = "9827349"  # gitlab project id for godfat/battle-cats-rolls
@@ -29,7 +29,7 @@ _POOL_OFFSET = 9  # godfat tsv_reader PoolOffset: event fields end, pool blocks 
 _POOL_FIELDS = 15  # godfat tsv_reader PoolFields: each pool block is 15 columns
 _RARE_GACHA = 1  # event type for the rare (main) gacha
 
-_RARITY_ORDER = (Rarity.RARE, Rarity.SUPER_RARE, Rarity.UBER_SUPER_RARE, Rarity.LEGEND_RARE)
+_RARITY_ORDER = GACHA_RARITIES
 
 
 @dataclass(frozen=True, slots=True)

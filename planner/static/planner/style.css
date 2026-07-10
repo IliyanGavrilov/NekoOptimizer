@@ -1493,3 +1493,31 @@ table.track th.guaranteed-col, table.track td.guaranteed-col {
 @media (prefers-reduced-motion: reduce) {
   .loading-overlay .spinner { animation: none; }
 }
+
+/* ---- Seed Finder ------------------------------------------------------- */
+.seek-banner-row { display: block; margin: 1rem 0; }
+.seek-banner-row select { max-width: 100%; }
+.seek-rolls {
+  margin: 0.5rem 0 1rem;
+  padding-left: 1.6rem;
+  display: grid;
+  gap: 0.4rem;
+  max-width: 26rem;
+}
+.seek-rolls li::marker { color: var(--muted); }
+.seek-roll { width: 100%; }
+.seek-actions { display: flex; gap: 0.6rem; align-items: center; }
+.seek-add { background: var(--panel-2); }
+.seek-progress { margin-top: 1.2rem; max-width: 26rem; }
+.seek-progress progress { width: 100%; accent-color: var(--accent); }
+.seek-results { margin-top: 1.2rem; display: grid; gap: 0.8rem; max-width: 34rem; }
+.seek-match {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 0.9rem 1.1rem;
+}
+.seek-match .seek-seed { font-family: var(--head-font); font-size: 1.05rem; }
+.seek-match .seek-open { display: inline-block; margin: 0.4rem 0; }
+.seek-match p { margin: 0.3rem 0 0; }
+.seek-none { color: var(--muted); max-width: 34rem; }

@@ -6,6 +6,10 @@ from planner.models import Cat, Unit
 EXPLORE_HORIZON = 1000  # default rolls to look ahead per banner in explore mode
 MAX_TRACK_LENGTH = 999  # godfat's unit-count ceiling for the Rolls table
 MAX_FUTURE_UBERS = 99  # placeholder ubers the Rolls table will pad a pool with
+# Observed pulls the seed finder accepts: below 5 the window rarely pins one seed
+# down (the search truncates), and past 30 the extras stop adding information.
+MIN_SEEK_ROLLS = 5
+MAX_SEEK_ROLLS = 30
 
 
 class PlannerForm(forms.Form):
