@@ -1093,10 +1093,12 @@ document.querySelectorAll('input[type="number"]').forEach(scrubNumberInput);
   applyTheme();
 }
 
-// ---- Cat popup: a unit's forms (icons) + a link to its wiki page ------
+// ---- Cat popup: a unit's forms (icons), stats + a link to its wiki page ------
 // Opened from any cat name (track / steps) or the ⓘ opener on collection/picker
 // chips. Form icons are hotlinked per-form from battlecatsinfo's asset repo (via its
-// GitHub Pages CDN); ones that 404 (unreleased units) just hide themselves.
+// GitHub Pages CDN); ones that 404 (unreleased units) just hide themselves. Clicking
+// a form icon shows that form's stat block and ability chips (quoted at the level
+// baked into stats.json).
 const catPopup = document.getElementById("catPopup");
 if (catPopup) {
   const ICON_BASE = "https://battlecatsinfo.github.io/img/u";
@@ -1106,6 +1108,10 @@ if (catPopup) {
   const tierEl = catPopup.querySelector(".cat-popup-tier");
   const formsEl = catPopup.querySelector(".cat-popup-forms");
   const wikiEl = catPopup.querySelector(".cat-popup-wiki");
+  const statsEl = catPopup.querySelector(".cat-popup-stats");
+  const gridEl = catPopup.querySelector(".cat-stats-grid");
+  const chipsEl = catPopup.querySelector(".cat-popup-chips");
+  const noteEl = catPopup.querySelector(".cat-stats-note");
   const cache = new Map(); // name -> Promise<info | null>
 
   const load = (name) => {
@@ -1120,6 +1126,56 @@ if (catPopup) {
     }
     return cache.get(name);
   };
+
+  const chip = (text, kind) => {
+    const span = document.createElement("span");
+    span.className = kind ? `cat-chip ${kind}` : "cat-chip";
+    span.textContent = text;
+    return span;
+  };
+
+  const statCell = (label, value) => {
+    const cell = document.createElement("div");
+    cell.className = "cat-stat";
+    const name = document.createElement("span");
+    name.className = "label";
+    name.textContent = label;
+    const val = document.createElement("span");
+    val.className = "value";
+    val.textContent = value;
+    cell.append(name, val);
+    return cell;
+  };
+
+  // The selected form's stat block. HP/attack/DPS are level-30, max-treasure quotes
+  // (the level rides in with stats.json); a ? means battlecatsinfo doesn't carry the
+  // form's animation yet, so its true attack rate is unknown.
+  function renderStats(info, index) {
+    const fmt = (n) => n.toLocaleString("en-US");
+    const form = info.stats ? info.stats.forms[index] : undefined;
+    statsEl.hidden = !form;
+    [...formsEl.children].forEach((fig, i) => fig.classList.toggle("selected", !!form && i === index));
+    if (!form) return;
+    gridEl.replaceChildren(
+      statCell("HP", fmt(form.hp)),
+      statCell("Attack", fmt(form.atk)),
+      statCell("DPS", form.dps === null ? "?" : fmt(form.dps)),
+      statCell("Attack rate", form.freq === null ? "?" : `${form.freq}s`),
+      statCell("Range", form.range),
+      statCell("Attack type", form.area ? "Area" : "Single"),
+      statCell("Recharge", `${form.recharge}s`),
+      statCell("Speed", form.speed),
+      statCell("Knockbacks", form.kb),
+      statCell("Cost", fmt(form.cost)),
+    );
+    chipsEl.replaceChildren();
+    form.targets.forEach((trait) => chipsEl.appendChild(chip(trait, "target")));
+    form.effects.forEach((effect) => chipsEl.appendChild(chip(effect)));
+    if (form.immune.length) {
+      chipsEl.appendChild(chip(`Immune: ${form.immune.join(", ")}`, "immune"));
+    }
+    noteEl.textContent = `Lv ${info.stats.level} stats with max treasures; cost in chapter 2.`;
+  }
 
   async function openFor(name) {
     const info = await load(name);
@@ -1148,8 +1204,11 @@ if (catPopup) {
       const caption = document.createElement("figcaption");
       caption.textContent = form;
       fig.append(img, caption);
+      fig.addEventListener("click", () => renderStats(info, i));
       formsEl.appendChild(fig);
     });
+    const last = info.stats ? info.stats.forms.length - 1 : 0;
+    renderStats(info, last);
     if (!catPopup.open) catPopup.showModal();
   }
 

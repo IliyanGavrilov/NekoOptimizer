@@ -28,6 +28,7 @@ from neko.roller import (
     units_from_records,
 )
 from neko.search import astar, beam_search, obtainable
+from neko.statsdata import load_stats
 from neko.subsets import SubsetPlan, solve_subsets
 from neko.tierdata import TIER_ORDER, load_tiers
 from planner.models import Banner, Cat, Unit
@@ -120,6 +121,17 @@ def tier_list_rows(doc=None) -> list[dict]:
         }
         for row in doc["tiers"]
     ]
+
+
+def unit_stats(unit_id: int, doc=None) -> dict | None:
+    """The unit's per-form stat blocks (and the level they're quoted at) from the
+    committed stats document; None when the unit has no stats."""
+    doc = load_stats() if doc is None else doc
+    for unit in doc["units"]:
+        if unit["id"] == unit_id:
+            return {"level": doc["level"], "forms": unit["forms"]}
+
+    return None
 
 
 # Platinum/Legend run on scarce tickets, not catfood, so the optimizer treats them as

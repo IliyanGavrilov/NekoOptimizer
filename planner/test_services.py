@@ -33,6 +33,7 @@ from planner.services import (
     tier_badges,
     tier_list_rows,
     trace_marks,
+    unit_stats,
     wiki_url,
 )
 
@@ -1302,3 +1303,12 @@ def test_tier_list_rows_keep_a_boosted_entry_undimmed():
     doc = _tier_doc(("SS", [(5, "UF")]), ("B", [(5, None)]))
     boosted = next(e for row in tier_list_rows(doc) for e in row["entries"] if e["boost"] == "UF")
     assert boosted["dimmed"] is False
+
+
+def test_unit_stats_pairs_the_forms_with_the_quoted_level():
+    doc = {"level": 30, "units": [{"id": 25, "forms": [{"hp": 1700}]}]}
+    assert unit_stats(25, doc) == {"level": 30, "forms": [{"hp": 1700}]}
+
+
+def test_unit_stats_is_none_for_an_unlisted_unit():
+    assert unit_stats(99, {"level": 30, "units": [{"id": 25, "forms": []}]}) is None
