@@ -1156,7 +1156,8 @@ table.track th.guaranteed-col, table.track td.guaranteed-col {
 }
 .tier-up { font-weight: 600; opacity: 0.85; }
 
-.tier-table { display: flex; flex-direction: column; gap: 0.45rem; margin-top: 1.25rem; }
+.tier-controls { display: flex; justify-content: flex-end; margin-top: 1.25rem; }
+.tier-table { display: flex; flex-direction: column; gap: 0.45rem; margin-top: 0.6rem; }
 .tier-more { margin-top: 1.25rem; }
 .tier-row {
   display: flex;

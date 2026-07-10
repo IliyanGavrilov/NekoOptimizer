@@ -13,6 +13,15 @@
     Click a cat for its forms and wiki page.
   </p>
 
+  <div class="tier-controls">
+    <label class="ctrl" title="Show each cat as this form - name and icon; a unit without that form shows the last one it has"><select id="tierForm">
+        <option value="0">1st form</option>
+        <option value="1">2nd form</option>
+        <option value="2">3rd form</option>
+        <option value="3">4th form</option>
+      </select></label>
+  </div>
+
   <div class="tier-table">
     {% for row in rows %}
       <div class="tier-row">
@@ -20,7 +29,7 @@
         <div class="tier-units">
           {% for entry in row.entries %}
             <button type="button" class="tier-unit{% if entry.dimmed %} dimmed{% endif %}"
-                    {% if entry.unit_id is not None %}data-name="{{ entry.name }}"{% endif %}>
+                    {% if entry.unit_id is not None %}data-name="{{ entry.name }}" data-uid="{{ entry.unit_id }}" data-forms="{{ entry.forms }}"{% endif %}>
               {% if entry.unit_id is not None %}
                 <img loading="lazy" src="https://battlecatsinfo.github.io/img/u/{{ entry.unit_id }}/0.png" alt="">
               {% endif %}
