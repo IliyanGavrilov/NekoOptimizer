@@ -36,11 +36,13 @@ class Unit:
 
 
 def parse_forms(text: str) -> tuple[str, ...]:
-    """Form names from one Unit_Explanation file (one per line, name in pipe-field 0)."""
+    """Form names from one Unit_Explanation file (one per line, name in pipe-field 0).
+    A line that repeats the previous name is an evolution the game hasn't released (or
+    named) here yet - a placeholder row, not a real form - so it's dropped."""
     forms = []
     for line in text.splitlines():
         name = line.split("|", 1)[0].strip()
-        if name:
+        if name and (not forms or name != forms[-1]):
             forms.append(name)
 
     return tuple(forms)
