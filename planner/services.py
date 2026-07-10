@@ -113,8 +113,7 @@ def tier_list_rows(doc=None) -> list[dict]:
                 {
                     **entry,
                     "dimmed": entry["boost"] is None
-                    and best_boost.get(entry["unit_id"], len(TIER_ORDER))
-                    < _TIER_RANK[row["tier"]],
+                    and best_boost.get(entry["unit_id"], len(TIER_ORDER)) < _TIER_RANK[row["tier"]],
                 }
                 for entry in row["entries"]
             ],
