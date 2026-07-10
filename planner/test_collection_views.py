@@ -1,6 +1,8 @@
+import json
 from itertools import count
 
 import pytest
+from django.core.files.uploadedfile import SimpleUploadedFile
 
 from planner.models import Unit
 
@@ -90,3 +92,73 @@ def test_bulk_wishlist_stars_owned_units_too(client):
 @pytest.mark.django_db
 def test_bulk_rejects_unknown_field(client):
     assert client.post("/collection/bulk/", {"field": "rarity"}).status_code == 400
+
+
+@pytest.mark.django_db
+def test_export_lists_owned_and_wanted(client):
+    unit("Bahamut", owned=True)
+    unit("Kasli", wanted=True)
+    unit("Mott")  # neither, absent from the snapshot
+    data = client.get("/collection/export/").json()
+    assert [e["name"] for e in data["owned"]] == ["Bahamut"]
+    assert [e["name"] for e in data["wanted"]] == ["Kasli"]
+
+
+@pytest.mark.django_db
+def test_import_round_trips_an_export(client):
+    unit("Bahamut", owned=True)
+    unit("Kasli", wanted=True)
+    snapshot = client.get("/collection/export/").json()
+    Unit.objects.update(owned=False, wanted=False)
+
+    resp = _import(client, snapshot)
+
+    assert resp.json() == {"owned": 1, "wanted": 1, "missing": []}
+    assert Unit.objects.get(name="Bahamut").owned is True
+    assert Unit.objects.get(name="Kasli").wanted is True
+
+
+@pytest.mark.django_db
+def test_import_replaces_existing_marks(client):
+    stale = unit("Bahamut", owned=True)
+    fresh = unit("Kasli")
+    _import(client, {"neko_collection": 1, "owned": [{"id": fresh.unit_id, "name": "Kasli"}]})
+    stale.refresh_from_db()
+    fresh.refresh_from_db()
+    assert (stale.owned, fresh.owned) == (False, True)
+
+
+@pytest.mark.django_db
+def test_import_matches_by_name_when_id_misses(client):
+    u = unit("Bahamut")
+    _import(client, {"neko_collection": 1, "owned": [{"id": 999999, "name": "Bahamut"}]})
+    u.refresh_from_db()
+    assert u.owned is True
+
+
+@pytest.mark.django_db
+def test_import_reports_unmatched_entries(client):
+    resp = _import(client, {"neko_collection": 1, "owned": [{"id": 42, "name": "Ghost"}]})
+    assert resp.json()["missing"] == ["Ghost"]
+
+
+@pytest.mark.django_db
+def test_import_rejects_a_non_snapshot(client):
+    assert _import(client, {"just": "some json"}).status_code == 400
+
+
+@pytest.mark.django_db
+def test_import_rejects_non_json(client):
+    resp = client.post("/collection/import/", {"file": _upload(b"not json at all", "c.json")})
+    assert resp.status_code == 400
+
+
+def _upload(content, name="collection.json"):
+    return SimpleUploadedFile(name, content, content_type="application/json")
+
+
+def _import(client, payload):
+    return client.post(
+        "/collection/import/",
+        {"file": _upload(json.dumps(payload).encode())},
+    )

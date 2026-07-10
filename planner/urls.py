@@ -4,6 +4,8 @@ from planner.views import (
     apply_plan,
     collection,
     collection_bulk,
+    collection_export,
+    collection_import,
     collection_toggle,
     find_plan,
     picker_past,
@@ -28,4 +30,6 @@ urlpatterns = [
     path("tiers/", tier_list, name="tier_list"),
     path("collection/toggle/", collection_toggle, name="collection_toggle"),
     path("collection/bulk/", collection_bulk, name="collection_bulk"),
+    path("collection/export/", collection_export, name="collection_export"),
+    path("collection/import/", collection_import, name="collection_import"),
 ]

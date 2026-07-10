@@ -1516,6 +1516,68 @@ def import_units(records: Iterable[Mapping]) -> int:
     return created
 
 
+COLLECTION_FORMAT = 1
+
+
+def export_collection() -> dict:
+    """The player's owned and wishlisted units as a portable snapshot. Each entry keeps the
+    unit_id (the canonical PONOS id, identical across installs) and its name for readability
+    and as a fallback key. The raw owned/wanted flags are exported as-is - a wishlist star
+    can sit on an owned unit - so importing the snapshot reproduces the marks exactly."""
+
+    def entries(flag):
+        rows = Unit.objects.filter(**{flag: True}).values("unit_id", "name")
+        return [{"id": r["unit_id"], "name": r["name"]} for r in rows]
+
+    return {
+        "neko_collection": COLLECTION_FORMAT,
+        "owned": entries("owned"),
+        "wanted": entries("wanted"),
+    }
+
+
+def _resolve_units(entries: Iterable[Mapping]) -> tuple[set[int], list]:
+    """The unit pks named by an export list, matched by unit_id and falling back to name for
+    anything the id misses (provisional/local stand-ins). Returns the pks and the entries
+    that matched nothing."""
+    entries = [e for e in entries if isinstance(e, Mapping)]
+    by_id = dict(
+        Unit.objects.filter(unit_id__in=[e.get("id") for e in entries]).values_list("unit_id", "pk")
+    )
+    by_name = dict(
+        Unit.objects.filter(name__in=[e.get("name") for e in entries]).values_list("name", "pk")
+    )
+    pks, missing = set(), []
+    for entry in entries:
+        pk = by_id.get(entry.get("id")) or by_name.get(entry.get("name"))
+        if pk is None:
+            missing.append(entry.get("name") or entry.get("id"))
+        else:
+            pks.add(pk)
+
+    return pks, missing
+
+
+def import_collection(data: Mapping) -> dict:
+    """Restore owned/wishlist flags from an export snapshot. Authoritative: a unit ends up
+    owned/wanted iff the snapshot lists it, so importing replaces the current marks rather
+    than adding to them. Returns the matched owned/wishlist counts and any unmatched entries."""
+    if not isinstance(data, Mapping) or "neko_collection" not in data:
+        raise ValueError("not a Neko collection export")
+
+    owned_pks, owned_missing = _resolve_units(data.get("owned") or [])
+    wanted_pks, wanted_missing = _resolve_units(data.get("wanted") or [])
+    for flag, keep in (("owned", owned_pks), ("wanted", wanted_pks)):
+        Unit.objects.filter(pk__in=keep).exclude(**{flag: True}).update(**{flag: True})
+        Unit.objects.filter(**{flag: True}).exclude(pk__in=keep).update(**{flag: False})
+
+    return {
+        "owned": len(owned_pks),
+        "wanted": len(wanted_pks),
+        "missing": owned_missing + wanted_missing,
+    }
+
+
 def reconcile_provisional_units() -> tuple[int, list[str]]:
     """Merge each provisional unit into its now-canonical version by the same name: move
     its cats and owned/wishlist flags onto the canonical unit, then delete the stand-in.
