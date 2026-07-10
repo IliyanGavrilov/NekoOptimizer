@@ -42,32 +42,33 @@
     {% csrf_token %}
 
     <label class="seek-label" for="seekBannerSearch">Banner you rolled on</label>
-    <div class="seek-combo" id="seekBanner">
-      <input type="text" id="seekBannerSearch" class="combo-input"
-             placeholder="Search banners&hellip;" autocomplete="off" autocorrect="off"
-             autocapitalize="off" spellcheck="false">
+    <div id="seekBanner">
+      <div class="search-wrap">
+        <input type="search" id="seekBannerSearch" placeholder="Search banners&hellip;"
+               autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+      </div>
       <input type="hidden" id="seekBannerValue">
-      <div class="combo-list" hidden>
+      {# The planner picker's groups and run rows, minus the openable cat lists: #}
+      {# clicking a row IS the selection. #}
+      <div class="picker-scroll seek-picker">
         {% for label, runs in run_groups %}
           {% if runs %}
-            <div class="combo-group">{{ label }}</div>
-            {% for value, title, name, dates in runs %}
-              <button type="button" class="combo-row" data-value="{{ value }}"
-                      data-label="{{ title }}" data-search="{{ title|lower }} {{ name|lower }}">
-                <span class="banner-name">{{ title }}{% if title != name %} <span class="banner-sub">{{ name }}</span>{% endif %}</span>
-                {% if dates.1.year >= 2030 %}
-                  <span class="combo-dates">Since {{ dates.0|date:"M j, Y" }}</span>
-                {% elif dates.0.year != dates.1.year %}
-                  {# A run spanning New Year needs both years or the range misreads. #}
-                  <span class="combo-dates">{{ dates.0|date:"M j, Y" }} &ndash; {{ dates.1|date:"M j, Y" }}</span>
-                {% else %}
-                  <span class="combo-dates">{{ dates.0|date:"M j" }} &ndash; {{ dates.1|date:"M j, Y" }}</span>
-                {% endif %}
-              </button>
-            {% endfor %}
+            {% if forloop.first %}
+              <h3 class="group">{{ label }} <span class="count-pill">{{ runs|length }}</span></h3>
+              {% for value, title, name, dates in runs %}
+                {% include "planner/_seek_run.html" %}
+              {% endfor %}
+            {% else %}
+              <details class="group-drop">
+                <summary>{{ label }} <span class="count-pill">{{ runs|length }}</span></summary>
+                {% for value, title, name, dates in runs %}
+                  {% include "planner/_seek_run.html" %}
+                {% endfor %}
+              </details>
+            {% endif %}
           {% endif %}
         {% endfor %}
-        <p class="combo-empty" hidden>No banners match.</p>
+        <p class="muted seek-no-match" hidden>No banners match.</p>
       </div>
     </div>
 

@@ -1503,9 +1503,79 @@ table.track th.guaranteed-col, table.track td.guaranteed-col {
 }
 .seek-label { display: block; font-weight: 600; margin-bottom: 0.4rem; }
 
-/* Searchable picker: a text box filtering a floating list of rows. */
-.seek-combo { position: relative; max-width: 30rem; }
-.seek-combo .combo-input { width: 100%; }
+/* The banner list: the planner picker's groups and run bars, minus the openable
+   cat lists - the search box filters, clicking a bar selects. */
+.seek-picker {
+  margin-top: 0.6rem;
+  max-height: 40vh;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--bg-2);
+  padding: 0.15rem 0.75rem 0.6rem;
+}
+.seek-picker .group {
+  margin: 0.6rem 0 0.2rem;
+  padding-bottom: 0.25rem;
+  border-bottom: 2px solid var(--line);
+  color: var(--accent);
+  font-size: 1.05rem;
+}
+.seek-picker details.group-drop { margin-top: 0.75rem; }
+.seek-run {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  text-align: left;
+  margin: 0.45rem 0;
+  padding: 0.5rem 0.8rem;
+  background: linear-gradient(90deg, color-mix(in srgb, var(--accent) 14%, var(--panel)), var(--panel));
+  color: var(--ink);
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--accent);
+  border-radius: 10px;
+  font-family: var(--head-font);
+  font-weight: 600;
+  cursor: pointer;
+}
+.seek-run:hover { border-color: var(--accent); filter: none; }
+.seek-run.selected { outline: 2px solid var(--accent); outline-offset: -1px; }
+.seek-run .dates {
+  margin-left: auto;
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 500;
+  white-space: nowrap;
+}
+.seek-no-match { margin: 0.6rem 0 0.2rem; }
+
+/* Each pull: a dropdown button with a search box inside its panel. */
+.roll-pick { position: relative; }
+.roll-trigger {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  text-align: left;
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  color: var(--ink);
+  padding: 0.45rem 0.7rem;
+  font-size: 0.95rem;
+  cursor: pointer;
+}
+.roll-trigger:hover { border-color: var(--accent); filter: none; }
+.roll-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+}
+.roll-label.roll-placeholder { color: var(--muted); }
+.roll-chevron { margin-left: auto; color: var(--muted); font-size: 0.8rem; }
 .combo-list {
   position: absolute;
   inset-inline: 0;
@@ -1518,6 +1588,13 @@ table.track th.guaranteed-col, table.track td.guaranteed-col {
   max-height: 19rem;
   overflow-y: auto;
   padding: 0.3rem;
+}
+.pick-search {
+  width: 100%;
+  position: sticky;
+  top: -0.3rem;
+  z-index: 1;
+  margin-bottom: 0.25rem;
 }
 .combo-group {
   padding: 0.45rem 0.55rem 0.2rem;
@@ -1542,13 +1619,6 @@ table.track th.guaranteed-col, table.track td.guaranteed-col {
   cursor: pointer;
 }
 .combo-row:hover { background: color-mix(in srgb, var(--accent) 14%, transparent); filter: none; }
-.combo-row .banner-name { flex: 1 1 auto; }
-.combo-row .combo-dates {
-  margin-left: auto;
-  color: var(--muted);
-  font-size: 0.75rem;
-  white-space: nowrap;
-}
 .combo-row .rarity { flex: 0 0 auto; }
 .combo-row .combo-cat {
   min-width: 0;

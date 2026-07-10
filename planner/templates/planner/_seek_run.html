@@ -1,0 +1,15 @@
+{% comment %}One pickable run row in the seed finder's banner list: the planner's
+banner bar (title, marketing subtitle, dates) as a plain button - no cat list to
+open, clicking it selects the run.{% endcomment %}
+<button type="button" class="seek-run" data-value="{{ value }}"
+        data-search="{{ title|lower }} {{ name|lower }}">
+  <span class="banner-name">{{ title }}{% if title != name %} <span class="banner-sub">{{ name }}</span>{% endif %}</span>
+  {% if dates.1.year >= 2030 %}
+    <span class="dates">Since {{ dates.0|date:"M j, Y" }}</span>
+  {% elif dates.0.year != dates.1.year %}
+    {# A run spanning New Year needs both years or the range misreads. #}
+    <span class="dates">{{ dates.0|date:"M j, Y" }} &ndash; {{ dates.1|date:"M j, Y" }}</span>
+  {% else %}
+    <span class="dates">{{ dates.0|date:"M j" }} &ndash; {{ dates.1|date:"M j, Y" }}</span>
+  {% endif %}
+</button>
