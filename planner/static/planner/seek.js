@@ -1,11 +1,12 @@
 // ---- Seed Finder: enter your real pulls, poll the background search ----------
-// Picking a banner fetches its pools and builds the roll pickers; submitting
-// starts a server-side sieve of the whole 2^32 seed space and this page polls its
-// progress until the matching seed(s) come back.
+// Picking a banner fetches its pools and builds one searchable cat box per pull;
+// submitting starts a server-side sieve of the whole 2^32 seed space and this page
+// polls its progress until the matching seed(s) come back.
 const seekForm = document.getElementById("seekForm");
 if (seekForm) {
   const token = seekForm.querySelector("[name=csrfmiddlewaretoken]").value;
-  const bannerEl = document.getElementById("seekBanner");
+  const bannerValue = document.getElementById("seekBannerValue");
+  const pickHint = document.getElementById("seekPickHint");
   const entry = document.getElementById("seekEntry");
   const rollsEl = document.getElementById("seekRolls");
   const addRow = document.getElementById("seekAddRow");
@@ -20,32 +21,114 @@ if (seekForm) {
   const MAX = Number(seekForm.dataset.maxRolls);
   const START_ROWS = 10;
 
-  let optionsHtml = ""; // the selected banner's pools, rendered once per fetch
+  let optionsHtml = ""; // the selected banner's cats as combo rows, rendered per fetch
 
-  const esc = (text) =>
-    text.replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
+  const esc = (text) => text.replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
 
   const setError = (msg) => (errorEl.textContent = msg || "");
 
-  const appendRow = () => {
-    const li = document.createElement("li");
-    li.innerHTML = `<select class="seek-roll"><option value="">&mdash;</option>${optionsHtml}</select>`;
-    rollsEl.append(li);
+  // ---- Combobox: a text input filtering a list of picker rows ----------------
+  // Rows are buttons carrying data-value / data-label / data-search; picking one
+  // fills the sibling hidden input. Typing filters (and clears any earlier pick);
+  // Enter takes the first visible row.
+  const initCombo = (root, onPick) => {
+    const input = root.querySelector(".combo-input");
+    const hidden = root.querySelector("input[type=hidden]");
+    const list = root.querySelector(".combo-list");
+    const empty = list.querySelector(".combo-empty");
+
+    const filter = () => {
+      const query = input.value.trim().toLowerCase();
+      let group = null;
+      let any = false;
+      for (const el of list.children) {
+        if (el.classList.contains("combo-group")) {
+          group = el;
+          el.hidden = true;
+        } else if (el.classList.contains("combo-row")) {
+          const show = !query || el.dataset.search.includes(query);
+          el.hidden = !show;
+          if (show) {
+            any = true;
+            if (group) group.hidden = false;
+          }
+        }
+      }
+      empty.hidden = any;
+      list.hidden = false;
+    };
+
+    const pick = (row) => {
+      hidden.value = row.dataset.value;
+      input.value = row.dataset.label;
+      list.hidden = true;
+      if (onPick) onPick();
+    };
+
+    // Opened by a click, a keystroke or ArrowDown - NOT by mere focus, so the
+    // pick-to-next-box hop below doesn't leave a stray list floating over the form.
+    input.addEventListener("click", filter);
+    input.addEventListener("input", () => {
+      hidden.value = "";
+      filter();
+    });
+    input.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") list.hidden = true;
+      if (e.key === "ArrowDown" && list.hidden) filter();
+      if (e.key === "Enter") {
+        e.preventDefault(); // pick, never submit the form from inside a combo
+        const first = list.querySelector(".combo-row:not([hidden])");
+        if (!list.hidden && first) pick(first);
+      }
+    });
+    // pointerdown fires before blur, and preventDefault keeps the input focused,
+    // so a click on a row can't be swallowed by the list closing first.
+    list.addEventListener("pointerdown", (e) => {
+      const row = e.target.closest(".combo-row");
+      if (row) {
+        e.preventDefault();
+        pick(row);
+      }
+    });
+    input.addEventListener("blur", () => {
+      setTimeout(() => {
+        list.hidden = true;
+        // Leaving the box with text but no pick would look chosen while being
+        // empty - snap the text back to whatever is actually picked.
+        if (!hidden.value) input.value = "";
+      }, 120);
+    });
   };
 
-  const pickHint = document.getElementById("seekPickHint");
+  const appendRow = () => {
+    const li = document.createElement("li");
+    li.innerHTML = `<div class="seek-combo">
+      <input type="text" class="combo-input" placeholder="Type a cat's name&hellip;"
+             autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+      <input type="hidden" class="seek-roll">
+      <div class="combo-list" hidden>${optionsHtml}</div>
+    </div>`;
+    rollsEl.append(li);
+    // Picking a cat hops to the next empty box, so a 10-pull entry is one flow.
+    initCombo(li.firstElementChild, () => {
+      const boxes = [...rollsEl.querySelectorAll(".combo-input")];
+      const next = boxes.find((b, i) => !rollsEl.querySelectorAll(".seek-roll")[i].value);
+      if (next) next.focus();
+    });
+  };
 
-  bannerEl.addEventListener("change", async () => {
+  initCombo(document.getElementById("seekBanner"), async () => {
     setError("");
     results.hidden = true;
     entry.hidden = true;
     pickHint.hidden = false;
     rollsEl.innerHTML = "";
-    if (!bannerEl.value) return;
 
     let resp;
     try {
-      resp = await fetch(`${seekForm.dataset.poolUrl}?banner=${encodeURIComponent(bannerEl.value)}`);
+      resp = await fetch(
+        `${seekForm.dataset.poolUrl}?banner=${encodeURIComponent(bannerValue.value)}`
+      );
     } catch {
       resp = null;
     }
@@ -54,14 +137,22 @@ if (seekForm) {
       return;
     }
     const pool = await resp.json();
-    optionsHtml = pool.groups
-      .map(
-        (g) =>
-          `<optgroup label="${esc(g.rarity)}">` +
-          g.options.map((o) => `<option value="${o.value}">${esc(o.label)}</option>`).join("") +
-          "</optgroup>"
-      )
-      .join("");
+    optionsHtml =
+      pool.groups
+        .map(
+          (g) =>
+            `<div class="combo-group">${esc(g.rarity)}</div>` +
+            g.options
+              .map(
+                (o) =>
+                  `<button type="button" class="combo-row" data-value="${o.value}"` +
+                  ` data-label="${esc(o.label)}" data-search="${esc(o.label.toLowerCase())}">` +
+                  `<span class="rarity" data-rarity="${esc(g.rarity)}">${esc(g.rarity)}</span>` +
+                  `<span class="combo-cat">${esc(o.label)}</span></button>`
+              )
+              .join("")
+        )
+        .join("") + `<p class="combo-empty" hidden>No cats match.</p>`;
     for (let i = 0; i < START_ROWS; i++) appendRow();
     pickHint.hidden = true;
     entry.hidden = false;
@@ -154,7 +245,7 @@ if (seekForm) {
     e.preventDefault();
     setError("");
 
-    const values = [...rollsEl.querySelectorAll("select")].map((s) => s.value);
+    const values = [...rollsEl.querySelectorAll(".seek-roll")].map((h) => h.value);
     const last = values.length - 1 - [...values].reverse().findIndex(Boolean);
     const filled = values.filter(Boolean);
     if (filled.length && values.slice(0, last + 1).some((v) => !v)) {
@@ -166,7 +257,7 @@ if (seekForm) {
       return;
     }
 
-    const body = new URLSearchParams({ banner: bannerEl.value, csrfmiddlewaretoken: token });
+    const body = new URLSearchParams({ banner: bannerValue.value, csrfmiddlewaretoken: token });
     filled.forEach((v) => body.append("rolls", v));
     const resp = await fetch(seekForm.dataset.startUrl, {
       method: "POST",

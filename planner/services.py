@@ -187,11 +187,13 @@ def fetch_catalogue() -> RollResult:
 _SEEK_PAST_DAYS = 120
 
 
-def seek_run_choices(events=None, today=None) -> list[tuple[str, list[tuple[str, str]]]]:
-    """The seed finder's banner dropdown as (group label, [(value, label)]) rows, one
-    pinned "start|name" per run - the SAME runs, titles and grouping as the planner's
+def seek_run_choices(events=None, today=None) -> list:
+    """The seed finder's banner picker rows as
+    ``[(group label, [(value, title, name, (start, end))])]``, one pinned
+    "start|name" value per run - the SAME runs, titles and grouping as the planner's
     picker (_effective_runs caps a recurring run at its next rerun, so the permanent
-    capsules appear once as their current session, not once per scheduled rerun).
+    capsules appear once as their current session, not once per scheduled rerun;
+    ``title`` is the set display name with the run's marketing text as the subtitle).
     Available now leads (the pulls being entered were just made in-game); Upcoming
     covers pre-planning, and the recent past a run that ended since rolling."""
     today = today or date.today()
@@ -201,7 +203,7 @@ def seek_run_choices(events=None, today=None) -> list[tuple[str, list[tuple[str,
 
     def option(event, start, end):
         title = titles.get(event.pool_id, "") or event.name
-        return (f"{event.start}|{event.name}", f"{title} ({start} - {end})")
+        return (f"{event.start}|{event.name}", title, event.name, (start, end))
 
     runs = _effective_runs(events)
     live = [option(e, start, end) for e, start, end in runs if start <= today <= end]
