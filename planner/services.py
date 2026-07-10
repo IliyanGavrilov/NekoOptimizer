@@ -64,7 +64,9 @@ def wiki_url(name: str, rarity: str = "") -> str:
     label = _WIKI_RARITY.get(rarity)
     title = f"{name} ({label})" if label else name
 
-    return WIKI_BASE + quote(title.replace(" ", "_"), safe="()'")
+    # MediaWiki resolves '&' literally in a page-title path (e.g. Bunny_&_Canard);
+    # percent-encoding it to %26 lands on a nonexistent page, so keep it unescaped.
+    return WIKI_BASE + quote(title.replace(" ", "_"), safe="()'&")
 
 
 _TIER_RANK = {tier: rank for rank, tier in enumerate(TIER_ORDER)}
