@@ -1,6 +1,7 @@
 {# One collection card: a rarity bin or a gacha set, with bulk own/wishlist buttons. #}
 <section class="collection-section" data-label="{{ label }}">
   <h3>
+    <button type="button" class="section-toggle" aria-expanded="true" title="Collapse / expand" aria-label="Collapse or expand this section">&#9662;</button>
     {% if is_rarity %}
       <span class="rarity" data-rarity="{{ label }}">{{ label }}</span>
     {% else %}

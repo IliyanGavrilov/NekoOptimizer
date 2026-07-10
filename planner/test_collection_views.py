@@ -78,13 +78,13 @@ def test_bulk_clears_a_fully_owned_section(client):
 
 
 @pytest.mark.django_db
-def test_bulk_wishlist_skips_owned_units(client):
+def test_bulk_wishlist_stars_owned_units_too(client):
     owned = unit("Bahamut", owned=True)
     missing = unit("Kasli")
     client.post("/collection/bulk/", {"field": "wanted", "pk": [owned.pk, missing.pk]})
     owned.refresh_from_db()
     missing.refresh_from_db()
-    assert (owned.wanted, missing.wanted) == (False, True)
+    assert (owned.wanted, missing.wanted) == (True, True)
 
 
 @pytest.mark.django_db

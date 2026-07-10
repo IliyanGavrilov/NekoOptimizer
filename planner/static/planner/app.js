@@ -1020,29 +1020,42 @@ if (collectionBrowser) {
   // filter the same way: hide non-matching chips, then empty rows and sections.
   const search = document.getElementById("collectionSearch");
   const rarityBtns = [...document.querySelectorAll("#rarityFilter button")];
+  const statusBtns = [...document.querySelectorAll("#statusFilter button")];
+  // Ownership filter: "wishlist" means still-wanted, so it drops cats you own -
+  // matching how the planner reads the wishlist (owned cats are never on it).
+  const statusHit = (chip, status) =>
+    status === "owned"
+      ? chip.classList.contains("owned")
+      : status === "unowned"
+        ? !chip.classList.contains("owned")
+        : status === "wishlist"
+          ? chip.classList.contains("wanted") && !chip.classList.contains("owned")
+          : true;
   function applyFilters() {
     const query = search.value.trim().toLowerCase();
     const rarity = rarityBtns.find((b) => b.getAttribute("aria-pressed") === "true").dataset.rarity;
+    const status = statusBtns.find((b) => b.getAttribute("aria-pressed") === "true").dataset.status;
+    // Any active filter overrides a section's collapsed state, so matches can't
+    // hide inside a folded-up section.
+    collectionBrowser.classList.toggle("filtering", !!(query || rarity || status));
     const active = views.find((v) => !v.hidden);
     for (const section of active.querySelectorAll(".collection-section")) {
       // A query matching the section itself (a set or rarity name) keeps it whole.
       const labelHit = !!query && section.dataset.label.toLowerCase().includes(query);
       for (const row of section.querySelectorAll(".rarity-row")) {
         let shown = 0;
-        if (rarity && row.dataset.rarity !== rarity) {
-          row.querySelectorAll(".own-chip").forEach((chip) => {
-            chip.hidden = true;
-          });
-        } else {
-          row.querySelectorAll(".own-chip").forEach((chip) => {
-            // Match on any form name (data-forms carries them all), so "Mohawk"
-            // finds the Cat whatever form the picker is showing.
-            const names = chip.dataset.forms || chip.dataset.name;
-            const hit = !query || labelHit || names.toLowerCase().includes(query);
-            chip.hidden = !hit;
-            shown += hit;
-          });
-        }
+        const rarityHidesRow = rarity && row.dataset.rarity !== rarity;
+        row.querySelectorAll(".own-chip").forEach((chip) => {
+          // Match on any form name (data-forms carries them all), so "Mohawk"
+          // finds the Cat whatever form the picker is showing.
+          const names = chip.dataset.forms || chip.dataset.name;
+          const hit =
+            !rarityHidesRow &&
+            (!query || labelHit || names.toLowerCase().includes(query)) &&
+            statusHit(chip, status);
+          chip.hidden = !hit;
+          shown += hit;
+        });
         row.hidden = shown === 0;
       }
       section.hidden = !section.querySelector(".rarity-row:not([hidden])");
@@ -1050,20 +1063,31 @@ if (collectionBrowser) {
     noMatches.hidden = !!active.querySelector(".collection-section:not([hidden])");
   }
   search.addEventListener("input", applyFilters);
-  document.getElementById("rarityFilter").addEventListener("click", (e) => {
-    const btn = e.target.closest("button");
-    if (!btn) return;
-    rarityBtns.forEach((b) => b.setAttribute("aria-pressed", b === btn ? "true" : "false"));
-    applyFilters();
-  });
+  const bindFilter = (id, btns) =>
+    document.getElementById(id).addEventListener("click", (e) => {
+      const btn = e.target.closest("button");
+      if (!btn) return;
+      btns.forEach((b) => b.setAttribute("aria-pressed", b === btn ? "true" : "false"));
+      applyFilters();
+    });
+  bindFilter("rarityFilter", rarityBtns);
+  bindFilter("statusFilter", statusBtns);
 
-  // "12 / 325 owned" per section header, ignoring filters, refreshed on every change.
+  // "12 / 325 owned" per section header plus one grand total, both ignoring
+  // filters and refreshed on every change. The grand total counts each unit once
+  // by reading only the rarity view (every cat lives in exactly one rarity bin).
+  const totalEl = document.getElementById("collectionTotal");
+  const rarityView = views.find((v) => v.dataset.view === "rarity");
   function updateCounts() {
     for (const section of sections) {
       const total = section.querySelectorAll(".own-chip").length;
       const owned = section.querySelectorAll(".own-chip.owned").length;
       section.querySelector(".owned-count").textContent = `${owned} / ${total} owned`;
     }
+    const chips = [...rarityView.querySelectorAll(".own-chip")];
+    const owned = chips.filter((c) => c.classList.contains("owned")).length;
+    const wished = chips.filter((c) => c.classList.contains("wanted") && !c.classList.contains("owned")).length;
+    totalEl.textContent = `${owned} / ${chips.length} owned${wished ? ` · ${wished} wishlisted` : ""}`;
   }
 
   // The same unit renders once per view; every change lands on all its copies.
@@ -1076,6 +1100,13 @@ if (collectionBrowser) {
   }
 
   collectionBrowser.addEventListener("click", async (e) => {
+    const toggle = e.target.closest(".section-toggle");
+    if (toggle) {
+      const section = toggle.closest(".collection-section");
+      const open = section.classList.toggle("collapsed");
+      toggle.setAttribute("aria-expanded", !open);
+      return;
+    }
     const bulk = e.target.closest(".bulk-own, .bulk-star");
     if (bulk) return bulkToggle(bulk);
     const star = e.target.closest(".chip-star");
@@ -1094,7 +1125,8 @@ if (collectionBrowser) {
   });
 
   // Section-header ✓/★: mark the whole section owned/wanted, or clear it when it
-  // already is. The server decides which way it goes and skips owned on wishlists.
+  // already is. The server decides which way it goes; bulk star hits every cat,
+  // owned included, so it matches tapping each star by hand.
   async function bulkToggle(btn) {
     const field = btn.classList.contains("bulk-star") ? "wanted" : "owned";
     const chips = [...btn.closest(".collection-section").querySelectorAll(".own-chip")];
@@ -1107,13 +1139,9 @@ if (collectionBrowser) {
     });
     if (!resp.ok) return;
     const { value } = await resp.json();
+    const other = field === "owned" ? "wanted" : "owned";
     for (const chip of chips) {
-      const owned = field === "owned" ? value : chip.classList.contains("owned");
-      const wanted =
-        field === "wanted"
-          ? value && !chip.classList.contains("owned")
-          : chip.classList.contains("wanted");
-      mark(chip.dataset.pk, { owned, wanted });
+      mark(chip.dataset.pk, { [field]: value, [other]: chip.classList.contains(other) });
     }
     updateCounts();
   }
