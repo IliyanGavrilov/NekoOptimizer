@@ -59,7 +59,7 @@
         <div id="targetFlat" class="chips flat" hidden>
           {% for cat in target_flat %}
             <button type="button" class="chip{% if cat.owned %} owned{% endif %}{% if cat.wanted %} wanted{% endif %}" data-pk="{{ cat.pk }}"
-                    data-name="{{ cat.name }}" data-rarity="{{ cat.rarity }}">{% if cat.rarity %}<span class="rarity" data-rarity="{{ cat.rarity }}">{{ cat.rarity }}</span> {% endif %}{{ cat.name }}{% include "planner/_tier_badge.html" with badge=cat.tier_badge %}</button>
+                    data-name="{{ cat.name }}" data-rarity="{{ cat.rarity }}"{% if cat.unit %} data-forms="{{ cat.unit.forms|join:'|' }}"{% endif %}>{% if cat.rarity %}<span class="rarity" data-rarity="{{ cat.rarity }}">{{ cat.rarity }}</span> {% endif %}{{ cat.name }}{% include "planner/_tier_badge.html" with badge=cat.tier_badge %}</button>
           {% endfor %}
         </div>
 

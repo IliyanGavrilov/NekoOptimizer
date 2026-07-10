@@ -373,8 +373,14 @@ def collection(request):
 def tier_list(request):
     """The cumulative uber tier list, tier by tier, with catalogue names and icons."""
     doc = load_tiers()
+    rows = tier_list_rows(doc)
+    # The form picker renames entries client-side; ship each unit's form names along.
+    forms = dict(Unit.objects.values_list("unit_id", "forms"))
+    for row in rows:
+        for entry in row["entries"]:
+            entry["forms"] = "|".join(forms.get(entry["unit_id"], []))
     context = {
-        "rows": tier_list_rows(doc),
+        "rows": rows,
         "source": doc["source"],
         "fetched": doc["fetched"],
     }

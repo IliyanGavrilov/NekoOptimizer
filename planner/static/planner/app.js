@@ -372,8 +372,9 @@ if (picker) {
       if (searching) drop.open = hasMatch;
     });
     if (searching) {
+      // Cats match on any of their form names, not just the base one.
       flat.querySelectorAll("[data-name]").forEach((chip) => {
-        chip.hidden = !chip.dataset.name.toLowerCase().includes(query);
+        chip.hidden = !(chip.dataset.forms || chip.dataset.name).toLowerCase().includes(query);
       });
     }
   }
@@ -915,8 +916,10 @@ if (collectionBrowser) {
           });
         } else {
           row.querySelectorAll(".own-chip").forEach((chip) => {
-            const hit =
-              !query || labelHit || chip.dataset.name.toLowerCase().includes(query);
+            // Match on any form name (data-forms carries them all), so "Mohawk"
+            // finds the Cat whatever form the picker is showing.
+            const names = chip.dataset.forms || chip.dataset.name;
+            const hit = !query || labelHit || names.toLowerCase().includes(query);
             chip.hidden = !hit;
             shown += hit;
           });
@@ -996,9 +999,62 @@ if (collectionBrowser) {
     updateCounts();
   }
 
+  // Form picker: every chip renames to the picked form. It shares the Rolls table's
+  // persisted pick, so the whole site shows cats the same way.
+  const formSel = document.getElementById("collectionForm");
+  const saved = localStorage.getItem("neko:rollForm");
+  if (saved && [...formSel.options].some((o) => o.value === saved)) formSel.value = saved;
+  const applyForm = () => {
+    const form = Number(formSel.value);
+    collectionBrowser.querySelectorAll(".own-chip").forEach((chip) => {
+      const forms = chip.dataset.forms ? chip.dataset.forms.split("|") : [];
+      chip.querySelector(".catname").textContent = forms.length
+        ? forms[Math.min(form, forms.length - 1)]
+        : chip.dataset.name;
+    });
+  };
+  applyForm();
+  formSel.addEventListener("change", () => {
+    localStorage.setItem("neko:rollForm", formSel.value);
+    applyForm();
+  });
+
   updateCounts();
   const savedView = localStorage.getItem(VIEW_KEY);
   showView(savedView === "sets" ? "sets" : "rarity");
+}
+
+// ---- Tier list: the form picker renames each unit and swaps its icon ----
+// Same persisted pick as the Rolls table and Collection; an icon a unit doesn't
+// have (404) falls back to its base form's.
+const tierTable = document.querySelector(".tier-table");
+if (tierTable) {
+  const ICON_BASE = "https://battlecatsinfo.github.io/img/u";
+  const formSel = document.getElementById("tierForm");
+  const saved = localStorage.getItem("neko:rollForm");
+  if (saved && [...formSel.options].some((o) => o.value === saved)) formSel.value = saved;
+  tierTable.querySelectorAll(".tier-unit[data-uid] img").forEach((img) => {
+    img.addEventListener("error", () => {
+      const base = `${ICON_BASE}/${img.closest(".tier-unit").dataset.uid}/0.png`;
+      if (!img.src.endsWith("/0.png")) img.src = base;
+    });
+  });
+  const applyForm = () => {
+    const form = Number(formSel.value);
+    tierTable.querySelectorAll(".tier-unit[data-uid]").forEach((btn) => {
+      const forms = (btn.dataset.forms || "").split("|").filter(Boolean);
+      const index = forms.length ? Math.min(form, forms.length - 1) : 0;
+      btn.querySelector(".tier-unit-name").textContent = forms[index] || btn.dataset.name;
+      const src = `${ICON_BASE}/${btn.dataset.uid}/${index}.png`;
+      const img = btn.querySelector("img");
+      if (img && !img.src.endsWith(`/${index}.png`)) img.src = src;
+    });
+  };
+  applyForm();
+  formSel.addEventListener("change", () => {
+    localStorage.setItem("neko:rollForm", formSel.value);
+    applyForm();
+  });
 }
 
 // ---- Drag-to-scrub number inputs -------------------------------------
@@ -1197,7 +1253,6 @@ if (catPopup) {
       const fig = document.createElement("figure");
       fig.className = "cat-form";
       const img = document.createElement("img");
-      img.loading = "lazy";
       img.alt = form;
       img.src = `${ICON_BASE}/${info.unit_id}/${i}.png`;
       img.addEventListener("error", () => fig.classList.add("no-icon"));
