@@ -39,6 +39,7 @@ def wait_done(client, job):
     raise AssertionError("seek job never finished")
 
 
+@pytest.mark.django_db
 def test_seed_finder_page_lists_banner_runs(client):
     content = client.get("/seek/").content
 

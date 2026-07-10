@@ -54,7 +54,6 @@ if (seekForm) {
       return;
     }
     const pool = await resp.json();
-    names.clear();
     optionsHtml = pool.groups
       .map(
         (g) =>

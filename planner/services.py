@@ -189,30 +189,30 @@ _SEEK_PAST_DAYS = 120
 
 def seek_run_choices(events=None, today=None) -> list[tuple[str, list[tuple[str, str]]]]:
     """The seed finder's banner dropdown as (group label, [(value, label)]) rows, one
-    pinned "start|name" per run. The pulls being entered were just made in-game, so
-    Available now leads; Upcoming covers pre-planning, and the recent past covers a
-    banner that ended between rolling and seeking."""
+    pinned "start|name" per run - the SAME runs, titles and grouping as the planner's
+    picker (_effective_runs caps a recurring run at its next rerun, so the permanent
+    capsules appear once as their current session, not once per scheduled rerun).
+    Available now leads (the pulls being entered were just made in-game); Upcoming
+    covers pre-planning, and the recent past a run that ended since rolling."""
     today = today or date.today()
     events = events if events is not None else load_events()
-
+    titles = banner_titles(events=events)
     cutoff = today - timedelta(days=_SEEK_PAST_DAYS)
-    live = [e for e in events if e.start <= today <= e.end]
-    upcoming = [e for e in events if e.start > today]
-    past = [e for e in events if cutoff <= e.end < today]
 
-    def rows(runs, key):
-        return [
-            (f"{e.start}|{e.name}", f"{e.name} ({e.start} - {e.end})")
-            for e in sorted(runs, key=key)
-        ]
+    def option(event, start, end):
+        title = titles.get(event.pool_id, "") or event.name
+        return (f"{event.start}|{event.name}", f"{title} ({start} - {end})")
 
-    # Newest first within each group: the run being sought is almost always the one
-    # that just started (or just ended), not a years-old permanent capsule.
-    return [
-        ("Available now", rows(live, lambda e: (-e.start.toordinal(), e.name))),
-        ("Upcoming", rows(upcoming, lambda e: (e.start, e.name))),
-        ("Recently ended", rows(past, lambda e: (-e.end.toordinal(), e.name))),
+    runs = _effective_runs(events)
+    live = [option(e, start, end) for e, start, end in runs if start <= today <= end]
+    upcoming = [option(e, start, end) for e, start, end in runs if start > today]
+    past = [
+        option(e, start, end)
+        for e, start, end in sorted(runs, key=lambda run: run[2], reverse=True)
+        if cutoff <= end < today
     ]
+
+    return [("Available now", live), ("Upcoming", upcoming), ("Recently ended", past)]
 
 
 def seek_banner(selection: str, events=None, pools=None, units=None):
