@@ -10,26 +10,29 @@
     finder replays every possible seed until it finds the one that deals exactly
     those cats.
   </p>
-  <ul class="muted seek-howto">
-    <li>Pick the gacha event you rolled on (e.g. Ultra Souls or Uberfest). Rare
-      (gold) tickets or cat food &mdash; both work the same.</li>
-    <li>Roll several times &mdash; preferably 7 to 10 &mdash; and record the results.
-      The more rolls, the more certain the answer. Fill them in below in the exact
-      order you rolled them.</li>
-    <li>If you did an 11-roll on a guaranteed event, or a 15-roll (3+5+7) step-up:
-      <strong>don't include the guaranteed uber</strong> &mdash; enter the 10 real
-      rolls before it, and nothing rolled after it.</li>
-    <li>Short on tickets? Enter {{ min_rolls }} rolls and search. If several seeds
-      match, roll one more cat, add it, and search again &mdash; repeat until one
-      seed remains.</li>
-    <li>Avoid events that repeat the same cat in their pool (e.g. Metal Busters or
-      some collabs): the duplicate slots are indistinguishable, so you'd have to try
-      each copy in the dropdown one by one.</li>
-    <li>You only need to find your seed once &mdash; from then on the planner tracks
-      it as you roll.</li>
-  </ul>
+  <details class="advanced seek-howto">
+    <summary>How to record your rolls</summary>
+    <ul>
+      <li>Pick the gacha event you rolled on (e.g. Ultra Souls or Uberfest). Rare
+        (gold) tickets or cat food &mdash; both work the same.</li>
+      <li>Roll several times &mdash; preferably 7 to 10 &mdash; and record the results.
+        The more rolls, the more certain the answer. Fill them in below in the exact
+        order you rolled them.</li>
+      <li>If you did an 11-roll on a guaranteed event, or a 15-roll (3+5+7) step-up:
+        <strong>don't include the guaranteed uber</strong> &mdash; enter the 10 real
+        rolls before it, and nothing rolled after it.</li>
+      <li>Short on tickets? Enter {{ min_rolls }} rolls and search. If several seeds
+        match, roll one more cat, add it, and search again &mdash; repeat until one
+        seed remains.</li>
+      <li>Avoid events that repeat the same cat in their pool (e.g. Metal Busters or
+        some collabs): the duplicate slots are indistinguishable, so you'd have to try
+        each copy in the list one by one.</li>
+      <li>You only need to find your seed once &mdash; from then on the planner tracks
+        it as you roll.</li>
+    </ul>
+  </details>
 
-  <form id="seekForm" novalidate
+  <form id="seekForm" class="seek-panel" novalidate
         data-pool-url="{% url 'seek_pool' %}"
         data-start-url="{% url 'seek_start' %}"
         data-status-url="{% url 'seek_status' %}"
@@ -38,26 +41,41 @@
         data-max-rolls="{{ max_rolls }}">
     {% csrf_token %}
 
-    <label class="opt seek-banner-row">Banner you rolled on
-      <select id="seekBanner">
-        <option value="">Choose a banner&hellip;</option>
+    <label class="seek-label" for="seekBannerSearch">Banner you rolled on</label>
+    <div class="seek-combo" id="seekBanner">
+      <input type="text" id="seekBannerSearch" class="combo-input"
+             placeholder="Search banners&hellip;" autocomplete="off" autocorrect="off"
+             autocapitalize="off" spellcheck="false">
+      <input type="hidden" id="seekBannerValue">
+      <div class="combo-list" hidden>
         {% for label, runs in run_groups %}
           {% if runs %}
-            <optgroup label="{{ label }}">
-              {% for value, text in runs %}
-                <option value="{{ value }}">{{ text }}</option>
-              {% endfor %}
-            </optgroup>
+            <div class="combo-group">{{ label }}</div>
+            {% for value, title, name, dates in runs %}
+              <button type="button" class="combo-row" data-value="{{ value }}"
+                      data-label="{{ title }}" data-search="{{ title|lower }} {{ name|lower }}">
+                <span class="banner-name">{{ title }}{% if title != name %} <span class="banner-sub">{{ name }}</span>{% endif %}</span>
+                {% if dates.1.year >= 2030 %}
+                  <span class="combo-dates">Since {{ dates.0|date:"M j, Y" }}</span>
+                {% elif dates.0.year != dates.1.year %}
+                  {# A run spanning New Year needs both years or the range misreads. #}
+                  <span class="combo-dates">{{ dates.0|date:"M j, Y" }} &ndash; {{ dates.1|date:"M j, Y" }}</span>
+                {% else %}
+                  <span class="combo-dates">{{ dates.0|date:"M j" }} &ndash; {{ dates.1|date:"M j, Y" }}</span>
+                {% endif %}
+              </button>
+            {% endfor %}
           {% endif %}
         {% endfor %}
-      </select>
-    </label>
+        <p class="combo-empty" hidden>No banners match.</p>
+      </div>
+    </div>
 
     <p class="muted hint" id="seekPickHint">Pick the banner above &mdash; its cats then
-      appear here for you to fill in, one picker per pull.</p>
+      appear here for you to fill in, one search box per pull.</p>
 
     <div id="seekEntry" hidden>
-      <p class="muted hint">Your pulls, oldest first &mdash; pick each cat you got:</p>
+      <p class="muted hint">Your pulls, oldest first &mdash; search each cat you got:</p>
       <ol id="seekRolls" class="seek-rolls"></ol>
       <div class="seek-actions">
         <button type="button" id="seekAddRow" class="seek-add">+ one more roll</button>
