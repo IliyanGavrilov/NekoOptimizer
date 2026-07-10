@@ -996,11 +996,9 @@ if (collectionBrowser) {
   const statusHit = (chip, status) =>
     status === "owned"
       ? chip.classList.contains("owned")
-      : status === "unowned"
-        ? !chip.classList.contains("owned")
-        : status === "wishlist"
-          ? chip.classList.contains("wanted") && !chip.classList.contains("owned")
-          : true;
+      : status === "wishlist"
+        ? chip.classList.contains("wanted") && !chip.classList.contains("owned")
+        : true;
   function applyFilters() {
     const query = search.value.trim().toLowerCase();
     const rarity = rarityBtns.find((b) => b.getAttribute("aria-pressed") === "true").dataset.rarity;
@@ -1070,15 +1068,18 @@ if (collectionBrowser) {
   }
 
   collectionBrowser.addEventListener("click", async (e) => {
-    const toggle = e.target.closest(".section-toggle");
-    if (toggle) {
-      const section = toggle.closest(".collection-section");
-      const open = section.classList.toggle("collapsed");
-      toggle.setAttribute("aria-expanded", !open);
-      return;
-    }
+    // The bulk own/wishlist buttons live in the header; let them win before the
+    // header-wide collapse click below claims the rest of the bar.
     const bulk = e.target.closest(".bulk-own, .bulk-star");
     if (bulk) return bulkToggle(bulk);
+    // Clicking anywhere else on a section header (label, count, chevron) folds it.
+    const header = e.target.closest(".collection-section > h3");
+    if (header) {
+      const section = header.closest(".collection-section");
+      const open = section.classList.toggle("collapsed");
+      header.querySelector(".section-toggle").setAttribute("aria-expanded", !open);
+      return;
+    }
     const star = e.target.closest(".chip-star");
     if (!star && !e.target.closest(".chip-own")) return;
     const chip = e.target.closest(".own-chip");
