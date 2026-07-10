@@ -45,7 +45,8 @@
     <span class="muted">rankings from The Battle Cats Tier List</span>
   </footer>
   {% comment %}One shared popup for any cat name: its forms (icons hotlinked from
-  battlecatsinfo) and a link to its Battle Cats Wiki page. Filled in by app.js.{% endcomment %}
+  battlecatsinfo), the selected form's stats and abilities, and a link to its Battle
+  Cats Wiki page. Filled in by app.js.{% endcomment %}
   <dialog id="catPopup" class="cat-popup">
     <button type="button" class="cat-popup-close" data-close aria-label="Close">&times;</button>
     <div class="cat-popup-head">
@@ -54,6 +55,11 @@
       <span class="cat-popup-tier tier-badge" hidden></span>
     </div>
     <div class="cat-popup-forms"></div>
+    <div class="cat-popup-stats" hidden>
+      <div class="cat-stats-grid"></div>
+      <div class="cat-popup-chips"></div>
+      <p class="cat-stats-note"></p>
+    </div>
     <a class="cat-popup-wiki" target="_blank" rel="noopener">View on the Battle Cats Wiki &#8599;</a>
   </dialog>
   <script src="{% static 'planner/app.js' %}"></script>

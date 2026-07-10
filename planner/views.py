@@ -29,6 +29,7 @@ from planner.services import (
     tier_badges,
     tier_list_rows,
     trace_marks,
+    unit_stats,
     wiki_url,
 )
 
@@ -338,6 +339,7 @@ def unit_info(request):
             "forms": unit.forms,
             "wiki": wiki_url(unit.name, unit.rarity),
             "tier": tier_badges().get(unit.unit_id),
+            "stats": unit_stats(unit.unit_id),
         }
     )
 
