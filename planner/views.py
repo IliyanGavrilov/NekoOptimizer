@@ -20,8 +20,10 @@ from planner.services import (
     collection_sections,
     display_titles,
     equivalent_banners,
+    export_collection,
     fetch_banners,
     fetch_for_banners,
+    import_collection,
     newly_added_ubers,
     picker_groups,
     set_sections,
@@ -431,3 +433,33 @@ def collection_toggle(request):
     unit.save(update_fields=[field])
 
     return JsonResponse({"owned": unit.owned, "wanted": unit.wanted})
+
+
+def collection_export(request):
+    """Download the owned/wishlist marks as a JSON snapshot the player can back up or move
+    to another install."""
+    resp = JsonResponse(export_collection(), json_dumps_params={"indent": 2})
+    resp["Content-Disposition"] = 'attachment; filename="neko-collection.json"'
+
+    return resp
+
+
+@require_POST
+def collection_import(request):
+    """Restore owned/wishlist marks from an uploaded export snapshot, replacing the current
+    ones. Returns the applied counts (the page reloads to show them)."""
+    upload = request.FILES.get("file")
+    if upload is None:
+        return HttpResponseBadRequest("no file uploaded")
+
+    try:
+        data = json.load(upload)
+    except json.JSONDecodeError, UnicodeDecodeError:
+        return HttpResponseBadRequest("not a JSON file")
+
+    try:
+        result = import_collection(data)
+    except ValueError, TypeError:
+        return HttpResponseBadRequest("not a Neko collection export")
+
+    return JsonResponse(result)

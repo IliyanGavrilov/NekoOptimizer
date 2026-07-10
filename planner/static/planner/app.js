@@ -1117,6 +1117,38 @@ if (collectionBrowser) {
     updateCounts();
   }
 
+  // Import/export. Export is a plain download link; import uploads a snapshot and
+  // replaces every mark, so it confirms first and reloads to show the restored state.
+  const importBtn = document.getElementById("collectionImport");
+  const importFile = document.getElementById("collectionImportFile");
+  const ioMsg = document.getElementById("collectionIoMsg");
+  const showIoMsg = (text) => {
+    ioMsg.textContent = text;
+    ioMsg.hidden = false;
+  };
+  importBtn.addEventListener("click", () => importFile.click());
+  importFile.addEventListener("change", async () => {
+    const file = importFile.files[0];
+    if (!file) return;
+    const ok = confirm(
+      "Replace your collection with this file? Your current owned and wishlist marks will be overwritten.",
+    );
+    importFile.value = "";
+    if (!ok) return;
+    const body = new FormData();
+    body.append("file", file);
+    const resp = await fetch(collectionBrowser.dataset.importUrl, {
+      method: "POST",
+      headers: { "X-CSRFToken": token },
+      body,
+    });
+    if (!resp.ok) return showIoMsg("Import failed — that isn't a Neko collection file.");
+    const { owned, wanted, missing } = await resp.json();
+    const skipped = missing.length ? `, ${missing.length} not in the catalogue` : "";
+    showIoMsg(`Imported ${owned} owned, ${wanted} wishlisted${skipped}. Reloading…`);
+    location.reload();
+  });
+
   // Form picker: every chip renames to the picked form. It shares the Rolls table's
   // persisted pick, so the whole site shows cats the same way.
   const formSel = document.getElementById("collectionForm");

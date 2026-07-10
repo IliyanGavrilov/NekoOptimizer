@@ -20,7 +20,13 @@
         <option value="3">Ultra</option>
       </select></label>
     <span id="collectionTotal" class="collection-total" aria-live="polite"></span>
+    <span class="collection-io">
+      <a class="io-btn" href="{% url 'collection_export' %}" download>Export</a>
+      <button type="button" class="io-btn" id="collectionImport">Import</button>
+      <input type="file" id="collectionImportFile" accept="application/json,.json" hidden>
+    </span>
   </div>
+  <p id="collectionIoMsg" class="io-msg" role="status" aria-live="polite" hidden></p>
   <div class="status-filter" id="statusFilter" role="group" aria-label="Filter by ownership">
     <button type="button" data-status="" aria-pressed="true">All</button>
     <button type="button" data-status="owned" aria-pressed="false">Owned</button>
@@ -34,7 +40,8 @@
   </div>
 
   <div class="cat-browser" id="collectionBrowser"
-       data-toggle-url="{% url 'collection_toggle' %}" data-bulk-url="{% url 'collection_bulk' %}">
+       data-toggle-url="{% url 'collection_toggle' %}" data-bulk-url="{% url 'collection_bulk' %}"
+       data-import-url="{% url 'collection_import' %}">
     <div class="collection-view" data-view="rarity">
       {% for label, note, rarities in rarity_sections %}
         {% include "planner/_collection_section.html" with is_rarity=True %}
