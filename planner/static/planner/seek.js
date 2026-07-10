@@ -33,18 +33,24 @@ if (seekForm) {
     rollsEl.append(li);
   };
 
+  const pickHint = document.getElementById("seekPickHint");
+
   bannerEl.addEventListener("change", async () => {
     setError("");
     results.hidden = true;
     entry.hidden = true;
+    pickHint.hidden = false;
     rollsEl.innerHTML = "";
     if (!bannerEl.value) return;
 
-    const resp = await fetch(
-      `${seekForm.dataset.poolUrl}?banner=${encodeURIComponent(bannerEl.value)}`
-    );
-    if (!resp.ok) {
-      setError("Couldn't load that banner's cats - pick another one.");
+    let resp;
+    try {
+      resp = await fetch(`${seekForm.dataset.poolUrl}?banner=${encodeURIComponent(bannerEl.value)}`);
+    } catch {
+      resp = null;
+    }
+    if (!resp || !resp.ok) {
+      setError("Couldn't load that banner's cats - is the server still running?");
       return;
     }
     const pool = await resp.json();
@@ -58,6 +64,7 @@ if (seekForm) {
       )
       .join("");
     for (let i = 0; i < START_ROWS; i++) appendRow();
+    pickHint.hidden = true;
     entry.hidden = false;
   });
 
