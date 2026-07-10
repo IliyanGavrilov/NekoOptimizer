@@ -513,6 +513,25 @@ def test_unit_info_omits_the_tier_for_an_unranked_unit(client, monkeypatch):
     assert client.get("/unit/info/", {"name": "Bahamut"}).json()["tier"] is None
 
 
+def _stats_doc(unit_id):
+    return {"level": 30, "units": [{"id": unit_id, "forms": [{"hp": 1700}]}]}
+
+
+@pytest.mark.django_db
+def test_unit_info_carries_the_units_stat_blocks(client, monkeypatch):
+    Unit.objects.create(unit_id=25, name="Bahamut", rarity="Uber Super Rare")
+    monkeypatch.setattr("planner.services.load_stats", lambda: _stats_doc(25))
+    stats = client.get("/unit/info/", {"name": "Bahamut"}).json()["stats"]
+    assert stats == {"level": 30, "forms": [{"hp": 1700}]}
+
+
+@pytest.mark.django_db
+def test_unit_info_omits_stats_for_a_unit_without_any(client, monkeypatch):
+    Unit.objects.create(unit_id=25, name="Bahamut", rarity="Uber Super Rare")
+    monkeypatch.setattr("planner.services.load_stats", lambda: _stats_doc(999))
+    assert client.get("/unit/info/", {"name": "Bahamut"}).json()["stats"] is None
+
+
 @pytest.mark.django_db
 def test_tier_list_page_renders_a_ranked_unit(client, monkeypatch):
     monkeypatch.setattr("planner.views.load_tiers", lambda: _tier_doc(25))
