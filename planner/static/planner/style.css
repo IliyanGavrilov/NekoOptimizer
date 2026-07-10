@@ -973,6 +973,15 @@ table.track th.guaranteed-col, table.track td.guaranteed-col {
 .seed-undo:hover,
 .seed-back:not(:disabled):hover { color: var(--accent); border-color: var(--accent); filter: none; }
 .seed-back:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* "Copy link" beside Find plan: a quiet secondary action - the permalink it
+   copies reproduces the current seed/banners/targets/budget. */
+.share-link {
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  color: var(--muted);
+}
+.share-link:hover { color: var(--accent); border-color: var(--accent); filter: none; }
 .check-row { display: inline-flex; align-items: center; gap: 0.5rem; color: var(--ink); margin: 0.5rem 0; }
 .error { color: var(--r-legend); }
 
