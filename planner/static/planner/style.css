@@ -1264,18 +1264,6 @@ table.track th.guaranteed-col, table.track td.guaranteed-col {
   padding: 0 0.3em;
 }
 
-.site-footer {
-  max-width: 760px;
-  margin: 0 auto;
-  padding: 0.8rem 1.25rem 1.5rem;
-  border-top: 1px solid var(--line);
-  display: flex;
-  gap: 0.75rem;
-  align-items: baseline;
-  flex-wrap: wrap;
-  font-size: 0.9rem;
-}
-
 /* ---- Cat name -> forms + wiki popup ---------------------------------- */
 /* A cat name in a track cell: plain text that opens the popup on click. */
 .catlink {
@@ -1495,6 +1483,7 @@ table.track th.guaranteed-col, table.track td.guaranteed-col {
 }
 
 /* ---- Seed Finder ------------------------------------------------------- */
+.seek-howto { max-width: 44rem; padding-left: 1.4rem; display: grid; gap: 0.35rem; }
 .seek-banner-row { display: block; margin: 1rem 0; }
 .seek-banner-row select { max-width: 100%; }
 .seek-rolls {
@@ -1507,7 +1496,14 @@ table.track th.guaranteed-col, table.track td.guaranteed-col {
 .seek-rolls li::marker { color: var(--muted); }
 .seek-roll { width: 100%; }
 .seek-actions { display: flex; gap: 0.6rem; align-items: center; }
-.seek-add { background: var(--panel-2); }
+/* A quiet secondary action beside the primary Find button, like the collection's
+   backup/restore buttons. */
+.seek-add {
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  color: var(--muted);
+}
+.seek-add:hover { color: var(--ink); border-color: var(--accent); filter: none; }
 .seek-progress { margin-top: 1.2rem; max-width: 26rem; }
 .seek-progress progress { width: 100%; accent-color: var(--accent); }
 .seek-results { margin-top: 1.2rem; display: grid; gap: 0.8rem; max-width: 34rem; }
