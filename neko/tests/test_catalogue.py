@@ -17,6 +17,14 @@ def test_forms_keep_every_evolution_in_order():
     assert parse_forms(CAT_NAMES) == ("Cat", "Macho Cat", "Mohawk Cat")
 
 
+def test_forms_drop_an_unreleased_placeholder_that_repeats_the_previous_name():
+    assert parse_forms("Kasli|x\nDaughter|x\nDaughter|x") == ("Kasli", "Daughter")
+
+
+def test_forms_keep_a_name_that_repeats_non_consecutively():
+    assert parse_forms("Cat|x\nMacho|x\nCat|x") == ("Cat", "Macho", "Cat")
+
+
 def test_rarity_is_keyed_by_unit_id():
     assert parse_rarities(UNITBUY)[0] == Rarity.NORMAL
 
