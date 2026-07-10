@@ -948,9 +948,10 @@ if (picker) {
 
   // A seed on load - restored from your form or handed in by a permalink - restores
   // its remembered pull and browses its rolls straight away. Banners are whatever's
-  // live today; a permalink adds nothing here beyond the seed + view already applied.
+  // live today. A link can also carry the pull that landed on its seed (the Seed
+  // Finder's "open at your position" does): record it as the dupe memory.
   if (seedEl.value.trim()) {
-    applyLastCat(seedEl.value.trim(), ""); // the seed's remembered pull
+    applyLastCat(seedEl.value.trim(), (fromLink && linkParams.get("last")) || "");
     requestTracks();
   }
 }

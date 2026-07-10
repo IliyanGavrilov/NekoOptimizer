@@ -18,6 +18,10 @@ class Rarity(StrEnum):
     LEGEND_RARE = "Legend Rare"
 
 
+# The rollable rarities in band order: a pull's rarity score walks these bottom-up.
+GACHA_RARITIES = (Rarity.RARE, Rarity.SUPER_RARE, Rarity.UBER_SUPER_RARE, Rarity.LEGEND_RARE)
+
+
 @dataclass(frozen=True, slots=True)
 class TrackPull:
     """A pull result on track "A" or "B" at a 1-based position.

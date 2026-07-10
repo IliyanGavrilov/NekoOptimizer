@@ -1,0 +1,65 @@
+{% extends "planner/base.html" %}
+{% load static %}
+
+{% block title %}Seed Finder &middot; Neko Optimizer{% endblock %}
+
+{% block content %}
+  <h1>Seed Finder</h1>
+  <p class="muted">
+    Don't know your seed? Roll the gacha in your game and note down the cats you get,
+    in order &mdash; {{ min_rolls }} at the very least, around 10 to pin the seed down.
+    The finder replays every possible seed until it finds the one that deals exactly
+    those cats.
+  </p>
+  <p class="muted">
+    The pulls must be consecutive draws on one banner: single pulls, or a multi on a
+    banner without a guaranteed uber. If you did a guaranteed multi, enter only the
+    rolls before the guaranteed uber and nothing after it.
+  </p>
+
+  <form id="seekForm" novalidate
+        data-pool-url="{% url 'seek_pool' %}"
+        data-start-url="{% url 'seek_start' %}"
+        data-status-url="{% url 'seek_status' %}"
+        data-planner-url="{% url 'planner' %}"
+        data-min-rolls="{{ min_rolls }}"
+        data-max-rolls="{{ max_rolls }}">
+    {% csrf_token %}
+
+    <label class="opt seek-banner-row">Banner you rolled on
+      <select id="seekBanner">
+        <option value="">Choose a banner&hellip;</option>
+        {% for label, runs in run_groups %}
+          {% if runs %}
+            <optgroup label="{{ label }}">
+              {% for value, text in runs %}
+                <option value="{{ value }}">{{ text }}</option>
+              {% endfor %}
+            </optgroup>
+          {% endif %}
+        {% endfor %}
+      </select>
+    </label>
+
+    <div id="seekEntry" hidden>
+      <p class="muted hint">Your pulls, oldest first &mdash; pick each cat you got:</p>
+      <ol id="seekRolls" class="seek-rolls"></ol>
+      <div class="seek-actions">
+        <button type="button" id="seekAddRow" class="seek-add">+ one more roll</button>
+        <button type="submit" id="seekGo">Find my seed</button>
+      </div>
+    </div>
+    <p class="field-error" id="seekError" aria-live="polite"></p>
+  </form>
+
+  <div id="seekProgress" class="seek-progress" hidden role="status" aria-live="polite">
+    <progress id="seekBar" max="1" value="0"></progress>
+    <p id="seekProgressText">Searching&hellip;</p>
+  </div>
+
+  <div id="seekResults" class="seek-results" hidden aria-live="polite"></div>
+{% endblock %}
+
+{% block scripts %}
+  <script src="{% static 'planner/seek.js' %}"></script>
+{% endblock %}
