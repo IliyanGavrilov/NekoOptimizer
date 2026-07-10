@@ -1249,6 +1249,13 @@ def test_wiki_url_keeps_an_apostrophe_literal():
     assert wiki_url("D'arktanyan", "Uber Super Rare") == WIKI_BASE + "D'arktanyan_(Uber_Rare_Cat)"
 
 
+def test_wiki_url_keeps_an_ampersand_literal():
+    # MediaWiki resolves '&' in the title path; percent-encoding it to %26 404s.
+    assert wiki_url("Bunny & Canard", "Uber Super Rare") == (
+        WIKI_BASE + "Bunny_&_Canard_(Uber_Rare_Cat)"
+    )
+
+
 def test_wiki_url_falls_back_to_the_bare_name_for_an_unknown_rarity():
     assert wiki_url("Doge", "") == WIKI_BASE + "Doge"
 
