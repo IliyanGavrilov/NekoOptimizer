@@ -21,103 +21,47 @@ if (seekForm) {
   const MAX = Number(seekForm.dataset.maxRolls);
   const START_ROWS = 10;
 
-  let optionsHtml = ""; // the selected banner's cats as combo rows, rendered per fetch
+  let optionsHtml = ""; // the selected banner's cats as picker rows, rendered per fetch
 
   const esc = (text) => text.replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
 
   const setError = (msg) => (errorEl.textContent = msg || "");
 
-  // ---- Combobox: a text input filtering a list of picker rows ----------------
-  // Rows are buttons carrying data-value / data-label / data-search; picking one
-  // fills the sibling hidden input. Typing filters (and clears any earlier pick);
-  // Enter takes the first visible row.
-  const initCombo = (root, onPick) => {
-    const input = root.querySelector(".combo-input");
-    const hidden = root.querySelector("input[type=hidden]");
-    const list = root.querySelector(".combo-list");
-    const empty = list.querySelector(".combo-empty");
+  // ---- Banner list: the planner's picker rows, filtered by the search box ----
+  const bannerBox = document.getElementById("seekBanner");
+  const bannerSearch = document.getElementById("seekBannerSearch");
+  const runRows = [...bannerBox.querySelectorAll(".seek-run")];
+  const runGroups = [...bannerBox.querySelectorAll("details.group-drop")];
+  const liveHeader = bannerBox.querySelector(".seek-picker > .group");
+  const liveRows = runRows.filter((row) => row.parentElement === liveHeader.parentElement);
+  const noMatch = bannerBox.querySelector(".seek-no-match");
 
-    const filter = () => {
-      const query = input.value.trim().toLowerCase();
-      let group = null;
-      let any = false;
-      for (const el of list.children) {
-        if (el.classList.contains("combo-group")) {
-          group = el;
-          el.hidden = true;
-        } else if (el.classList.contains("combo-row")) {
-          const show = !query || el.dataset.search.includes(query);
-          el.hidden = !show;
-          if (show) {
-            any = true;
-            if (group) group.hidden = false;
-          }
-        }
-      }
-      empty.hidden = any;
-      list.hidden = false;
-    };
+  bannerSearch.addEventListener("input", () => {
+    const query = bannerSearch.value.trim().toLowerCase();
+    let any = false;
+    for (const row of runRows) {
+      row.hidden = Boolean(query) && !row.dataset.search.includes(query);
+      any = any || !row.hidden;
+    }
+    // While searching, groups with a hit open so their matches actually show, the
+    // rest disappear header and all; clearing the box folds everything back up.
+    for (const group of runGroups) {
+      const hit = query && group.querySelector(".seek-run:not([hidden])");
+      group.open = Boolean(hit);
+      group.hidden = Boolean(query) && !hit;
+    }
+    liveHeader.hidden = Boolean(query) && !liveRows.some((row) => !row.hidden);
+    noMatch.hidden = any;
+  });
 
-    const pick = (row) => {
-      hidden.value = row.dataset.value;
-      input.value = row.dataset.label;
-      list.hidden = true;
-      if (onPick) onPick();
-    };
+  bannerBox.addEventListener("click", async (e) => {
+    const row = e.target.closest(".seek-run");
+    if (!row) return;
 
-    // Opened by a click, a keystroke or ArrowDown - NOT by mere focus, so the
-    // pick-to-next-box hop below doesn't leave a stray list floating over the form.
-    input.addEventListener("click", filter);
-    input.addEventListener("input", () => {
-      hidden.value = "";
-      filter();
-    });
-    input.addEventListener("keydown", (e) => {
-      if (e.key === "Escape") list.hidden = true;
-      if (e.key === "ArrowDown" && list.hidden) filter();
-      if (e.key === "Enter") {
-        e.preventDefault(); // pick, never submit the form from inside a combo
-        const first = list.querySelector(".combo-row:not([hidden])");
-        if (!list.hidden && first) pick(first);
-      }
-    });
-    // pointerdown fires before blur, and preventDefault keeps the input focused,
-    // so a click on a row can't be swallowed by the list closing first.
-    list.addEventListener("pointerdown", (e) => {
-      const row = e.target.closest(".combo-row");
-      if (row) {
-        e.preventDefault();
-        pick(row);
-      }
-    });
-    input.addEventListener("blur", () => {
-      setTimeout(() => {
-        list.hidden = true;
-        // Leaving the box with text but no pick would look chosen while being
-        // empty - snap the text back to whatever is actually picked.
-        if (!hidden.value) input.value = "";
-      }, 120);
-    });
-  };
+    bannerBox.querySelector(".seek-run.selected")?.classList.remove("selected");
+    row.classList.add("selected");
+    bannerValue.value = row.dataset.value;
 
-  const appendRow = () => {
-    const li = document.createElement("li");
-    li.innerHTML = `<div class="seek-combo">
-      <input type="text" class="combo-input" placeholder="Type a cat's name&hellip;"
-             autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
-      <input type="hidden" class="seek-roll">
-      <div class="combo-list" hidden>${optionsHtml}</div>
-    </div>`;
-    rollsEl.append(li);
-    // Picking a cat hops to the next empty box, so a 10-pull entry is one flow.
-    initCombo(li.firstElementChild, () => {
-      const boxes = [...rollsEl.querySelectorAll(".combo-input")];
-      const next = boxes.find((b, i) => !rollsEl.querySelectorAll(".seek-roll")[i].value);
-      if (next) next.focus();
-    });
-  };
-
-  initCombo(document.getElementById("seekBanner"), async () => {
     setError("");
     results.hidden = true;
     entry.hidden = true;
@@ -138,6 +82,8 @@ if (seekForm) {
     }
     const pool = await resp.json();
     optionsHtml =
+      `<input type="text" class="pick-search" placeholder="Search cats&hellip;"` +
+      ` autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">` +
       pool.groups
         .map(
           (g) =>
@@ -146,7 +92,7 @@ if (seekForm) {
               .map(
                 (o) =>
                   `<button type="button" class="combo-row" data-value="${o.value}"` +
-                  ` data-label="${esc(o.label)}" data-search="${esc(o.label.toLowerCase())}">` +
+                  ` data-search="${esc(o.label.toLowerCase())}">` +
                   `<span class="rarity" data-rarity="${esc(g.rarity)}">${esc(g.rarity)}</span>` +
                   `<span class="combo-cat">${esc(o.label)}</span></button>`
               )
@@ -157,6 +103,98 @@ if (seekForm) {
     pickHint.hidden = true;
     entry.hidden = false;
   });
+
+  // ---- Pull pickers: a dropdown per pull, with a search box inside -----------
+  const closePanels = () => {
+    for (const open of rollsEl.querySelectorAll(".combo-list:not([hidden])")) {
+      open.hidden = true;
+    }
+  };
+  document.addEventListener("pointerdown", (e) => {
+    if (!e.target.closest(".roll-pick")) closePanels();
+  });
+
+  const appendRow = () => {
+    const li = document.createElement("li");
+    li.innerHTML = `<div class="roll-pick">
+      <button type="button" class="roll-trigger">
+        <span class="roll-label">Pick a cat&hellip;</span><span class="roll-chevron">&#9662;</span>
+      </button>
+      <input type="hidden" class="seek-roll">
+      <div class="combo-list" hidden>${optionsHtml}</div>
+    </div>`;
+    rollsEl.append(li);
+
+    const root = li.firstElementChild;
+    const trigger = root.querySelector(".roll-trigger");
+    const label = root.querySelector(".roll-label");
+    const hidden = root.querySelector(".seek-roll");
+    const panel = root.querySelector(".combo-list");
+    const search = panel.querySelector(".pick-search");
+    const empty = panel.querySelector(".combo-empty");
+
+    const filter = () => {
+      const query = search.value.trim().toLowerCase();
+      let group = null;
+      let any = false;
+      for (const el of panel.children) {
+        if (el.classList.contains("combo-group")) {
+          group = el;
+          el.hidden = true;
+        } else if (el.classList.contains("combo-row")) {
+          const show = !query || el.dataset.search.includes(query);
+          el.hidden = !show;
+          if (show) {
+            any = true;
+            if (group) group.hidden = false;
+          }
+        }
+      }
+      empty.hidden = any;
+    };
+
+    const pick = (row) => {
+      hidden.value = row.dataset.value;
+      label.innerHTML = row.innerHTML; // rarity chip + name, exactly as listed
+      label.classList.remove("roll-placeholder");
+      panel.hidden = true;
+      // Hop to the next empty pull so a 10-pull entry is one flow (its dropdown
+      // stays closed until asked - a stray open panel would cover the buttons).
+      const rows = [...rollsEl.querySelectorAll(".roll-pick")];
+      const next = rows.find((r) => !r.querySelector(".seek-roll").value);
+      if (next) next.querySelector(".roll-trigger").focus();
+    };
+
+    label.classList.add("roll-placeholder");
+    trigger.addEventListener("click", () => {
+      const wasOpen = !panel.hidden;
+      closePanels();
+      if (wasOpen) return;
+      search.value = "";
+      filter();
+      panel.hidden = false;
+      search.focus();
+    });
+    search.addEventListener("input", filter);
+    search.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") {
+        panel.hidden = true;
+        trigger.focus();
+      }
+      if (e.key === "Enter") {
+        e.preventDefault(); // pick, never submit the form from inside the panel
+        const first = panel.querySelector(".combo-row:not([hidden])");
+        if (first) pick(first);
+      }
+    });
+    panel.addEventListener("pointerdown", (e) => {
+      const row = e.target.closest(".combo-row");
+      if (row) {
+        e.preventDefault();
+        pick(row);
+      }
+    });
+  };
 
   addRow.addEventListener("click", () => {
     if (rollsEl.children.length < MAX) appendRow();
