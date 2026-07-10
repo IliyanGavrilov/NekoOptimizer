@@ -33,6 +33,11 @@ if (picker) {
       return {};
     }
   })();
+  // A shared permalink (?seed=...) reproduces a plan: its params replace the saved
+  // form, and the page re-runs the plan once the pickers are restored (applyLink).
+  const linkParams = new URLSearchParams(location.search);
+  const fromLink = linkParams.has("seed");
+  let restoringLink = fromLink; // keep the query string while the restore itself saves
   let ready = false; // don't persist until the restore below has run
   // Inline validation messages live next to their field; clear them all as soon
   // as the user changes anything.
@@ -46,6 +51,9 @@ if (picker) {
   function save() {
     if (!ready) return;
     clearError();
+    // The form has drifted from any permalink in the address bar: drop the stale
+    // query string so nobody copies a link that lies about what's on screen.
+    if (!restoringLink && location.search) history.replaceState(null, "", location.pathname);
     // Targets and banner selection are deliberately NOT persisted - each visit
     // starts fresh from today's banners and no targets.
     localStorage.setItem(
@@ -390,15 +398,33 @@ if (picker) {
     search.focus();
   });
 
-  // Restore the saved form, then default whatever was never saved.
-  if (stored.seed != null && stored.seed !== "") seedEl.value = stored.seed;
-  if (stored.tickets != null) ticketsEl.value = stored.tickets;
-  if (stored.catfood != null) catfoodEl.value = stored.catfood;
-  wishlistEl.checked = !!stored.useWishlist;
-  if (stored.ticketValue != null) ticketValueEl.value = stored.ticketValue;
-  if (stored.platLegendCap != null) platLegendCapEl.value = stored.platLegendCap;
-  if (stored.explore != null) exploreEl.checked = stored.explore; // else keep server default (on)
-  if (stored.horizon != null) horizonEl.value = stored.horizon;
+  // Restore the form: a permalink's params when one was opened (fields it omits
+  // stay at the server defaults, NOT the saved form, so the same link reproduces
+  // the same plan in any browser), else the saved form, then default the rest.
+  if (fromLink) {
+    seedEl.value = linkParams.get("seed");
+    const numbers = [
+      [ticketsEl, "tickets"],
+      [catfoodEl, "catfood"],
+      [ticketValueEl, "ticket_value"],
+      [platLegendCapEl, "platinum_legend_cap"],
+      [horizonEl, "horizon"],
+    ];
+    for (const [el, key] of numbers) {
+      if (linkParams.has(key)) el.value = linkParams.get(key);
+    }
+    wishlistEl.checked = linkParams.get("use_wishlist") === "1";
+    if (linkParams.has("explore")) exploreEl.checked = linkParams.get("explore") === "1";
+  } else {
+    if (stored.seed != null && stored.seed !== "") seedEl.value = stored.seed;
+    if (stored.tickets != null) ticketsEl.value = stored.tickets;
+    if (stored.catfood != null) catfoodEl.value = stored.catfood;
+    wishlistEl.checked = !!stored.useWishlist;
+    if (stored.ticketValue != null) ticketValueEl.value = stored.ticketValue;
+    if (stored.platLegendCap != null) platLegendCapEl.value = stored.platLegendCap;
+    if (stored.explore != null) exploreEl.checked = stored.explore; // else keep server default (on)
+    if (stored.horizon != null) horizonEl.value = stored.horizon;
+  }
   // Display controls keep their HTML defaults (100 rolls / no details / guaranteed off);
   // they aren't persisted, so every refresh starts fresh.
   const syncExplore = () => {
@@ -426,10 +452,13 @@ if (picker) {
   render();
 
   // Targets and banner selection aren't persisted: every visit starts from the
-  // banners live today (capsules excluded - they're opt-in) and no targets.
-  sessionDayAnchor = today(); // the default selection sits on today
-  for (const btn of includes) {
-    if (!CAPPED.test(btn.dataset.banner) && liveOn(rangeOf(btn), today())) setIncluded(btn, true);
+  // banners live today (capsules excluded - they're opt-in) and no targets. A
+  // permalink names its own selection instead - restored by applyLink at the end.
+  if (!fromLink) {
+    sessionDayAnchor = today(); // the default selection sits on today
+    for (const btn of includes) {
+      if (!CAPPED.test(btn.dataset.banner) && liveOn(rangeOf(btn), today())) setIncluded(btn, true);
+    }
   }
   ready = true;
   syncBanners();
@@ -582,6 +611,51 @@ if (picker) {
     }
     return fetch(url, { method: "POST", body, headers: { "X-CSRFToken": token } });
   };
+
+  // ---- Shareable permalink: seed / banners / targets / budget as a URL --------
+  // Params mirror the form's POST names (targets by NAME - pks are this database's);
+  // values at their server defaults stay out, so short links stay short. Opening
+  // one restores the pickers and re-runs the plan (the fromLink path + applyLink).
+  const permalink = () => {
+    const p = new URLSearchParams();
+    p.set("seed", seedEl.value.trim());
+    for (const input of bannerInputs.children) p.append("banners", input.value);
+    for (const [, name] of selected) p.append("targets", name);
+    if (wishlistEl.checked) p.set("use_wishlist", "1");
+    if (exploreEl.checked !== exploreEl.defaultChecked) p.set("explore", exploreEl.checked ? "1" : "0");
+    // Only the numbers the current mode reads: the budget is ignored while
+    // exploring, and the horizon only matters there.
+    const numbers = exploreEl.checked
+      ? [[horizonEl, "horizon"]]
+      : [
+          [ticketsEl, "tickets"],
+          [catfoodEl, "catfood"],
+        ];
+    numbers.push([ticketValueEl, "ticket_value"], [platLegendCapEl, "platinum_legend_cap"]);
+    for (const [el, key] of numbers) {
+      if (el.value !== el.defaultValue) p.set(key, el.value);
+    }
+    if (lastCatEl.value) p.set("last_cat", lastCatEl.value);
+    return `${location.pathname}?${p}`;
+  };
+
+  // "Copy link" beside Find plan: the permalink goes to the clipboard and the
+  // address bar both (the address bar is the fallback where there's no clipboard).
+  const shareLink = document.getElementById("shareLink");
+  let shareTimer;
+  shareLink.addEventListener("click", async () => {
+    const url = new URL(permalink(), location.href).href;
+    history.replaceState(null, "", url);
+    let note = "Link copied ✓";
+    try {
+      await navigator.clipboard.writeText(url);
+    } catch {
+      note = "Link is in the address bar";
+    }
+    shareLink.textContent = note;
+    clearTimeout(shareTimer);
+    shareTimer = setTimeout(() => (shareLink.textContent = "Copy link"), 2000);
+  });
 
   // ---- Apply a plan (delegated; solutions are injected by AJAX) --------
   // Own its cats, drop them from the wishlist, and spend its tickets/catfood.
@@ -845,6 +919,8 @@ if (picker) {
         resultsRegion.hidden = !solutions.firstElementChild;
         syncRollDisplay(); // the solution tracks carry icons too
         setLegendHeight();
+        // The plan on screen is exactly what the address bar now reproduces.
+        history.replaceState(null, "", permalink());
       } else {
         const { errors = {} } = await resp.json().catch(() => ({}));
         const field = Object.keys(errors).find((k) => k in fieldSlot);
@@ -860,7 +936,50 @@ if (picker) {
     }
   });
 
-  if (seedEl.value.trim()) {
+  // ---- Opening a permalink: restore its banners/targets, then re-run the plan --
+  // Linked banners may live in the lazy Past group, so restoring can need a fetch;
+  // anything the link names that's gone from the picker is reported, not dropped
+  // silently. Runs last so the submit/track listeners above are already wired.
+  async function applyLink() {
+    const wanted = new Set(linkParams.getAll("banners"));
+    const claim = () => {
+      for (const btn of includes) {
+        const value = btn.dataset.run ? `${btn.dataset.run}|${btn.dataset.banner}` : btn.dataset.banner;
+        if (!wanted.delete(value)) continue;
+        setIncluded(btn, true);
+        // Anchor the session on the linked period, so a capsule added by hand
+        // later still has to overlap it.
+        if (!CAPPED.test(btn.dataset.banner)) sessionDayAnchor ??= sessionDay(rangeOf(btn));
+      }
+    };
+    claim();
+    if (wanted.size) {
+      await loadPast(); // the link may point at runs the picker hasn't shipped yet
+      claim();
+    }
+    const missing = [...wanted].map((value) => value.split("|").pop());
+    const chips = new Map(
+      [...flat.querySelectorAll(".chip[data-pk]")].map((chip) => [chip.dataset.name, chip]),
+    );
+    for (const name of linkParams.getAll("targets")) {
+      if (chips.has(name)) toggle(chips.get(name).dataset.pk, name);
+      else missing.push(name);
+    }
+    syncBanners();
+    applyLastCat(seedEl.value.trim(), linkParams.get("last_cat") || "");
+    if (missing.length) {
+      bannerWarn.textContent = `Not in the picker any more, so not restored from the link: ${missing.join(", ")}.`;
+      bannerWarn.hidden = false;
+    }
+    restoringLink = false;
+    if (!seedEl.value.trim()) return;
+    if (inputs.childElementCount || wishlistEl.checked) plannerForm.requestSubmit();
+    else requestTracks();
+  }
+
+  if (fromLink) {
+    applyLink();
+  } else if (seedEl.value.trim()) {
     applyLastCat(seedEl.value.trim(), ""); // the restored seed's remembered pull
     requestTracks();
   }
