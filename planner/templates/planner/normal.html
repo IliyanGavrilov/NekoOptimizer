@@ -19,10 +19,9 @@
       <li>Roll the plain Normal Capsules several times &mdash; 8 to 12 works best &mdash;
         and record what you get, in order. They cost pocket XP, so this is the cheap way
         (the event machines would burn 12+ tickets for the same answer).</li>
-      <li>Pick the right machine: <strong>Normal Capsules+</strong> once
-        <strong>Superfeline</strong> can drop for you, plain <strong>Normal
-        Capsules</strong> if it can't &mdash; the pools differ, so the wrong one finds
-        nothing.</li>
+      <li>The finder searches the pool your <strong>Superfeline unlocked</strong>
+        toggle (next to the machine picks below) says you have &mdash; the pools
+        differ, so if the search finds nothing, check that toggle first.</li>
       <li>The pulls must be consecutive: nothing rolled in between on any normal-side
         machine.</li>
       <li>You only need this once &mdash; from then on the tracker follows your seed as
@@ -34,13 +33,8 @@
           data-min-rolls="{{ min_rolls }}"
           data-max-rolls="{{ max_rolls }}">
       {% csrf_token %}
-      <label class="seek-label" for="nseekBanner">Machine you rolled on</label>
-      <select id="nseekBanner">
-        {% for key, pool in seek_pools.items %}
-          <option value="{{ key }}">{{ pool.name }}{% if pool.note %} &mdash; {{ pool.note }}{% endif %}</option>
-        {% endfor %}
-      </select>
-      <p class="muted hint">Your pulls, oldest first &mdash; search each item you got:</p>
+      <p class="muted hint">Searching the <strong id="nseekPool">Normal Capsules</strong>
+        pool. Your pulls, oldest first &mdash; search each item you got:</p>
       <ol id="nseekRolls" class="seek-rolls"></ol>
       <div class="seek-actions">
         <button type="button" id="nseekAddRow" class="seek-add">+ one more roll</button>
@@ -67,30 +61,48 @@
         <input type="number" id="normalCount" min="1" max="999" value="100">
       </label>
       <span class="normal-machines" role="group" aria-label="Capsule machines">
+        <label class="machine-toggle">
+          <input type="checkbox" id="machineNormal" checked>
+          Normal Capsules
+        </label>
+        <label class="machine-toggle superfeline-toggle"
+               title="Once Superfeline joins your capsule pool it never leaves - this is about your save, not a viewing choice. It changes every roll, so get it right.">
+          <input type="checkbox" id="superfeline" checked>
+          Superfeline unlocked
+        </label>
         {% for banner in banners %}
-          <label class="machine-toggle">
-            <input type="checkbox" value="{{ banner.key }}"
-                   {% if banner.key in default_keys %}checked{% endif %}>
-            {{ banner.name }}
-          </label>
+          {% if banner.key != "n" and banner.key != "np" %}
+            <label class="machine-toggle">
+              <input type="checkbox" value="{{ banner.key }}"
+                     {% if banner.key in default_keys %}checked{% endif %}>
+              {{ banner.name }}
+            </label>
+          {% endif %}
         {% endfor %}
       </span>
     </div>
 
     <details class="advanced" id="normalPlanPanel">
       <summary>Plan a path &mdash; most Dark Catseyes for your rolls</summary>
-      <p class="muted hint">Say how many rolls each machine may take (its tickets, or
-        for the plain capsules how much XP you'll spend), pick a target, and the
-        planner steers the shared seed stream &mdash; cheap normal rolls to walk it,
-        the odd ticket to dupe-switch tracks &mdash; collecting as many as possible
-        while burning as few tickets as it can.</p>
+      <p class="muted hint">Enter your ticket stashes &mdash; <strong>Normal Cat
+        Tickets</strong> feed the plain capsule and the Catfruit/Catseye machines
+        alike, the lucky tickets are their own &mdash; pick a target, and the planner
+        steers the shared seed stream across the machines shown above: normal-ticket
+        rolls to walk it, the odd lucky ticket to dupe-switch tracks, collecting as
+        many as possible while burning as few lucky tickets as it can.</p>
       <div class="plan-budgets">
-        {% for banner in banners %}
-          <label class="opt">{{ banner.name }}
-            <input type="number" class="plan-budget" data-key="{{ banner.key }}"
-                   min="0" max="500" value="0">
-          </label>
-        {% endfor %}
+        <label class="opt">Normal Cat Tickets
+          <input type="number" class="plan-budget" data-kind="normal"
+                 min="0" max="500" value="0">
+        </label>
+        <label class="opt">Lucky Tickets
+          <input type="number" class="plan-budget" data-kind="lucky"
+                 min="0" max="500" value="0">
+        </label>
+        <label class="opt">Lucky Tickets G
+          <input type="number" class="plan-budget" data-kind="luckyg"
+                 min="0" max="500" value="0">
+        </label>
       </div>
       <div class="plan-controls">
         <label class="opt">Chasing

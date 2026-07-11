@@ -487,47 +487,54 @@ def normal_tracks(request):
     return render(request, "planner/_normal_tracks.html", {"track": track})
 
 
-MAX_PLAN_ROLLS = 500  # per machine; normal_plan caps the total look-ahead anyway
+MAX_PLAN_ROLLS = 500  # per currency; normal_plan caps the total look-ahead anyway
+
+# The plan panel's currencies: Normal Cat Tickets feed the plain capsule and the
+# Catfruit/Catseye machines alike; each lucky ticket kind is its own stash.
+_TICKET_KINDS = ("normal", "lucky", "luckyg")
 
 
-def _normal_budgets(request):
-    """The posted per-machine roll budgets, as {banner key: rolls}: a JSON object
-    from the plan panel's steppers, unknown keys dropped, counts clamped."""
+def _normal_tickets(request):
+    """The posted currency counts, as {kind: rolls}: a JSON object from the plan
+    panel's steppers, unknown kinds dropped, counts clamped."""
     try:
-        raw = json.loads(request.POST.get("budgets", "") or "{}")
+        raw = json.loads(request.POST.get("tickets", "") or "{}")
     except json.JSONDecodeError:
         return {}
     if not isinstance(raw, dict):
         return {}
 
-    budgets = {}
-    for key, count in raw.items():
+    tickets = {}
+    for kind, count in raw.items():
         try:
             count = int(count)
         except TypeError, ValueError:
             continue
-        if key in BANNERS_BY_KEY and count > 0:
-            budgets[key] = min(count, MAX_PLAN_ROLLS)
+        if kind in _TICKET_KINDS and count > 0:
+            tickets[kind] = min(count, MAX_PLAN_ROLLS)
 
-    return budgets
+    return tickets
 
 
 @require_POST
 def normal_plan(request):
     """Run the normal-side path planner: from the current seed, the pull sequence
-    over the budgeted machines that collects the most of the chosen target."""
+    over the live machines that collects the most of the chosen target within the
+    posted ticket stashes."""
     try:
         seed = int(request.POST.get("seed", ""))
     except ValueError:
         return HttpResponseBadRequest("seed must be an integer")
 
-    budgets = _normal_budgets(request)
-    if not budgets:
-        return HttpResponseBadRequest("give at least one machine some rolls")
+    tickets = _normal_tickets(request)
+    machines = [key for key in request.POST.getlist("banners") if key in BANNERS_BY_KEY]
+    if not tickets or not machines:
+        return HttpResponseBadRequest("give some tickets to at least one shown machine")
 
     plan = build_normal_plan(
         seed,
-        budgets,
+        machines,
+        tickets,
         request.POST.get("target", "dark"),
         _track_length(request),
         last_item=request.POST.get("last_item", "").strip(),

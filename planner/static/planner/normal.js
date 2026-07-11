@@ -10,9 +10,17 @@ if (normalForm) {
   const token = normalForm.querySelector("[name=csrfmiddlewaretoken]").value;
   const seedEl = document.getElementById("normalSeed");
   const countEl = document.getElementById("normalCount");
-  const machineEls = [...normalForm.querySelectorAll(".machine-toggle input")];
+  // The plain capsule is one column with a profile fact attached: once Superfeline
+  // joins your pool it never leaves, so "which normal machine" isn't a choice -
+  // the toggle records which pool YOUR save rolls, and everything (columns, the
+  // finder, the planner) reads it.
+  const normalToggle = document.getElementById("machineNormal");
+  const superfeline = document.getElementById("superfeline");
+  const machineEls = [...normalForm.querySelectorAll(".machine-toggle input[value]")];
   const hint = document.getElementById("normalHint");
   const tracksHost = document.getElementById("normalTracks");
+
+  const normalKey = () => (superfeline.checked ? "np" : "n");
 
   const esc = (text) => text.replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
 
@@ -43,10 +51,18 @@ if (normalForm) {
   if (linkParams.has("seed") || linkParams.has("m")) save();
   if (stored.machines) {
     for (const el of machineEls) el.checked = stored.machines.includes(el.value);
+    normalToggle.checked = stored.machines.includes("n") || stored.machines.includes("np");
+    // The machine list carries which capsule flavor this save has (a link shares
+    // it too); when the normal column is off, fall back to the remembered flag.
+    if (normalToggle.checked) stored.superfeline = stored.machines.includes("np");
   }
+  if (stored.superfeline !== undefined) superfeline.checked = stored.superfeline;
   seedEl.value = stored.seed || "";
 
-  const checkedMachines = () => machineEls.filter((el) => el.checked).map((el) => el.value);
+  const checkedMachines = () => {
+    const keys = normalToggle.checked ? [normalKey()] : [];
+    return keys.concat(machineEls.filter((el) => el.checked).map((el) => el.value));
+  };
 
   // Keep the address bar shareable: the current seed, dupe memory and machines.
   const syncLink = () => {
@@ -63,6 +79,7 @@ if (normalForm) {
     const seed = seedEl.value.trim();
     const machines = checkedMachines();
     stored.machines = machines;
+    stored.superfeline = superfeline.checked;
     save();
     syncLink();
     if (!/^\d+$/.test(seed)) {
@@ -119,6 +136,11 @@ if (normalForm) {
   });
   countEl.addEventListener("input", scheduleTracks);
   for (const el of machineEls) el.addEventListener("change", fetchTracks);
+  normalToggle.addEventListener("change", fetchTracks);
+  superfeline.addEventListener("change", () => {
+    fetchTracks();
+    syncFinderPool(); // the finder searches the flavor's pool - rebuild its pickers
+  });
 
   // A cell's dice: "I rolled this" - jump to just after it, remembering what it
   // gave (the next view's first cell can dupe it).
@@ -138,15 +160,18 @@ if (normalForm) {
   const targetSel = document.getElementById("normalTarget");
   const budgetEls = [...planPanel.querySelectorAll(".plan-budget")];
 
-  // First open: seed the budgets with something sensible - the checked plain
-  // capsule gets 100 XP rolls, checked ticket machines 10 - so "Find a path"
-  // works out of the box.
+  // First open: seed the stashes with something sensible - normal tickets are
+  // the abundant currency, the lucky kinds precious - so "Find a path" works out
+  // of the box.
   planPanel.addEventListener("toggle", () => {
     if (!planPanel.open || budgetEls.some((el) => Number(el.value) > 0)) return;
     const machines = checkedMachines();
     for (const el of budgetEls) {
-      if (!machines.includes(el.dataset.key)) continue;
-      el.value = el.dataset.key === "n" || el.dataset.key === "np" ? 100 : 10;
+      if (el.dataset.kind === "normal") {
+        el.value = machines.some((k) => k !== "lt" && k !== "ltg") ? 100 : 0;
+      } else {
+        el.value = machines.includes(el.dataset.kind === "lucky" ? "lt" : "ltg") ? 10 : 0;
+      }
     }
   });
 
@@ -157,13 +182,13 @@ if (normalForm) {
       planError.textContent = "Enter (or find) your normal seed first.";
       return;
     }
-    const budgets = {};
+    const tickets = {};
     for (const el of budgetEls) {
       const count = Number(el.value);
-      if (count > 0) budgets[el.dataset.key] = count;
+      if (count > 0) tickets[el.dataset.kind] = count;
     }
-    if (!Object.keys(budgets).length) {
-      planError.textContent = "Give at least one machine some rolls.";
+    if (!Object.keys(tickets).length) {
+      planError.textContent = "Enter at least one ticket stash.";
       return;
     }
 
@@ -171,12 +196,13 @@ if (normalForm) {
     planGo.textContent = "Searching…";
     const body = new URLSearchParams({
       seed,
-      budgets: JSON.stringify(budgets),
+      tickets: JSON.stringify(tickets),
       target: targetSel.value,
       track_length: countEl.value,
       last_item: stored.last || "",
       csrfmiddlewaretoken: token,
     });
+    for (const key of checkedMachines()) body.append("banners", key);
     let resp;
     try {
       resp = await fetch(normalForm.dataset.planUrl, {
@@ -200,7 +226,7 @@ if (normalForm) {
   // ---- The normal seed finder: static pools, the shared polling flow ----------
   const pools = JSON.parse(document.getElementById("normalPools").textContent);
   const nseekForm = document.getElementById("nseekForm");
-  const bannerSel = document.getElementById("nseekBanner");
+  const poolLabel = document.getElementById("nseekPool");
   const rollsEl = document.getElementById("nseekRolls");
   const addRow = document.getElementById("nseekAddRow");
   const goBtn = document.getElementById("nseekGo");
@@ -216,7 +242,7 @@ if (normalForm) {
   const setError = (msg) => (errorEl.textContent = msg || "");
 
   const optionsHtml = () => {
-    const pool = pools[bannerSel.value];
+    const pool = pools[normalKey()];
     return (
       `<input type="text" class="pick-search" placeholder="Search items&hellip;"` +
       ` autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">` +
@@ -332,8 +358,12 @@ if (normalForm) {
     for (let i = 0; i < START_ROWS; i++) appendRow();
     addRow.hidden = false;
   };
-  bannerSel.addEventListener("change", resetRows);
-  resetRows();
+  const syncFinderPool = () => {
+    const pool = pools[normalKey()];
+    poolLabel.textContent = pool.name + " (" + pool.note + ")";
+    resetRows();
+  };
+  syncFinderPool();
 
   addRow.addEventListener("click", () => {
     if (rollsEl.children.length < MAX) appendRow();
@@ -394,10 +424,8 @@ if (normalForm) {
   results.addEventListener("click", (e) => {
     const btn = e.target.closest(".seek-use");
     if (!btn) return;
-    const machine = btn.dataset.machine;
-    for (const el of machineEls) {
-      if (el.value === machine) el.checked = true;
-    }
+    normalToggle.checked = true; // the sought pool is always the plain capsule
+    superfeline.checked = btn.dataset.machine === "np";
     setSeed(btn.dataset.seed, btn.dataset.item || "");
     document.getElementById("normalFinder").open = false;
     tracksHost.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -445,7 +473,7 @@ if (normalForm) {
       return;
     }
 
-    const machine = bannerSel.value;
+    const machine = normalKey();
     const body = new URLSearchParams({ banner: machine, csrfmiddlewaretoken: token });
     filled.forEach((v) => body.append("rolls", v));
     const resp = await fetch(nseekForm.dataset.startUrl, {
