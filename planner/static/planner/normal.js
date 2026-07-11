@@ -1,13 +1,14 @@
-// ---- Normal Capsules: its own seed, its own tracks, its own finder -----------
+// ---- Normal Capsules: its own seed, its own tracks, finder and path planner --
 // The normal-side gacha shares nothing with the rare seed the planner follows, so
 // this page keeps its seed in localStorage (?seed= permalinks override it), renders
 // the A/B tracks from the server, and runs the normal seed finder against the same
-// polling endpoints the rare finder uses.
+// polling endpoints the rare finder uses. Tracks reload live as the seed, machines
+// or roll count change, exactly like the planner (the seed field is a number input,
+// so app.js's drag-to-scrub picks it up too).
 const normalForm = document.getElementById("normalForm");
 if (normalForm) {
   const token = normalForm.querySelector("[name=csrfmiddlewaretoken]").value;
   const seedEl = document.getElementById("normalSeed");
-  const updateBtn = document.getElementById("normalUpdate");
   const countEl = document.getElementById("normalCount");
   const machineEls = [...normalForm.querySelectorAll(".machine-toggle input")];
   const hint = document.getElementById("normalHint");
@@ -16,8 +17,9 @@ if (normalForm) {
   const esc = (text) => text.replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
 
   // ---- Seed + dupe memory, persisted like the planner's -----------------------
-  // ?seed= (a share link or a finder result) wins over the stored seed; the dupe
-  // memory rides along as ?last= / storage, since the remembered item can dupe 1A.
+  // A share link (?seed=&last=&m=) wins over the stored state; the dupe memory
+  // rides along since the remembered item can dupe 1A, and the machine set rides
+  // so the link shows the same columns.
   let stored = {};
   try {
     stored = JSON.parse(localStorage.getItem("nekoNormal") || "{}");
@@ -36,25 +38,30 @@ if (normalForm) {
   if (linkParams.has("seed")) {
     stored.seed = linkParams.get("seed");
     stored.last = linkParams.get("last") || "";
-    save();
   }
+  if (linkParams.has("m")) stored.machines = linkParams.get("m").split(",").filter(Boolean);
+  if (linkParams.has("seed") || linkParams.has("m")) save();
   if (stored.machines) {
     for (const el of machineEls) el.checked = stored.machines.includes(el.value);
   }
   seedEl.value = stored.seed || "";
 
-  // Keep the address bar shareable: the current seed (+ dupe memory) as you move.
+  const checkedMachines = () => machineEls.filter((el) => el.checked).map((el) => el.value);
+
+  // Keep the address bar shareable: the current seed, dupe memory and machines.
   const syncLink = () => {
     const p = new URLSearchParams();
     if (seedEl.value.trim()) p.set("seed", seedEl.value.trim());
     if (stored.last) p.set("last", stored.last);
+    const machines = checkedMachines();
+    if (machines.length) p.set("m", machines.join(","));
     const query = p.toString();
     history.replaceState(null, "", query ? `?${query}` : location.pathname);
   };
 
   const fetchTracks = async () => {
     const seed = seedEl.value.trim();
-    const machines = machineEls.filter((el) => el.checked).map((el) => el.value);
+    const machines = checkedMachines();
     stored.machines = machines;
     save();
     syncLink();
@@ -88,6 +95,13 @@ if (normalForm) {
         : `<p class="field-error">Couldn't load the tracks - is the server still running?</p>`;
   };
 
+  // ---- Live reload: the seed field (typed or scrubbed), machines, roll count --
+  let trackTimer;
+  const scheduleTracks = () => {
+    clearTimeout(trackTimer);
+    trackTimer = setTimeout(fetchTracks, 400);
+  };
+
   const setSeed = (seed, lastItem) => {
     stored.seed = String(seed);
     stored.last = lastItem || "";
@@ -96,14 +110,14 @@ if (normalForm) {
     fetchTracks();
   };
 
-  updateBtn.addEventListener("click", () => setSeed(seedEl.value.trim(), ""));
-  seedEl.addEventListener("keydown", (e) => {
-    if (e.key === "Enter") {
-      e.preventDefault();
-      setSeed(seedEl.value.trim(), "");
-    }
+  seedEl.addEventListener("input", () => {
+    // A hand-typed (or scrubbed) seed is a fresh arrival: no remembered pull.
+    stored.seed = seedEl.value.trim();
+    stored.last = "";
+    save();
+    scheduleTracks();
   });
-  countEl.addEventListener("change", fetchTracks);
+  countEl.addEventListener("input", scheduleTracks);
   for (const el of machineEls) el.addEventListener("change", fetchTracks);
 
   // A cell's dice: "I rolled this" - jump to just after it, remembering what it
@@ -111,9 +125,77 @@ if (normalForm) {
   tracksHost.addEventListener("click", (e) => {
     const btn = e.target.closest(".reseed");
     if (btn) setSeed(btn.dataset.seed, btn.dataset.item || "");
+    const apply = e.target.closest(".plan-apply");
+    if (apply) setSeed(apply.dataset.seed, apply.dataset.item || "");
   });
 
   fetchTracks();
+
+  // ---- The path planner: budgets in, lit path out ------------------------------
+  const planPanel = document.getElementById("normalPlanPanel");
+  const planGo = document.getElementById("normalPlanGo");
+  const planError = document.getElementById("normalPlanError");
+  const targetSel = document.getElementById("normalTarget");
+  const budgetEls = [...planPanel.querySelectorAll(".plan-budget")];
+
+  // First open: seed the budgets with something sensible - the checked plain
+  // capsule gets 100 XP rolls, checked ticket machines 10 - so "Find a path"
+  // works out of the box.
+  planPanel.addEventListener("toggle", () => {
+    if (!planPanel.open || budgetEls.some((el) => Number(el.value) > 0)) return;
+    const machines = checkedMachines();
+    for (const el of budgetEls) {
+      if (!machines.includes(el.dataset.key)) continue;
+      el.value = el.dataset.key === "n" || el.dataset.key === "np" ? 100 : 10;
+    }
+  });
+
+  planGo.addEventListener("click", async () => {
+    planError.textContent = "";
+    const seed = seedEl.value.trim();
+    if (!/^\d+$/.test(seed)) {
+      planError.textContent = "Enter (or find) your normal seed first.";
+      return;
+    }
+    const budgets = {};
+    for (const el of budgetEls) {
+      const count = Number(el.value);
+      if (count > 0) budgets[el.dataset.key] = count;
+    }
+    if (!Object.keys(budgets).length) {
+      planError.textContent = "Give at least one machine some rolls.";
+      return;
+    }
+
+    planGo.disabled = true;
+    planGo.textContent = "Searching…";
+    const body = new URLSearchParams({
+      seed,
+      budgets: JSON.stringify(budgets),
+      target: targetSel.value,
+      track_length: countEl.value,
+      last_item: stored.last || "",
+      csrfmiddlewaretoken: token,
+    });
+    let resp;
+    try {
+      resp = await fetch(normalForm.dataset.planUrl, {
+        method: "POST",
+        headers: { "X-CSRFToken": token },
+        body,
+      });
+    } catch {
+      resp = null;
+    }
+    planGo.disabled = false;
+    planGo.textContent = "Find a path";
+    if (!resp || !resp.ok) {
+      planError.textContent = resp ? await resp.text() : "Lost the server - try again.";
+      return;
+    }
+    tracksHost.innerHTML = await resp.text();
+    tracksHost.scrollIntoView({ behavior: "smooth", block: "start" });
+  });
 
   // ---- The normal seed finder: static pools, the shared polling flow ----------
   const pools = JSON.parse(document.getElementById("normalPools").textContent);
@@ -265,18 +347,20 @@ if (normalForm) {
     "No clean match — retrying your first pull as a dupe reroll (at or above the shadow slot)…",
   ];
 
-  const matchCard = (m, lastItem) => `<div class="seek-match">
+  const matchCard = (m, lastItem, machine) => `<div class="seek-match">
       <div class="seek-seed">Your normal seed is now <strong>${m.seed_after}</strong></div>
-      <button type="button" class="seek-open seek-use" data-seed="${m.seed_after}"
-        data-item="${esc(lastItem || "")}">Show my upcoming rolls &rarr;</button>
-      <p class="muted">Seed before those pulls: ${m.seed_before}${
+      <button type="button" class="seek-use" data-seed="${m.seed_after}"
+        data-item="${esc(lastItem || "")}" data-machine="${esc(machine)}">Show my upcoming rolls &rarr;</button>
+      <p class="muted">Seed before those pulls: ${m.seed_before} &middot;
+        <button type="button" class="seek-use" data-seed="${m.seed_before}"
+          data-machine="${esc(machine)}">replay them</button>${
         m.run
-          ? " &middot; your first entered pull arrived as a dupe reroll of the roll just before it"
+          ? " &middot; your first entered pull arrived as a dupe reroll, so the replay shows it as its cell's branch value"
           : ""
       }</p>
     </div>`;
 
-  const render = (data) => {
+  const render = (data, machine) => {
     progressWrap.hidden = true;
     goBtn.disabled = false;
     results.hidden = false;
@@ -302,18 +386,24 @@ if (normalForm) {
         more items, add them, and search again to narrow it down.</p>`;
     }
     results.innerHTML =
-      notes + data.matches.map((m) => matchCard(m, data.last_cat)).join("");
+      notes + data.matches.map((m) => matchCard(m, data.last_cat, machine)).join("");
   };
 
+  // A result button applies its seed right here: the sought machine joins the
+  // shown columns (so what you just rolled is on screen), the finder folds away.
   results.addEventListener("click", (e) => {
     const btn = e.target.closest(".seek-use");
     if (!btn) return;
+    const machine = btn.dataset.machine;
+    for (const el of machineEls) {
+      if (el.value === machine) el.checked = true;
+    }
     setSeed(btn.dataset.seed, btn.dataset.item || "");
     document.getElementById("normalFinder").open = false;
     tracksHost.scrollIntoView({ behavior: "smooth", block: "start" });
   });
 
-  const poll = (job) => {
+  const poll = (job, machine) => {
     const tick = async () => {
       let resp;
       try {
@@ -329,7 +419,7 @@ if (normalForm) {
       }
       const data = await resp.json();
       if (data.done) {
-        render(data);
+        render(data, machine);
         return;
       }
       bar.value = data.progress;
@@ -355,7 +445,8 @@ if (normalForm) {
       return;
     }
 
-    const body = new URLSearchParams({ banner: bannerSel.value, csrfmiddlewaretoken: token });
+    const machine = bannerSel.value;
+    const body = new URLSearchParams({ banner: machine, csrfmiddlewaretoken: token });
     filled.forEach((v) => body.append("rolls", v));
     const resp = await fetch(nseekForm.dataset.startUrl, {
       method: "POST",
@@ -372,6 +463,6 @@ if (normalForm) {
     bar.value = 0;
     progressText.textContent = PASS_LABELS[0];
     progressWrap.hidden = false;
-    poll((await resp.json()).job);
+    poll((await resp.json()).job, machine);
   });
 }

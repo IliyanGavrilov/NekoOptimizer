@@ -1,0 +1,27 @@
+{% comment %}The path planner's result: the haul, the spend, the merged legs
+(consecutive pulls on one machine), then the tracks table with the path lit.
+{% endcomment %}
+<div class="normal-plan">
+  {% if plan.hits %}
+    <p class="plan-haul">
+      <strong>{{ plan.hits }}</strong> {{ plan.label }}
+      for
+      {% for s in plan.spent %}{% if not forloop.first %} + {% endif %}{{ s.rolls }} {{ s.name }} roll{{ s.rolls|pluralize }}{% endfor %}.
+      <button type="button" class="seek-use plan-apply" data-seed="{{ plan.seed_after }}"
+              data-item="{{ plan.last_item }}"
+              title="You rolled this plan: the seed jumps to just after its final pull">I rolled it &mdash; advance my seed</button>
+    </p>
+    <ol class="plan-legs">
+      {% for leg in plan.legs %}
+        <li>
+          <strong>{{ leg.name }}</strong> &times;{{ leg.pulls|length }}{% if not leg.cheap %} <span class="ticket-note">(tickets)</span>{% endif %}:
+          {% for pull in leg.pulls %}{% if not forloop.first %}, {% endif %}<span class="item{% if pull.dark %} dark-catseye{% endif %}{% if pull.target %} got{% endif %}">{{ pull.item }}</span>{% if pull.dupe %} <span class="muted">(dupe reroll, {{ pull.cell }})</span>{% endif %}{% endfor %}
+        </li>
+      {% endfor %}
+    </ol>
+  {% else %}
+    <p class="seek-none">No {{ plan.label }} reachable with those rolls. Give a machine more
+      budget, or try again after your next real pulls move the seed.</p>
+  {% endif %}
+</div>
+{% include "planner/_normal_tracks.html" %}

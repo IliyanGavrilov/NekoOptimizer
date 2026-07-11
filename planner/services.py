@@ -29,13 +29,16 @@ from neko.models import (
 )
 from neko.normal import (
     BANNERS_BY_KEY,
+    LIL_CATS,
     NORMAL_BANNERS,
+    NORMAL_CATS,
     SEEKABLE_KEYS,
     UPGRADES,
     NormalBanner,
     landing,
     roll_normal,
 )
+from neko.normal_plan import CHEAP_KEYS, plan_normal
 from neko.roller import (
     DEFAULT_COUNT,
     RollResult,
@@ -1757,10 +1760,18 @@ def normal_banner_choices() -> list[dict]:
     return [{"key": banner.key, "name": banner.name} for banner in NORMAL_BANNERS]
 
 
+# What tells the two seekable capsules apart: whether Superfeline can drop yet.
+_SEEK_NOTES = {
+    "n": "Superfeline NOT unlocked",
+    "np": "with Superfeline in the pool",
+}
+
+
 def normal_seek_pools() -> dict[str, dict]:
     """Every seekable banner's items as grouped picker options (value "pool:slot"),
     inlined into the page - the pools are a handful of constants, no fetch needed.
-    Each group is labelled with its band's drop chance."""
+    Each group is labelled with its band's drop chance, and each banner carries the
+    Superfeline note that tells the two capsules apart."""
     pools = {}
     for key in SEEKABLE_KEYS:
         banner = BANNERS_BY_KEY[key]
@@ -1779,7 +1790,7 @@ def normal_seek_pools() -> dict[str, dict]:
                 }
             )
 
-        pools[key] = {"name": banner.name, "groups": groups}
+        pools[key] = {"name": banner.name, "note": _SEEK_NOTES.get(key, ""), "groups": groups}
 
     return pools
 
@@ -1789,22 +1800,35 @@ def normal_seek_banner(key: str) -> NormalBanner | None:
     return BANNERS_BY_KEY.get(key) if key in SEEKABLE_KEYS else None
 
 
-def build_normal_tracks(seed: int, keys: Iterable[str], count: int, last_item: str = "") -> dict:
+def build_normal_tracks(
+    seed: int,
+    keys: Iterable[str],
+    count: int,
+    last_item: str = "",
+    marks: Mapping[tuple[int, str], Mapping[str, dict]] | None = None,
+) -> dict:
     """One merged A/B table over the chosen normal banners, like build_tracks: each
     cell stacks each banner's item at that shared stream position, with the dupe
     branches the play chains realize. The cell's dice state is banner-independent
     (a clean roll uses the same two stream values whatever the pool), so one dice
-    serves the whole cell; ``item`` feeds the dupe memory when every banner agrees."""
+    serves the whole cell; ``item`` feeds the dupe memory when every banner agrees.
+
+    ``marks`` is a plan's highlighting: {(position, track): {banner key: step}},
+    each step a plan pull at that cell - it lights the machine's entry (the dupe
+    branch when the step arrived as a reroll) and gilds collected targets."""
     banners = [BANNERS_BY_KEY[key] for key in keys if key in BANNERS_BY_KEY]
     if not banners:
         return {"legend": [], "rows": []}
 
+    marks = marks or {}
+    units = set(Unit.objects.values_list("name", flat=True))
     columns = []
     for tag, banner in enumerate(banners, start=1):
         rolls = roll_normal(seed, banner, count, last_item=last_item)
         columns.append(
             {
                 "tag": tag,
+                "key": banner.key,
                 "name": banner.name,
                 "pulls": {(p.position, p.track): p for p in rolls.pulls},
                 "rerolls": {(p.position, p.track): p for p in rolls.rerolls if p.realized},
@@ -1815,11 +1839,18 @@ def build_normal_tracks(seed: int, keys: Iterable[str], count: int, last_item: s
         cells = []
         for column in columns:
             pull = column["pulls"][(position, track)]
+            mark = marks.get((position, track), {}).get(column["key"])
             alt = None
             reroll = column["rerolls"].get((position, track))
             if reroll is not None:
                 to_pos, to_track = landing(position, track, reroll.steps)
-                alt = {"item": reroll.item, "seed": reroll.seed, "to": f"{to_pos}{to_track}"}
+                alt = {
+                    "item": reroll.item,
+                    "seed": reroll.seed,
+                    "to": f"{to_pos}{to_track}",
+                    "unit": reroll.item in units,
+                    "target": bool(mark and mark["dupe"] and mark["target"]),
+                }
 
             cells.append(
                 {
@@ -1828,6 +1859,9 @@ def build_normal_tracks(seed: int, keys: Iterable[str], count: int, last_item: s
                     "pool": pull.pool,
                     "upgrade": pull.item in UPGRADES,
                     "dark": pull.item == "Dark Catseye",
+                    "unit": pull.item in units,
+                    "on_path": mark is not None,
+                    "target": bool(mark and not mark["dupe"] and mark["target"]),
                     "alt": alt,
                 }
             )
@@ -1855,4 +1889,107 @@ def build_normal_tracks(seed: int, keys: Iterable[str], count: int, last_item: s
     return {
         "legend": [{"tag": column["tag"], "name": column["name"]} for column in columns],
         "rows": rows,
+    }
+
+
+# The plan's target picker: what to chase on the normal-side machines. Dark
+# Catseyes head the list - the rarest, most valuable drop there is - the rest are
+# the classic farming goals (upgrades merge 5-into-a-rare-ticket, cat dupes sell
+# for NP/XP). A "item:<name>" value chases one specific item instead.
+NORMAL_TARGET_PRESETS = {
+    "dark": ("Dark Catseyes", frozenset({"Dark Catseye"})),
+    "upgrades": ("Upgrades (5 merge into a Rare Ticket)", frozenset(UPGRADES)),
+    "cats": ("Basic cats (NP/XP fodder)", frozenset(NORMAL_CATS) | {"Superfeline"}),
+    "lil": ("Li'l cats", frozenset(LIL_CATS)),
+}
+
+
+def normal_plan_targets(value: str) -> tuple[str, frozenset[str]] | None:
+    """The target set a plan post names: a preset key, or "item:<name>" for one
+    specific item; None when it names nothing rollable."""
+    preset = NORMAL_TARGET_PRESETS.get(value)
+    if preset is not None:
+        return preset
+
+    _, _, name = value.partition("item:")
+    if value.startswith("item:") and any(
+        name in pool.items for banner in NORMAL_BANNERS for pool in banner.pools
+    ):
+        return (name, frozenset({name}))
+
+    return None
+
+
+def normal_item_options() -> list[str]:
+    """Every distinct item the machines deal, for the plan's specific-item picker."""
+    items = {item for banner in NORMAL_BANNERS for pool in banner.pools for item in pool.items}
+
+    return sorted(items)
+
+
+def build_normal_plan(
+    seed: int,
+    budgets: Mapping[str, int],
+    target: str,
+    count: int,
+    last_item: str = "",
+) -> dict | None:
+    """Run the normal-side path planner and shape its result for the fragment:
+    the merged legs (consecutive pulls on one machine), the spend summary, and the
+    tracks table with the path lit. None when the target names nothing."""
+    resolved = normal_plan_targets(target)
+    if resolved is None:
+        return None
+
+    label, targets = resolved
+    plan = plan_normal(seed, budgets, targets, last_item=last_item)
+
+    marks: dict[tuple[int, str], dict[str, dict]] = {}
+    for step in plan.steps:
+        marks.setdefault((step.position, step.track), {})[step.machine] = {
+            "dupe": step.dupe,
+            "target": step.target,
+        }
+
+    legs = []
+    for step in plan.steps:
+        cell = f"{step.position}{step.track}"
+        entry = {
+            "item": step.item,
+            "cell": cell,
+            "dupe": step.dupe,
+            "target": step.target,
+            "dark": step.item == "Dark Catseye",
+        }
+        if legs and legs[-1]["key"] == step.machine:
+            legs[-1]["pulls"].append(entry)
+        else:
+            legs.append(
+                {
+                    "key": step.machine,
+                    "name": BANNERS_BY_KEY[step.machine].name,
+                    "cheap": step.machine in CHEAP_KEYS,
+                    "pulls": [entry],
+                }
+            )
+
+    # The table shows every machine the plan may roll (budget given), reaching at
+    # least the plan's furthest cell.
+    keys = [banner.key for banner in NORMAL_BANNERS if budgets.get(banner.key, 0) > 0]
+    rows = max((step.position for step in plan.steps), default=0)
+    track = build_normal_tracks(seed, keys, max(count, rows + 2), last_item, marks=marks)
+
+    spent = [
+        {"name": BANNERS_BY_KEY[key].name, "rolls": rolls, "cheap": key in CHEAP_KEYS}
+        for key, rolls in plan.spent.items()
+    ]
+
+    return {
+        "label": label,
+        "hits": plan.hits,
+        "legs": legs,
+        "spent": spent,
+        "seed_after": plan.seed_after,
+        "last_item": plan.last_item,
+        "track": track,
     }

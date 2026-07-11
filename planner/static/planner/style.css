@@ -1696,9 +1696,9 @@ table.track th.guaranteed-col, table.track td.guaranteed-col {
   margin-bottom: 0.6rem;
 }
 
-/* The finder's "use this seed" result is a button (it applies the seed right here),
-   but reads like the rare finder's link. */
-.seek-match .seek-use {
+/* The finder's result buttons and the plan's apply button act right here on the
+   page, but read like the rare finder's links. */
+.seek-use {
   background: none;
   border: none;
   padding: 0;
@@ -1710,3 +1710,33 @@ table.track th.guaranteed-col, table.track td.guaranteed-col {
 
 /* The machine toggles take their own full row under the seed controls. */
 .roll-options .normal-machines { flex-basis: 100%; }
+
+/* ---- The normal path planner ---------------------------------------------------- */
+.plan-budgets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem 1rem;
+  margin: 0.5rem 0;
+}
+.plan-budgets .plan-budget { width: 5.5rem; }
+.plan-controls { display: flex; align-items: flex-end; flex-wrap: wrap; gap: 0.8rem; }
+.normal-plan { margin: 0.9rem 0 1.1rem; }
+.plan-haul { font-size: 1.05rem; }
+.plan-haul .seek-use { margin-left: 0.5rem; }
+.plan-legs { margin: 0.5rem 0 0; padding-left: 1.4rem; }
+.plan-legs li { margin: 0.25rem 0; }
+.ticket-note { color: var(--warn); font-weight: 600; }
+
+/* What a plan collects: a pill on the item itself - Dark Catseyes scream loudest. */
+.normal-track .item.got,
+.plan-legs .item.got {
+  font-weight: 700;
+  padding: 0 0.3rem;
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--accent) 24%, transparent);
+}
+.normal-track .item.dark-catseye.got,
+.plan-legs .item.dark-catseye.got {
+  background: color-mix(in srgb, var(--r-uber) 26%, transparent);
+  box-shadow: 0 0 12px color-mix(in srgb, var(--r-uber) 45%, transparent);
+}

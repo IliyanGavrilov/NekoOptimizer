@@ -1,7 +1,9 @@
+import json
 import time
 
 import pytest
 
+from neko.normal_plan import plan_normal
 from neko.seek import SeekMatch, SeekResult
 from planner.forms import MIN_SEEK_ROLLS
 
@@ -24,16 +26,23 @@ def wait_done(client, job):
     raise AssertionError("seek job never finished")
 
 
-def test_normal_page_offers_machines_and_finder(client):
+def test_normal_page_offers_machines_finder_and_planner(client):
     content = client.get("/normal/").content.decode()
 
     assert "Normal Capsules" in content
     assert "Catseye Capsules" in content
     assert "nseekBanner" in content
     assert "normalPools" in content
-    assert "Lucky Ticket" not in content.split("normalPools")[1]  # not seekable
+    assert "with Superfeline in the pool" in content  # the finder tells the capsules apart
+    assert "normalPlanPanel" in content
+    assert "Dark Catseyes" in content  # the default plan target
+
+    pools = content.split("normalPools")[1]
+    for unseekable in ("Lucky Ticket", "Catfruit Capsules", "Catseye Capsules"):
+        assert unseekable not in pools  # only the plain capsules are seekable
 
 
+@pytest.mark.django_db
 def test_normal_tracks_roll_the_chosen_machines(client):
     response = client.post(
         "/normal/tracks/", {"seed": SEED, "banners": ["n", "ce"], "track_length": 20}
@@ -46,6 +55,7 @@ def test_normal_tracks_roll_the_chosen_machines(client):
     assert 'data-seed="4190409564"' in content  # 1A's dice: the state after it
 
 
+@pytest.mark.django_db
 def test_normal_tracks_remember_the_last_item(client):
     response = client.post(
         "/normal/tracks/",
@@ -58,6 +68,7 @@ def test_normal_tracks_remember_the_last_item(client):
     assert "jumps to 2B" in content
 
 
+@pytest.mark.django_db
 def test_normal_tracks_need_a_seed_and_a_machine(client):
     assert client.post("/normal/tracks/", {"seed": "junk"}).content == b""
     content = client.post("/normal/tracks/", {"seed": SEED}).content.decode()
@@ -93,6 +104,54 @@ def test_normal_seek_start_polls_to_matches(client, monkeypatch):
     assert data["last_cat"] == "Lizard Cat"
 
 
-@pytest.mark.parametrize("path", ["/normal/tracks/", "/normal/seek/start/"])
+# The ce grid shows a Dark Catseye at 15B for this seed (see test_normal_plan).
+PLAN_SEED = 2157514271
+
+
+@pytest.mark.django_db
+def test_normal_plan_lights_a_path(client):
+    expected = plan_normal(PLAN_SEED, {"ce": 30}, frozenset({"Dark Catseye"}))
+    assert expected.hits  # the fixture seed must actually reach a dark
+
+    response = client.post(
+        "/normal/plan/",
+        {
+            "seed": PLAN_SEED,
+            "budgets": json.dumps({"ce": 30}),
+            "target": "dark",
+            "track_length": 20,
+        },
+    )
+    content = response.content.decode()
+
+    assert f"<strong>{expected.hits}</strong> Dark Catseyes" in content
+    assert "I rolled it" in content  # the apply button carries the end state
+    assert f'data-seed="{expected.seed_after}"' in content
+    assert 'class="item dark-catseye got"' in content  # the collected dark is gilded
+
+
+@pytest.mark.django_db
+def test_normal_plan_reports_an_unreachable_target(client):
+    # One catseye roll from a cell that isn't a dark: nothing to collect.
+    response = client.post(
+        "/normal/plan/",
+        {"seed": 1515525936, "budgets": json.dumps({"ce": 1}), "target": "dark"},
+    )
+
+    assert b"No Dark Catseyes reachable" in response.content
+
+
+def test_normal_plan_rejects_bad_posts(client):
+    def plan(**fields):
+        return client.post("/normal/plan/", fields).status_code
+
+    assert plan(seed="junk", budgets='{"ce": 5}', target="dark") == 400
+    assert plan(seed=PLAN_SEED, budgets="{}", target="dark") == 400
+    assert plan(seed=PLAN_SEED, budgets='{"nope": 5}', target="dark") == 400
+    assert plan(seed=PLAN_SEED, budgets='{"ce": 5}', target="nonsense") == 400
+    assert plan(seed=PLAN_SEED, budgets='{"ce": 5}', target="item:Not A Thing") == 400
+
+
+@pytest.mark.parametrize("path", ["/normal/tracks/", "/normal/seek/start/", "/normal/plan/"])
 def test_normal_posts_reject_get(client, path):
     assert client.get(path).status_code == 405
