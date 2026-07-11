@@ -19,9 +19,11 @@ from planner.forms import (
 )
 from planner.models import Cat, Seed, Unit
 from planner.services import (
+    NORMAL_DEFAULT_KEYS,
     RARITY_ORDER,
     SECTION_NOTES,
     banner_titles,
+    build_normal_tracks,
     build_tracks,
     capped_banner_limits,
     collection_sections,
@@ -32,6 +34,9 @@ from planner.services import (
     fetch_for_banners,
     import_collection,
     newly_added_ubers,
+    normal_banner_choices,
+    normal_seek_banner,
+    normal_seek_pools,
     picker_groups,
     seek_banner,
     seek_pool_groups,
@@ -436,6 +441,83 @@ def seek_status(request):
         return HttpResponseBadRequest("unknown job")
 
     return JsonResponse(job.snapshot())
+
+
+def normal_capsules(request):
+    """The Normal Capsules tracker: the normal-side gacha runs on its own seed,
+    independent of the rare one the planner follows. One page holds its A/B tracks
+    (Catseye event machines included) and its own seed finder."""
+    return render(
+        request,
+        "planner/normal.html",
+        {
+            "banners": normal_banner_choices(),
+            "default_keys": NORMAL_DEFAULT_KEYS,
+            "seek_pools": normal_seek_pools(),
+            "min_rolls": MIN_SEEK_ROLLS,
+            "max_rolls": MAX_SEEK_ROLLS,
+        },
+    )
+
+
+@require_POST
+def normal_tracks(request):
+    """A/B track tables for the normal seed + chosen capsule machines. ``last_item``
+    is the dupe memory: the item the pull just before this view obtained."""
+    try:
+        seed = int(request.POST.get("seed", ""))
+    except ValueError:
+        return HttpResponse("")
+
+    track = build_normal_tracks(
+        seed,
+        request.POST.getlist("banners"),
+        _track_length(request),
+        last_item=request.POST.get("last_item", "").strip(),
+    )
+
+    return render(request, "planner/_normal_tracks.html", {"track": track})
+
+
+def _observed_normal_rolls(request, banner):
+    """The posted rolls as the (pool, slot) pairs seek_normal takes, or None when
+    anything is malformed or points outside the banner's pools."""
+    observed = []
+    for value in request.POST.getlist("rolls"):
+        pool, _, slot = value.partition(":")
+        try:
+            pool, slot = int(pool), int(slot)
+        except ValueError:
+            return None
+
+        if not 0 <= pool < len(banner.pools):
+            return None
+        if not 0 <= slot < len(banner.pools[pool].items):
+            return None
+
+        observed.append((pool, slot))
+
+    return observed
+
+
+@require_POST
+def normal_seek_start(request):
+    """Kick off a normal-seed search for the posted banner + observed rolls; returns
+    the job key the page polls seek_status with (the finders share the registry)."""
+    banner = normal_seek_banner(request.POST.get("banner", ""))
+    if banner is None:
+        return HttpResponseBadRequest("unknown banner")
+
+    observed = _observed_normal_rolls(request, banner)
+    if observed is None:
+        return HttpResponseBadRequest("malformed rolls")
+    if not MIN_SEEK_ROLLS <= len(observed) <= MAX_SEEK_ROLLS:
+        return HttpResponseBadRequest(f"enter between {MIN_SEEK_ROLLS} and {MAX_SEEK_ROLLS} rolls")
+
+    pool, slot = observed[-1]
+    last_item = banner.pools[pool].items[slot]
+
+    return JsonResponse({"job": seekjobs.start_normal(banner, observed, last_item)})
 
 
 def collection(request):
