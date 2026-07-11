@@ -1,9 +1,11 @@
 import pytest
 
 from neko.models import Banner, Rarity
+from neko.normal import BANNERS_BY_KEY, NormalBanner, NormalPool
+from neko.normal import play as normal_play
 from neko.rng import xorshift
 from neko.roll import roll_banner
-from neko.seek import play, seek_seed
+from neko.seek import play, seek_normal, seek_seed
 from neko.tests.test_golden import local_banner
 
 GOLDEN_SEED = 1893568593
@@ -174,3 +176,96 @@ def test_seek_reports_monotonic_progress():
     assert all(run == 0 for run, _ in fractions)
     assert fractions == sorted(fractions)
     assert fractions[-1][1] == 1.0
+
+
+# ---- The normal-side gacha through the same sieve ---------------------------------
+
+# Like ALL_RARE: one huge rerolling pool keeps the candidate family tiny, so
+# full-space normal seeks run in milliseconds.
+NORMAL_WIDE = NormalBanner(
+    "wide", "wide test", (NormalPool(10000, tuple(f"I{i}" for i in range(3000)), True),)
+)
+
+CATSEYE = BANNERS_BY_KEY["ce"]
+
+
+def normal_observed(banner: NormalBanner, names: list[str]) -> list[tuple[int, int]]:
+    """Item names back to the (pool, slot) pairs seek_normal takes (the banners here
+    never repeat a name, so each maps to exactly one slot)."""
+    slots = {
+        name: (index, slot)
+        for index, pool in enumerate(banner.pools)
+        for slot, name in enumerate(pool.items)
+    }
+
+    return [slots[name] for name in names]
+
+
+def normal_window_with_repick(banner: NormalBanner, start: int, count: int):
+    """normal.play windows until one contains a dupe repick, like window_with_repick."""
+    state = start
+    for _ in range(20000):
+        names, end = normal_play(state, banner, count)
+        if end != straight_end(state, count):
+            return state, names, end
+
+        state = xorshift(state)
+
+    raise AssertionError("no repick window found")
+
+
+def test_seek_normal_recovers_a_seed_from_eight_pulls():
+    names, end = normal_play(GOLDEN_SEED, NORMAL_WIDE, 8)
+
+    result = seek_normal(NORMAL_WIDE, normal_observed(NORMAL_WIDE, names))
+
+    assert not result.truncated
+    assert len(result.matches) == 1
+    match = result.matches[0]
+    assert (match.seed_before, match.seed_after, match.run) == (GOLDEN_SEED, end, 0)
+
+
+def test_seek_normal_matches_a_window_with_a_repick_inside():
+    seed, names, end = normal_window_with_repick(NORMAL_WIDE, GOLDEN_SEED, 6)
+
+    result = seek_normal(NORMAL_WIDE, normal_observed(NORMAL_WIDE, names))
+
+    assert found(result, seed, end, run=0)
+
+
+def test_seek_normal_reads_a_first_pull_that_was_itself_a_repick():
+    start, _, _ = normal_window_with_repick(NORMAL_WIDE, GOLDEN_SEED, 2)
+    full, end = normal_play(start, NORMAL_WIDE, 6)
+    _, before = normal_play(start, NORMAL_WIDE, 1)  # the window starts at the repicked pull
+
+    result = seek_normal(NORMAL_WIDE, normal_observed(NORMAL_WIDE, full[1:]))
+
+    assert any(
+        m.seed_before == before and m.seed_after == end and m.run in (1, 2) for m in result.matches
+    )
+
+
+def test_seek_normal_on_the_real_catseye_banner():
+    """The headline use case: pin the normal seed from Catseye Capsule pulls. A Dark
+    Catseye first pull also forces the narrow-band rarity method over a one-item pool.
+    Item pools are tiny, so a pull carries far less information than a cat pull -
+    12 of them (vs the usual 8) to pin this seed uniquely."""
+    state = GOLDEN_SEED
+    while normal_play(state, CATSEYE, 1)[0] != ["Dark Catseye"]:
+        state = xorshift(state)
+    names, end = normal_play(state, CATSEYE, 12)
+
+    result = seek_normal(CATSEYE, normal_observed(CATSEYE, names))
+
+    assert not result.truncated
+    assert len(result.matches) == 1
+    assert found(result, state, end, run=0)
+
+
+def test_seek_normal_rejects_bad_observations():
+    with pytest.raises(ValueError):
+        seek_normal(CATSEYE, [])
+    with pytest.raises(ValueError):
+        seek_normal(CATSEYE, [(9, 0)])  # no such pool
+    with pytest.raises(ValueError):
+        seek_normal(CATSEYE, [(4, 1)])  # slot outside the one-item Dark Catseye pool
