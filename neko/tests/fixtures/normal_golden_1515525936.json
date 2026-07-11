@@ -1,0 +1,6007 @@
+{
+ "seed": 1515525936,
+ "rolls": 100,
+ "banners": [
+  "n",
+  "np",
+  "cf",
+  "ce",
+  "lt",
+  "ltg"
+ ],
+ "trackA": [
+  [
+   {
+    "name": "Fish Cat",
+    "seed": 4190409564
+   },
+   {
+    "name": "Research",
+    "seed": 4190409564
+   },
+   {
+    "name": "200K XP",
+    "seed": 4190409564
+   },
+   {
+    "name": "10K XP",
+    "seed": 4190409564
+   },
+   {
+    "name": "Li'l Cow Cat",
+    "seed": 4190409564
+   },
+   {
+    "name": "Catamin A",
+    "seed": 4190409564
+   }
+  ],
+  [
+   {
+    "name": "Titan Cat",
+    "seed": 1685098646
+   },
+   {
+    "name": "Titan Cat",
+    "seed": 1685098646
+   },
+   {
+    "name": "Red Catfruit",
+    "seed": 1685098646
+   },
+   {
+    "name": "100K XP",
+    "seed": 1685098646
+   },
+   {
+    "name": "Sniper the Cat",
+    "seed": 1685098646
+   },
+   {
+    "name": "Catamin B",
+    "seed": 1685098646
+   }
+  ],
+  [
+   {
+    "name": "Tank Cat",
+    "seed": 3836196037
+   },
+   {
+    "name": "Cat Cannon Charge",
+    "seed": 3836196037
+   },
+   {
+    "name": "Blue Catfruit",
+    "seed": 3836196037
+   },
+   {
+    "name": "30K XP",
+    "seed": 3836196037
+   },
+   {
+    "name": "30K XP",
+    "seed": 3836196037
+   },
+   {
+    "name": "Catamin A",
+    "seed": 3836196037
+   }
+  ],
+  [
+   {
+    "name": "Worker Cat Wallet",
+    "seed": 1180578414
+   },
+   {
+    "name": "Cat",
+    "seed": 1180578414
+   },
+   {
+    "name": "200K XP",
+    "seed": 1180578414
+   },
+   {
+    "name": "Special Catseye",
+    "seed": 1180578414
+   },
+   {
+    "name": "10K XP",
+    "seed": 1180578414
+   },
+   {
+    "name": "Catamin B",
+    "seed": 1180578414
+   }
+  ],
+  [
+   {
+    "name": "Tank Cat",
+    "seed": 562331089
+   },
+   {
+    "name": "Axe Cat",
+    "seed": 562331089
+   },
+   {
+    "name": "Yellow Catfruit Seed",
+    "seed": 562331089
+   },
+   {
+    "name": "30K XP",
+    "seed": 562331089
+   },
+   {
+    "name": "Speed Up",
+    "seed": 562331089
+   },
+   {
+    "name": "Catamin A",
+    "seed": 562331089
+   }
+  ],
+  [
+   {
+    "name": "Titan Cat",
+    "seed": 3454504910
+   },
+   {
+    "name": "Study",
+    "seed": 3454504910
+   },
+   {
+    "name": "Epic Catfruit",
+    "seed": 3454504910
+   },
+   {
+    "name": "Uber Rare Catseye",
+    "seed": 3454504910
+   },
+   {
+    "name": "Sniper the Cat",
+    "seed": 3454504910
+   },
+   {
+    "name": "Catamin C",
+    "seed": 3454504910
+   }
+  ],
+  [
+   {
+    "name": "Titan Cat",
+    "seed": 2241304226,
+    "dupe": {
+     "name": "Worker Cat Rate",
+     "pos": 8,
+     "track": "B",
+     "bounce": false,
+     "seed": 2177002755
+    }
+   },
+   {
+    "name": "Fish Cat",
+    "seed": 2241304226
+   },
+   {
+    "name": "Red Catfruit",
+    "seed": 2241304226
+   },
+   {
+    "name": "Special Catseye",
+    "seed": 2241304226
+   },
+   {
+    "name": "Li'l Axe Cat",
+    "seed": 2241304226
+   },
+   {
+    "name": "Catamin A",
+    "seed": 2241304226
+   }
+  ],
+  [
+   {
+    "name": "Cat",
+    "seed": 4194003762
+   },
+   {
+    "name": "Axe Cat",
+    "seed": 4194003762
+   },
+   {
+    "name": "Sniper the Cat",
+    "seed": 4194003762
+   },
+   {
+    "name": "Special Catseye",
+    "seed": 4194003762,
+    "dupe": {
+     "name": "30K XP",
+     "pos": 9,
+     "track": "B",
+     "bounce": true,
+     "seed": 606298492
+    }
+   },
+   {
+    "name": "Li'l Fish Cat",
+    "seed": 4194003762
+   },
+   {
+    "name": "Catamin A",
+    "seed": 4194003762,
+    "dupe": {
+     "name": "100K XP (β)",
+     "pos": 9,
+     "track": "B",
+     "bounce": true,
+     "seed": 606298492
+    }
+   }
+  ],
+  [
+   {
+    "name": "Cow Cat",
+    "seed": 716293498
+   },
+   {
+    "name": "Research",
+    "seed": 716293498
+   },
+   {
+    "name": "Green Catfruit",
+    "seed": 716293498
+   },
+   {
+    "name": "100K XP",
+    "seed": 716293498
+   },
+   {
+    "name": "Cat Jobs",
+    "seed": 716293498
+   },
+   {
+    "name": "Catamin B",
+    "seed": 716293498
+   }
+  ],
+  [
+   {
+    "name": "Cow Cat",
+    "seed": 3069888160,
+    "dupe": {
+     "name": "Research",
+     "pos": 11,
+     "track": "B",
+     "bounce": false,
+     "seed": 3069522359
+    }
+   },
+   {
+    "name": "Tank Cat",
+    "seed": 3069888160
+   },
+   {
+    "name": "Rich Cat",
+    "seed": 3069888160
+   },
+   {
+    "name": "100K XP",
+    "seed": 3069888160
+   },
+   {
+    "name": "Cat Jobs",
+    "seed": 3069888160
+   },
+   {
+    "name": "Catamin C",
+    "seed": 3069888160
+   }
+  ],
+  [
+   {
+    "name": "Worker Cat Wallet",
+    "seed": 4230535638
+   },
+   {
+    "name": "Titan Cat",
+    "seed": 4230535638
+   },
+   {
+    "name": "Green Catfruit Seed",
+    "seed": 4230535638
+   },
+   {
+    "name": "Special Catseye",
+    "seed": 4230535638,
+    "dupe": {
+     "name": "10K XP",
+     "pos": 12,
+     "track": "B",
+     "bounce": true,
+     "seed": 3527273055
+    }
+   },
+   {
+    "name": "30K XP",
+    "seed": 4230535638
+   },
+   {
+    "name": "Catamin A",
+    "seed": 4230535638,
+    "dupe": {
+     "name": "100K XP (β)",
+     "pos": 13,
+     "track": "B",
+     "bounce": false,
+     "seed": 2504312568
+    }
+   }
+  ],
+  [
+   {
+    "name": "Fish Cat",
+    "seed": 1904492004
+   },
+   {
+    "name": "Bird Cat",
+    "seed": 1904492004
+   },
+   {
+    "name": "200K XP",
+    "seed": 1904492004
+   },
+   {
+    "name": "10K XP",
+    "seed": 1904492004
+   },
+   {
+    "name": "Li'l Cow Cat",
+    "seed": 1904492004
+   },
+   {
+    "name": "Catamin A",
+    "seed": 1904492004,
+    "dupe": {
+     "name": "100K XP (β)",
+     "pos": 13,
+     "track": "B",
+     "bounce": false,
+     "seed": 2504312568
+    }
+   }
+  ],
+  [
+   {
+    "name": "Cat Cannon Attack",
+    "seed": 3984670773
+   },
+   {
+    "name": "Lizard Cat",
+    "seed": 3984670773
+   },
+   {
+    "name": "100K XP",
+    "seed": 3984670773
+   },
+   {
+    "name": "30K XP",
+    "seed": 3984670773
+   },
+   {
+    "name": "Cat CPU",
+    "seed": 3984670773
+   },
+   {
+    "name": "100K XP (β)",
+    "seed": 3984670773
+   }
+  ],
+  [
+   {
+    "name": "Base Defense",
+    "seed": 2431748263
+   },
+   {
+    "name": "Worker Cat Wallet",
+    "seed": 2431748263
+   },
+   {
+    "name": "100K XP",
+    "seed": 2431748263
+   },
+   {
+    "name": "Super Rare Catseye",
+    "seed": 2431748263
+   },
+   {
+    "name": "Cat Jobs",
+    "seed": 2431748263
+   },
+   {
+    "name": "500K XP",
+    "seed": 2431748263
+   }
+  ],
+  [
+   {
+    "name": "Bird Cat",
+    "seed": 1952382263
+   },
+   {
+    "name": "Cow Cat",
+    "seed": 1952382263
+   },
+   {
+    "name": "100K XP",
+    "seed": 1952382263
+   },
+   {
+    "name": "Rare Catseye",
+    "seed": 1952382263
+   },
+   {
+    "name": "Li'l Bird Cat",
+    "seed": 1952382263
+   },
+   {
+    "name": "100K XP (β)",
+    "seed": 1952382263,
+    "dupe": {
+     "name": "Catamin A",
+     "pos": 17,
+     "track": "A",
+     "bounce": false,
+     "seed": 1866478473
+    }
+   }
+  ],
+  [
+   {
+    "name": "Cat Cannon Attack",
+    "seed": 1866478473
+   },
+   {
+    "name": "Axe Cat",
+    "seed": 1866478473
+   },
+   {
+    "name": "100K XP",
+    "seed": 1866478473
+   },
+   {
+    "name": "30K XP",
+    "seed": 1866478473
+   },
+   {
+    "name": "Cat CPU",
+    "seed": 1866478473
+   },
+   {
+    "name": "100K XP (β)",
+    "seed": 1866478473,
+    "dupe": {
+     "name": "Catamin A",
+     "pos": 18,
+     "track": "A",
+     "bounce": true,
+     "seed": 1044766780
+    }
+   }
+  ],
+  [
+   {
+    "name": "Study",
+    "seed": 1044766780
+   },
+   {
+    "name": "Bird Cat",
+    "seed": 1044766780
+   },
+   {
+    "name": "Speed Up",
+    "seed": 1044766780
+   },
+   {
+    "name": "10K XP",
+    "seed": 1044766780
+   },
+   {
+    "name": "Li'l Titan Cat",
+    "seed": 1044766780
+   },
+   {
+    "name": "100K XP (β)",
+    "seed": 1044766780,
+    "dupe": {
+     "name": "Catamin A",
+     "pos": 18,
+     "track": "B",
+     "bounce": false,
+     "seed": 2462884125
+    }
+   }
+  ],
+  [
+   {
+    "name": "Axe Cat",
+    "seed": 2279211626
+   },
+   {
+    "name": "Worker Cat Rate",
+    "seed": 2279211626
+   },
+   {
+    "name": "Red Catfruit",
+    "seed": 2279211626
+   },
+   {
+    "name": "Special Catseye",
+    "seed": 2279211626
+   },
+   {
+    "name": "Li'l Axe Cat",
+    "seed": 2279211626
+   },
+   {
+    "name": "Catamin A",
+    "seed": 2279211626,
+    "dupe": {
+     "name": "100K XP (β)",
+     "pos": 21,
+     "track": "A",
+     "bounce": false,
+     "seed": 2707868347
+    }
+   }
+  ],
+  [
+   {
+    "name": "Axe Cat",
+    "seed": 1266667544,
+    "dupe": {
+     "name": "Cat Energy",
+     "pos": 20,
+     "track": "B",
+     "bounce": false,
+     "seed": 4113533094
+    }
+   },
+   {
+    "name": "Accounting",
+    "seed": 1266667544
+   },
+   {
+    "name": "50K XP",
+    "seed": 1266667544
+   },
+   {
+    "name": "10K XP",
+    "seed": 1266667544
+   },
+   {
+    "name": "Li'l Cow Cat",
+    "seed": 1266667544
+   },
+   {
+    "name": "Catamin A",
+    "seed": 1266667544,
+    "dupe": {
+     "name": "100K XP (β)",
+     "pos": 20,
+     "track": "B",
+     "bounce": false,
+     "seed": 4113533094
+    }
+   }
+  ],
+  [
+   {
+    "name": "Lizard Cat",
+    "seed": 2707868347
+   },
+   {
+    "name": "Worker Cat Wallet",
+    "seed": 2707868347
+   },
+   {
+    "name": "Blue Catfruit",
+    "seed": 2707868347
+   },
+   {
+    "name": "Rare Catseye",
+    "seed": 2707868347,
+    "dupe": {
+     "name": "30K XP",
+     "pos": 21,
+     "track": "B",
+     "bounce": false,
+     "seed": 3009418915
+    }
+   },
+   {
+    "name": "Li'l Tank Cat",
+    "seed": 2707868347
+   },
+   {
+    "name": "Catamin A",
+    "seed": 2707868347,
+    "dupe": {
+     "name": "100K XP (β)",
+     "pos": 22,
+     "track": "A",
+     "bounce": false,
+     "seed": 2793975417
+    }
+   }
+  ],
+  [
+   {
+    "name": "Cat Cannon Attack",
+    "seed": 2793975417
+   },
+   {
+    "name": "Base Defense",
+    "seed": 2793975417
+   },
+   {
+    "name": "Blue Catfruit",
+    "seed": 2793975417
+   },
+   {
+    "name": "Super Rare Catseye",
+    "seed": 2793975417
+   },
+   {
+    "name": "Rich Cat",
+    "seed": 2793975417
+   },
+   {
+    "name": "Catamin C",
+    "seed": 2793975417
+   }
+  ],
+  [
+   {
+    "name": "Cat",
+    "seed": 3374880498
+   },
+   {
+    "name": "Lizard Cat",
+    "seed": 3374880498
+   },
+   {
+    "name": "Green Catfruit Seed",
+    "seed": 3374880498
+   },
+   {
+    "name": "Special Catseye",
+    "seed": 3374880498
+   },
+   {
+    "name": "30K XP",
+    "seed": 3374880498
+   },
+   {
+    "name": "Catamin A",
+    "seed": 3374880498
+   }
+  ],
+  [
+   {
+    "name": "Study",
+    "seed": 2094234496
+   },
+   {
+    "name": "Cow Cat",
+    "seed": 2094234496
+   },
+   {
+    "name": "Red Catfruit",
+    "seed": 2094234496
+   },
+   {
+    "name": "10K XP",
+    "seed": 2094234496
+   },
+   {
+    "name": "10K XP",
+    "seed": 2094234496
+   },
+   {
+    "name": "100K XP (β)",
+    "seed": 2094234496
+   }
+  ],
+  [
+   {
+    "name": "Cat Cannon Attack",
+    "seed": 148453425
+   },
+   {
+    "name": "Gross Cat",
+    "seed": 148453425
+   },
+   {
+    "name": "Purple Catfruit",
+    "seed": 148453425
+   },
+   {
+    "name": "Super Rare Catseye",
+    "seed": 148453425
+   },
+   {
+    "name": "Rich Cat",
+    "seed": 148453425
+   },
+   {
+    "name": "Catamin B",
+    "seed": 148453425
+   }
+  ],
+  [
+   {
+    "name": "Bird Cat",
+    "seed": 1683364667
+   },
+   {
+    "name": "Lizard Cat",
+    "seed": 1683364667
+   },
+   {
+    "name": "Blue Catfruit Seed",
+    "seed": 1683364667
+   },
+   {
+    "name": "Rare Catseye",
+    "seed": 1683364667
+   },
+   {
+    "name": "Li'l Tank Cat",
+    "seed": 1683364667
+   },
+   {
+    "name": "100K XP (β)",
+    "seed": 1683364667
+   }
+  ],
+  [
+   {
+    "name": "Cat Energy",
+    "seed": 1270373273
+   },
+   {
+    "name": "Cow Cat",
+    "seed": 1270373273
+   },
+   {
+    "name": "100K XP",
+    "seed": 1270373273
+   },
+   {
+    "name": "30K XP",
+    "seed": 1270373273
+   },
+   {
+    "name": "Cat CPU",
+    "seed": 1270373273
+   },
+   {
+    "name": "100K XP (β)",
+    "seed": 1270373273,
+    "dupe": {
+     "name": "Catamin A",
+     "pos": 28,
+     "track": "A",
+     "bounce": false,
+     "seed": 975599833
+    }
+   }
+  ],
+  [
+   {
+    "name": "Base Defense",
+    "seed": 975599833
+   },
+   {
+    "name": "Worker Cat Rate",
+    "seed": 975599833
+   },
+   {
+    "name": "100K XP",
+    "seed": 975599833
+   },
+   {
+    "name": "30K XP",
+    "seed": 975599833,
+    "dupe": {
+     "name": "10K XP",
+     "pos": 28,
+     "track": "B",
+     "bounce": false,
+     "seed": 1679729223
+    }
+   },
+   {
+    "name": "Cat CPU",
+    "seed": 975599833,
+    "dupe": {
+     "name": "Li'l Cow Cat",
+     "pos": 28,
+     "track": "B",
+     "bounce": false,
+     "seed": 1679729223
+    }
+   },
+   {
+    "name": "Catamin B",
+    "seed": 975599833
+   }
+  ],
+  [
+   {
+    "name": "Axe Cat",
+    "seed": 3177192044
+   },
+   {
+    "name": "Study",
+    "seed": 3177192044
+   },
+   {
+    "name": "200K XP",
+    "seed": 3177192044
+   },
+   {
+    "name": "100K XP",
+    "seed": 3177192044
+   },
+   {
+    "name": "Sniper the Cat",
+    "seed": 3177192044
+   },
+   {
+    "name": "Catamin C",
+    "seed": 3177192044
+   }
+  ],
+  [
+   {
+    "name": "Cat Cannon Attack",
+    "seed": 2542610277
+   },
+   {
+    "name": "Cat Cannon Attack",
+    "seed": 2542610277
+   },
+   {
+    "name": "Blue Catfruit Seed",
+    "seed": 2542610277
+   },
+   {
+    "name": "30K XP",
+    "seed": 2542610277
+   },
+   {
+    "name": "30K XP",
+    "seed": 2542610277
+   },
+   {
+    "name": "100K XP (β)",
+    "seed": 2542610277
+   }
+  ],
+  [
+   {
+    "name": "Cat Energy",
+    "seed": 1733259581
+   },
+   {
+    "name": "Superfeline",
+    "seed": 1733259581
+   },
+   {
+    "name": "Cat Jobs",
+    "seed": 1733259581
+   },
+   {
+    "name": "30K XP",
+    "seed": 1733259581,
+    "dupe": {
+     "name": "10K XP",
+     "pos": 31,
+     "track": "B",
+     "bounce": false,
+     "seed": 3282834825
+    }
+   },
+   {
+    "name": "Li'l Lizard Cat",
+    "seed": 1733259581
+   },
+   {
+    "name": "Catamin B",
+    "seed": 1733259581
+   }
+  ],
+  [
+   {
+    "name": "Base Defense",
+    "seed": 3416167687
+   },
+   {
+    "name": "Fish Cat",
+    "seed": 3416167687
+   },
+   {
+    "name": "Blue Catfruit",
+    "seed": 3416167687
+   },
+   {
+    "name": "Rare Catseye",
+    "seed": 3416167687
+   },
+   {
+    "name": "Li'l Tank Cat",
+    "seed": 3416167687
+   },
+   {
+    "name": "Catamin A",
+    "seed": 3416167687
+   }
+  ],
+  [
+   {
+    "name": "Cat",
+    "seed": 3434958072
+   },
+   {
+    "name": "Cat Energy",
+    "seed": 3434958072
+   },
+   {
+    "name": "Sniper the Cat",
+    "seed": 3434958072
+   },
+   {
+    "name": "100K XP",
+    "seed": 3434958072
+   },
+   {
+    "name": "Rich Cat",
+    "seed": 3434958072
+   },
+   {
+    "name": "Catamin B",
+    "seed": 3434958072
+   }
+  ],
+  [
+   {
+    "name": "Worker Cat Wallet",
+    "seed": 1268358276
+   },
+   {
+    "name": "Base Defense",
+    "seed": 1268358276
+   },
+   {
+    "name": "Red Catfruit",
+    "seed": 1268358276
+   },
+   {
+    "name": "10K XP",
+    "seed": 1268358276
+   },
+   {
+    "name": "10K XP",
+    "seed": 1268358276
+   },
+   {
+    "name": "Catamin B",
+    "seed": 1268358276
+   }
+  ],
+  [
+   {
+    "name": "Axe Cat",
+    "seed": 1863272108
+   },
+   {
+    "name": "Tank Cat",
+    "seed": 1863272108
+   },
+   {
+    "name": "Green Catfruit",
+    "seed": 1863272108
+   },
+   {
+    "name": "10K XP",
+    "seed": 1863272108,
+    "dupe": {
+     "name": "Rare Catseye",
+     "pos": 35,
+     "track": "B",
+     "bounce": false,
+     "seed": 3313108289
+    }
+   },
+   {
+    "name": "Li'l Cat",
+    "seed": 1863272108
+   },
+   {
+    "name": "Catamin B",
+    "seed": 1863272108
+   }
+  ],
+  [
+   {
+    "name": "Worker Cat Wallet",
+    "seed": 3053873064
+   },
+   {
+    "name": "Bird Cat",
+    "seed": 3053873064
+   },
+   {
+    "name": "200K XP",
+    "seed": 3053873064
+   },
+   {
+    "name": "100K XP",
+    "seed": 3053873064
+   },
+   {
+    "name": "Rich Cat",
+    "seed": 3053873064
+   },
+   {
+    "name": "Catamin B",
+    "seed": 3053873064
+   }
+  ],
+  [
+   {
+    "name": "Lizard Cat",
+    "seed": 2056858801
+   },
+   {
+    "name": "Lizard Cat",
+    "seed": 2056858801
+   },
+   {
+    "name": "Cat Jobs",
+    "seed": 2056858801
+   },
+   {
+    "name": "30K XP",
+    "seed": 2056858801
+   },
+   {
+    "name": "Li'l Lizard Cat",
+    "seed": 2056858801
+   },
+   {
+    "name": "Catamin B",
+    "seed": 2056858801
+   }
+  ],
+  [
+   {
+    "name": "Tank Cat",
+    "seed": 701843023
+   },
+   {
+    "name": "Superfeline",
+    "seed": 701843023
+   },
+   {
+    "name": "100K XP",
+    "seed": 701843023
+   },
+   {
+    "name": "Rare Catseye",
+    "seed": 701843023
+   },
+   {
+    "name": "Li'l Bird Cat",
+    "seed": 701843023
+   },
+   {
+    "name": "Catamin A",
+    "seed": 701843023,
+    "dupe": {
+     "name": "100K XP (β)",
+     "pos": 39,
+     "track": "A",
+     "bounce": false,
+     "seed": 1114503571
+    }
+   }
+  ],
+  [
+   {
+    "name": "Tank Cat",
+    "seed": 1114503571,
+    "dupe": {
+     "name": "Fish Cat",
+     "pos": 39,
+     "track": "B",
+     "bounce": false,
+     "seed": 247588668
+    }
+   },
+   {
+    "name": "Worker Cat Wallet",
+    "seed": 1114503571
+   },
+   {
+    "name": "Cat Jobs",
+    "seed": 1114503571
+   },
+   {
+    "name": "Super Rare Catseye",
+    "seed": 1114503571
+   },
+   {
+    "name": "Cat Jobs",
+    "seed": 1114503571
+   },
+   {
+    "name": "1M XP",
+    "seed": 1114503571
+   }
+  ],
+  [
+   {
+    "name": "Accounting",
+    "seed": 221380143
+   },
+   {
+    "name": "Superfeline",
+    "seed": 221380143
+   },
+   {
+    "name": "100K XP",
+    "seed": 221380143
+   },
+   {
+    "name": "Super Rare Catseye",
+    "seed": 221380143
+   },
+   {
+    "name": "Rich Cat",
+    "seed": 221380143
+   },
+   {
+    "name": "1M XP",
+    "seed": 221380143
+   }
+  ],
+  [
+   {
+    "name": "Gross Cat",
+    "seed": 3396589455
+   },
+   {
+    "name": "Tank Cat",
+    "seed": 3396589455
+   },
+   {
+    "name": "Purple Catfruit",
+    "seed": 3396589455
+   },
+   {
+    "name": "Super Rare Catseye",
+    "seed": 3396589455
+   },
+   {
+    "name": "Rich Cat",
+    "seed": 3396589455
+   },
+   {
+    "name": "1M XP",
+    "seed": 3396589455
+   }
+  ],
+  [
+   {
+    "name": "Axe Cat",
+    "seed": 2010954368
+   },
+   {
+    "name": "Cat Cannon Charge",
+    "seed": 2010954368
+   },
+   {
+    "name": "Green Catfruit Seed",
+    "seed": 2010954368
+   },
+   {
+    "name": "10K XP",
+    "seed": 2010954368
+   },
+   {
+    "name": "Li'l Cat",
+    "seed": 2010954368
+   },
+   {
+    "name": "Catamin A",
+    "seed": 2010954368
+   }
+  ],
+  [
+   {
+    "name": "Accounting",
+    "seed": 3875124381
+   },
+   {
+    "name": "Research",
+    "seed": 3875124381
+   },
+   {
+    "name": "Cat Jobs",
+    "seed": 3875124381
+   },
+   {
+    "name": "30K XP",
+    "seed": 3875124381
+   },
+   {
+    "name": "Li'l Lizard Cat",
+    "seed": 3875124381
+   },
+   {
+    "name": "100K XP (β)",
+    "seed": 3875124381
+   }
+  ],
+  [
+   {
+    "name": "Base Defense",
+    "seed": 2543185021
+   },
+   {
+    "name": "Cow Cat",
+    "seed": 2543185021
+   },
+   {
+    "name": "Cat Jobs",
+    "seed": 2543185021
+   },
+   {
+    "name": "30K XP",
+    "seed": 2543185021,
+    "dupe": {
+     "name": "10K XP",
+     "pos": 44,
+     "track": "B",
+     "bounce": false,
+     "seed": 111303024
+    }
+   },
+   {
+    "name": "Li'l Lizard Cat",
+    "seed": 2543185021,
+    "dupe": {
+     "name": "30K XP",
+     "pos": 44,
+     "track": "B",
+     "bounce": false,
+     "seed": 111303024
+    }
+   },
+   {
+    "name": "Catamin A",
+    "seed": 2543185021
+   }
+  ],
+  [
+   {
+    "name": "Cat",
+    "seed": 1918336950
+   },
+   {
+    "name": "Worker Cat Rate",
+    "seed": 1918336950
+   },
+   {
+    "name": "Rich Cat",
+    "seed": 1918336950
+   },
+   {
+    "name": "Special Catseye",
+    "seed": 1918336950
+   },
+   {
+    "name": "Speed Up",
+    "seed": 1918336950
+   },
+   {
+    "name": "Catamin A",
+    "seed": 1918336950,
+    "dupe": {
+     "name": "100K XP (β)",
+     "pos": 45,
+     "track": "B",
+     "bounce": true,
+     "seed": 1695740262
+    }
+   }
+  ],
+  [
+   {
+    "name": "Base Defense",
+    "seed": 759344377
+   },
+   {
+    "name": "Cat Cannon Attack",
+    "seed": 759344377
+   },
+   {
+    "name": "5K XP",
+    "seed": 759344377
+   },
+   {
+    "name": "5K XP",
+    "seed": 759344377
+   },
+   {
+    "name": "30K XP",
+    "seed": 759344377
+   },
+   {
+    "name": "Catamin A",
+    "seed": 759344377,
+    "dupe": {
+     "name": "100K XP (β)",
+     "pos": 46,
+     "track": "B",
+     "bounce": false,
+     "seed": 2694197399
+    }
+   }
+  ],
+  [
+   {
+    "name": "Lizard Cat",
+    "seed": 393110485
+   },
+   {
+    "name": "Cat Cannon Attack",
+    "seed": 393110485,
+    "dupe": {
+     "name": "Base Defense",
+     "pos": 47,
+     "track": "B",
+     "bounce": true,
+     "seed": 2352688735
+    }
+   },
+   {
+    "name": "Purple Catfruit",
+    "seed": 393110485
+   },
+   {
+    "name": "30K XP",
+    "seed": 393110485
+   },
+   {
+    "name": "Li'l Gross Cat",
+    "seed": 393110485
+   },
+   {
+    "name": "Catamin B",
+    "seed": 393110485
+   }
+  ],
+  [
+   {
+    "name": "Tank Cat",
+    "seed": 3030596263
+   },
+   {
+    "name": "Superfeline",
+    "seed": 3030596263
+   },
+   {
+    "name": "100K XP",
+    "seed": 3030596263
+   },
+   {
+    "name": "Super Rare Catseye",
+    "seed": 3030596263
+   },
+   {
+    "name": "Cat Jobs",
+    "seed": 3030596263
+   },
+   {
+    "name": "1M XP",
+    "seed": 3030596263
+   }
+  ],
+  [
+   {
+    "name": "Worker Cat Rate",
+    "seed": 714124613
+   },
+   {
+    "name": "Cat Energy",
+    "seed": 714124613
+   },
+   {
+    "name": "30K XP",
+    "seed": 714124613
+   },
+   {
+    "name": "30K XP",
+    "seed": 714124613
+   },
+   {
+    "name": "Cat CPU",
+    "seed": 714124613
+   },
+   {
+    "name": "100K XP (β)",
+    "seed": 714124613
+   }
+  ],
+  [
+   {
+    "name": "Axe Cat",
+    "seed": 1415635166
+   },
+   {
+    "name": "Cat",
+    "seed": 1415635166
+   },
+   {
+    "name": "Red Catfruit Seed",
+    "seed": 1415635166
+   },
+   {
+    "name": "Special Catseye",
+    "seed": 1415635166
+   },
+   {
+    "name": "Li'l Axe Cat",
+    "seed": 1415635166
+   },
+   {
+    "name": "Catamin A",
+    "seed": 1415635166
+   }
+  ],
+  [
+   {
+    "name": "Cat",
+    "seed": 3460475304
+   },
+   {
+    "name": "Gross Cat",
+    "seed": 3460475304
+   },
+   {
+    "name": "200K XP",
+    "seed": 3460475304
+   },
+   {
+    "name": "10K XP",
+    "seed": 3460475304
+   },
+   {
+    "name": "Li'l Cow Cat",
+    "seed": 3460475304
+   },
+   {
+    "name": "Catamin B",
+    "seed": 3460475304
+   }
+  ],
+  [
+   {
+    "name": "Bird Cat",
+    "seed": 2391463661
+   },
+   {
+    "name": "Superfeline",
+    "seed": 2391463661
+   },
+   {
+    "name": "Cat CPU",
+    "seed": 2391463661
+   },
+   {
+    "name": "30K XP",
+    "seed": 2391463661
+   },
+   {
+    "name": "Li'l Lizard Cat",
+    "seed": 2391463661
+   },
+   {
+    "name": "100K XP (β)",
+    "seed": 2391463661
+   }
+  ],
+  [
+   {
+    "name": "Titan Cat",
+    "seed": 2175053840
+   },
+   {
+    "name": "Study",
+    "seed": 2175053840
+   },
+   {
+    "name": "Rich Cat",
+    "seed": 2175053840
+   },
+   {
+    "name": "10K XP",
+    "seed": 2175053840
+   },
+   {
+    "name": "Li'l Titan Cat",
+    "seed": 2175053840
+   },
+   {
+    "name": "Catamin A",
+    "seed": 2175053840
+   }
+  ],
+  [
+   {
+    "name": "Research",
+    "seed": 730926428
+   },
+   {
+    "name": "Cat",
+    "seed": 730926428
+   },
+   {
+    "name": "Green Catfruit Seed",
+    "seed": 730926428
+   },
+   {
+    "name": "10K XP",
+    "seed": 730926428,
+    "dupe": {
+     "name": "30K XP",
+     "pos": 54,
+     "track": "B",
+     "bounce": false,
+     "seed": 1310328897
+    }
+   },
+   {
+    "name": "Li'l Cat",
+    "seed": 730926428
+   },
+   {
+    "name": "Catamin A",
+    "seed": 730926428,
+    "dupe": {
+     "name": "100K XP (β)",
+     "pos": 54,
+     "track": "B",
+     "bounce": false,
+     "seed": 1310328897
+    }
+   }
+  ],
+  [
+   {
+    "name": "Cat Cannon Charge",
+    "seed": 418787272
+   },
+   {
+    "name": "Lizard Cat",
+    "seed": 418787272
+   },
+   {
+    "name": "Sniper the Cat",
+    "seed": 418787272
+   },
+   {
+    "name": "100K XP",
+    "seed": 418787272
+   },
+   {
+    "name": "Cat Jobs",
+    "seed": 418787272
+   },
+   {
+    "name": "Catamin C",
+    "seed": 418787272
+   }
+  ],
+  [
+   {
+    "name": "Cat Energy",
+    "seed": 3964048271
+   },
+   {
+    "name": "Cat Cannon Attack",
+    "seed": 3964048271
+   },
+   {
+    "name": "Cat CPU",
+    "seed": 3964048271
+   },
+   {
+    "name": "Rare Catseye",
+    "seed": 3964048271
+   },
+   {
+    "name": "Speed Up",
+    "seed": 3964048271
+   },
+   {
+    "name": "100K XP (β)",
+    "seed": 3964048271
+   }
+  ],
+  [
+   {
+    "name": "Cat Energy",
+    "seed": 3672014435,
+    "dupe": {
+     "name": "Research",
+     "pos": 57,
+     "track": "B",
+     "bounce": true,
+     "seed": 526849258
+    }
+   },
+   {
+    "name": "Worker Cat Rate",
+    "seed": 3672014435
+   },
+   {
+    "name": "Purple Catfruit Seed",
+    "seed": 3672014435
+   },
+   {
+    "name": "Rare Catseye",
+    "seed": 3672014435,
+    "dupe": {
+     "name": "30K XP",
+     "pos": 57,
+     "track": "B",
+     "bounce": false,
+     "seed": 526849258
+    }
+   },
+   {
+    "name": "10K XP",
+    "seed": 3672014435
+   },
+   {
+    "name": "100K XP (β)",
+    "seed": 3672014435,
+    "dupe": {
+     "name": "Catamin A",
+     "pos": 58,
+     "track": "B",
+     "bounce": true,
+     "seed": 1339303118
+    }
+   }
+  ],
+  [
+   {
+    "name": "Gross Cat",
+    "seed": 3908151831
+   },
+   {
+    "name": "Worker Cat Rate",
+    "seed": 3908151831,
+    "dupe": {
+     "name": "Research",
+     "pos": 58,
+     "track": "B",
+     "bounce": false,
+     "seed": 1339303118
+    }
+   },
+   {
+    "name": "Cat Jobs",
+    "seed": 3908151831
+   },
+   {
+    "name": "Super Rare Catseye",
+    "seed": 3908151831
+   },
+   {
+    "name": "Rich Cat",
+    "seed": 3908151831
+   },
+   {
+    "name": "1M XP",
+    "seed": 3908151831
+   }
+  ],
+  [
+   {
+    "name": "Study",
+    "seed": 200900968
+   },
+   {
+    "name": "Gross Cat",
+    "seed": 200900968
+   },
+   {
+    "name": "Green Catfruit",
+    "seed": 200900968
+   },
+   {
+    "name": "10K XP",
+    "seed": 200900968
+   },
+   {
+    "name": "Li'l Cat",
+    "seed": 200900968
+   },
+   {
+    "name": "100K XP (β)",
+    "seed": 200900968
+   }
+  ],
+  [
+   {
+    "name": "Cat Cannon Charge",
+    "seed": 432390016
+   },
+   {
+    "name": "Bird Cat",
+    "seed": 432390016
+   },
+   {
+    "name": "Red Catfruit",
+    "seed": 432390016
+   },
+   {
+    "name": "100K XP",
+    "seed": 432390016
+   },
+   {
+    "name": "Cat Jobs",
+    "seed": 432390016
+   },
+   {
+    "name": "Catamin C",
+    "seed": 432390016
+   }
+  ],
+  [
+   {
+    "name": "Bird Cat",
+    "seed": 2197556015
+   },
+   {
+    "name": "Study",
+    "seed": 2197556015
+   },
+   {
+    "name": "Purple Catfruit",
+    "seed": 2197556015
+   },
+   {
+    "name": "Rare Catseye",
+    "seed": 2197556015
+   },
+   {
+    "name": "10K XP",
+    "seed": 2197556015
+   },
+   {
+    "name": "100K XP (β)",
+    "seed": 2197556015
+   }
+  ],
+  [
+   {
+    "name": "Bird Cat",
+    "seed": 3223910201,
+    "dupe": {
+     "name": "Worker Cat Wallet",
+     "pos": 62,
+     "track": "B",
+     "bounce": true,
+     "seed": 48281694
+    }
+   },
+   {
+    "name": "Bird Cat",
+    "seed": 3223910201
+   },
+   {
+    "name": "Cat Jobs",
+    "seed": 3223910201
+   },
+   {
+    "name": "30K XP",
+    "seed": 3223910201
+   },
+   {
+    "name": "Li'l Lizard Cat",
+    "seed": 3223910201
+   },
+   {
+    "name": "Catamin B",
+    "seed": 3223910201
+   }
+  ],
+  [
+   {
+    "name": "Base Defense",
+    "seed": 2898195115
+   },
+   {
+    "name": "Cat",
+    "seed": 2898195115
+   },
+   {
+    "name": "Purple Catfruit Seed",
+    "seed": 2898195115
+   },
+   {
+    "name": "Rare Catseye",
+    "seed": 2898195115
+   },
+   {
+    "name": "10K XP",
+    "seed": 2898195115
+   },
+   {
+    "name": "Catamin A",
+    "seed": 2898195115
+   }
+  ],
+  [
+   {
+    "name": "Accounting",
+    "seed": 2333078241
+   },
+   {
+    "name": "Worker Cat Rate",
+    "seed": 2333078241
+   },
+   {
+    "name": "Cat CPU",
+    "seed": 2333078241
+   },
+   {
+    "name": "30K XP",
+    "seed": 2333078241
+   },
+   {
+    "name": "Li'l Lizard Cat",
+    "seed": 2333078241
+   },
+   {
+    "name": "100K XP (β)",
+    "seed": 2333078241
+   }
+  ],
+  [
+   {
+    "name": "Accounting",
+    "seed": 390420087,
+    "dupe": {
+     "name": "Base Defense",
+     "pos": 65,
+     "track": "B",
+     "bounce": false,
+     "seed": 1238558898
+    }
+   },
+   {
+    "name": "Worker Cat Rate",
+    "seed": 390420087,
+    "dupe": {
+     "name": "Worker Cat Wallet",
+     "pos": 65,
+     "track": "B",
+     "bounce": false,
+     "seed": 1238558898
+    }
+   },
+   {
+    "name": "Blue Catfruit",
+    "seed": 390420087
+   },
+   {
+    "name": "Super Rare Catseye",
+    "seed": 390420087
+   },
+   {
+    "name": "Rich Cat",
+    "seed": 390420087
+   },
+   {
+    "name": "1M XP",
+    "seed": 390420087
+   }
+  ],
+  [
+   {
+    "name": "Research",
+    "seed": 1168941776
+   },
+   {
+    "name": "Lizard Cat",
+    "seed": 1168941776
+   },
+   {
+    "name": "Red Catfruit",
+    "seed": 1168941776
+   },
+   {
+    "name": "100K XP",
+    "seed": 1168941776
+   },
+   {
+    "name": "Sniper the Cat",
+    "seed": 1168941776
+   },
+   {
+    "name": "Catamin C",
+    "seed": 1168941776
+   }
+  ],
+  [
+   {
+    "name": "Fish Cat",
+    "seed": 4292494584
+   },
+   {
+    "name": "Cat Cannon Charge",
+    "seed": 4292494584
+   },
+   {
+    "name": "200K XP",
+    "seed": 4292494584
+   },
+   {
+    "name": "10K XP",
+    "seed": 4292494584
+   },
+   {
+    "name": "Li'l Cow Cat",
+    "seed": 4292494584
+   },
+   {
+    "name": "Catamin A",
+    "seed": 4292494584
+   }
+  ],
+  [
+   {
+    "name": "Worker Cat Rate",
+    "seed": 2590950107
+   },
+   {
+    "name": "Axe Cat",
+    "seed": 2590950107
+   },
+   {
+    "name": "Blue Catfruit",
+    "seed": 2590950107
+   },
+   {
+    "name": "Rare Catseye",
+    "seed": 2590950107
+   },
+   {
+    "name": "Li'l Tank Cat",
+    "seed": 2590950107
+   },
+   {
+    "name": "500K XP",
+    "seed": 2590950107
+   }
+  ],
+  [
+   {
+    "name": "Base Defense",
+    "seed": 3131486743
+   },
+   {
+    "name": "Base Defense",
+    "seed": 3131486743
+   },
+   {
+    "name": "100K XP",
+    "seed": 3131486743
+   },
+   {
+    "name": "Rare Catseye",
+    "seed": 3131486743,
+    "dupe": {
+     "name": "30K XP",
+     "pos": 69,
+     "track": "B",
+     "bounce": false,
+     "seed": 1591141477
+    }
+   },
+   {
+    "name": "Li'l Bird Cat",
+    "seed": 3131486743
+   },
+   {
+    "name": "500K XP",
+    "seed": 3131486743
+   }
+  ],
+  [
+   {
+    "name": "Cat",
+    "seed": 2164131144
+   },
+   {
+    "name": "Gross Cat",
+    "seed": 2164131144
+   },
+   {
+    "name": "50K XP",
+    "seed": 2164131144
+   },
+   {
+    "name": "10K XP",
+    "seed": 2164131144
+   },
+   {
+    "name": "Li'l Cow Cat",
+    "seed": 2164131144
+   },
+   {
+    "name": "Catamin A",
+    "seed": 2164131144
+   }
+  ],
+  [
+   {
+    "name": "Fish Cat",
+    "seed": 1701430854
+   },
+   {
+    "name": "Fish Cat",
+    "seed": 1701430854
+   },
+   {
+    "name": "50K XP",
+    "seed": 1701430854,
+    "dupe": {
+     "name": "Green Catfruit Seed",
+     "pos": 71,
+     "track": "B",
+     "bounce": false,
+     "seed": 3387566230
+    }
+   },
+   {
+    "name": "Special Catseye",
+    "seed": 1701430854
+   },
+   {
+    "name": "10K XP",
+    "seed": 1701430854
+   },
+   {
+    "name": "Catamin A",
+    "seed": 1701430854,
+    "dupe": {
+     "name": "100K XP (β)",
+     "pos": 72,
+     "track": "A",
+     "bounce": true,
+     "seed": 3683495658
+    }
+   }
+  ],
+  [
+   {
+    "name": "Worker Cat Wallet",
+    "seed": 3683495658
+   },
+   {
+    "name": "Cat Cannon Attack",
+    "seed": 3683495658
+   },
+   {
+    "name": "Green Catfruit",
+    "seed": 3683495658
+   },
+   {
+    "name": "Special Catseye",
+    "seed": 3683495658,
+    "dupe": {
+     "name": "Rare Catseye",
+     "pos": 72,
+     "track": "B",
+     "bounce": true,
+     "seed": 45210050
+    }
+   },
+   {
+    "name": "30K XP",
+    "seed": 3683495658
+   },
+   {
+    "name": "Catamin B",
+    "seed": 3683495658
+   }
+  ],
+  [
+   {
+    "name": "Cow Cat",
+    "seed": 4211770630
+   },
+   {
+    "name": "Titan Cat",
+    "seed": 4211770630
+   },
+   {
+    "name": "5K XP",
+    "seed": 4211770630
+   },
+   {
+    "name": "5K XP",
+    "seed": 4211770630
+   },
+   {
+    "name": "Speed Up",
+    "seed": 4211770630
+   },
+   {
+    "name": "100K XP (β)",
+    "seed": 4211770630,
+    "dupe": {
+     "name": "Catamin A",
+     "pos": 74,
+     "track": "B",
+     "bounce": true,
+     "seed": 359536479
+    }
+   }
+  ],
+  [
+   {
+    "name": "Cat Energy",
+    "seed": 499521599
+   },
+   {
+    "name": "Superfeline",
+    "seed": 499521599
+   },
+   {
+    "name": "Yellow Catfruit",
+    "seed": 499521599
+   },
+   {
+    "name": "Rare Catseye",
+    "seed": 499521599
+   },
+   {
+    "name": "30K XP",
+    "seed": 499521599
+   },
+   {
+    "name": "100K XP (β)",
+    "seed": 499521599,
+    "dupe": {
+     "name": "Catamin A",
+     "pos": 75,
+     "track": "A",
+     "bounce": false,
+     "seed": 432741533
+    }
+   }
+  ],
+  [
+   {
+    "name": "Bird Cat",
+    "seed": 432741533
+   },
+   {
+    "name": "Gross Cat",
+    "seed": 432741533
+   },
+   {
+    "name": "100K XP",
+    "seed": 432741533
+   },
+   {
+    "name": "30K XP",
+    "seed": 432741533
+   },
+   {
+    "name": "Cat CPU",
+    "seed": 432741533
+   },
+   {
+    "name": "Catamin B",
+    "seed": 432741533
+   }
+  ],
+  [
+   {
+    "name": "Worker Cat Wallet",
+    "seed": 616774890
+   },
+   {
+    "name": "Fish Cat",
+    "seed": 616774890
+   },
+   {
+    "name": "Rich Cat",
+    "seed": 616774890
+   },
+   {
+    "name": "100K XP",
+    "seed": 616774890
+   },
+   {
+    "name": "Rich Cat",
+    "seed": 616774890
+   },
+   {
+    "name": "Catamin B",
+    "seed": 616774890
+   }
+  ],
+  [
+   {
+    "name": "Tank Cat",
+    "seed": 4116940399
+   },
+   {
+    "name": "Worker Cat Rate",
+    "seed": 4116940399
+   },
+   {
+    "name": "Yellow Catfruit",
+    "seed": 4116940399
+   },
+   {
+    "name": "Super Rare Catseye",
+    "seed": 4116940399
+   },
+   {
+    "name": "Cat Jobs",
+    "seed": 4116940399
+   },
+   {
+    "name": "500K XP",
+    "seed": 4116940399
+   }
+  ],
+  [
+   {
+    "name": "Research",
+    "seed": 1977634058
+   },
+   {
+    "name": "Tank Cat",
+    "seed": 1977634058
+   },
+   {
+    "name": "Green Catfruit",
+    "seed": 1977634058
+   },
+   {
+    "name": "100K XP",
+    "seed": 1977634058
+   },
+   {
+    "name": "Sniper the Cat",
+    "seed": 1977634058
+   },
+   {
+    "name": "Catamin C",
+    "seed": 1977634058
+   }
+  ],
+  [
+   {
+    "name": "Worker Cat Wallet",
+    "seed": 3267904242
+   },
+   {
+    "name": "Axe Cat",
+    "seed": 3267904242
+   },
+   {
+    "name": "Sniper the Cat",
+    "seed": 3267904242
+   },
+   {
+    "name": "100K XP",
+    "seed": 3267904242
+   },
+   {
+    "name": "Rich Cat",
+    "seed": 3267904242
+   },
+   {
+    "name": "Catamin C",
+    "seed": 3267904242
+   }
+  ],
+  [
+   {
+    "name": "Cat Cannon Attack",
+    "seed": 1863193959
+   },
+   {
+    "name": "Cat Energy",
+    "seed": 1863193959
+   },
+   {
+    "name": "Yellow Catfruit",
+    "seed": 1863193959
+   },
+   {
+    "name": "Rare Catseye",
+    "seed": 1863193959
+   },
+   {
+    "name": "30K XP",
+    "seed": 1863193959
+   },
+   {
+    "name": "500K XP",
+    "seed": 1863193959
+   }
+  ],
+  [
+   {
+    "name": "Worker Cat Rate",
+    "seed": 1272416177
+   },
+   {
+    "name": "Superfeline",
+    "seed": 1272416177
+   },
+   {
+    "name": "5K XP",
+    "seed": 1272416177
+   },
+   {
+    "name": "5K XP",
+    "seed": 1272416177
+   },
+   {
+    "name": "30K XP",
+    "seed": 1272416177,
+    "dupe": {
+     "name": "Li'l Cow Cat",
+     "pos": 81,
+     "track": "B",
+     "bounce": false,
+     "seed": 1177647649
+    }
+   },
+   {
+    "name": "100K XP (β)",
+    "seed": 1272416177,
+    "dupe": {
+     "name": "Catamin A",
+     "pos": 82,
+     "track": "B",
+     "bounce": true,
+     "seed": 878505838
+    }
+   }
+  ],
+  [
+   {
+    "name": "Worker Cat Rate",
+    "seed": 3728273051,
+    "dupe": {
+     "name": "Cat",
+     "pos": 82,
+     "track": "B",
+     "bounce": false,
+     "seed": 878505838
+    }
+   },
+   {
+    "name": "Titan Cat",
+    "seed": 3728273051
+   },
+   {
+    "name": "Cat Jobs",
+    "seed": 3728273051
+   },
+   {
+    "name": "Super Rare Catseye",
+    "seed": 3728273051
+   },
+   {
+    "name": "Sniper the Cat",
+    "seed": 3728273051
+   },
+   {
+    "name": "500K XP",
+    "seed": 3728273051
+   }
+  ],
+  [
+   {
+    "name": "Research",
+    "seed": 342522806
+   },
+   {
+    "name": "Axe Cat",
+    "seed": 342522806
+   },
+   {
+    "name": "Red Catfruit",
+    "seed": 342522806
+   },
+   {
+    "name": "Special Catseye",
+    "seed": 342522806
+   },
+   {
+    "name": "Li'l Axe Cat",
+    "seed": 342522806
+   },
+   {
+    "name": "Catamin B",
+    "seed": 342522806
+   }
+  ],
+  [
+   {
+    "name": "Tank Cat",
+    "seed": 3379173211
+   },
+   {
+    "name": "Worker Cat Rate",
+    "seed": 3379173211
+   },
+   {
+    "name": "Cat Jobs",
+    "seed": 3379173211
+   },
+   {
+    "name": "Rare Catseye",
+    "seed": 3379173211
+   },
+   {
+    "name": "Speed Up",
+    "seed": 3379173211
+   },
+   {
+    "name": "Catamin A",
+    "seed": 3379173211
+   }
+  ],
+  [
+   {
+    "name": "Research",
+    "seed": 1291161812
+   },
+   {
+    "name": "Accounting",
+    "seed": 1291161812
+   },
+   {
+    "name": "Sniper the Cat",
+    "seed": 1291161812
+   },
+   {
+    "name": "10K XP",
+    "seed": 1291161812
+   },
+   {
+    "name": "Cat CPU",
+    "seed": 1291161812
+   },
+   {
+    "name": "Catamin A",
+    "seed": 1291161812,
+    "dupe": {
+     "name": "100K XP (β)",
+     "pos": 85,
+     "track": "B",
+     "bounce": false,
+     "seed": 1228861347
+    }
+   }
+  ],
+  [
+   {
+    "name": "Study",
+    "seed": 4129932742
+   },
+   {
+    "name": "Gross Cat",
+    "seed": 4129932742
+   },
+   {
+    "name": "10K XP",
+    "seed": 4129932742
+   },
+   {
+    "name": "Special Catseye",
+    "seed": 4129932742
+   },
+   {
+    "name": "Li'l Fish Cat",
+    "seed": 4129932742
+   },
+   {
+    "name": "100K XP (β)",
+    "seed": 4129932742
+   }
+  ],
+  [
+   {
+    "name": "Bird Cat",
+    "seed": 1310817101
+   },
+   {
+    "name": "Base Defense",
+    "seed": 1310817101
+   },
+   {
+    "name": "Cat Jobs",
+    "seed": 1310817101
+   },
+   {
+    "name": "30K XP",
+    "seed": 1310817101,
+    "dupe": {
+     "name": "Rare Catseye",
+     "pos": 87,
+     "track": "B",
+     "bounce": true,
+     "seed": 347892713
+    }
+   },
+   {
+    "name": "Li'l Lizard Cat",
+    "seed": 1310817101
+   },
+   {
+    "name": "Catamin B",
+    "seed": 1310817101
+   }
+  ],
+  [
+   {
+    "name": "Bird Cat",
+    "seed": 440764169,
+    "dupe": {
+     "name": "Cat Cannon Charge",
+     "pos": 88,
+     "track": "B",
+     "bounce": false,
+     "seed": 3549000283
+    }
+   },
+   {
+    "name": "Gross Cat",
+    "seed": 440764169
+   },
+   {
+    "name": "Yellow Catfruit",
+    "seed": 440764169
+   },
+   {
+    "name": "30K XP",
+    "seed": 440764169,
+    "dupe": {
+     "name": "Special Catseye",
+     "pos": 88,
+     "track": "B",
+     "bounce": true,
+     "seed": 3549000283
+    }
+   },
+   {
+    "name": "Speed Up",
+    "seed": 440764169
+   },
+   {
+    "name": "100K XP (β)",
+    "seed": 440764169
+   }
+  ],
+  [
+   {
+    "name": "Titan Cat",
+    "seed": 3416222906
+   },
+   {
+    "name": "Cat Cannon Charge",
+    "seed": 3416222906
+   },
+   {
+    "name": "5K XP",
+    "seed": 3416222906
+   },
+   {
+    "name": "5K XP",
+    "seed": 3416222906
+   },
+   {
+    "name": "Li'l Axe Cat",
+    "seed": 3416222906
+   },
+   {
+    "name": "Catamin A",
+    "seed": 3416222906
+   }
+  ],
+  [
+   {
+    "name": "Research",
+    "seed": 2524418222
+   },
+   {
+    "name": "Cat Energy",
+    "seed": 2524418222
+   },
+   {
+    "name": "Sniper the Cat",
+    "seed": 2524418222
+   },
+   {
+    "name": "100K XP",
+    "seed": 2524418222
+   },
+   {
+    "name": "Sniper the Cat",
+    "seed": 2524418222
+   },
+   {
+    "name": "Catamin B",
+    "seed": 2524418222
+   }
+  ],
+  [
+   {
+    "name": "Titan Cat",
+    "seed": 3530454560
+   },
+   {
+    "name": "Study",
+    "seed": 3530454560
+   },
+   {
+    "name": "Speed Up",
+    "seed": 3530454560
+   },
+   {
+    "name": "5K XP",
+    "seed": 3530454560
+   },
+   {
+    "name": "Li'l Titan Cat",
+    "seed": 3530454560
+   },
+   {
+    "name": "Catamin A",
+    "seed": 3530454560
+   }
+  ],
+  [
+   {
+    "name": "Cow Cat",
+    "seed": 474171322
+   },
+   {
+    "name": "Lizard Cat",
+    "seed": 474171322
+   },
+   {
+    "name": "10K XP",
+    "seed": 474171322
+   },
+   {
+    "name": "Special Catseye",
+    "seed": 474171322
+   },
+   {
+    "name": "Li'l Fish Cat",
+    "seed": 474171322
+   },
+   {
+    "name": "100K XP (β)",
+    "seed": 474171322
+   }
+  ],
+  [
+   {
+    "name": "Cow Cat",
+    "seed": 3363195676,
+    "dupe": {
+     "name": "Bird Cat",
+     "pos": 93,
+     "track": "B",
+     "bounce": false,
+     "seed": 3839806358
+    }
+   },
+   {
+    "name": "Base Defense",
+    "seed": 3363195676
+   },
+   {
+    "name": "Red Catfruit",
+    "seed": 3363195676
+   },
+   {
+    "name": "10K XP",
+    "seed": 3363195676
+   },
+   {
+    "name": "10K XP",
+    "seed": 3363195676
+   },
+   {
+    "name": "Catamin B",
+    "seed": 3363195676
+   }
+  ],
+  [
+   {
+    "name": "Titan Cat",
+    "seed": 923538752
+   },
+   {
+    "name": "Base Defense",
+    "seed": 923538752,
+    "dupe": {
+     "name": "Worker Cat Rate",
+     "pos": 94,
+     "track": "B",
+     "bounce": false,
+     "seed": 2456637330
+    }
+   },
+   {
+    "name": "Sniper the Cat",
+    "seed": 923538752
+   },
+   {
+    "name": "10K XP",
+    "seed": 923538752,
+    "dupe": {
+     "name": "30K XP",
+     "pos": 94,
+     "track": "B",
+     "bounce": false,
+     "seed": 2456637330
+    }
+   },
+   {
+    "name": "Cat CPU",
+    "seed": 923538752
+   },
+   {
+    "name": "Catamin B",
+    "seed": 923538752
+   }
+  ],
+  [
+   {
+    "name": "Accounting",
+    "seed": 2997981789
+   },
+   {
+    "name": "Cow Cat",
+    "seed": 2997981789
+   },
+   {
+    "name": "Yellow Catfruit",
+    "seed": 2997981789
+   },
+   {
+    "name": "30K XP",
+    "seed": 2997981789
+   },
+   {
+    "name": "Speed Up",
+    "seed": 2997981789
+   },
+   {
+    "name": "Catamin B",
+    "seed": 2997981789
+   }
+  ],
+  [
+   {
+    "name": "Base Defense",
+    "seed": 4082469367
+   },
+   {
+    "name": "Research",
+    "seed": 4082469367
+   },
+   {
+    "name": "500K XP",
+    "seed": 4082469367
+   },
+   {
+    "name": "Uber Rare Catseye",
+    "seed": 4082469367
+   },
+   {
+    "name": "Treasure Radar",
+    "seed": 4082469367
+   },
+   {
+    "name": "1M XP",
+    "seed": 4082469367
+   }
+  ],
+  [
+   {
+    "name": "Cat Cannon Attack",
+    "seed": 2159533899
+   },
+   {
+    "name": "Study",
+    "seed": 2159533899
+   },
+   {
+    "name": "Yellow Catfruit",
+    "seed": 2159533899
+   },
+   {
+    "name": "Rare Catseye",
+    "seed": 2159533899
+   },
+   {
+    "name": "30K XP",
+    "seed": 2159533899
+   },
+   {
+    "name": "100K XP (β)",
+    "seed": 2159533899
+   }
+  ],
+  [
+   {
+    "name": "Worker Cat Wallet",
+    "seed": 2174638044
+   },
+   {
+    "name": "Study",
+    "seed": 2174638044,
+    "dupe": {
+     "name": "Worker Cat Rate",
+     "pos": 98,
+     "track": "B",
+     "bounce": false,
+     "seed": 2991780462
+    }
+   },
+   {
+    "name": "200K XP",
+    "seed": 2174638044
+   },
+   {
+    "name": "10K XP",
+    "seed": 2174638044
+   },
+   {
+    "name": "Li'l Cow Cat",
+    "seed": 2174638044
+   },
+   {
+    "name": "Catamin B",
+    "seed": 2174638044
+   }
+  ],
+  [
+   {
+    "name": "Tank Cat",
+    "seed": 1311753313
+   },
+   {
+    "name": "Tank Cat",
+    "seed": 1311753313
+   },
+   {
+    "name": "30K XP",
+    "seed": 1311753313
+   },
+   {
+    "name": "5K XP",
+    "seed": 1311753313
+   },
+   {
+    "name": "Cat CPU",
+    "seed": 1311753313
+   },
+   {
+    "name": "Catamin A",
+    "seed": 1311753313
+   }
+  ],
+  [
+   {
+    "name": "Titan Cat",
+    "seed": 3337793630
+   },
+   {
+    "name": "Cat Energy",
+    "seed": 3337793630
+   },
+   {
+    "name": "Rich Cat",
+    "seed": 3337793630
+   },
+   {
+    "name": "Special Catseye",
+    "seed": 3337793630
+   },
+   {
+    "name": "Speed Up",
+    "seed": 3337793630
+   },
+   {
+    "name": "Catamin A",
+    "seed": 3337793630,
+    "dupe": {
+     "name": "100K XP (β)",
+     "pos": 100,
+     "track": "B",
+     "bounce": false,
+     "seed": 216545314
+    }
+   }
+  ],
+  [
+   {
+    "name": "Fish Cat",
+    "seed": 889617876
+   },
+   {
+    "name": "Superfeline",
+    "seed": 889617876
+   },
+   {
+    "name": "Red Catfruit",
+    "seed": 889617876
+   },
+   {
+    "name": "10K XP",
+    "seed": 889617876
+   },
+   {
+    "name": "10K XP",
+    "seed": 889617876
+   },
+   {
+    "name": "Catamin B",
+    "seed": 889617876
+   }
+  ]
+ ],
+ "trackB": [
+  [
+   {
+    "name": "Lizard Cat",
+    "seed": 4176127627
+   },
+   {
+    "name": "Study",
+    "seed": 4176127627
+   },
+   {
+    "name": "500K XP",
+    "seed": 4176127627
+   },
+   {
+    "name": "Uber Rare Catseye",
+    "seed": 4176127627
+   },
+   {
+    "name": "Treasure Radar",
+    "seed": 4176127627
+   },
+   {
+    "name": "1M XP",
+    "seed": 4176127627
+   }
+  ],
+  [
+   {
+    "name": "Tank Cat",
+    "seed": 1135733671
+   },
+   {
+    "name": "Lizard Cat",
+    "seed": 1135733671
+   },
+   {
+    "name": "Cat Jobs",
+    "seed": 1135733671
+   },
+   {
+    "name": "Super Rare Catseye",
+    "seed": 1135733671
+   },
+   {
+    "name": "Cat Jobs",
+    "seed": 1135733671
+   },
+   {
+    "name": "1M XP",
+    "seed": 1135733671
+   }
+  ],
+  [
+   {
+    "name": "Study",
+    "seed": 2631015898
+   },
+   {
+    "name": "Cat Energy",
+    "seed": 2631015898
+   },
+   {
+    "name": "Green Catfruit",
+    "seed": 2631015898
+   },
+   {
+    "name": "Special Catseye",
+    "seed": 2631015898
+   },
+   {
+    "name": "30K XP",
+    "seed": 2631015898
+   },
+   {
+    "name": "Catamin B",
+    "seed": 2631015898
+   }
+  ],
+  [
+   {
+    "name": "Base Defense",
+    "seed": 1495282279
+   },
+   {
+    "name": "Fish Cat",
+    "seed": 1495282279
+   },
+   {
+    "name": "Yellow Catfruit",
+    "seed": 1495282279
+   },
+   {
+    "name": "Super Rare Catseye",
+    "seed": 1495282279
+   },
+   {
+    "name": "Cat Jobs",
+    "seed": 1495282279
+   },
+   {
+    "name": "500K XP",
+    "seed": 1495282279
+   }
+  ],
+  [
+   {
+    "name": "Research",
+    "seed": 2874739406
+   },
+   {
+    "name": "Cat",
+    "seed": 2874739406
+   },
+   {
+    "name": "Red Catfruit Seed",
+    "seed": 2874739406
+   },
+   {
+    "name": "Special Catseye",
+    "seed": 2874739406
+   },
+   {
+    "name": "Li'l Axe Cat",
+    "seed": 2874739406
+   },
+   {
+    "name": "Catamin A",
+    "seed": 2874739406
+   }
+  ],
+  [
+   {
+    "name": "Tank Cat",
+    "seed": 352244161
+   },
+   {
+    "name": "Lizard Cat",
+    "seed": 352244161
+   },
+   {
+    "name": "Cat Jobs",
+    "seed": 352244161
+   },
+   {
+    "name": "30K XP",
+    "seed": 352244161
+   },
+   {
+    "name": "Li'l Lizard Cat",
+    "seed": 352244161
+   },
+   {
+    "name": "Catamin A",
+    "seed": 352244161,
+    "dupe": {
+     "name": "100K XP (β)",
+     "pos": 8,
+     "track": "B",
+     "bounce": true,
+     "seed": 2177002755
+    }
+   }
+  ],
+  [
+   {
+    "name": "Cat Cannon Attack",
+    "seed": 2177002755
+   },
+   {
+    "name": "Lizard Cat",
+    "seed": 2177002755,
+    "dupe": {
+     "name": "Cat",
+     "pos": 9,
+     "track": "A",
+     "bounce": false,
+     "seed": 4194003762
+    }
+   },
+   {
+    "name": "Purple Catfruit",
+    "seed": 2177002755
+   },
+   {
+    "name": "Rare Catseye",
+    "seed": 2177002755
+   },
+   {
+    "name": "10K XP",
+    "seed": 2177002755
+   },
+   {
+    "name": "100K XP (β)",
+    "seed": 2177002755
+   }
+  ],
+  [
+   {
+    "name": "Cat Cannon Charge",
+    "seed": 606298492
+   },
+   {
+    "name": "Cat Energy",
+    "seed": 606298492
+   },
+   {
+    "name": "Sniper the Cat",
+    "seed": 606298492
+   },
+   {
+    "name": "10K XP",
+    "seed": 606298492
+   },
+   {
+    "name": "Cat CPU",
+    "seed": 606298492
+   },
+   {
+    "name": "100K XP (β)",
+    "seed": 606298492,
+    "dupe": {
+     "name": "Catamin A",
+     "pos": 10,
+     "track": "B",
+     "bounce": false,
+     "seed": 1411648629
+    }
+   }
+  ],
+  [
+   {
+    "name": "Accounting",
+    "seed": 1411648629
+   },
+   {
+    "name": "Bird Cat",
+    "seed": 1411648629
+   },
+   {
+    "name": "Yellow Catfruit",
+    "seed": 1411648629
+   },
+   {
+    "name": "30K XP",
+    "seed": 1411648629,
+    "dupe": {
+     "name": "Special Catseye",
+     "pos": 11,
+     "track": "A",
+     "bounce": true,
+     "seed": 3069888160
+    }
+   },
+   {
+    "name": "Speed Up",
+    "seed": 1411648629
+   },
+   {
+    "name": "100K XP (β)",
+    "seed": 1411648629,
+    "dupe": {
+     "name": "Catamin A",
+     "pos": 11,
+     "track": "A",
+     "bounce": true,
+     "seed": 3069888160
+    }
+   }
+  ],
+  [
+   {
+    "name": "Cat Energy",
+    "seed": 3069522359
+   },
+   {
+    "name": "Lizard Cat",
+    "seed": 3069522359
+   },
+   {
+    "name": "Yellow Catfruit",
+    "seed": 3069522359
+   },
+   {
+    "name": "Super Rare Catseye",
+    "seed": 3069522359
+   },
+   {
+    "name": "Sniper the Cat",
+    "seed": 3069522359
+   },
+   {
+    "name": "500K XP",
+    "seed": 3069522359
+   }
+  ],
+  [
+   {
+    "name": "Gross Cat",
+    "seed": 3527273055
+   },
+   {
+    "name": "Bird Cat",
+    "seed": 3527273055
+   },
+   {
+    "name": "Purple Catfruit",
+    "seed": 3527273055
+   },
+   {
+    "name": "Rare Catseye",
+    "seed": 3527273055
+   },
+   {
+    "name": "10K XP",
+    "seed": 3527273055
+   },
+   {
+    "name": "500K XP",
+    "seed": 3527273055
+   }
+  ],
+  [
+   {
+    "name": "Cat",
+    "seed": 2504312568
+   },
+   {
+    "name": "Worker Cat Rate",
+    "seed": 2504312568
+   },
+   {
+    "name": "Green Catfruit Seed",
+    "seed": 2504312568
+   },
+   {
+    "name": "10K XP",
+    "seed": 2504312568,
+    "dupe": {
+     "name": "30K XP",
+     "pos": 14,
+     "track": "A",
+     "bounce": false,
+     "seed": 3984670773
+    }
+   },
+   {
+    "name": "Li'l Cat",
+    "seed": 2504312568
+   },
+   {
+    "name": "Catamin A",
+    "seed": 2504312568
+   }
+  ],
+  [
+   {
+    "name": "Research",
+    "seed": 83657462
+   },
+   {
+    "name": "Fish Cat",
+    "seed": 83657462
+   },
+   {
+    "name": "10K XP",
+    "seed": 83657462
+   },
+   {
+    "name": "Special Catseye",
+    "seed": 83657462
+   },
+   {
+    "name": "Li'l Fish Cat",
+    "seed": 83657462
+   },
+   {
+    "name": "Catamin A",
+    "seed": 83657462,
+    "dupe": {
+     "name": "100K XP (β)",
+     "pos": 15,
+     "track": "A",
+     "bounce": true,
+     "seed": 2431748263
+    }
+   }
+  ],
+  [
+   {
+    "name": "Cat Cannon Attack",
+    "seed": 1037023317
+   },
+   {
+    "name": "Cat Cannon Charge",
+    "seed": 1037023317
+   },
+   {
+    "name": "Blue Catfruit",
+    "seed": 1037023317
+   },
+   {
+    "name": "Super Rare Catseye",
+    "seed": 1037023317
+   },
+   {
+    "name": "Rich Cat",
+    "seed": 1037023317
+   },
+   {
+    "name": "Catamin B",
+    "seed": 1037023317
+   }
+  ],
+  [
+   {
+    "name": "Base Defense",
+    "seed": 2409482443
+   },
+   {
+    "name": "Titan Cat",
+    "seed": 2409482443
+   },
+   {
+    "name": "30K XP",
+    "seed": 2409482443
+   },
+   {
+    "name": "Rare Catseye",
+    "seed": 2409482443
+   },
+   {
+    "name": "Li'l Bird Cat",
+    "seed": 2409482443
+   },
+   {
+    "name": "Catamin A",
+    "seed": 2409482443
+   }
+  ],
+  [
+   {
+    "name": "Lizard Cat",
+    "seed": 4206470929
+   },
+   {
+    "name": "Research",
+    "seed": 4206470929
+   },
+   {
+    "name": "Yellow Catfruit",
+    "seed": 4206470929
+   },
+   {
+    "name": "Super Rare Catseye",
+    "seed": 4206470929
+   },
+   {
+    "name": "Cat Jobs",
+    "seed": 4206470929
+   },
+   {
+    "name": "Catamin B",
+    "seed": 4206470929
+   }
+  ],
+  [
+   {
+    "name": "Accounting",
+    "seed": 2462884125
+   },
+   {
+    "name": "Bird Cat",
+    "seed": 2462884125
+   },
+   {
+    "name": "Purple Catfruit",
+    "seed": 2462884125
+   },
+   {
+    "name": "30K XP",
+    "seed": 2462884125
+   },
+   {
+    "name": "Li'l Gross Cat",
+    "seed": 2462884125
+   },
+   {
+    "name": "Catamin B",
+    "seed": 2462884125
+   }
+  ],
+  [
+   {
+    "name": "Gross Cat",
+    "seed": 1464312225
+   },
+   {
+    "name": "Superfeline",
+    "seed": 1464312225
+   },
+   {
+    "name": "Purple Catfruit Seed",
+    "seed": 1464312225
+   },
+   {
+    "name": "30K XP",
+    "seed": 1464312225,
+    "dupe": {
+     "name": "Rare Catseye",
+     "pos": 20,
+     "track": "A",
+     "bounce": true,
+     "seed": 1266667544
+    }
+   },
+   {
+    "name": "Li'l Gross Cat",
+    "seed": 1464312225,
+    "dupe": {
+     "name": "30K XP",
+     "pos": 20,
+     "track": "A",
+     "bounce": false,
+     "seed": 1266667544
+    }
+   },
+   {
+    "name": "100K XP (β)",
+    "seed": 1464312225
+   }
+  ],
+  [
+   {
+    "name": "Fish Cat",
+    "seed": 4113533094
+   },
+   {
+    "name": "Research",
+    "seed": 4113533094
+   },
+   {
+    "name": "200K XP",
+    "seed": 4113533094
+   },
+   {
+    "name": "100K XP",
+    "seed": 4113533094
+   },
+   {
+    "name": "Rich Cat",
+    "seed": 4113533094
+   },
+   {
+    "name": "Catamin B",
+    "seed": 4113533094
+   }
+  ],
+  [
+   {
+    "name": "Base Defense",
+    "seed": 3009418915
+   },
+   {
+    "name": "Cow Cat",
+    "seed": 3009418915
+   },
+   {
+    "name": "Purple Catfruit",
+    "seed": 3009418915
+   },
+   {
+    "name": "Super Rare Catseye",
+    "seed": 3009418915
+   },
+   {
+    "name": "Cat Jobs",
+    "seed": 3009418915
+   },
+   {
+    "name": "500K XP",
+    "seed": 3009418915
+   }
+  ],
+  [
+   {
+    "name": "Study",
+    "seed": 1487591386
+   },
+   {
+    "name": "Superfeline",
+    "seed": 1487591386
+   },
+   {
+    "name": "Red Catfruit",
+    "seed": 1487591386
+   },
+   {
+    "name": "Special Catseye",
+    "seed": 1487591386
+   },
+   {
+    "name": "Li'l Axe Cat",
+    "seed": 1487591386
+   },
+   {
+    "name": "Catamin B",
+    "seed": 1487591386
+   }
+  ],
+  [
+   {
+    "name": "Lizard Cat",
+    "seed": 2255633161
+   },
+   {
+    "name": "Research",
+    "seed": 2255633161
+   },
+   {
+    "name": "Cat CPU",
+    "seed": 2255633161
+   },
+   {
+    "name": "5K XP",
+    "seed": 2255633161
+   },
+   {
+    "name": "Li'l Lizard Cat",
+    "seed": 2255633161
+   },
+   {
+    "name": "Catamin A",
+    "seed": 2255633161
+   }
+  ],
+  [
+   {
+    "name": "Bird Cat",
+    "seed": 2861298257
+   },
+   {
+    "name": "Axe Cat",
+    "seed": 2861298257
+   },
+   {
+    "name": "Blue Catfruit",
+    "seed": 2861298257
+   },
+   {
+    "name": "30K XP",
+    "seed": 2861298257
+   },
+   {
+    "name": "30K XP",
+    "seed": 2861298257
+   },
+   {
+    "name": "100K XP (β)",
+    "seed": 2861298257
+   }
+  ],
+  [
+   {
+    "name": "Worker Cat Wallet",
+    "seed": 2821722078
+   },
+   {
+    "name": "Fish Cat",
+    "seed": 2821722078
+   },
+   {
+    "name": "Green Catfruit",
+    "seed": 2821722078
+   },
+   {
+    "name": "Special Catseye",
+    "seed": 2821722078
+   },
+   {
+    "name": "30K XP",
+    "seed": 2821722078,
+    "dupe": {
+     "name": "Li'l Tank Cat",
+     "pos": 26,
+     "track": "A",
+     "bounce": false,
+     "seed": 1683364667
+    }
+   },
+   {
+    "name": "Catamin A",
+    "seed": 2821722078
+   }
+  ],
+  [
+   {
+    "name": "Tank Cat",
+    "seed": 861972643
+   },
+   {
+    "name": "Cow Cat",
+    "seed": 861972643
+   },
+   {
+    "name": "100K XP",
+    "seed": 861972643
+   },
+   {
+    "name": "Rare Catseye",
+    "seed": 861972643
+   },
+   {
+    "name": "Li'l Bird Cat",
+    "seed": 861972643
+   },
+   {
+    "name": "Catamin A",
+    "seed": 861972643,
+    "dupe": {
+     "name": "100K XP (β)",
+     "pos": 27,
+     "track": "A",
+     "bounce": false,
+     "seed": 1270373273
+    }
+   }
+  ],
+  [
+   {
+    "name": "Cat",
+    "seed": 3979697148
+   },
+   {
+    "name": "Worker Cat Rate",
+    "seed": 3979697148
+   },
+   {
+    "name": "Green Catfruit",
+    "seed": 3979697148
+   },
+   {
+    "name": "10K XP",
+    "seed": 3979697148
+   },
+   {
+    "name": "Li'l Cat",
+    "seed": 3979697148
+   },
+   {
+    "name": "Catamin A",
+    "seed": 3979697148,
+    "dupe": {
+     "name": "100K XP (β)",
+     "pos": 28,
+     "track": "A",
+     "bounce": false,
+     "seed": 975599833
+    }
+   }
+  ],
+  [
+   {
+    "name": "Gross Cat",
+    "seed": 1679729223
+   },
+   {
+    "name": "Cow Cat",
+    "seed": 1679729223
+   },
+   {
+    "name": "Treasure Radar",
+    "seed": 1679729223
+   },
+   {
+    "name": "Uber Rare Catseye",
+    "seed": 1679729223
+   },
+   {
+    "name": "Treasure Radar",
+    "seed": 1679729223
+   },
+   {
+    "name": "1M XP",
+    "seed": 1679729223
+   }
+  ],
+  [
+   {
+    "name": "Worker Cat Wallet",
+    "seed": 1552991610
+   },
+   {
+    "name": "Cat Cannon Attack",
+    "seed": 1552991610
+   },
+   {
+    "name": "Speed Up",
+    "seed": 1552991610
+   },
+   {
+    "name": "Special Catseye",
+    "seed": 1552991610
+   },
+   {
+    "name": "Speed Up",
+    "seed": 1552991610
+   },
+   {
+    "name": "Catamin A",
+    "seed": 1552991610
+   }
+  ],
+  [
+   {
+    "name": "Bird Cat",
+    "seed": 4228587221
+   },
+   {
+    "name": "Gross Cat",
+    "seed": 4228587221
+   },
+   {
+    "name": "5K XP",
+    "seed": 4228587221
+   },
+   {
+    "name": "5K XP",
+    "seed": 4228587221
+   },
+   {
+    "name": "Li'l Lizard Cat",
+    "seed": 4228587221
+   },
+   {
+    "name": "100K XP (β)",
+    "seed": 4228587221
+   }
+  ],
+  [
+   {
+    "name": "Cat Cannon Attack",
+    "seed": 3282834825
+   },
+   {
+    "name": "Bird Cat",
+    "seed": 3282834825
+   },
+   {
+    "name": "Treasure Radar",
+    "seed": 3282834825
+   },
+   {
+    "name": "Uber Rare Catseye",
+    "seed": 3282834825
+   },
+   {
+    "name": "Treasure Radar",
+    "seed": 3282834825
+   },
+   {
+    "name": "Catamin C",
+    "seed": 3282834825
+   }
+  ],
+  [
+   {
+    "name": "Cat",
+    "seed": 636647832
+   },
+   {
+    "name": "Worker Cat Rate",
+    "seed": 636647832
+   },
+   {
+    "name": "Sniper the Cat",
+    "seed": 636647832
+   },
+   {
+    "name": "100K XP",
+    "seed": 636647832
+   },
+   {
+    "name": "Rich Cat",
+    "seed": 636647832
+   },
+   {
+    "name": "Catamin B",
+    "seed": 636647832
+   }
+  ],
+  [
+   {
+    "name": "Accounting",
+    "seed": 1511456361
+   },
+   {
+    "name": "Research",
+    "seed": 1511456361
+   },
+   {
+    "name": "Cat Jobs",
+    "seed": 1511456361
+   },
+   {
+    "name": "Super Rare Catseye",
+    "seed": 1511456361
+   },
+   {
+    "name": "Rich Cat",
+    "seed": 1511456361
+   },
+   {
+    "name": "Catamin B",
+    "seed": 1511456361
+   }
+  ],
+  [
+   {
+    "name": "Cat",
+    "seed": 3897106560
+   },
+   {
+    "name": "Cat Cannon Charge",
+    "seed": 3897106560
+   },
+   {
+    "name": "Rich Cat",
+    "seed": 3897106560
+   },
+   {
+    "name": "100K XP",
+    "seed": 3897106560
+   },
+   {
+    "name": "Rich Cat",
+    "seed": 3897106560
+   },
+   {
+    "name": "Catamin B",
+    "seed": 3897106560
+   }
+  ],
+  [
+   {
+    "name": "Worker Cat Rate",
+    "seed": 3313108289
+   },
+   {
+    "name": "Superfeline",
+    "seed": 3313108289
+   },
+   {
+    "name": "Yellow Catfruit Seed",
+    "seed": 3313108289
+   },
+   {
+    "name": "30K XP",
+    "seed": 3313108289
+   },
+   {
+    "name": "Speed Up",
+    "seed": 3313108289
+   },
+   {
+    "name": "100K XP (β)",
+    "seed": 3313108289
+   }
+  ],
+  [
+   {
+    "name": "Bird Cat",
+    "seed": 3617315537
+   },
+   {
+    "name": "Bird Cat",
+    "seed": 3617315537
+   },
+   {
+    "name": "Blue Catfruit",
+    "seed": 3617315537
+   },
+   {
+    "name": "30K XP",
+    "seed": 3617315537,
+    "dupe": {
+     "name": "Special Catseye",
+     "pos": 37,
+     "track": "A",
+     "bounce": false,
+     "seed": 2056858801
+    }
+   },
+   {
+    "name": "30K XP",
+    "seed": 3617315537
+   },
+   {
+    "name": "100K XP (β)",
+    "seed": 3617315537,
+    "dupe": {
+     "name": "Catamin A",
+     "pos": 37,
+     "track": "A",
+     "bounce": true,
+     "seed": 2056858801
+    }
+   }
+  ],
+  [
+   {
+    "name": "Research",
+    "seed": 3465814838
+   },
+   {
+    "name": "Bird Cat",
+    "seed": 3465814838,
+    "dupe": {
+     "name": "Tank Cat",
+     "pos": 38,
+     "track": "A",
+     "bounce": false,
+     "seed": 701843023
+    }
+   },
+   {
+    "name": "Green Catfruit",
+    "seed": 3465814838
+   },
+   {
+    "name": "100K XP",
+    "seed": 3465814838
+   },
+   {
+    "name": "Sniper the Cat",
+    "seed": 3465814838
+   },
+   {
+    "name": "Catamin C",
+    "seed": 3465814838
+   }
+  ],
+  [
+   {
+    "name": "Tank Cat",
+    "seed": 4068239041
+   },
+   {
+    "name": "Bird Cat",
+    "seed": 4068239041,
+    "dupe": {
+     "name": "Tank Cat",
+     "pos": 39,
+     "track": "A",
+     "bounce": false,
+     "seed": 1114503571
+    }
+   },
+   {
+    "name": "Cat Jobs",
+    "seed": 4068239041
+   },
+   {
+    "name": "30K XP",
+    "seed": 4068239041
+   },
+   {
+    "name": "Li'l Lizard Cat",
+    "seed": 4068239041
+   },
+   {
+    "name": "Catamin A",
+    "seed": 4068239041
+   }
+  ],
+  [
+   {
+    "name": "Cat",
+    "seed": 247588668
+   },
+   {
+    "name": "Cat Cannon Attack",
+    "seed": 247588668
+   },
+   {
+    "name": "Green Catfruit",
+    "seed": 247588668
+   },
+   {
+    "name": "10K XP",
+    "seed": 247588668
+   },
+   {
+    "name": "Li'l Cat",
+    "seed": 247588668
+   },
+   {
+    "name": "Catamin A",
+    "seed": 247588668,
+    "dupe": {
+     "name": "100K XP (β)",
+     "pos": 40,
+     "track": "A",
+     "bounce": false,
+     "seed": 221380143
+    }
+   }
+  ],
+  [
+   {
+    "name": "Cat Cannon Attack",
+    "seed": 828278613
+   },
+   {
+    "name": "Cow Cat",
+    "seed": 828278613
+   },
+   {
+    "name": "5K XP",
+    "seed": 828278613
+   },
+   {
+    "name": "5K XP",
+    "seed": 828278613
+   },
+   {
+    "name": "Cat CPU",
+    "seed": 828278613
+   },
+   {
+    "name": "100K XP (β)",
+    "seed": 828278613
+   }
+  ],
+  [
+   {
+    "name": "Study",
+    "seed": 2271571918
+   },
+   {
+    "name": "Base Defense",
+    "seed": 2271571918
+   },
+   {
+    "name": "500K XP",
+    "seed": 2271571918
+   },
+   {
+    "name": "Uber Rare Catseye",
+    "seed": 2271571918
+   },
+   {
+    "name": "Cat Jobs",
+    "seed": 2271571918
+   },
+   {
+    "name": "Catamin C",
+    "seed": 2271571918
+   }
+  ],
+  [
+   {
+    "name": "Cow Cat",
+    "seed": 2247084742
+   },
+   {
+    "name": "Cat",
+    "seed": 2247084742
+   },
+   {
+    "name": "Sniper the Cat",
+    "seed": 2247084742
+   },
+   {
+    "name": "Special Catseye",
+    "seed": 2247084742
+   },
+   {
+    "name": "Li'l Fish Cat",
+    "seed": 2247084742
+   },
+   {
+    "name": "100K XP (β)",
+    "seed": 2247084742
+   }
+  ],
+  [
+   {
+    "name": "Cow Cat",
+    "seed": 3997072552,
+    "dupe": {
+     "name": "Study",
+     "pos": 44,
+     "track": "A",
+     "bounce": false,
+     "seed": 2543185021
+    }
+   },
+   {
+    "name": "Cat Cannon Charge",
+    "seed": 3997072552
+   },
+   {
+    "name": "Sniper the Cat",
+    "seed": 3997072552
+   },
+   {
+    "name": "10K XP",
+    "seed": 3997072552
+   },
+   {
+    "name": "Cat CPU",
+    "seed": 3997072552
+   },
+   {
+    "name": "100K XP (β)",
+    "seed": 3997072552,
+    "dupe": {
+     "name": "Catamin A",
+     "pos": 44,
+     "track": "A",
+     "bounce": true,
+     "seed": 2543185021
+    }
+   }
+  ],
+  [
+   {
+    "name": "Fish Cat",
+    "seed": 111303024
+   },
+   {
+    "name": "Study",
+    "seed": 111303024
+   },
+   {
+    "name": "200K XP",
+    "seed": 111303024
+   },
+   {
+    "name": "10K XP",
+    "seed": 111303024,
+    "dupe": {
+     "name": "30K XP",
+     "pos": 45,
+     "track": "A",
+     "bounce": false,
+     "seed": 1918336950
+    }
+   },
+   {
+    "name": "Li'l Cow Cat",
+    "seed": 111303024
+   },
+   {
+    "name": "Catamin A",
+    "seed": 111303024
+   }
+  ],
+  [
+   {
+    "name": "Fish Cat",
+    "seed": 1695740262,
+    "dupe": {
+     "name": "Bird Cat",
+     "pos": 46,
+     "track": "A",
+     "bounce": false,
+     "seed": 759344377
+    }
+   },
+   {
+    "name": "Superfeline",
+    "seed": 1695740262
+   },
+   {
+    "name": "Sniper the Cat",
+    "seed": 1695740262
+   },
+   {
+    "name": "Special Catseye",
+    "seed": 1695740262
+   },
+   {
+    "name": "Li'l Fish Cat",
+    "seed": 1695740262
+   },
+   {
+    "name": "Catamin B",
+    "seed": 1695740262
+   }
+  ],
+  [
+   {
+    "name": "Bird Cat",
+    "seed": 2694197399
+   },
+   {
+    "name": "Axe Cat",
+    "seed": 2694197399
+   },
+   {
+    "name": "Yellow Catfruit",
+    "seed": 2694197399
+   },
+   {
+    "name": "Rare Catseye",
+    "seed": 2694197399
+   },
+   {
+    "name": "30K XP",
+    "seed": 2694197399
+   },
+   {
+    "name": "100K XP (β)",
+    "seed": 2694197399,
+    "dupe": {
+     "name": "Catamin A",
+     "pos": 47,
+     "track": "A",
+     "bounce": false,
+     "seed": 393110485
+    }
+   }
+  ],
+  [
+   {
+    "name": "Base Defense",
+    "seed": 2352688735
+   },
+   {
+    "name": "Study",
+    "seed": 2352688735
+   },
+   {
+    "name": "Purple Catfruit Seed",
+    "seed": 2352688735
+   },
+   {
+    "name": "5K XP",
+    "seed": 2352688735
+   },
+   {
+    "name": "10K XP",
+    "seed": 2352688735
+   },
+   {
+    "name": "Catamin A",
+    "seed": 2352688735
+   }
+  ],
+  [
+   {
+    "name": "Cat Cannon Charge",
+    "seed": 173650780
+   },
+   {
+    "name": "Base Defense",
+    "seed": 173650780,
+    "dupe": {
+     "name": "Cat Cannon Charge",
+     "pos": 49,
+     "track": "A",
+     "bounce": false,
+     "seed": 714124613
+    }
+   },
+   {
+    "name": "Rich Cat",
+    "seed": 173650780
+   },
+   {
+    "name": "10K XP",
+    "seed": 173650780
+   },
+   {
+    "name": "Li'l Titan Cat",
+    "seed": 173650780
+   },
+   {
+    "name": "Catamin B",
+    "seed": 173650780
+   }
+  ],
+  [
+   {
+    "name": "Gross Cat",
+    "seed": 911512281
+   },
+   {
+    "name": "Cat Cannon Charge",
+    "seed": 911512281
+   },
+   {
+    "name": "Cat Jobs",
+    "seed": 911512281
+   },
+   {
+    "name": "30K XP",
+    "seed": 911512281
+   },
+   {
+    "name": "Li'l Lizard Cat",
+    "seed": 911512281
+   },
+   {
+    "name": "100K XP (β)",
+    "seed": 911512281
+   }
+  ],
+  [
+   {
+    "name": "Tank Cat",
+    "seed": 3389687011
+   },
+   {
+    "name": "Cat Cannon Attack",
+    "seed": 3389687011
+   },
+   {
+    "name": "Cat Jobs",
+    "seed": 3389687011
+   },
+   {
+    "name": "Rare Catseye",
+    "seed": 3389687011
+   },
+   {
+    "name": "Speed Up",
+    "seed": 3389687011
+   },
+   {
+    "name": "500K XP",
+    "seed": 3389687011
+   }
+  ],
+  [
+   {
+    "name": "Worker Cat Rate",
+    "seed": 1769890835
+   },
+   {
+    "name": "Cow Cat",
+    "seed": 1769890835
+   },
+   {
+    "name": "Purple Catfruit",
+    "seed": 1769890835
+   },
+   {
+    "name": "Rare Catseye",
+    "seed": 1769890835,
+    "dupe": {
+     "name": "Special Catseye",
+     "pos": 52,
+     "track": "A",
+     "bounce": false,
+     "seed": 2391463661
+    }
+   },
+   {
+    "name": "10K XP",
+    "seed": 1769890835
+   },
+   {
+    "name": "500K XP",
+    "seed": 1769890835
+   }
+  ],
+  [
+   {
+    "name": "Titan Cat",
+    "seed": 1513364678
+   },
+   {
+    "name": "Cat Cannon Attack",
+    "seed": 1513364678
+   },
+   {
+    "name": "Green Catfruit",
+    "seed": 1513364678
+   },
+   {
+    "name": "Special Catseye",
+    "seed": 1513364678
+   },
+   {
+    "name": "30K XP",
+    "seed": 1513364678
+   },
+   {
+    "name": "Catamin A",
+    "seed": 1513364678
+   }
+  ],
+  [
+   {
+    "name": "Gross Cat",
+    "seed": 1246182339
+   },
+   {
+    "name": "Gross Cat",
+    "seed": 1246182339
+   },
+   {
+    "name": "Yellow Catfruit",
+    "seed": 1246182339
+   },
+   {
+    "name": "Rare Catseye",
+    "seed": 1246182339
+   },
+   {
+    "name": "30K XP",
+    "seed": 1246182339,
+    "dupe": {
+     "name": "Li'l Titan Cat",
+     "pos": 54,
+     "track": "A",
+     "bounce": false,
+     "seed": 730926428
+    }
+   },
+   {
+    "name": "100K XP (β)",
+    "seed": 1246182339
+   }
+  ],
+  [
+   {
+    "name": "Accounting",
+    "seed": 1310328897
+   },
+   {
+    "name": "Research",
+    "seed": 1310328897
+   },
+   {
+    "name": "Blue Catfruit",
+    "seed": 1310328897
+   },
+   {
+    "name": "30K XP",
+    "seed": 1310328897
+   },
+   {
+    "name": "30K XP",
+    "seed": 1310328897,
+    "dupe": {
+     "name": "Li'l Tank Cat",
+     "pos": 55,
+     "track": "A",
+     "bounce": false,
+     "seed": 418787272
+    }
+   },
+   {
+    "name": "Catamin B",
+    "seed": 1310328897
+   }
+  ],
+  [
+   {
+    "name": "Tank Cat",
+    "seed": 2108211535
+   },
+   {
+    "name": "Accounting",
+    "seed": 2108211535
+   },
+   {
+    "name": "Purple Catfruit",
+    "seed": 2108211535
+   },
+   {
+    "name": "Rare Catseye",
+    "seed": 2108211535
+   },
+   {
+    "name": "10K XP",
+    "seed": 2108211535
+   },
+   {
+    "name": "500K XP",
+    "seed": 2108211535
+   }
+  ],
+  [
+   {
+    "name": "Study",
+    "seed": 2289921172
+   },
+   {
+    "name": "Cat Energy",
+    "seed": 2289921172
+   },
+   {
+    "name": "Sniper the Cat",
+    "seed": 2289921172
+   },
+   {
+    "name": "100K XP",
+    "seed": 2289921172
+   },
+   {
+    "name": "Cat Jobs",
+    "seed": 2289921172
+   },
+   {
+    "name": "Catamin B",
+    "seed": 2289921172
+   }
+  ],
+  [
+   {
+    "name": "Cow Cat",
+    "seed": 526849258
+   },
+   {
+    "name": "Fish Cat",
+    "seed": 526849258
+   },
+   {
+    "name": "Green Catfruit",
+    "seed": 526849258
+   },
+   {
+    "name": "Special Catseye",
+    "seed": 526849258
+   },
+   {
+    "name": "30K XP",
+    "seed": 526849258
+   },
+   {
+    "name": "100K XP (β)",
+    "seed": 526849258
+   }
+  ],
+  [
+   {
+    "name": "Research",
+    "seed": 1339303118,
+    "dupe": {
+     "name": "Cat",
+     "pos": 59,
+     "track": "A",
+     "bounce": false,
+     "seed": 200900968
+    }
+   },
+   {
+    "name": "Research",
+    "seed": 1339303118
+   },
+   {
+    "name": "Green Catfruit Seed",
+    "seed": 1339303118
+   },
+   {
+    "name": "Special Catseye",
+    "seed": 1339303118,
+    "dupe": {
+     "name": "30K XP",
+     "pos": 59,
+     "track": "A",
+     "bounce": false,
+     "seed": 200900968
+    }
+   },
+   {
+    "name": "30K XP",
+    "seed": 1339303118,
+    "dupe": {
+     "name": "Li'l Bird Cat",
+     "pos": 59,
+     "track": "A",
+     "bounce": false,
+     "seed": 200900968
+    }
+   },
+   {
+    "name": "Catamin A",
+    "seed": 1339303118
+   }
+  ],
+  [
+   {
+    "name": "Fish Cat",
+    "seed": 1972739202
+   },
+   {
+    "name": "Tank Cat",
+    "seed": 1972739202
+   },
+   {
+    "name": "10K XP",
+    "seed": 1972739202
+   },
+   {
+    "name": "Special Catseye",
+    "seed": 1972739202,
+    "dupe": {
+     "name": "30K XP",
+     "pos": 60,
+     "track": "A",
+     "bounce": false,
+     "seed": 432390016
+    }
+   },
+   {
+    "name": "Li'l Fish Cat",
+    "seed": 1972739202
+   },
+   {
+    "name": "Catamin A",
+    "seed": 1972739202,
+    "dupe": {
+     "name": "100K XP (β)",
+     "pos": 60,
+     "track": "B",
+     "bounce": false,
+     "seed": 1517873306
+    }
+   }
+  ],
+  [
+   {
+    "name": "Research",
+    "seed": 1517873306
+   },
+   {
+    "name": "Base Defense",
+    "seed": 1517873306
+   },
+   {
+    "name": "5K XP",
+    "seed": 1517873306
+   },
+   {
+    "name": "5K XP",
+    "seed": 1517873306
+   },
+   {
+    "name": "Li'l Axe Cat",
+    "seed": 1517873306
+   },
+   {
+    "name": "Catamin A",
+    "seed": 1517873306,
+    "dupe": {
+     "name": "100K XP (β)",
+     "pos": 61,
+     "track": "B",
+     "bounce": false,
+     "seed": 4142426851
+    }
+   }
+  ],
+  [
+   {
+    "name": "Tank Cat",
+    "seed": 4142426851
+   },
+   {
+    "name": "Accounting",
+    "seed": 4142426851
+   },
+   {
+    "name": "Cat Jobs",
+    "seed": 4142426851
+   },
+   {
+    "name": "Rare Catseye",
+    "seed": 4142426851
+   },
+   {
+    "name": "Speed Up",
+    "seed": 4142426851
+   },
+   {
+    "name": "500K XP",
+    "seed": 4142426851
+   }
+  ],
+  [
+   {
+    "name": "Fish Cat",
+    "seed": 48281694
+   },
+   {
+    "name": "Research",
+    "seed": 48281694
+   },
+   {
+    "name": "5K XP",
+    "seed": 48281694
+   },
+   {
+    "name": "5K XP",
+    "seed": 48281694
+   },
+   {
+    "name": "10K XP",
+    "seed": 48281694
+   },
+   {
+    "name": "Catamin A",
+    "seed": 48281694
+   }
+  ],
+  [
+   {
+    "name": "Worker Cat Wallet",
+    "seed": 2802101214,
+    "dupe": {
+     "name": "Cat Cannon Attack",
+     "pos": 64,
+     "track": "A",
+     "bounce": false,
+     "seed": 2333078241
+    }
+   },
+   {
+    "name": "Bird Cat",
+    "seed": 2802101214
+   },
+   {
+    "name": "200K XP",
+    "seed": 2802101214
+   },
+   {
+    "name": "Special Catseye",
+    "seed": 2802101214
+   },
+   {
+    "name": "10K XP",
+    "seed": 2802101214,
+    "dupe": {
+     "name": "Cat CPU",
+     "pos": 64,
+     "track": "A",
+     "bounce": false,
+     "seed": 2333078241
+    }
+   },
+   {
+    "name": "Catamin B",
+    "seed": 2802101214
+   }
+  ],
+  [
+   {
+    "name": "Cat",
+    "seed": 2172119112
+   },
+   {
+    "name": "Cat Cannon Attack",
+    "seed": 2172119112
+   },
+   {
+    "name": "Sniper the Cat",
+    "seed": 2172119112
+   },
+   {
+    "name": "100K XP",
+    "seed": 2172119112
+   },
+   {
+    "name": "Rich Cat",
+    "seed": 2172119112
+   },
+   {
+    "name": "Catamin B",
+    "seed": 2172119112
+   }
+  ],
+  [
+   {
+    "name": "Worker Cat Wallet",
+    "seed": 1238558898
+   },
+   {
+    "name": "Titan Cat",
+    "seed": 1238558898
+   },
+   {
+    "name": "5K XP",
+    "seed": 1238558898
+   },
+   {
+    "name": "5K XP",
+    "seed": 1238558898
+   },
+   {
+    "name": "30K XP",
+    "seed": 1238558898
+   },
+   {
+    "name": "Catamin A",
+    "seed": 1238558898
+   }
+  ],
+  [
+   {
+    "name": "Worker Cat Rate",
+    "seed": 3034794539
+   },
+   {
+    "name": "Lizard Cat",
+    "seed": 3034794539
+   },
+   {
+    "name": "Yellow Catfruit Seed",
+    "seed": 3034794539
+   },
+   {
+    "name": "Rare Catseye",
+    "seed": 3034794539
+   },
+   {
+    "name": "30K XP",
+    "seed": 3034794539,
+    "dupe": {
+     "name": "Speed Up",
+     "pos": 67,
+     "track": "A",
+     "bounce": false,
+     "seed": 4292494584
+    }
+   },
+   {
+    "name": "100K XP (β)",
+    "seed": 3034794539
+   }
+  ],
+  [
+   {
+    "name": "Cow Cat",
+    "seed": 954736474
+   },
+   {
+    "name": "Axe Cat",
+    "seed": 954736474
+   },
+   {
+    "name": "200K XP",
+    "seed": 954736474
+   },
+   {
+    "name": "Special Catseye",
+    "seed": 954736474
+   },
+   {
+    "name": "10K XP",
+    "seed": 954736474
+   },
+   {
+    "name": "100K XP (β)",
+    "seed": 954736474,
+    "dupe": {
+     "name": "Catamin A",
+     "pos": 68,
+     "track": "A",
+     "bounce": false,
+     "seed": 2590950107
+    }
+   }
+  ],
+  [
+   {
+    "name": "Cat Cannon Attack",
+    "seed": 2211775425
+   },
+   {
+    "name": "Study",
+    "seed": 2211775425
+   },
+   {
+    "name": "5K XP",
+    "seed": 2211775425
+   },
+   {
+    "name": "5K XP",
+    "seed": 2211775425
+   },
+   {
+    "name": "Li'l Gross Cat",
+    "seed": 2211775425
+   },
+   {
+    "name": "100K XP (β)",
+    "seed": 2211775425,
+    "dupe": {
+     "name": "Catamin A",
+     "pos": 69,
+     "track": "B",
+     "bounce": false,
+     "seed": 1591141477
+    }
+   }
+  ],
+  [
+   {
+    "name": "Base Defense",
+    "seed": 1591141477
+   },
+   {
+    "name": "Bird Cat",
+    "seed": 1591141477
+   },
+   {
+    "name": "Blue Catfruit",
+    "seed": 1591141477
+   },
+   {
+    "name": "30K XP",
+    "seed": 1591141477
+   },
+   {
+    "name": "30K XP",
+    "seed": 1591141477
+   },
+   {
+    "name": "Catamin B",
+    "seed": 1591141477
+   }
+  ],
+  [
+   {
+    "name": "Bird Cat",
+    "seed": 3538330979
+   },
+   {
+    "name": "Bird Cat",
+    "seed": 3538330979,
+    "dupe": {
+     "name": "Lizard Cat",
+     "pos": 71,
+     "track": "A",
+     "bounce": false,
+     "seed": 1701430854
+    }
+   },
+   {
+    "name": "Yellow Catfruit Seed",
+    "seed": 3538330979
+   },
+   {
+    "name": "Rare Catseye",
+    "seed": 3538330979
+   },
+   {
+    "name": "30K XP",
+    "seed": 3538330979,
+    "dupe": {
+     "name": "Li'l Axe Cat",
+     "pos": 71,
+     "track": "A",
+     "bounce": false,
+     "seed": 1701430854
+    }
+   },
+   {
+    "name": "100K XP (β)",
+    "seed": 3538330979
+   }
+  ],
+  [
+   {
+    "name": "Study",
+    "seed": 3387566230
+   },
+   {
+    "name": "Superfeline",
+    "seed": 3387566230
+   },
+   {
+    "name": "Speed Up",
+    "seed": 3387566230
+   },
+   {
+    "name": "Special Catseye",
+    "seed": 3387566230
+   },
+   {
+    "name": "Speed Up",
+    "seed": 3387566230
+   },
+   {
+    "name": "100K XP (β)",
+    "seed": 3387566230,
+    "dupe": {
+     "name": "Catamin A",
+     "pos": 72,
+     "track": "B",
+     "bounce": false,
+     "seed": 45210050
+    }
+   }
+  ],
+  [
+   {
+    "name": "Titan Cat",
+    "seed": 45210050
+   },
+   {
+    "name": "Fish Cat",
+    "seed": 45210050
+   },
+   {
+    "name": "Rich Cat",
+    "seed": 45210050
+   },
+   {
+    "name": "Special Catseye",
+    "seed": 45210050,
+    "dupe": {
+     "name": "30K XP",
+     "pos": 73,
+     "track": "A",
+     "bounce": false,
+     "seed": 4211770630
+    }
+   },
+   {
+    "name": "Speed Up",
+    "seed": 45210050,
+    "dupe": {
+     "name": "Li'l Cat",
+     "pos": 73,
+     "track": "A",
+     "bounce": false,
+     "seed": 4211770630
+    }
+   },
+   {
+    "name": "Catamin B",
+    "seed": 45210050
+   }
+  ],
+  [
+   {
+    "name": "Worker Cat Rate",
+    "seed": 2747502803
+   },
+   {
+    "name": "Worker Cat Wallet",
+    "seed": 2747502803
+   },
+   {
+    "name": "30K XP",
+    "seed": 2747502803
+   },
+   {
+    "name": "Rare Catseye",
+    "seed": 2747502803,
+    "dupe": {
+     "name": "Special Catseye",
+     "pos": 74,
+     "track": "A",
+     "bounce": false,
+     "seed": 499521599
+    }
+   },
+   {
+    "name": "Li'l Bird Cat",
+    "seed": 2747502803
+   },
+   {
+    "name": "100K XP (β)",
+    "seed": 2747502803
+   }
+  ],
+  [
+   {
+    "name": "Accounting",
+    "seed": 359536479
+   },
+   {
+    "name": "Cat Cannon Charge",
+    "seed": 359536479
+   },
+   {
+    "name": "Yellow Catfruit Seed",
+    "seed": 359536479
+   },
+   {
+    "name": "Rare Catseye",
+    "seed": 359536479,
+    "dupe": {
+     "name": "Special Catseye",
+     "pos": 75,
+     "track": "A",
+     "bounce": false,
+     "seed": 432741533
+    }
+   },
+   {
+    "name": "30K XP",
+    "seed": 359536479
+   },
+   {
+    "name": "100K XP (β)",
+    "seed": 359536479,
+    "dupe": {
+     "name": "Catamin A",
+     "pos": 75,
+     "track": "B",
+     "bounce": false,
+     "seed": 981467569
+    }
+   }
+  ],
+  [
+   {
+    "name": "Tank Cat",
+    "seed": 981467569
+   },
+   {
+    "name": "Accounting",
+    "seed": 981467569
+   },
+   {
+    "name": "Yellow Catfruit Seed",
+    "seed": 981467569,
+    "dupe": {
+     "name": "30K XP",
+     "pos": 76,
+     "track": "A",
+     "bounce": false,
+     "seed": 616774890
+    }
+   },
+   {
+    "name": "30K XP",
+    "seed": 981467569
+   },
+   {
+    "name": "Speed Up",
+    "seed": 981467569
+   },
+   {
+    "name": "Catamin A",
+    "seed": 981467569,
+    "dupe": {
+     "name": "100K XP (β)",
+     "pos": 76,
+     "track": "B",
+     "bounce": true,
+     "seed": 1845288261
+    }
+   }
+  ],
+  [
+   {
+    "name": "Cat Cannon Attack",
+    "seed": 1845288261
+   },
+   {
+    "name": "Research",
+    "seed": 1845288261
+   },
+   {
+    "name": "Cat Jobs",
+    "seed": 1845288261
+   },
+   {
+    "name": "30K XP",
+    "seed": 1845288261,
+    "dupe": {
+     "name": "Special Catseye",
+     "pos": 77,
+     "track": "A",
+     "bounce": false,
+     "seed": 4116940399
+    }
+   },
+   {
+    "name": "Li'l Lizard Cat",
+    "seed": 1845288261
+   },
+   {
+    "name": "100K XP (β)",
+    "seed": 1845288261
+   }
+  ],
+  [
+   {
+    "name": "Cow Cat",
+    "seed": 2549228728
+   },
+   {
+    "name": "Tank Cat",
+    "seed": 2549228728
+   },
+   {
+    "name": "5K XP",
+    "seed": 2549228728
+   },
+   {
+    "name": "5K XP",
+    "seed": 2549228728
+   },
+   {
+    "name": "Li'l Cat",
+    "seed": 2549228728
+   },
+   {
+    "name": "100K XP (β)",
+    "seed": 2549228728,
+    "dupe": {
+     "name": "Catamin A",
+     "pos": 78,
+     "track": "B",
+     "bounce": true,
+     "seed": 3855889194
+    }
+   }
+  ],
+  [
+   {
+    "name": "Fish Cat",
+    "seed": 3855889194
+   },
+   {
+    "name": "Cat Cannon Attack",
+    "seed": 3855889194
+   },
+   {
+    "name": "200K XP",
+    "seed": 3855889194
+   },
+   {
+    "name": "Special Catseye",
+    "seed": 3855889194
+   },
+   {
+    "name": "10K XP",
+    "seed": 3855889194
+   },
+   {
+    "name": "Catamin A",
+    "seed": 3855889194
+   }
+  ],
+  [
+   {
+    "name": "Base Defense",
+    "seed": 4182435769
+   },
+   {
+    "name": "Lizard Cat",
+    "seed": 4182435769
+   },
+   {
+    "name": "Yellow Catfruit",
+    "seed": 4182435769
+   },
+   {
+    "name": "30K XP",
+    "seed": 4182435769
+   },
+   {
+    "name": "Speed Up",
+    "seed": 4182435769
+   },
+   {
+    "name": "Catamin A",
+    "seed": 4182435769,
+    "dupe": {
+     "name": "100K XP (β)",
+     "pos": 80,
+     "track": "A",
+     "bounce": true,
+     "seed": 1863193959
+    }
+   }
+  ],
+  [
+   {
+    "name": "Study",
+    "seed": 4235830198
+   },
+   {
+    "name": "Superfeline",
+    "seed": 4235830198
+   },
+   {
+    "name": "Green Catfruit",
+    "seed": 4235830198
+   },
+   {
+    "name": "Special Catseye",
+    "seed": 4235830198
+   },
+   {
+    "name": "30K XP",
+    "seed": 4235830198
+   },
+   {
+    "name": "100K XP (β)",
+    "seed": 4235830198
+   }
+  ],
+  [
+   {
+    "name": "Lizard Cat",
+    "seed": 1177647649
+   },
+   {
+    "name": "Cow Cat",
+    "seed": 1177647649
+   },
+   {
+    "name": "Yellow Catfruit",
+    "seed": 1177647649
+   },
+   {
+    "name": "30K XP",
+    "seed": 1177647649
+   },
+   {
+    "name": "Speed Up",
+    "seed": 1177647649
+   },
+   {
+    "name": "Catamin B",
+    "seed": 1177647649
+   }
+  ],
+  [
+   {
+    "name": "Study",
+    "seed": 878505838
+   },
+   {
+    "name": "Lizard Cat",
+    "seed": 878505838
+   },
+   {
+    "name": "Green Catfruit",
+    "seed": 878505838
+   },
+   {
+    "name": "Special Catseye",
+    "seed": 878505838
+   },
+   {
+    "name": "30K XP",
+    "seed": 878505838
+   },
+   {
+    "name": "100K XP (β)",
+    "seed": 878505838
+   }
+  ],
+  [
+   {
+    "name": "Fish Cat",
+    "seed": 268473912
+   },
+   {
+    "name": "Study",
+    "seed": 268473912
+   },
+   {
+    "name": "Sniper the Cat",
+    "seed": 268473912
+   },
+   {
+    "name": "10K XP",
+    "seed": 268473912
+   },
+   {
+    "name": "Cat CPU",
+    "seed": 268473912
+   },
+   {
+    "name": "Catamin A",
+    "seed": 268473912,
+    "dupe": {
+     "name": "100K XP (β)",
+     "pos": 84,
+     "track": "B",
+     "bounce": true,
+     "seed": 315404955
+    }
+   }
+  ],
+  [
+   {
+    "name": "Cat Cannon Attack",
+    "seed": 315404955
+   },
+   {
+    "name": "Research",
+    "seed": 315404955
+   },
+   {
+    "name": "Purple Catfruit",
+    "seed": 315404955
+   },
+   {
+    "name": "Rare Catseye",
+    "seed": 315404955
+   },
+   {
+    "name": "10K XP",
+    "seed": 315404955
+   },
+   {
+    "name": "100K XP (β)",
+    "seed": 315404955
+   }
+  ],
+  [
+   {
+    "name": "Accounting",
+    "seed": 1228861347
+   },
+   {
+    "name": "Cat",
+    "seed": 1228861347
+   },
+   {
+    "name": "Blue Catfruit Seed",
+    "seed": 1228861347
+   },
+   {
+    "name": "Rare Catseye",
+    "seed": 1228861347,
+    "dupe": {
+     "name": "30K XP",
+     "pos": 86,
+     "track": "A",
+     "bounce": true,
+     "seed": 4129932742
+    }
+   },
+   {
+    "name": "Li'l Tank Cat",
+    "seed": 1228861347
+   },
+   {
+    "name": "100K XP (β)",
+    "seed": 1228861347,
+    "dupe": {
+     "name": "Catamin A",
+     "pos": 86,
+     "track": "A",
+     "bounce": false,
+     "seed": 4129932742
+    }
+   }
+  ],
+  [
+   {
+    "name": "Titan Cat",
+    "seed": 2144756366
+   },
+   {
+    "name": "Cat",
+    "seed": 2144756366,
+    "dupe": {
+     "name": "Fish Cat",
+     "pos": 87,
+     "track": "A",
+     "bounce": false,
+     "seed": 1310817101
+    }
+   },
+   {
+    "name": "Red Catfruit",
+    "seed": 2144756366
+   },
+   {
+    "name": "Special Catseye",
+    "seed": 2144756366
+   },
+   {
+    "name": "Li'l Axe Cat",
+    "seed": 2144756366
+   },
+   {
+    "name": "Catamin A",
+    "seed": 2144756366
+   }
+  ],
+  [
+   {
+    "name": "Cat Energy",
+    "seed": 347892713
+   },
+   {
+    "name": "Research",
+    "seed": 347892713
+   },
+   {
+    "name": "100K XP",
+    "seed": 347892713
+   },
+   {
+    "name": "30K XP",
+    "seed": 347892713
+   },
+   {
+    "name": "Cat CPU",
+    "seed": 347892713
+   },
+   {
+    "name": "Catamin B",
+    "seed": 347892713
+   }
+  ],
+  [
+   {
+    "name": "Lizard Cat",
+    "seed": 3549000283
+   },
+   {
+    "name": "Cat Cannon Charge",
+    "seed": 3549000283
+   },
+   {
+    "name": "100K XP",
+    "seed": 3549000283
+   },
+   {
+    "name": "Rare Catseye",
+    "seed": 3549000283,
+    "dupe": {
+     "name": "Special Catseye",
+     "pos": 89,
+     "track": "A",
+     "bounce": false,
+     "seed": 3416222906
+    }
+   },
+   {
+    "name": "Li'l Bird Cat",
+    "seed": 3549000283
+   },
+   {
+    "name": "Catamin A",
+    "seed": 3549000283
+   }
+  ],
+  [
+   {
+    "name": "Fish Cat",
+    "seed": 970407870
+   },
+   {
+    "name": "Titan Cat",
+    "seed": 970407870
+   },
+   {
+    "name": "Rich Cat",
+    "seed": 970407870
+   },
+   {
+    "name": "Special Catseye",
+    "seed": 970407870,
+    "dupe": {
+     "name": "Rare Catseye",
+     "pos": 90,
+     "track": "A",
+     "bounce": false,
+     "seed": 2524418222
+    }
+   },
+   {
+    "name": "Speed Up",
+    "seed": 970407870
+   },
+   {
+    "name": "Catamin A",
+    "seed": 970407870,
+    "dupe": {
+     "name": "100K XP (β)",
+     "pos": 90,
+     "track": "A",
+     "bounce": false,
+     "seed": 2524418222
+    }
+   }
+  ],
+  [
+   {
+    "name": "Bird Cat",
+    "seed": 1429070495
+   },
+   {
+    "name": "Cat Cannon Charge",
+    "seed": 1429070495
+   },
+   {
+    "name": "Purple Catfruit",
+    "seed": 1429070495
+   },
+   {
+    "name": "Super Rare Catseye",
+    "seed": 1429070495
+   },
+   {
+    "name": "Sniper the Cat",
+    "seed": 1429070495
+   },
+   {
+    "name": "500K XP",
+    "seed": 1429070495
+   }
+  ],
+  [
+   {
+    "name": "Lizard Cat",
+    "seed": 546371701
+   },
+   {
+    "name": "Fish Cat",
+    "seed": 546371701
+   },
+   {
+    "name": "Cat Jobs",
+    "seed": 546371701
+   },
+   {
+    "name": "30K XP",
+    "seed": 546371701
+   },
+   {
+    "name": "Li'l Lizard Cat",
+    "seed": 546371701
+   },
+   {
+    "name": "Catamin A",
+    "seed": 546371701
+   }
+  ],
+  [
+   {
+    "name": "Fish Cat",
+    "seed": 1782857184
+   },
+   {
+    "name": "Worker Cat Rate",
+    "seed": 1782857184
+   },
+   {
+    "name": "50K XP",
+    "seed": 1782857184
+   },
+   {
+    "name": "10K XP",
+    "seed": 1782857184
+   },
+   {
+    "name": "Li'l Cow Cat",
+    "seed": 1782857184
+   },
+   {
+    "name": "Catamin A",
+    "seed": 1782857184,
+    "dupe": {
+     "name": "100K XP (β)",
+     "pos": 93,
+     "track": "B",
+     "bounce": false,
+     "seed": 3839806358
+    }
+   }
+  ],
+  [
+   {
+    "name": "Titan Cat",
+    "seed": 3839806358
+   },
+   {
+    "name": "Superfeline",
+    "seed": 3839806358
+   },
+   {
+    "name": "Green Catfruit",
+    "seed": 3839806358
+   },
+   {
+    "name": "Special Catseye",
+    "seed": 3839806358
+   },
+   {
+    "name": "30K XP",
+    "seed": 3839806358
+   },
+   {
+    "name": "Catamin B",
+    "seed": 3839806358
+   }
+  ],
+  [
+   {
+    "name": "Worker Cat Wallet",
+    "seed": 2456637330
+   },
+   {
+    "name": "Cat Cannon Charge",
+    "seed": 2456637330
+   },
+   {
+    "name": "Rich Cat",
+    "seed": 2456637330
+   },
+   {
+    "name": "100K XP",
+    "seed": 2456637330
+   },
+   {
+    "name": "Rich Cat",
+    "seed": 2456637330
+   },
+   {
+    "name": "Catamin C",
+    "seed": 2456637330
+   }
+  ],
+  [
+   {
+    "name": "Study",
+    "seed": 3119149600
+   },
+   {
+    "name": "Titan Cat",
+    "seed": 3119149600
+   },
+   {
+    "name": "Speed Up",
+    "seed": 3119149600
+   },
+   {
+    "name": "10K XP",
+    "seed": 3119149600
+   },
+   {
+    "name": "Li'l Titan Cat",
+    "seed": 3119149600
+   },
+   {
+    "name": "100K XP (β)",
+    "seed": 3119149600
+   }
+  ],
+  [
+   {
+    "name": "Titan Cat",
+    "seed": 3859433666
+   },
+   {
+    "name": "Worker Cat Wallet",
+    "seed": 3859433666
+   },
+   {
+    "name": "Red Catfruit",
+    "seed": 3859433666
+   },
+   {
+    "name": "100K XP",
+    "seed": 3859433666
+   },
+   {
+    "name": "Sniper the Cat",
+    "seed": 3859433666
+   },
+   {
+    "name": "Catamin C",
+    "seed": 3859433666
+   }
+  ],
+  [
+   {
+    "name": "Study",
+    "seed": 975995620
+   },
+   {
+    "name": "Cat Cannon Attack",
+    "seed": 975995620
+   },
+   {
+    "name": "Rich Cat",
+    "seed": 975995620
+   },
+   {
+    "name": "10K XP",
+    "seed": 975995620
+   },
+   {
+    "name": "Li'l Titan Cat",
+    "seed": 975995620
+   },
+   {
+    "name": "100K XP (β)",
+    "seed": 975995620
+   }
+  ],
+  [
+   {
+    "name": "Worker Cat Wallet",
+    "seed": 2991780462
+   },
+   {
+    "name": "Cat Cannon Charge",
+    "seed": 2991780462
+   },
+   {
+    "name": "Sniper the Cat",
+    "seed": 2991780462
+   },
+   {
+    "name": "100K XP",
+    "seed": 2991780462
+   },
+   {
+    "name": "Rich Cat",
+    "seed": 2991780462
+   },
+   {
+    "name": "Catamin B",
+    "seed": 2991780462
+   }
+  ],
+  [
+   {
+    "name": "Study",
+    "seed": 1765523248
+   },
+   {
+    "name": "Cow Cat",
+    "seed": 1765523248
+   },
+   {
+    "name": "Green Catfruit",
+    "seed": 1765523248
+   },
+   {
+    "name": "10K XP",
+    "seed": 1765523248
+   },
+   {
+    "name": "Li'l Cat",
+    "seed": 1765523248
+   },
+   {
+    "name": "100K XP (β)",
+    "seed": 1765523248
+   }
+  ],
+  [
+   {
+    "name": "Cow Cat",
+    "seed": 216545314
+   },
+   {
+    "name": "Research",
+    "seed": 216545314
+   },
+   {
+    "name": "200K XP",
+    "seed": 216545314
+   },
+   {
+    "name": "Special Catseye",
+    "seed": 216545314
+   },
+   {
+    "name": "10K XP",
+    "seed": 216545314
+   },
+   {
+    "name": "100K XP (β)",
+    "seed": 216545314,
+    "dupe": {
+     "name": "Catamin A",
+     "pos": 101,
+     "track": "A",
+     "bounce": false,
+     "seed": 889617876
+    }
+   }
+  ],
+  [
+   {
+    "name": "Research",
+    "seed": 3136913546
+   },
+   {
+    "name": "Cat Energy",
+    "seed": 3136913546
+   },
+   {
+    "name": "Red Catfruit",
+    "seed": 3136913546
+   },
+   {
+    "name": "100K XP",
+    "seed": 3136913546
+   },
+   {
+    "name": "Sniper the Cat",
+    "seed": 3136913546
+   },
+   {
+    "name": "Catamin B",
+    "seed": 3136913546
+   }
+  ]
+ ]
+}

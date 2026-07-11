@@ -1,7 +1,9 @@
 # A port of godfat's seed seeker (gitlab.com/godfat/battle-cats-rolls, Apache-2.0,
 # Seeker/Seeker-VampireFlower.c): recover the hidden gacha seed from a short run of
 # observed pulls by exhausting the 2^32 seed space - numpy-vectorised where the C
-# fans out over threads.
+# fans out over threads. The sieve itself only knows rate bands, pool sizes and
+# which pools reroll dupes, so the normal-side gacha (its own seed, its own pools)
+# seeks through the same machinery via seek_normal.
 
 from collections.abc import Callable, Iterator, Sequence
 from dataclasses import dataclass
@@ -9,6 +11,7 @@ from dataclasses import dataclass
 import numpy as np
 
 from neko.models import GACHA_RARITIES, Banner, Rarity
+from neko.normal import NormalBanner
 from neko.rng import unxorshift, xorshift
 
 _BASE = 10000  # rarity scores and rates are parts-per-10000 (godfat's GachaPool::Base)
@@ -110,13 +113,13 @@ def _sieve(
     cats: list[tuple[int, int]],
     bands: tuple[int, ...],
     sizes: tuple[int, ...],
+    rerollable: frozenset[int],
 ) -> np.ndarray:
     """Keep the candidate lanes whose remaining pulls also match: each pull reads a
-    rarity value then a slot value, and a rare landing on the previous pull's slot
-    repicks once from the pool minus that cat (the C's simulate_rolls - plus the
-    rarity check it skips, which is nearly free here and compacts the lanes)."""
-    rare_size = sizes[0]
-
+    rarity value then a slot value, and a rerollable-pool pull landing on the
+    previous pull's slot repicks once from the pool minus that cat (the C's
+    simulate_rolls - plus the rarity check it skips, which is nearly free here and
+    compacts the lanes)."""
     for j in range(1, len(cats)):
         rarity, want = cats[j]
 
@@ -131,12 +134,12 @@ def _sieve(
         slot = state % sizes[rarity]
         good = slot == want
         prev_rarity, prev_slot = cats[j - 1]
-        if rarity == 0 and prev_rarity == 0 and rare_size > 1:
+        if rarity in rerollable and prev_rarity == rarity and sizes[rarity] > 1:
             dupe = slot == prev_slot
             if dupe.any():
                 repick_state = _xs(state[dupe])
                 state[dupe] = repick_state
-                repick = repick_state % (rare_size - 1)
+                repick = repick_state % (sizes[rarity] - 1)
                 good[dupe] = (repick + (repick >= prev_slot)) == want
 
         i, state = i[good], state[good]
@@ -151,6 +154,7 @@ def _verify(
     cats: list[tuple[int, int]],
     bands: tuple[int, ...],
     sizes: tuple[int, ...],
+    rerollable: frozenset[int],
     run: int,
 ) -> int | None:
     """The C's verify_seed: replay every observed pull from ``begin`` with full
@@ -172,11 +176,11 @@ def _verify(
 
         seed = xorshift(seed)
         slot = seed % sizes[rarity]
-        if rarity == 0 and j > 0 and sizes[0] > 1:
+        if rarity in rerollable and j > 0 and sizes[rarity] > 1:
             prev_rarity, prev_slot = cats[j - 1]
-            if prev_rarity == 0 and slot == prev_slot:
+            if prev_rarity == rarity and slot == prev_slot:
                 seed = xorshift(seed)
-                repick = seed % (sizes[0] - 1)
+                repick = seed % (sizes[rarity] - 1)
                 slot = repick + (repick >= prev_slot)
 
         if slot != want:
@@ -190,6 +194,7 @@ def _seek_run(
     cats: list[tuple[int, int]],
     bands: tuple[int, ...],
     sizes: tuple[int, ...],
+    rerollable: frozenset[int],
     chunk: int,
     limit: int,
     progress: ProgressFn | None,
@@ -209,7 +214,7 @@ def _seek_run(
         # The first pull as a dupe's repick: one value later in the stream, drawn
         # mod (pool - 1), sitting below (run 1) / at-or-above (run 2) the shadow
         # slot - so the observed slot pins the repick value's residue either way.
-        m, b = sizes[0] - 1, slot - (run == 2)
+        m, b = sizes[rarity] - 1, slot - (run == 2)
         by_rarity = False
 
     back = 1 if by_rarity else 2 + (run > 0)
@@ -222,12 +227,12 @@ def _seek_run(
             keep = state % m == b
             i, state = i[keep], state[keep]
 
-        for value in _sieve(i, state, cats, bands, sizes).tolist():
+        for value in _sieve(i, state, cats, bands, sizes, rerollable).tolist():
             begin = value
             for _ in range(back):
                 begin = unxorshift(begin)
 
-            end = _verify(begin, cats, bands, sizes, run)
+            end = _verify(begin, cats, bands, sizes, rerollable, run)
             if end is not None:
                 found.append(SeekMatch(begin, end, run))
                 if len(found) > limit:
@@ -237,6 +242,46 @@ def _seek_run(
             progress(run, fraction)
 
     return False
+
+
+def _seek(
+    cats: list[tuple[int, int]],
+    bands: tuple[int, ...],
+    sizes: tuple[int, ...],
+    rerollable: frozenset[int],
+    progress: ProgressFn | None,
+    chunk: int,
+    limit: int,
+) -> SeekResult:
+    """The shared search: every seed whose play reproduces ``cats`` (as (pool index,
+    slot) pairs) under the given rate bands, pool sizes and rerolling pools.
+
+    The clean reading runs first; only when it finds nothing are the two dupe-repick
+    readings of the first pull tried (the C guesses the likelier one and stops - both
+    run here, so a genuinely ambiguous window reports every candidate). A
+    ``truncated`` result hit ``limit``: the window is too short to pin the seed down,
+    ask for more rolls."""
+    if not cats:
+        raise ValueError("no observed pulls to seek with")
+
+    found: list[SeekMatch] = []
+    truncated = _seek_run(0, cats, bands, sizes, rerollable, chunk, limit, progress, found)
+
+    # Nothing rolls the first pull clean: it must have arrived as a dupe's repick,
+    # if it can be one. A repick is drawn from the pool minus the shadow cat, so
+    # slot 0 can't land at-or-above the shadow (run 2) and the last slot can't land
+    # below it (run 1).
+    first_pool, first_slot = cats[0]
+    if not found and first_pool in rerollable and sizes[first_pool] > 1:
+        for run in (1, 2):
+            if (run == 1 and first_slot == sizes[first_pool] - 1) or (run == 2 and first_slot == 0):
+                continue
+
+            truncated |= _seek_run(
+                run, cats, bands, sizes, rerollable, chunk, limit, progress, found
+            )
+
+    return SeekResult(tuple(found), truncated)
 
 
 def seek_seed(
@@ -250,13 +295,8 @@ def seek_seed(
     """Every seed that reproduces ``observed`` - the player's consecutive in-game
     pulls on ``banner``, oldest first, each as (rarity, slot in that rarity's pool) -
     found by sieving the whole 2^32 space like godfat's Seeker-VampireFlower.
-
-    The clean reading runs first; only when it finds nothing are the two dupe-repick
-    readings of the first pull tried (the C guesses the likelier one and stops - both
-    run here, so a genuinely ambiguous window reports every candidate). ``progress``
-    is called after each sieved chunk with (run, fraction of that pass done). A
-    ``truncated`` result hit ``limit``: the window is too short to pin the seed down,
-    ask for more rolls."""
+    ``progress`` is called after each sieved chunk with (run, fraction of that pass
+    done). Only the Rare pool rerolls dupes, exactly like the game's rare gacha."""
     sizes = _sizes(banner)
     cats: list[tuple[int, int]] = []
     for rarity, slot in observed:
@@ -269,26 +309,31 @@ def seek_seed(
 
         cats.append((index, slot))
 
-    if not cats:
-        raise ValueError("no observed pulls to seek with")
+    return _seek(cats, _bands(banner), sizes, frozenset({0}), progress, chunk, limit)
 
-    bands = _bands(banner)
-    found: list[SeekMatch] = []
-    truncated = _seek_run(0, cats, bands, sizes, chunk, limit, progress, found)
 
-    # Nothing rolls the first pull clean: it must have arrived as a dupe's repick,
-    # if it can be one. A repick is drawn from the pool minus the shadow cat, so
-    # slot 0 can't land at-or-above the shadow (run 2) and the last slot can't land
-    # below it (run 1).
-    if not found and cats[0][0] == 0 and sizes[0] > 1:
-        first_slot = cats[0][1]
-        for run in (1, 2):
-            if (run == 1 and first_slot == sizes[0] - 1) or (run == 2 and first_slot == 0):
-                continue
+def seek_normal(
+    banner: NormalBanner,
+    observed: Sequence[tuple[int, int]],
+    *,
+    progress: ProgressFn | None = None,
+    chunk: int = _CHUNK,
+    limit: int = MAX_MATCHES,
+) -> SeekResult:
+    """seek_seed for the normal-side gacha: ``observed`` are the player's consecutive
+    normal-capsule pulls, oldest first, each as (pool index, slot in that pool).
+    The normal seed is independent of the rare one, but the stream mechanics are
+    identical, so the same sieve recovers it."""
+    sizes = tuple(len(pool.items) for pool in banner.pools)
+    for pool, slot in observed:
+        if not 0 <= pool < len(banner.pools):
+            raise ValueError(f"{banner.name} has no pool {pool}")
+        if not 0 <= slot < sizes[pool]:
+            raise ValueError(f"slot {slot} outside pool {pool} of {sizes[pool]}")
 
-            truncated |= _seek_run(run, cats, bands, sizes, chunk, limit, progress, found)
+    rerollable = frozenset(i for i, pool in enumerate(banner.pools) if pool.reroll)
 
-    return SeekResult(tuple(found), truncated)
+    return _seek(list(observed), banner.bands(), sizes, rerollable, progress, chunk, limit)
 
 
 def play(seed: int, banner: Banner, count: int) -> tuple[list[tuple[Rarity, int]], int]:
