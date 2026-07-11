@@ -1,0 +1,88 @@
+{% extends "planner/base.html" %}
+{% load static %}
+
+{% block title %}Normal Capsules &middot; Neko Optimizer{% endblock %}
+
+{% block content %}
+  <h1>Normal Capsules</h1>
+  <p class="muted">
+    The Normal Cat Capsule runs on its <strong>own seed</strong>, separate from the rare
+    gacha the planner tracks. Every normal-side machine (Catfruit, Catseye, Lucky
+    Tickets&hellip;) reads the same normal seed, so one table predicts them all &mdash;
+    including which pulls land a <span class="item dark-catseye">Dark Catseye</span>
+    during a Catseye Capsules event.
+  </p>
+
+  <details class="advanced seek-howto" id="normalFinder">
+    <summary>Find my normal seed</summary>
+    <ul>
+      <li>Roll the plain Normal Capsules several times &mdash; 8 to 12 works best &mdash;
+        and record what you get, in order.</li>
+      <li>Rolling Catfruit or Catseye Capsules instead? Those pulls carry less
+        information each, so enter 12 or more.</li>
+      <li>The pulls must be consecutive: nothing rolled in between on any normal-side
+        machine.</li>
+      <li>You only need this once &mdash; from then on the tracker follows your seed as
+        you click the dice.</li>
+    </ul>
+    <form id="nseekForm" class="seek-panel" novalidate
+          data-start-url="{% url 'normal_seek_start' %}"
+          data-status-url="{% url 'seek_status' %}"
+          data-min-rolls="{{ min_rolls }}"
+          data-max-rolls="{{ max_rolls }}">
+      {% csrf_token %}
+      <label class="seek-label" for="nseekBanner">Machine you rolled on</label>
+      <select id="nseekBanner">
+        {% for key, pool in seek_pools.items %}
+          <option value="{{ key }}">{{ pool.name }}</option>
+        {% endfor %}
+      </select>
+      <p class="muted hint">Your pulls, oldest first &mdash; search each item you got:</p>
+      <ol id="nseekRolls" class="seek-rolls"></ol>
+      <div class="seek-actions">
+        <button type="button" id="nseekAddRow" class="seek-add">+ one more roll</button>
+        <button type="submit" id="nseekGo">Find my seed</button>
+      </div>
+      <p class="field-error" id="nseekError" aria-live="polite"></p>
+    </form>
+    <div id="nseekProgress" class="seek-progress" hidden role="status" aria-live="polite">
+      <progress id="nseekBar" max="1" value="0"></progress>
+      <p id="nseekProgressText">Searching&hellip;</p>
+    </div>
+    <div id="nseekResults" class="seek-results" hidden aria-live="polite"></div>
+  </details>
+
+  <form id="normalForm" data-tracks-url="{% url 'normal_tracks' %}">
+    {% csrf_token %}
+    <div class="roll-options">
+      <label class="opt">Normal seed
+        <input type="text" id="normalSeed" inputmode="numeric" autocomplete="off"
+               placeholder="e.g. 1515525936">
+      </label>
+      <button type="button" id="normalUpdate">Update</button>
+      <label class="opt">Rolls to show
+        <input type="number" id="normalCount" min="1" max="999" value="100">
+      </label>
+      <span class="normal-machines" role="group" aria-label="Capsule machines">
+        {% for banner in banners %}
+          <label class="machine-toggle">
+            <input type="checkbox" value="{{ banner.key }}"
+                   {% if banner.key in default_keys %}checked{% endif %}>
+            {{ banner.name }}
+          </label>
+        {% endfor %}
+      </span>
+    </div>
+  </form>
+
+  <p class="muted hint" id="normalHint" hidden>Enter your normal seed above &mdash; or open
+    <strong>Find my normal seed</strong> and let the finder recover it from a few real pulls.</p>
+
+  <div id="normalTracks" aria-live="polite"></div>
+
+  {{ seek_pools|json_script:"normalPools" }}
+{% endblock %}
+
+{% block scripts %}
+  <script src="{% static 'planner/normal.js' %}"></script>
+{% endblock %}

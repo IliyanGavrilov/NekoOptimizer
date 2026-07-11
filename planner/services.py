@@ -27,6 +27,15 @@ from neko.models import (
     State,
     is_future_uber,
 )
+from neko.normal import (
+    BANNERS_BY_KEY,
+    NORMAL_BANNERS,
+    SEEKABLE_KEYS,
+    UPGRADES,
+    NormalBanner,
+    landing,
+    roll_normal,
+)
 from neko.roller import (
     DEFAULT_COUNT,
     RollResult,
@@ -1734,3 +1743,116 @@ def import_cats(
             banner.cats.add(cat)
 
     return created
+
+
+# ---- Normal Capsules: the normal-side gacha on its own seed ----------------------
+
+# The columns the normal page opens with: the everyday capsule (with Superfeline)
+# and the Catseye event machine the page exists to predict.
+NORMAL_DEFAULT_KEYS = ("np", "ce")
+
+
+def normal_banner_choices() -> list[dict]:
+    """The normal-side banners, for the page's column toggles."""
+    return [{"key": banner.key, "name": banner.name} for banner in NORMAL_BANNERS]
+
+
+def normal_seek_pools() -> dict[str, dict]:
+    """Every seekable banner's items as grouped picker options (value "pool:slot"),
+    inlined into the page - the pools are a handful of constants, no fetch needed.
+    Each group is labelled with its band's drop chance."""
+    pools = {}
+    for key in SEEKABLE_KEYS:
+        banner = BANNERS_BY_KEY[key]
+        groups = []
+        for index, pool in enumerate(banner.pools):
+            if not pool.items:
+                continue
+
+            groups.append(
+                {
+                    "label": f"{pool.rate / 100:g}% band",
+                    "options": [
+                        {"value": f"{index}:{slot}", "label": item}
+                        for slot, item in enumerate(pool.items)
+                    ],
+                }
+            )
+
+        pools[key] = {"name": banner.name, "groups": groups}
+
+    return pools
+
+
+def normal_seek_banner(key: str) -> NormalBanner | None:
+    """The banner a finder post names, if it's one the finder supports."""
+    return BANNERS_BY_KEY.get(key) if key in SEEKABLE_KEYS else None
+
+
+def build_normal_tracks(seed: int, keys: Iterable[str], count: int, last_item: str = "") -> dict:
+    """One merged A/B table over the chosen normal banners, like build_tracks: each
+    cell stacks each banner's item at that shared stream position, with the dupe
+    branches the play chains realize. The cell's dice state is banner-independent
+    (a clean roll uses the same two stream values whatever the pool), so one dice
+    serves the whole cell; ``item`` feeds the dupe memory when every banner agrees."""
+    banners = [BANNERS_BY_KEY[key] for key in keys if key in BANNERS_BY_KEY]
+    if not banners:
+        return {"legend": [], "rows": []}
+
+    columns = []
+    for tag, banner in enumerate(banners, start=1):
+        rolls = roll_normal(seed, banner, count, last_item=last_item)
+        columns.append(
+            {
+                "tag": tag,
+                "name": banner.name,
+                "pulls": {(p.position, p.track): p for p in rolls.pulls},
+                "rerolls": {(p.position, p.track): p for p in rolls.rerolls if p.realized},
+            }
+        )
+
+    def entries(position: int, track: str) -> list[dict]:
+        cells = []
+        for column in columns:
+            pull = column["pulls"][(position, track)]
+            alt = None
+            reroll = column["rerolls"].get((position, track))
+            if reroll is not None:
+                to_pos, to_track = landing(position, track, reroll.steps)
+                alt = {"item": reroll.item, "seed": reroll.seed, "to": f"{to_pos}{to_track}"}
+
+            cells.append(
+                {
+                    "tag": column["tag"],
+                    "item": pull.item,
+                    "pool": pull.pool,
+                    "upgrade": pull.item in UPGRADES,
+                    "dark": pull.item == "Dark Catseye",
+                    "alt": alt,
+                }
+            )
+
+        return cells
+
+    def cell_item(position: int, track: str) -> str:
+        names = {column["pulls"][(position, track)].item for column in columns}
+
+        return names.pop() if len(names) == 1 else ""
+
+    rows = [
+        {
+            "pos": position,
+            "a": entries(position, "A"),
+            "b": entries(position, "B"),
+            "a_seed": columns[0]["pulls"][(position, "A")].seed,
+            "a_item": cell_item(position, "A"),
+            "b_seed": columns[0]["pulls"][(position, "B")].seed,
+            "b_item": cell_item(position, "B"),
+        }
+        for position in range(1, count + 1)
+    ]
+
+    return {
+        "legend": [{"tag": column["tag"], "name": column["name"]} for column in columns],
+        "rows": rows,
+    }

@@ -279,14 +279,21 @@ def _reroll(item: _Item, pool: tuple[str, ...]) -> _Item:
     return _Item(item.seq, item.track, item.pool, seed, name, item.reroll, steps=steps)
 
 
-def _landing(grid: list[list[_Item]], item: _Item) -> _Item | None:
-    """The cell a rerolled item's extra steps land on (same arithmetic as the rare
-    grid: 2 + steps values on from the dupe cell, track flipped per parity)."""
-    steps = item.rerolled.steps
-    seq = item.seq + (item.track + steps) // 2 + 1
-    track = ((item.track + steps - 1) ^ 1) & 1
+def landing(position: int, track: str, steps: int) -> tuple[int, str]:
+    """The 1-based cell a reroll's extra ``steps`` land the chain on (the same
+    arithmetic as the rare grid: 2 + steps values on from the dupe cell, the track
+    flipping with the step parity)."""
+    index = _TRACKS.index(track)
 
-    return grid[seq][track] if 0 <= seq < len(grid) else None
+    return position + (index + steps) // 2 + 1, _TRACKS[((index + steps - 1) ^ 1) & 1]
+
+
+def _landing(grid: list[list[_Item]], item: _Item) -> _Item | None:
+    """The grid cell a rerolled item's extra steps land on, if it was rolled."""
+    position, track = landing(item.seq + 1, _TRACKS[item.track], item.rerolled.steps)
+    seq = position - 1
+
+    return grid[seq][_TRACKS.index(track)] if 0 <= seq < len(grid) else None
 
 
 def _build_grid(
