@@ -1,17 +1,19 @@
 # Path planning over the normal-side gacha: all machines read the same seed
-# stream, so choosing WHICH machine takes the next pull steers the chain - a cheap
-# normal-capsule roll walks it forward, a lucky ticket can dupe and jump tracks.
-# Given per-machine roll budgets, find the pull sequence that collects the most
-# target items (Dark Catseyes, above all) while wasting the fewest event tickets.
+# stream, so choosing WHICH machine takes the next pull steers the chain - a
+# normal-ticket roll walks it forward, a lucky ticket can dupe and jump tracks.
+# Budgets mirror the game's currencies: ONE pool of Normal Cat Tickets feeds the
+# plain capsule and the Catfruit/Catseye event machines alike, while each Lucky
+# Ticket machine burns its own. Find the pull sequence that collects the most
+# target items (Dark Catseyes, above all) while burning the fewest lucky tickets.
 
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 
 from neko.normal import BANNERS_BY_KEY, landing, pull_once
 
-# The plain capsules cost pocket XP; every other machine burns a limited event
-# ticket, so plans prefer XP rolls and hoard tickets for the switches that pay.
-CHEAP_KEYS = frozenset({"n", "np"})
+# Normal Cat Tickets rain from stages; the lucky tickets are the scarce currency,
+# so plans hoard them for the switches that pay.
+CHEAP_KEYS = frozenset({"n", "np", "cf", "ce"})
 
 _BEAM = 200  # states kept per depth; branching is at most the six machines
 MAX_ROLLS = 500  # total pulls a plan may look ahead (keeps the search bounded)
@@ -46,8 +48,9 @@ class NormalPlan:
 
 @dataclass(frozen=True, slots=True)
 class _Node:
-    """One beam state: the chain so far. ``premium``/``cheap`` split the spend so
-    ranking can hoard tickets; ``steps`` accumulates the pull records."""
+    """One beam state: the chain so far. ``budgets`` counts what remains of each
+    budget GROUP (machines sharing a currency share an entry); ``premium``/
+    ``cheap`` split the spend so ranking can hoard lucky tickets."""
 
     seed: int
     position: int
@@ -66,21 +69,28 @@ class _Node:
 
 def plan_normal(
     seed: int,
-    budgets: Mapping[str, int],
+    budgets: Sequence[tuple[int, Sequence[str]]],
     targets: frozenset[str],
     last_item: str = "",
     beam: int = _BEAM,
 ) -> NormalPlan:
-    """The pull sequence from ``seed`` that collects the most items in ``targets``,
-    spending at most ``budgets`` rolls per machine ({banner key: rolls}) - beam
-    search over the shared stream, one machine choice per pull. Ties prefer plans
-    that burn fewer event tickets, then fewer rolls altogether, so leftover budget
-    is never wasted chasing nothing."""
-    machines = [key for key, count in budgets.items() if key in BANNERS_BY_KEY and count > 0]
-    if not machines or not targets:
+    """The pull sequence from ``seed`` that collects the most items in ``targets``.
+    ``budgets`` are the player's currencies: (rolls, machines that currency feeds)
+    pairs - normal tickets list every ticket machine that's live, each lucky
+    ticket kind lists its own. Beam search over the shared stream, one machine
+    choice per pull. Ties prefer plans that burn fewer lucky tickets, then fewer
+    rolls altogether, so leftover budget is never wasted chasing nothing."""
+    groups = [
+        (min(count, MAX_ROLLS), [key for key in keys if key in BANNERS_BY_KEY])
+        for count, keys in budgets
+        if count > 0
+    ]
+    groups = [(count, keys) for count, keys in groups if keys]
+    if not groups or not targets:
         return NormalPlan((), 0, {}, seed, last_item)
 
-    start_budgets = tuple(min(budgets[key], MAX_ROLLS) for key in machines)
+    choices = [(index, key) for index, (_, keys) in enumerate(groups) for key in keys]
+    start_budgets = tuple(count for count, _ in groups)
     depth = min(sum(start_budgets), MAX_ROLLS)
     start = _Node(seed, 1, "A", last_item, start_budgets)
     best = start  # the empty plan: rolling nothing is legal
@@ -89,7 +99,7 @@ def plan_normal(
     for _ in range(depth):
         grown: dict[tuple, _Node] = {}
         for node in nodes:
-            for index, key in enumerate(machines):
+            for index, key in choices:
                 if node.budgets[index] == 0:
                     continue
 
