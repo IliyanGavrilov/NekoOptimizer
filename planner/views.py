@@ -6,6 +6,7 @@ from django.template.loader import render_to_string
 from django.views.decorators.http import require_POST
 
 from neko.models import CATFOOD_PER_DRAW, GACHA_RARITIES
+from neko.normal import BANNERS_BY_KEY
 from neko.rng import backtrack
 from neko.roller import DEFAULT_COUNT, GUARANTEED_OPTIONS
 from neko.tierdata import load_tiers
@@ -20,9 +21,11 @@ from planner.forms import (
 from planner.models import Cat, Seed, Unit
 from planner.services import (
     NORMAL_DEFAULT_KEYS,
+    NORMAL_TARGET_PRESETS,
     RARITY_ORDER,
     SECTION_NOTES,
     banner_titles,
+    build_normal_plan,
     build_normal_tracks,
     build_tracks,
     capped_banner_limits,
@@ -35,6 +38,7 @@ from planner.services import (
     import_collection,
     newly_added_ubers,
     normal_banner_choices,
+    normal_item_options,
     normal_seek_banner,
     normal_seek_pools,
     picker_groups,
@@ -446,7 +450,7 @@ def seek_status(request):
 def normal_capsules(request):
     """The Normal Capsules tracker: the normal-side gacha runs on its own seed,
     independent of the rare one the planner follows. One page holds its A/B tracks
-    (Catseye event machines included) and its own seed finder."""
+    (Catseye event machines included), its own seed finder, and the path planner."""
     return render(
         request,
         "planner/normal.html",
@@ -456,6 +460,10 @@ def normal_capsules(request):
             "seek_pools": normal_seek_pools(),
             "min_rolls": MIN_SEEK_ROLLS,
             "max_rolls": MAX_SEEK_ROLLS,
+            "target_presets": [
+                (value, label) for value, (label, _) in NORMAL_TARGET_PRESETS.items()
+            ],
+            "item_options": normal_item_options(),
         },
     )
 
@@ -477,6 +485,57 @@ def normal_tracks(request):
     )
 
     return render(request, "planner/_normal_tracks.html", {"track": track})
+
+
+MAX_PLAN_ROLLS = 500  # per machine; normal_plan caps the total look-ahead anyway
+
+
+def _normal_budgets(request):
+    """The posted per-machine roll budgets, as {banner key: rolls}: a JSON object
+    from the plan panel's steppers, unknown keys dropped, counts clamped."""
+    try:
+        raw = json.loads(request.POST.get("budgets", "") or "{}")
+    except json.JSONDecodeError:
+        return {}
+    if not isinstance(raw, dict):
+        return {}
+
+    budgets = {}
+    for key, count in raw.items():
+        try:
+            count = int(count)
+        except TypeError, ValueError:
+            continue
+        if key in BANNERS_BY_KEY and count > 0:
+            budgets[key] = min(count, MAX_PLAN_ROLLS)
+
+    return budgets
+
+
+@require_POST
+def normal_plan(request):
+    """Run the normal-side path planner: from the current seed, the pull sequence
+    over the budgeted machines that collects the most of the chosen target."""
+    try:
+        seed = int(request.POST.get("seed", ""))
+    except ValueError:
+        return HttpResponseBadRequest("seed must be an integer")
+
+    budgets = _normal_budgets(request)
+    if not budgets:
+        return HttpResponseBadRequest("give at least one machine some rolls")
+
+    plan = build_normal_plan(
+        seed,
+        budgets,
+        request.POST.get("target", "dark"),
+        _track_length(request),
+        last_item=request.POST.get("last_item", "").strip(),
+    )
+    if plan is None:
+        return HttpResponseBadRequest("unknown target")
+
+    return render(request, "planner/_normal_plan.html", {"plan": plan, "track": plan["track"]})
 
 
 def _observed_normal_rolls(request, banner):
