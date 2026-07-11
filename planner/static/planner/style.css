@@ -1725,7 +1725,6 @@ table.track th.guaranteed-col, table.track td.guaranteed-col {
 .plan-haul .seek-use { margin-left: 0.5rem; }
 .plan-legs { margin: 0.5rem 0 0; padding-left: 1.4rem; }
 .plan-legs li { margin: 0.25rem 0; }
-.ticket-note { color: var(--warn); font-weight: 600; }
 
 /* What a plan collects: a pill on the item itself - Dark Catseyes scream loudest. */
 .normal-track .item.got,

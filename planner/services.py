@@ -1929,17 +1929,34 @@ def normal_item_options() -> list[str]:
 
 def build_normal_plan(
     seed: int,
-    budgets: Mapping[str, int],
+    machines: Iterable[str],
+    tickets: Mapping[str, int],
     target: str,
     count: int,
     last_item: str = "",
 ) -> dict | None:
     """Run the normal-side path planner and shape its result for the fragment:
     the merged legs (consecutive pulls on one machine), the spend summary, and the
-    tracks table with the path lit. None when the target names nothing."""
+    tracks table with the path lit. None when the target names nothing.
+
+    ``machines`` are the machines live for the player (the page's checked
+    columns); ``tickets`` the currency counts - "normal" (Normal Cat Tickets,
+    feeding the plain capsule and the Catfruit/Catseye machines alike), "lucky"
+    and "luckyg". A currency only enters the search when a machine it feeds is
+    live."""
     resolved = normal_plan_targets(target)
     if resolved is None:
         return None
+
+    live = [key for key in machines if key in BANNERS_BY_KEY]
+    budgets = []
+    normal_fed = [key for key in live if key in CHEAP_KEYS]
+    if normal_fed:
+        budgets.append((tickets.get("normal", 0), normal_fed))
+    if "lt" in live:
+        budgets.append((tickets.get("lucky", 0), ["lt"]))
+    if "ltg" in live:
+        budgets.append((tickets.get("luckyg", 0), ["ltg"]))
 
     label, targets = resolved
     plan = plan_normal(seed, budgets, targets, last_item=last_item)
@@ -1973,16 +1990,19 @@ def build_normal_plan(
                 }
             )
 
-    # The table shows every machine the plan may roll (budget given), reaching at
-    # least the plan's furthest cell.
-    keys = [banner.key for banner in NORMAL_BANNERS if budgets.get(banner.key, 0) > 0]
+    # The table shows the live machines, reaching at least the plan's furthest cell.
+    keys = [banner.key for banner in NORMAL_BANNERS if banner.key in live]
     rows = max((step.position for step in plan.steps), default=0)
     track = build_normal_tracks(seed, keys, max(count, rows + 2), last_item, marks=marks)
 
-    spent = [
-        {"name": BANNERS_BY_KEY[key].name, "rolls": rolls, "cheap": key in CHEAP_KEYS}
-        for key, rolls in plan.spent.items()
+    # The haul line talks currencies, not machines: one Normal Cat Ticket pool
+    # covers however many machines it fed.
+    currencies = [
+        ("Normal Cat Ticket", sum(n for key, n in plan.spent.items() if key in CHEAP_KEYS)),
+        ("Lucky Ticket", plan.spent.get("lt", 0)),
+        ("Lucky Ticket G", plan.spent.get("ltg", 0)),
     ]
+    spent = [{"name": name, "rolls": n} for name, n in currencies if n]
 
     return {
         "label": label,

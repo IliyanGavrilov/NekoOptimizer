@@ -31,10 +31,10 @@ def test_normal_page_offers_machines_finder_and_planner(client):
 
     assert "Normal Capsules" in content
     assert "Catseye Capsules" in content
-    assert "nseekBanner" in content
+    assert "Superfeline unlocked" in content  # the profile toggle, not a machine choice
     assert "normalPools" in content
-    assert "with Superfeline in the pool" in content  # the finder tells the capsules apart
     assert "normalPlanPanel" in content
+    assert "Normal Cat Tickets" in content  # one stash feeds normal/catfruit/catseye
     assert "Dark Catseyes" in content  # the default plan target
 
     pools = content.split("normalPools")[1]
@@ -110,14 +110,15 @@ PLAN_SEED = 2157514271
 
 @pytest.mark.django_db
 def test_normal_plan_lights_a_path(client):
-    expected = plan_normal(PLAN_SEED, {"ce": 30}, frozenset({"Dark Catseye"}))
+    expected = plan_normal(PLAN_SEED, [(30, ("ce",))], frozenset({"Dark Catseye"}))
     assert expected.hits  # the fixture seed must actually reach a dark
 
     response = client.post(
         "/normal/plan/",
         {
             "seed": PLAN_SEED,
-            "budgets": json.dumps({"ce": 30}),
+            "banners": ["ce"],
+            "tickets": json.dumps({"normal": 30}),
             "target": "dark",
             "track_length": 20,
         },
@@ -135,7 +136,12 @@ def test_normal_plan_reports_an_unreachable_target(client):
     # One catseye roll from a cell that isn't a dark: nothing to collect.
     response = client.post(
         "/normal/plan/",
-        {"seed": 1515525936, "budgets": json.dumps({"ce": 1}), "target": "dark"},
+        {
+            "seed": 1515525936,
+            "banners": ["ce"],
+            "tickets": json.dumps({"normal": 1}),
+            "target": "dark",
+        },
     )
 
     assert b"No Dark Catseyes reachable" in response.content
@@ -143,13 +149,15 @@ def test_normal_plan_reports_an_unreachable_target(client):
 
 def test_normal_plan_rejects_bad_posts(client):
     def plan(**fields):
+        fields.setdefault("banners", ["ce"])
         return client.post("/normal/plan/", fields).status_code
 
-    assert plan(seed="junk", budgets='{"ce": 5}', target="dark") == 400
-    assert plan(seed=PLAN_SEED, budgets="{}", target="dark") == 400
-    assert plan(seed=PLAN_SEED, budgets='{"nope": 5}', target="dark") == 400
-    assert plan(seed=PLAN_SEED, budgets='{"ce": 5}', target="nonsense") == 400
-    assert plan(seed=PLAN_SEED, budgets='{"ce": 5}', target="item:Not A Thing") == 400
+    assert plan(seed="junk", tickets='{"normal": 5}', target="dark") == 400
+    assert plan(seed=PLAN_SEED, tickets="{}", target="dark") == 400
+    assert plan(seed=PLAN_SEED, tickets='{"gold": 5}', target="dark") == 400
+    assert plan(seed=PLAN_SEED, tickets='{"normal": 5}', target="dark", banners=[]) == 400
+    assert plan(seed=PLAN_SEED, tickets='{"normal": 5}', target="nonsense") == 400
+    assert plan(seed=PLAN_SEED, tickets='{"normal": 5}', target="item:Not A Thing") == 400
 
 
 @pytest.mark.parametrize("path", ["/normal/tracks/", "/normal/seek/start/", "/normal/plan/"])
