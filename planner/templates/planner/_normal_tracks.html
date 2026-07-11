@@ -1,0 +1,37 @@
+{% if track.rows %}
+  <details class="track-guide">
+    <summary>Legend</summary>
+    <ul class="symbol-legend">
+      <li><span class="sym">A / B</span> alternate timelines; a dupe rerolls and switches track</li>
+      <li><span class="sym dice-sym">{% include "planner/_dice_icon.html" %}</span> &ldquo;I rolled this cell&rdquo; &mdash; jumps the seed to just after it</li>
+      <li><span class="arrow sample">&#8627; if dupe</span> the reroll branch (its own dice &amp; landing)</li>
+      <li><span class="item upgrade sample">blue</span> an upgrade (Special Skill), not a cat</li>
+      <li><span class="item dark-catseye sample">Dark Catseye</span> the 1% Catseye-event jackpot</li>
+    </ul>
+  </details>
+  {% if track.legend|length > 1 %}
+    <ul class="track-legend">
+      {% for b in track.legend %}
+        <li><span class="tag">{{ b.tag }}</span> {{ b.name }}</li>
+      {% endfor %}
+    </ul>
+  {% endif %}
+  <table class="track normal-track">
+    <thead><tr>
+      <th class="pos">#</th>
+      <th>Track A</th>
+      <th>Track B</th>
+    </tr></thead>
+    <tbody>
+      {% for row in track.rows %}
+        <tr>
+          <th scope="row" class="pos">{{ row.pos }}</th>
+          {% include "planner/_normal_cell.html" with entries=row.a multi=track.legend|length cell_seed=row.a_seed cell_item=row.a_item cell_track="A" %}
+          {% include "planner/_normal_cell.html" with entries=row.b multi=track.legend|length cell_seed=row.b_seed cell_item=row.b_item cell_track="B" %}
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+{% else %}
+  <p class="muted">Pick at least one capsule machine to roll.</p>
+{% endif %}

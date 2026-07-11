@@ -1658,3 +1658,55 @@ table.track th.guaranteed-col, table.track td.guaranteed-col {
 .seek-match .seek-open { display: inline-block; margin: 0.4rem 0; }
 .seek-match p { margin: 0.3rem 0 0; }
 .seek-none { color: var(--muted); max-width: 34rem; }
+
+/* ---- Normal Capsules: the normal-side tracker ---------------------------------- */
+/* Items aren't cats: a cell holds a plain item chip coloured by its rate band
+   (2 = the gold band, 3 = the red premium band, 4 = the aqua top band, matching
+   the community tracker's reading), upgrades read blue, and the Catseye event's
+   1% Dark Catseye gets the spotlight. */
+.normal-machines {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 0.9rem;
+  align-items: center;
+}
+.machine-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.normal-track .item[data-pool="2"] { color: var(--r-super); }
+.normal-track .item[data-pool="3"] { color: var(--r-legend); }
+.normal-track .item[data-pool="4"] { color: var(--r-rare); }
+.normal-track .item.upgrade { color: var(--r-rare); }
+.item.dark-catseye,
+.normal-track .item.dark-catseye {
+  color: var(--r-uber);
+  font-weight: 700;
+  text-shadow: 0 0 10px color-mix(in srgb, var(--r-uber) 45%, transparent);
+}
+.symbol-legend .item.sample { font-weight: 600; }
+.symbol-legend .item.upgrade.sample { color: var(--r-rare); }
+
+#nseekBanner {
+  max-width: 22rem;
+  margin-bottom: 0.6rem;
+}
+
+/* The finder's "use this seed" result is a button (it applies the seed right here),
+   but reads like the rare finder's link. */
+.seek-match .seek-use {
+  background: none;
+  border: none;
+  padding: 0;
+  font: inherit;
+  color: var(--accent);
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+/* The machine toggles take their own full row under the seed controls. */
+.roll-options .normal-machines { flex-basis: 100%; }
