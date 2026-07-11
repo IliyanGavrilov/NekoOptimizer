@@ -17,9 +17,12 @@
     <summary>Find my normal seed</summary>
     <ul>
       <li>Roll the plain Normal Capsules several times &mdash; 8 to 12 works best &mdash;
-        and record what you get, in order.</li>
-      <li>Rolling Catfruit or Catseye Capsules instead? Those pulls carry less
-        information each, so enter 12 or more.</li>
+        and record what you get, in order. They cost pocket XP, so this is the cheap way
+        (the event machines would burn 12+ tickets for the same answer).</li>
+      <li>Pick the right machine: <strong>Normal Capsules+</strong> once
+        <strong>Superfeline</strong> can drop for you, plain <strong>Normal
+        Capsules</strong> if it can't &mdash; the pools differ, so the wrong one finds
+        nothing.</li>
       <li>The pulls must be consecutive: nothing rolled in between on any normal-side
         machine.</li>
       <li>You only need this once &mdash; from then on the tracker follows your seed as
@@ -34,7 +37,7 @@
       <label class="seek-label" for="nseekBanner">Machine you rolled on</label>
       <select id="nseekBanner">
         {% for key, pool in seek_pools.items %}
-          <option value="{{ key }}">{{ pool.name }}</option>
+          <option value="{{ key }}">{{ pool.name }}{% if pool.note %} &mdash; {{ pool.note }}{% endif %}</option>
         {% endfor %}
       </select>
       <p class="muted hint">Your pulls, oldest first &mdash; search each item you got:</p>
@@ -52,14 +55,14 @@
     <div id="nseekResults" class="seek-results" hidden aria-live="polite"></div>
   </details>
 
-  <form id="normalForm" data-tracks-url="{% url 'normal_tracks' %}">
+  <form id="normalForm" data-tracks-url="{% url 'normal_tracks' %}"
+        data-plan-url="{% url 'normal_plan' %}">
     {% csrf_token %}
     <div class="roll-options">
       <label class="opt">Normal seed
-        <input type="text" id="normalSeed" inputmode="numeric" autocomplete="off"
+        <input type="number" id="normalSeed" min="0" autocomplete="off"
                placeholder="e.g. 1515525936">
       </label>
-      <button type="button" id="normalUpdate">Update</button>
       <label class="opt">Rolls to show
         <input type="number" id="normalCount" min="1" max="999" value="100">
       </label>
@@ -73,6 +76,39 @@
         {% endfor %}
       </span>
     </div>
+
+    <details class="advanced" id="normalPlanPanel">
+      <summary>Plan a path &mdash; most Dark Catseyes for your rolls</summary>
+      <p class="muted hint">Say how many rolls each machine may take (its tickets, or
+        for the plain capsules how much XP you'll spend), pick a target, and the
+        planner steers the shared seed stream &mdash; cheap normal rolls to walk it,
+        the odd ticket to dupe-switch tracks &mdash; collecting as many as possible
+        while burning as few tickets as it can.</p>
+      <div class="plan-budgets">
+        {% for banner in banners %}
+          <label class="opt">{{ banner.name }}
+            <input type="number" class="plan-budget" data-key="{{ banner.key }}"
+                   min="0" max="500" value="0">
+          </label>
+        {% endfor %}
+      </div>
+      <div class="plan-controls">
+        <label class="opt">Chasing
+          <select id="normalTarget">
+            {% for value, label in target_presets %}
+              <option value="{{ value }}">{{ label }}</option>
+            {% endfor %}
+            <optgroup label="A specific item">
+              {% for item in item_options %}
+                <option value="item:{{ item }}">{{ item }}</option>
+              {% endfor %}
+            </optgroup>
+          </select>
+        </label>
+        <button type="button" id="normalPlanGo">Find a path</button>
+        <span class="field-error" id="normalPlanError" aria-live="polite"></span>
+      </div>
+    </details>
   </form>
 
   <p class="muted hint" id="normalHint" hidden>Enter your normal seed above &mdash; or open

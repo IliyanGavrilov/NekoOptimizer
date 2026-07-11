@@ -60,7 +60,9 @@ UPGRADES = (
     "Cat Energy",
 )
 
-_NORMAL_CATS = (
+# The basic cats the plain capsules deal (dupes convert to XP/NP), and their Li'l
+# variants the Lucky Ticket deals.
+NORMAL_CATS = (
     "Cat",
     "Tank Cat",
     "Axe Cat",
@@ -72,12 +74,24 @@ _NORMAL_CATS = (
     "Titan Cat",
 )
 
+LIL_CATS = (
+    "Li'l Titan Cat",
+    "Li'l Lizard Cat",
+    "Li'l Fish Cat",
+    "Li'l Bird Cat",
+    "Li'l Cow Cat",
+    "Li'l Gross Cat",
+    "Li'l Axe Cat",
+    "Li'l Tank Cat",
+    "Li'l Cat",
+)
+
 NORMAL_BANNERS = (
-    NormalBanner("n", "Normal Capsules", (NormalPool(_BASE, _NORMAL_CATS + UPGRADES, True),)),
+    NormalBanner("n", "Normal Capsules", (NormalPool(_BASE, NORMAL_CATS + UPGRADES, True),)),
     NormalBanner(
         "np",
         "Normal Capsules+",
-        (NormalPool(_BASE, _NORMAL_CATS + ("Superfeline",) + UPGRADES, True),),
+        (NormalPool(_BASE, NORMAL_CATS + ("Superfeline",) + UPGRADES, True),),
     ),
     NormalBanner(
         "cf",
@@ -137,16 +151,8 @@ NORMAL_BANNERS = (
             NormalPool(0, (), False),
             NormalPool(
                 7400,
-                (
-                    "Li'l Titan Cat",
-                    "Li'l Lizard Cat",
-                    "Li'l Fish Cat",
-                    "Li'l Bird Cat",
-                    "Li'l Cow Cat",
-                    "Li'l Gross Cat",
-                    "Li'l Axe Cat",
-                    "Li'l Tank Cat",
-                    "Li'l Cat",
+                LIL_CATS
+                + (
                     "Speed Up",
                     "Speed Up",
                     "Speed Up",
@@ -190,10 +196,13 @@ NORMAL_BANNERS = (
 
 BANNERS_BY_KEY = {banner.key: banner for banner in NORMAL_BANNERS}
 
-# Banners the normal seed finder offers: every item name in them is unique, so an
-# observed item pins exactly one (pool, slot) - the lucky tickets repeat items
-# across slots and would need every copy tried one by one.
-SEEKABLE_KEYS = ("n", "np", "cf", "ce")
+# Banners the normal seed finder offers. Only the plain capsules: their pulls are
+# information-rich (18-19 distinct outcomes) and cost pocket XP, so ~8-10 recorded
+# rolls pin the seed. The item machines are technically seekable (unique names too)
+# but each pull carries far less information - pinning a seed needs 12+ pulls of
+# event tickets nobody should waste - and the lucky tickets repeat names across
+# slots outright.
+SEEKABLE_KEYS = ("n", "np")
 
 
 def pick_pool(score: int, banner: NormalBanner) -> int:
@@ -390,43 +399,56 @@ def roll_normal(seed: int, banner: NormalBanner, count: int, last_item: str = ""
     return NormalRolls(pulls, rerolls)
 
 
+def pull_once(seed: int, banner: NormalBanner, last_item: str = "") -> tuple[str, int, int]:
+    """One pull of ``banner`` from ``seed``: the item, the state after it, and the
+    extra stream values a dupe's reroll cascade consumed (0 for a clean roll - a
+    nonzero value means the play chain jumps tracks, see ``landing``). ``last_item``
+    is the previous pull on ANY normal-side machine: the dupe check is by item name,
+    which is how one machine's pull can force a track switch on another's."""
+    bands = banner.bands()
+
+    seed = xorshift(seed)
+    score = seed % _BASE
+    pool_index = 0
+    while score >= bands[pool_index + 1]:
+        pool_index += 1
+
+    pool = banner.pools[pool_index]
+    if not pool.items:
+        raise ValueError(f"pool {pool_index} of {banner.name} is empty")
+
+    seed = xorshift(seed)
+    slots = list(pool.items)
+    name = slots[seed % len(slots)]
+    steps = 0
+    if pool.reroll and name and name == last_item:
+        slot = seed % len(slots)
+        for _ in range(pool.items.count(name)):
+            seed = xorshift(seed)
+            steps += 1
+            del slots[slot]
+            if not slots:
+                break
+
+            slot = seed % len(slots)
+            if slots[slot] != name:
+                break
+
+        name = slots[slot] if slots else ""
+
+    return name, seed, steps
+
+
 def play(seed: int, banner: NormalBanner, count: int, last_item: str = "") -> tuple[list[str], int]:
     """What ``count`` consecutive pulls from ``seed`` give you - the linear play
     stream: two values per pull, plus the cascade's extras when a pull in a
     rerolling pool repeats the previous pull's item. Returns the item names and the
     state after the last pull."""
-    bands = banner.bands()
     items: list[str] = []
     prev = last_item
 
     for _ in range(count):
-        seed = xorshift(seed)
-        score = seed % _BASE
-        pool_index = 0
-        while score >= bands[pool_index + 1]:
-            pool_index += 1
-
-        pool = banner.pools[pool_index]
-        if not pool.items:
-            raise ValueError(f"pool {pool_index} of {banner.name} is empty")
-
-        seed = xorshift(seed)
-        slots = list(pool.items)
-        name = slots[seed % len(slots)]
-        if pool.reroll and name and name == prev:
-            slot = seed % len(slots)
-            for _ in range(pool.items.count(name)):
-                seed = xorshift(seed)
-                del slots[slot]
-                if not slots:
-                    break
-
-                slot = seed % len(slots)
-                if slots[slot] != name:
-                    break
-
-            name = slots[slot] if slots else ""
-
+        name, seed, _ = pull_once(seed, banner, prev)
         items.append(name)
         prev = name
 
