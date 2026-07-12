@@ -1,6 +1,7 @@
-{% comment %}The path planner's result: the haul, the spend, the merged legs
-(consecutive pulls on one machine), then the tracks table with the path lit.
-{% endcomment %}
+{% comment %}The path planner's result: the haul, the spend, then the steps and the
+tracks table merged into one follow-along - the step list walks the plan and lights each
+move on the track (normal.js). Steps sit first so they stack above the track on narrow
+screens.{% endcomment %}
 <div class="normal-plan">
   {% if plan.hits %}
     <p class="plan-haul">
@@ -11,17 +12,39 @@
               data-item="{{ plan.last_item }}"
               title="You rolled this plan: the seed jumps to just after its final pull">I rolled it &mdash; advance my seed</button>
     </p>
-    <ol class="plan-legs">
-      {% for leg in plan.legs %}
-        <li>
-          <strong>{{ leg.name }}</strong> &times;{{ leg.pulls|length }}:
-          {% for pull in leg.pulls %}{% if not forloop.first %}, {% endif %}<span class="item{% if pull.dark %} dark-catseye{% endif %}{% if pull.target %} got{% endif %}">{{ pull.item }}</span>{% if pull.dupe %} <span class="muted">(dupe reroll, {{ pull.cell }})</span>{% endif %}{% endfor %}
-        </li>
-      {% endfor %}
-    </ol>
+    <div class="plan-follow">
+      <div class="plan-steps">
+        <div class="steps-head">
+          <span class="steps-title">Steps</span>
+          <div class="step-nav" role="group" aria-label="Walk the plan step by step">
+            <button type="button" class="step-nav-btn step-prev" aria-label="Previous step">&#8249;</button>
+            <span class="step-count" aria-live="polite"></span>
+            <button type="button" class="step-nav-btn step-next" aria-label="Next step">&#8250;</button>
+          </div>
+        </div>
+        <ol class="step-list">
+          {% for leg in plan.legs %}
+            <li>
+              <button type="button" class="step-card" data-step="{{ leg.n }}">
+                <span class="step-card-head">
+                  <span class="step-dot">{{ leg.n }}</span>
+                  <span class="step-banner">{{ leg.name }}</span>
+                </span>
+                <span class="step-meta">
+                  <span class="step-kind">{{ leg.pulls|length }}&times; pull{{ leg.pulls|length|pluralize }}</span>
+                  <span class="step-cost">{{ leg.pulls|length }} {{ leg.currency }}{{ leg.pulls|length|pluralize }}</span>
+                </span>
+                {% if leg.targets %}<span class="step-gets">gets {% for p in leg.targets %}{% if not forloop.first %}, {% endif %}<span class="step-get{% if p.dark %} dark-catseye{% endif %}">{{ p.item }}</span>{% endfor %}</span>{% endif %}
+              </button>
+            </li>
+          {% endfor %}
+        </ol>
+      </div>
+      <div class="plan-track">{% include "planner/_normal_tracks.html" %}</div>
+    </div>
   {% else %}
     <p class="seek-none">No {{ plan.label }} reachable with those rolls. Give a machine more
       budget, or try again after your next real pulls move the seed.</p>
+    {% include "planner/_normal_tracks.html" %}
   {% endif %}
 </div>
-{% include "planner/_normal_tracks.html" %}
