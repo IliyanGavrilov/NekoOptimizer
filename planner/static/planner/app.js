@@ -1,3 +1,63 @@
+// ---- Follow-along: walk a plan's steps, lighting each on the track beside it -------
+// Shared by the planner solutions and the Normal Capsules plan - both render a
+// .plan-follow holding a .plan-steps card list and a .plan-track, with each step card
+// and each lit track cell tagged data-step. Selecting a step lights its cells, dims the
+// steps already done, and drops a "you are here" marker on its first cell. Until you
+// pick one, the whole plan stays lit (the plain result) and nothing is dimmed.
+function wireFollowAlong(root) {
+  root.querySelectorAll(".plan-follow").forEach(setupFollowAlong);
+}
+
+function setupFollowAlong(follow) {
+  if (follow.dataset.follow) return; // rendered fresh each time, but guard re-wiring
+  follow.dataset.follow = "1";
+  const cards = [...follow.querySelectorAll(".step-card")];
+  const track = follow.querySelector(".plan-track");
+  if (!cards.length || !track) return;
+  const count = follow.querySelector(".step-count");
+  const max = cards.length;
+  let cur = 0; // 0 = not walking yet; the full plan shows lit
+
+  const stepCells = (n) => track.querySelectorAll(`.entry[data-step="${n}"]`);
+
+  const render = (scroll) => {
+    cards.forEach((c) => {
+      const n = Number(c.dataset.step);
+      c.classList.toggle("is-current", n === cur);
+      c.classList.toggle("is-done", cur > 0 && n < cur);
+    });
+    track.querySelectorAll(".entry[data-step]").forEach((e) => {
+      const n = Number(e.dataset.step);
+      e.classList.toggle("is-here", cur > 0 && n === cur);
+      e.classList.toggle("is-done", cur > 0 && n < cur);
+    });
+    follow.querySelector(".step-here")?.remove();
+    if (count) count.textContent = cur > 0 ? `${cur} / ${max}` : `${max} step${max === 1 ? "" : "s"}`;
+    const first = cur > 0 ? stepCells(cur)[0] : null;
+    if (first) {
+      const pin = document.createElement("span");
+      pin.className = "step-here";
+      pin.textContent = "you are here";
+      first.appendChild(pin);
+      if (scroll) first.scrollIntoView({ block: "center", behavior: "smooth" });
+    }
+  };
+
+  const setStep = (n, scroll) => {
+    cur = Math.max(1, Math.min(max, n));
+    render(scroll);
+  };
+
+  follow.addEventListener("click", (e) => {
+    const card = e.target.closest(".step-card");
+    if (card) return setStep(Number(card.dataset.step), true);
+    if (e.target.closest(".step-prev")) return setStep((cur || 1) - 1, true);
+    if (e.target.closest(".step-next")) return setStep((cur || 0) + 1, true);
+  });
+
+  render(false);
+}
+
 // ---- Planner: target selection ---------------------------------------
 const picker = document.getElementById("targetPicker");
 if (picker) {
@@ -576,21 +636,6 @@ if (picker) {
     syncRollDisplay();
   }
 
-  // ---- Track / Steps view switch, scoped to the opened subset solution -----
-  solutions.addEventListener("click", (e) => {
-    const btn = e.target.closest(".view-btn");
-    if (!btn) return;
-    const body = btn.closest(".solution-body");
-    body.querySelectorAll(".view-btn").forEach((b) => {
-      const on = b === btn;
-      b.classList.toggle("is-active", on);
-      b.setAttribute("aria-selected", on);
-    });
-    body.querySelectorAll(".view").forEach((v) => {
-      v.hidden = v.dataset.view !== btn.dataset.view;
-    });
-    setLegendHeight(); // Steps has no track legend; Track does - re-measure the sticky offset
-  });
   // The Rolls-table display controls live outside the form (they sit with the table),
   // so fold their current values into every roll/plan post.
   const post = (url) => {
@@ -930,6 +975,7 @@ if (picker) {
         browseTrack.hidden = true;
         resultsRegion.hidden = !solutions.firstElementChild;
         syncRollDisplay(); // the solution tracks carry icons too
+        wireFollowAlong(solutions); // step list + track walk together
         setLegendHeight();
       } else {
         const { errors = {} } = await resp.json().catch(() => ({}));

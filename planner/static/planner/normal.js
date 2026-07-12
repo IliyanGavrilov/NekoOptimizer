@@ -220,6 +220,7 @@ if (normalForm) {
       return;
     }
     tracksHost.innerHTML = await resp.text();
+    wireFollowAlong(tracksHost); // step list + track walk together (defined in app.js)
     tracksHost.scrollIntoView({ behavior: "smooth", block: "start" });
   });
 
