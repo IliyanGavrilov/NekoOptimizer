@@ -4,22 +4,8 @@
 // and each lit track cell tagged data-step. Selecting a step lights its cells, dims the
 // steps already done, and drops a "you are here" marker on its first cell. Until you
 // pick one, the whole plan stays lit (the plain result) and nothing is dimmed.
-let railResizeBound = false;
-
 function wireFollowAlong(root) {
   root.querySelectorAll(".plan-follow").forEach(setupFollowAlong);
-  // Re-lay every rail on viewport changes (the per-track ResizeObserver misses a resize
-  // that leaves a collapsed solution's track at zero height). Bound once, globally.
-  if (!railResizeBound) {
-    railResizeBound = true;
-    let raf = 0;
-    addEventListener("resize", () => {
-      cancelAnimationFrame(raf);
-      raf = requestAnimationFrame(() =>
-        document.querySelectorAll(".plan-follow").forEach((f) => alignStepRail(f)),
-      );
-    });
-  }
 }
 
 function setupFollowAlong(follow) {
@@ -29,8 +15,9 @@ function setupFollowAlong(follow) {
   const track = follow.querySelector(".plan-track");
   if (!cards.length || !track) return;
   const count = follow.querySelector(".step-count");
+  const reset = follow.querySelector(".step-reset");
   const max = cards.length;
-  let cur = 0; // 0 = not walking yet; the full plan shows lit
+  let cur = 0; // 0 = the whole plan lit (overview); 1..max = walking that step
 
   const stepCells = (n) => track.querySelectorAll(`.entry[data-step="${n}"]`);
 
@@ -47,6 +34,7 @@ function setupFollowAlong(follow) {
     });
     follow.querySelector(".step-here")?.remove();
     if (count) count.textContent = cur > 0 ? `${cur} / ${max}` : `${max} step${max === 1 ? "" : "s"}`;
+    if (reset) reset.hidden = cur === 0;
     const first = cur > 0 ? stepCells(cur)[0] : null;
     if (first) {
       const pin = document.createElement("span");
@@ -57,63 +45,25 @@ function setupFollowAlong(follow) {
     }
   };
 
+  // cur clamps to [0, max]: 0 is the overview (whole plan lit, nothing dimmed), so
+  // stepping back off step 1 - or hitting "show whole plan" - returns to it.
   const setStep = (n, scroll) => {
-    cur = Math.max(1, Math.min(max, n));
+    cur = Math.max(0, Math.min(max, n));
     render(scroll);
   };
 
   follow.addEventListener("click", (e) => {
     const card = e.target.closest(".step-card");
-    if (card) return setStep(Number(card.dataset.step), true);
-    if (e.target.closest(".step-prev")) return setStep((cur || 1) - 1, true);
-    if (e.target.closest(".step-next")) return setStep((cur || 0) + 1, true);
+    if (card) {
+      const n = Number(card.dataset.step);
+      return setStep(n === cur ? 0 : n, n !== cur); // click the current step again to deselect
+    }
+    if (e.target.closest(".step-reset")) return setStep(0);
+    if (e.target.closest(".step-prev")) return setStep(cur - 1, true);
+    if (e.target.closest(".step-next")) return setStep(cur + 1, true);
   });
 
-  // Spread the cards down the rail beside the rows their steps start on. Re-run whenever
-  // the track's size changes - a details toggle opening it, the icons/form/details view
-  // controls reflowing the cells, or a window resize crossing the stacked breakpoint.
-  if (typeof ResizeObserver === "function") {
-    new ResizeObserver(() => alignStepRail(follow)).observe(track);
-  }
   render(false);
-  requestAnimationFrame(() => alignStepRail(follow));
-}
-
-// Lay the step cards out as a rail: each card floats level with the topmost cell of the
-// step it names, so as you scroll the track its step is right beside it. Cards never
-// overlap - one pushed too close to the last is nudged down - and the whole thing falls
-// back to a plain stack on narrow screens (where the steps sit above the track).
-function alignStepRail(follow) {
-  const list = follow.querySelector(".step-list");
-  const track = follow.querySelector(".plan-track");
-  if (!list || !track) return;
-  const cards = [...list.querySelectorAll(".step-card")];
-  if (!cards.length) return;
-  if (!matchMedia("(min-width: 761px)").matches || !track.offsetHeight) {
-    list.style.height = "";
-    cards.forEach((c) => {
-      c.style.position = "";
-      c.style.top = "";
-      c.style.left = "";
-    });
-    return;
-  }
-  const base = list.getBoundingClientRect().top;
-  const GAP = 8;
-  let floor = 0;
-  for (const card of cards) {
-    let want = null;
-    for (const cell of track.querySelectorAll(`.entry[data-step="${card.dataset.step}"]`)) {
-      const top = cell.getBoundingClientRect().top - base;
-      if (want === null || top < want) want = top;
-    }
-    card.style.position = "absolute";
-    card.style.left = "0";
-    const top = Math.max(want === null ? floor : want, floor);
-    card.style.top = `${Math.round(top)}px`;
-    floor = top + card.offsetHeight + GAP;
-  }
-  list.style.height = `${Math.round(floor)}px`;
 }
 
 // ---- Planner: target selection ---------------------------------------
