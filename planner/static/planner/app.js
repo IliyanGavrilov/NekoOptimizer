@@ -15,7 +15,6 @@ function setupFollowAlong(follow) {
   const track = follow.querySelector(".plan-track");
   if (!cards.length || !track) return;
   const count = follow.querySelector(".step-count");
-  const reset = follow.querySelector(".step-reset");
   const max = cards.length;
   let cur = 0; // 0 = the whole plan lit (overview); 1..max = walking that step
 
@@ -34,7 +33,6 @@ function setupFollowAlong(follow) {
     });
     follow.querySelector(".step-here")?.remove();
     if (count) count.textContent = cur > 0 ? `${cur} / ${max}` : `${max} step${max === 1 ? "" : "s"}`;
-    if (reset) reset.hidden = cur === 0;
     const first = cur > 0 ? stepCells(cur)[0] : null;
     if (first) {
       const pin = document.createElement("span");
@@ -56,9 +54,9 @@ function setupFollowAlong(follow) {
     const card = e.target.closest(".step-card");
     if (card) {
       const n = Number(card.dataset.step);
-      return setStep(n === cur ? 0 : n, n !== cur); // click the current step again to deselect
+      // Click the current step again to deselect - back to the whole plan lit.
+      return setStep(n === cur ? 0 : n, n !== cur);
     }
-    if (e.target.closest(".step-reset")) return setStep(0);
     if (e.target.closest(".step-prev")) return setStep(cur - 1, true);
     if (e.target.closest(".step-next")) return setStep(cur + 1, true);
   });
