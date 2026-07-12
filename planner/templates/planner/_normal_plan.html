@@ -22,23 +22,21 @@ screens.{% endcomment %}
             <button type="button" class="step-nav-btn step-next" aria-label="Next step">&#8250;</button>
           </div>
         </div>
-        <ol class="step-list">
+        <div class="step-list">
           {% for leg in plan.legs %}
-            <li>
-              <button type="button" class="step-card" data-step="{{ leg.n }}">
-                <span class="step-card-head">
-                  <span class="step-dot">{{ leg.n }}</span>
-                  <span class="step-banner">{{ leg.name }}</span>
-                </span>
-                <span class="step-meta">
-                  <span class="step-kind">{{ leg.pulls|length }}&times; pull{{ leg.pulls|length|pluralize }}</span>
-                  <span class="step-cost">{{ leg.pulls|length }} {{ leg.currency }}{{ leg.pulls|length|pluralize }}</span>
-                </span>
-                {% if leg.targets %}<span class="step-gets">gets {% for p in leg.targets %}{% if not forloop.first %}, {% endif %}<span class="step-get{% if p.dark %} dark-catseye{% endif %}">{{ p.item }}</span>{% endfor %}</span>{% endif %}
-              </button>
-            </li>
+            <button type="button" class="step-card" data-step="{{ leg.n }}">
+              <span class="step-card-head">
+                <span class="step-dot">{{ leg.n }}</span>
+                <span class="step-banner">{{ leg.name }}</span>
+              </span>
+              <span class="step-meta">
+                <span class="step-kind">{{ leg.pulls|length }}&times; pull{{ leg.pulls|length|pluralize }}</span>
+                <span class="step-cost">{{ leg.pulls|length }} {{ leg.currency }}{{ leg.pulls|length|pluralize }}</span>
+              </span>
+              {% if leg.targets %}<span class="step-gets">gets {% for p in leg.targets %}{% if not forloop.first %}, {% endif %}<span class="step-get{% if p.dark %} dark-catseye{% endif %}">{{ p.item }}</span>{% endfor %}</span>{% endif %}
+            </button>
           {% endfor %}
-        </ol>
+        </div>
       </div>
       <div class="plan-track">{% include "planner/_normal_tracks.html" %}</div>
     </div>
