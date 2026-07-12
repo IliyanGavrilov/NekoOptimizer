@@ -633,12 +633,12 @@ tbody tr:hover, table tr:hover { background: var(--panel-2); }
 .sol-cost { margin-left: auto; color: var(--accent); font-size: 0.85rem; font-weight: 600; }
 .sol-cost.not-found { color: var(--muted); font-weight: 400; }
 .solution-body { padding: 0.7rem 0.8rem; }
-/* Toggle pinned left, Apply pinned right, on one row above the views. */
+/* Apply pinned right, on its own row above the merged step-list + track. */
 .view-bar {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-end;
   gap: 0.5rem;
   margin-bottom: 0.6rem;
 }
@@ -688,39 +688,93 @@ tbody tr:hover, table tr:hover { background: var(--panel-2); }
   padding: 0 0.4rem;
   vertical-align: middle;
 }
-/* Step-by-step breakdown: which banner, what kind of pull, and the cats it yields. */
-.steps { display: flex; flex-direction: column; margin-top: 0.5rem; }
-.step-banner {
-  margin: 0.65rem 0 0.2rem;
-  color: var(--accent);
-  font-family: var(--head-font);
-  font-size: 0.9rem;
+/* Follow-along: the plan's step list beside its track. Steps come first in the DOM, so
+   on narrow screens they stack above the track; wide, they sit side by side. */
+.plan-follow { display: flex; align-items: flex-start; gap: 0.9rem; }
+.plan-steps { flex: 0 0 15rem; min-width: 0; }
+.plan-track { flex: 1 1 auto; min-width: 0; }
+@media (max-width: 760px) {
+  .plan-follow { flex-direction: column; }
+  .plan-steps { flex-basis: auto; width: 100%; }
 }
-.step-banner:first-child { margin-top: 0; }
-.step { border-left: 2px solid var(--line); margin-left: 0.2rem; padding: 0.15rem 0 0.3rem 0.6rem; }
-.step-meta { display: flex; flex-wrap: wrap; gap: 0.5rem; font-size: 0.8rem; color: var(--muted); }
-.step-kind { color: var(--ink); }
-.step-cats { display: flex; flex-wrap: wrap; gap: 0.25rem; margin-top: 0.2rem; }
-/* A step's cat: reads as a pill, and (being a button) opens the forms/wiki popup. */
-.cat-pill {
-  font-family: inherit;
-  font-size: 0.78rem;
-  font-weight: 500;
-  color: var(--ink);
+
+.steps-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.4rem;
+}
+.steps-title { font-family: var(--head-font); font-size: 0.9rem; color: var(--muted); }
+.step-nav { display: inline-flex; align-items: center; gap: 0.3rem; }
+.step-nav-btn {
+  font: inherit;
+  line-height: 1;
+  color: var(--muted);
   background: var(--panel-2);
   border: 1px solid var(--line);
-  border-radius: 999px;
-  padding: 0.05rem 0.5rem;
+  border-radius: 8px;
   margin: 0;
-  width: auto;
+  padding: 0.15rem 0.55rem;
   cursor: pointer;
 }
-.cat-pill:hover { border-color: var(--accent); filter: none; }
-/* A step's searched-for cat, ringed gold like its track cell. */
-.cat-pill.target {
-  background: color-mix(in srgb, var(--accent) 18%, transparent);
+.step-nav-btn:hover { border-color: var(--accent); color: var(--ink); }
+.step-count { font-size: 0.76rem; color: var(--muted); min-width: 3.4rem; text-align: center; }
+
+.step-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0.35rem; }
+/* One in-game action: a numbered card that lights its cells on the track when picked. */
+.step-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  width: 100%;
+  text-align: left;
+  font: inherit;
+  color: var(--muted);
+  background: var(--panel-2);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  margin: 0;
+  padding: 0.4rem 0.55rem;
+  cursor: pointer;
+}
+.step-card:hover { border-color: var(--accent); }
+.step-card.is-current {
   border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 14%, var(--panel-2));
+  color: var(--ink);
+}
+.step-card.is-done { opacity: 0.55; }
+.step-card-head { display: flex; align-items: center; gap: 0.4rem; }
+.step-banner { font-family: var(--head-font); font-size: 0.85rem; color: var(--ink); }
+.step-meta { display: flex; flex-wrap: wrap; gap: 0.2rem 0.5rem; font-size: 0.76rem; color: var(--muted); }
+.step-kind { color: var(--ink); }
+.step-gets { font-size: 0.76rem; color: var(--muted); }
+.step-get {
+  color: var(--ink);
+  background: color-mix(in srgb, var(--accent) 20%, transparent);
   box-shadow: inset 0 0 0 1px var(--accent);
+  border-radius: 999px;
+  padding: 0 0.4rem;
+  font-weight: 600;
+}
+.steps-total { margin: 0.5rem 0 0; font-size: 0.78rem; color: var(--muted); }
+
+/* The step number: one small badge shared by the card and the track cells it lights, so
+   the two read as the same step. On a track cell it heads the entry line. */
+.step-dot {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  min-width: 1.2rem;
+  height: 1.2rem;
+  padding: 0 0.25rem;
+  border-radius: 999px;
+  background: var(--accent);
+  color: var(--accent-ink);
+  font-family: var(--body-font);
+  font-size: 0.72rem;
   font-weight: 700;
 }
 
@@ -845,6 +899,26 @@ table.track .entry.target .catlink {
    the cell's empty space is the click target (names/dice have their own). The guaranteed
    column is clickable too - it traces the uber that column's multi would award. */
 table.track td.cell .entry { cursor: pointer; }
+/* Walking the plan step by step (the step list beside the track): the current step's
+   cells ring bright, the steps already done fade back, and a marker pins the first cell
+   you're on. After .on-path in source order so these win the equal-specificity tie. */
+table.track .entry.is-here {
+  color: var(--ink);
+  background: color-mix(in srgb, var(--accent) 30%, transparent);
+  box-shadow: inset 0 0 0 2px var(--accent);
+  font-weight: 700;
+}
+table.track .entry.is-done { opacity: 0.5; }
+.step-here {
+  display: inline-block;
+  margin-left: 0.4rem;
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--accent);
+  white-space: nowrap;
+}
 /* Rare-dupe reroll: show where the slot jumps (to the other track) on its own line.
    Dimmed accent so it reads as a branch note, not a pull of its own. */
 .arrow {

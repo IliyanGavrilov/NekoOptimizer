@@ -795,6 +795,11 @@ class TrackMarks:
     shared: dict[str, set[int]] = field(default_factory=dict)
     gshared: dict[str, set[int]] = field(default_factory=dict)
     nexts: dict[str, set[int]] = field(default_factory=dict)
+    # Which plan step (1-based leg number) each lit cell belongs to, so the track can
+    # be walked step by step alongside the step list; ``gsteps`` twins the guaranteed
+    # columns. Empty on the browse view.
+    steps: dict[str, dict[int, int]] = field(default_factory=dict)
+    gsteps: dict[str, dict[int, int]] = field(default_factory=dict)
 
 
 def _representative(name, equivalents):
@@ -934,6 +939,7 @@ def build_tracks(
                     "switch": switched,
                     "alt": _dupe_branch(branch, obtained) if branch is not None else None,
                     "on_path": on_path,
+                    "step": marks.steps.get(group["rep"], {}).get(index),
                     "target": obtained == tp.cat,
                     "shared": not on_path and index in marks.shared.get(group["rep"], ()),
                     "next": index in marks.nexts.get(group["rep"], ()),
@@ -997,6 +1003,7 @@ def build_tracks(
                     # is the track cell's own dice (same start anchor).
                     "seed": tp.seed,
                     "on_path": on_path,
+                    "step": marks.gsteps.get(group["rep"], {}).get(index),
                     "target": marks.gtargets.get(group["rep"], {}).get(index) == tp.cat,
                     "shared": not on_path and index in marks.gshared.get(group["rep"], ()),
                     **_collection_marks(tp.cat, rarity, owned, wanted, group["debuts"]),
@@ -1055,6 +1062,14 @@ def plan_highlight(option, equivalents):
         path.setdefault(rep, set()).add(pull.position)
         if pull.cat in option.targets:
             targets.setdefault(rep, {})[pull.position] = pull.cat
+
+    # Number the cells by the step (merged leg) they belong to: one in-game action -
+    # a run of single pulls, or a multi and its guaranteed column - shares a number.
+    for n, leg in enumerate(option.plan.legs, start=1):
+        for pull in leg.pulls:
+            rep = _representative(pull.banner_id, equivalents)
+            table = marks.gsteps if pull.guaranteed else marks.steps
+            table.setdefault(rep, {})[pull.position] = n
 
     return marks
 
@@ -1393,12 +1408,14 @@ def plan_summary(plans, equivalents, owned=None, wanted=None, titles=None):
             tickets = rolls - leg.cost // CATFOOD_PER_DRAW if leg.kind == "Single pull" else 0
             legs.append(
                 {
+                    "n": len(legs) + 1,
                     "names": _titled(equivalents.get(leg.banner_id, [leg.banner_id]), titles),
                     "new_banner": leg.banner_id != last_banner,
                     "kind": leg.kind,
                     "cost": leg.cost,
                     "tickets": tickets,
                     "rolls": rolls,
+                    "targets": [pull.cat for pull in leg.pulls if pull.cat in option.targets],
                     "cats": [
                         {
                             "name": pull.cat,
@@ -1861,6 +1878,7 @@ def build_normal_tracks(
                     "dark": pull.item == "Dark Catseye",
                     "unit": pull.item in units,
                     "on_path": mark is not None,
+                    "step": mark and mark.get("step"),
                     "target": bool(mark and not mark["dupe"] and mark["target"]),
                     "alt": alt,
                 }
@@ -1961,34 +1979,49 @@ def build_normal_plan(
     label, targets = resolved
     plan = plan_normal(seed, budgets, targets, last_item=last_item)
 
+    # One pass builds the merged legs (consecutive pulls on one machine) and the track
+    # marks together, so each lit cell carries the step (leg) number it belongs to and
+    # the step list and track can be walked in lockstep.
     marks: dict[tuple[int, str], dict[str, dict]] = {}
-    for step in plan.steps:
-        marks.setdefault((step.position, step.track), {})[step.machine] = {
-            "dupe": step.dupe,
-            "target": step.target,
-        }
-
     legs = []
     for step in plan.steps:
-        cell = f"{step.position}{step.track}"
-        entry = {
-            "item": step.item,
-            "cell": cell,
-            "dupe": step.dupe,
-            "target": step.target,
-            "dark": step.item == "Dark Catseye",
-        }
         if legs and legs[-1]["key"] == step.machine:
-            legs[-1]["pulls"].append(entry)
+            n = legs[-1]["n"]
         else:
+            n = len(legs) + 1
             legs.append(
                 {
+                    "n": n,
                     "key": step.machine,
                     "name": BANNERS_BY_KEY[step.machine].name,
                     "cheap": step.machine in CHEAP_KEYS,
-                    "pulls": [entry],
+                    "currency": (
+                        "Normal Cat Ticket"
+                        if step.machine in CHEAP_KEYS
+                        else "Lucky Ticket G"
+                        if step.machine == "ltg"
+                        else "Lucky Ticket"
+                    ),
+                    "pulls": [],
                 }
             )
+        marks.setdefault((step.position, step.track), {})[step.machine] = {
+            "dupe": step.dupe,
+            "target": step.target,
+            "step": n,
+        }
+        legs[-1]["pulls"].append(
+            {
+                "item": step.item,
+                "cell": f"{step.position}{step.track}",
+                "dupe": step.dupe,
+                "target": step.target,
+                "dark": step.item == "Dark Catseye",
+            }
+        )
+
+    for leg in legs:
+        leg["targets"] = [pull for pull in leg["pulls"] if pull["target"]]
 
     # The table shows the live machines, reaching at least the plan's furthest cell.
     keys = [banner.key for banner in NORMAL_BANNERS if banner.key in live]

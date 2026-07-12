@@ -1,14 +1,32 @@
-<div class="steps">
-  {% for leg in legs %}
-    {% if leg.new_banner %}
-      <div class="step-banner">{{ leg.names|join:" · " }}{% if leg.names|length > 1 %} <span class="equiv-note">same rolls</span>{% endif %}</div>
-    {% endif %}
-    <div class="step">
-      <div class="step-meta">
-        <span class="step-kind">{% if leg.kind == "Single pull" %}{{ leg.rolls }}&times; single pull{{ leg.rolls|pluralize }}{% else %}{{ leg.kind }}{% endif %}</span>
-        <span class="step-cost">{% if leg.tickets %}{{ leg.tickets }} ticket{{ leg.tickets|pluralize }}{% endif %}{% if leg.tickets and leg.cost %} + {% endif %}{% if leg.cost %}{{ leg.cost }} catfood{% endif %}{% if not leg.tickets and not leg.cost %}free{% endif %}</span>
-      </div>
-      <div class="step-cats">{% for c in leg.cats %}<button type="button" class="cat-pill{% if c.target %} target{% endif %}{% if c.new %} new{% endif %}{% if c.owned %} owned{% endif %}{% if c.wanted %} wanted{% endif %}" data-name="{{ c.name }}">{{ c.name }}</button>{% endfor %}</div>
+{% comment %}The plan as a walkable step list: one card per in-game action - a run of
+single pulls, or a multi - numbered to match the track cells beside it. Clicking a card,
+or the prev/next arrows, lights that step on the track and marks where you are (app.js's
+follow-along). Included next to the track by _solutions.html.{% endcomment %}
+<div class="plan-steps">
+  <div class="steps-head">
+    <span class="steps-title">Steps</span>
+    <div class="step-nav" role="group" aria-label="Walk the plan step by step">
+      <button type="button" class="step-nav-btn step-prev" aria-label="Previous step">&#8249;</button>
+      <span class="step-count" aria-live="polite"></span>
+      <button type="button" class="step-nav-btn step-next" aria-label="Next step">&#8250;</button>
     </div>
-  {% endfor %}
+  </div>
+  <ol class="step-list">
+    {% for leg in legs %}
+      <li>
+        <button type="button" class="step-card" data-step="{{ leg.n }}">
+          <span class="step-card-head">
+            <span class="step-dot">{{ leg.n }}</span>
+            <span class="step-banner">{{ leg.names|join:" · " }}{% if leg.names|length > 1 %} <span class="equiv-note">same rolls</span>{% endif %}</span>
+          </span>
+          <span class="step-meta">
+            <span class="step-kind">{% if leg.kind == "Single pull" %}{{ leg.rolls }}&times; single pull{{ leg.rolls|pluralize }}{% else %}{{ leg.kind }}{% endif %}</span>
+            <span class="step-cost">{% if leg.tickets %}{{ leg.tickets }} ticket{{ leg.tickets|pluralize }}{% endif %}{% if leg.tickets and leg.cost %} + {% endif %}{% if leg.cost %}{{ leg.cost }} catfood{% endif %}{% if not leg.tickets and not leg.cost %}free{% endif %}</span>
+          </span>
+          {% if leg.targets %}<span class="step-gets">gets {% for c in leg.targets %}{% if not forloop.first %}, {% endif %}<span class="step-get">{{ c }}</span>{% endfor %}</span>{% endif %}
+        </button>
+      </li>
+    {% endfor %}
+  </ol>
+  {% if total %}<p class="steps-total">Total &middot; {{ total }}</p>{% endif %}
 </div>
