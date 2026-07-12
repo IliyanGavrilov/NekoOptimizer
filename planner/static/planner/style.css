@@ -721,7 +721,10 @@ tbody tr:hover, table tr:hover { background: var(--panel-2); }
 .step-nav-btn:hover { border-color: var(--accent); color: var(--ink); }
 .step-count { font-size: 0.76rem; color: var(--muted); min-width: 3.4rem; text-align: center; }
 
-.step-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0.35rem; }
+/* Narrow screens keep the cards in a plain stack; wide screens turn them into a rail -
+   app.js absolutely-positions each card beside the row its step starts on (position
+   relative anchors those tops), and sets the list height to fit. */
+.step-list { position: relative; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0.35rem; }
 /* One in-game action: a numbered card that lights its cells on the track when picked. */
 .step-card {
   display: flex;
@@ -897,8 +900,10 @@ table.track .entry.target .catlink {
 }
 /* Click-to-trace renders as ordinary plan marks (on-path + target pill + shared);
    the cell's empty space is the click target (names/dice have their own). The guaranteed
-   column is clickable too - it traces the uber that column's multi would award. */
-table.track td.cell .entry { cursor: pointer; }
+   column is clickable too - it traces the uber that column's multi would award. Only the
+   browse Rolls table traces (#trackHost) - a solution's own track isn't clickable, so its
+   cells keep the default cursor; the names and dice inside are buttons and stay pointer. */
+#trackHost table.track td.cell .entry { cursor: pointer; }
 /* Walking the plan step by step (the step list beside the track): the current step's
    cells ring bright, the steps already done fade back, and a marker pins the first cell
    you're on. After .on-path in source order so these win the equal-specificity tie. */
