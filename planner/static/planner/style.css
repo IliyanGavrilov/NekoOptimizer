@@ -691,22 +691,53 @@ tbody tr:hover, table tr:hover { background: var(--panel-2); }
 /* Follow-along: the plan's step list beside its track. Steps come first in the DOM, so
    on narrow screens they stack above the track; wide, they sit side by side. */
 .plan-follow { display: flex; align-items: flex-start; gap: 0.9rem; }
-.plan-steps { flex: 0 0 15rem; min-width: 0; }
+/* The step list stays put while the track scrolls: pinned below the site header, so
+   every step and the walk controls are always in view, and it scrolls inside itself if a
+   plan has more steps than fit. */
+.plan-steps {
+  flex: 0 0 15rem;
+  min-width: 0;
+  position: sticky;
+  top: calc(var(--header-h, 56px) + 0.5rem);
+  max-height: calc(100vh - var(--header-h, 56px) - 1.5rem);
+  overflow: auto;
+}
 .plan-track { flex: 1 1 auto; min-width: 0; }
 @media (max-width: 760px) {
   .plan-follow { flex-direction: column; }
-  .plan-steps { flex-basis: auto; width: 100%; }
+  .plan-steps { flex-basis: auto; width: 100%; position: static; max-height: none; }
 }
 
+/* Sticky within the pinned panel, so the title + walk controls stay put even when a long
+   step list scrolls inside it. */
 .steps-head {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 0.5rem;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: var(--panel);
+  padding-bottom: 0.4rem;
   margin-bottom: 0.4rem;
 }
 .steps-title { font-family: var(--head-font); font-size: 0.9rem; color: var(--muted); }
 .step-nav { display: inline-flex; align-items: center; gap: 0.3rem; }
+/* Deselect back to the whole-lit plan; only shown while a step is picked. */
+.step-reset {
+  font: inherit;
+  font-size: 0.74rem;
+  color: var(--accent);
+  background: transparent;
+  border: 0;
+  margin: 0;
+  padding: 0.1rem 0.3rem;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.step-reset:hover { text-decoration: underline; }
+.step-reset[hidden] { display: none; }
 .step-nav-btn {
   font: inherit;
   line-height: 1;
@@ -721,10 +752,7 @@ tbody tr:hover, table tr:hover { background: var(--panel-2); }
 .step-nav-btn:hover { border-color: var(--accent); color: var(--ink); }
 .step-count { font-size: 0.76rem; color: var(--muted); min-width: 3.4rem; text-align: center; }
 
-/* Narrow screens keep the cards in a plain stack; wide screens turn them into a rail -
-   app.js absolutely-positions each card beside the row its step starts on (position
-   relative anchors those tops), and sets the list height to fit. */
-.step-list { position: relative; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0.35rem; }
+.step-list { margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0.35rem; }
 /* One in-game action: a numbered card that lights its cells on the track when picked. */
 .step-card {
   display: flex;
