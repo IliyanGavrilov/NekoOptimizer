@@ -613,6 +613,55 @@ tbody tr:hover, table tr:hover { background: var(--panel-2); }
 .ctrl input[type="number"] { width: 4.2rem; }
 .ctrl select { padding: 0.15rem 0.3rem; }
 
+/* "Find next" (godfat's Find): the browse track's summary of where each valuable cat
+   lands next - name, rarity, and a position chip that scrolls the table to that cell. */
+.found-cats {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.3rem 0.7rem;
+  margin: 0 0 0.5rem;
+  padding: 0.4rem 0.6rem;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+.found-label { font-size: 0.82rem; font-weight: 700; color: var(--muted); }
+.found-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem 0.8rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.found-item { display: inline-flex; align-items: baseline; gap: 0.35rem; }
+.found-item .rarity { font-size: 0.68rem; padding: 0 0.4rem; }
+.find-pos {
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent) 45%, transparent);
+  border-radius: 999px;
+  padding: 0.05rem 0.5rem;
+  cursor: pointer;
+}
+.find-pos:hover { border-color: var(--accent); filter: none; }
+
+/* A found position clicked: briefly ring the cell it points to (outline, so it doesn't
+   nudge layout or fight border-collapse). */
+@keyframes flash-cell {
+  0%, 100% { outline-color: transparent; }
+  30% { outline-color: var(--accent); }
+}
+td.cell.flash-locate {
+  outline: 2px solid transparent;
+  outline-offset: -2px;
+  animation: flash-cell 0.9s ease-out;
+}
+
 .solution {
   border: 1px solid var(--line);
   border-radius: 10px;

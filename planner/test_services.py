@@ -14,12 +14,14 @@ from planner.services import (
     REGULARS_LABEL,
     WIKI_BASE,
     TrackMarks,
+    _pos_label,
     banner_titles,
     build_tracks,
     capped_banner_limits,
     collection_sections,
     cost_label,
     equivalent_banners,
+    find_cats,
     newly_added_ubers,
     picker_groups,
     plan_highlight,
@@ -39,6 +41,7 @@ from planner.services import (
 
 U = Rarity.UBER_SUPER_RARE
 R = Rarity.RARE
+L = Rarity.LEGEND_RARE
 
 
 def test_capped_banner_limits_matches_only_platinum_and_legend():
@@ -1319,3 +1322,53 @@ def test_unit_stats_pairs_the_forms_with_the_quoted_level():
 
 def test_unit_stats_is_none_for_an_unlisted_unit():
     assert unit_stats(99, {"level": 30, "units": [{"id": 25, "forms": []}]}) is None
+
+
+# ---- find_cats (godfat's "Find next", scoped to picked targets) -------------
+
+
+def test_pos_label_reads_a_stream_index_as_godfat_notation():
+    assert _pos_label(0) == "1A"
+    assert _pos_label(1) == "1B"
+    assert _pos_label(214) == "108A"
+    assert _pos_label(215, guaranteed=True) == "108BG"
+
+
+def test_find_cats_locates_only_the_picked_targets():
+    pulls = [
+        TrackPull(1, "A", "Ignored Uber", U),  # not picked - skipped
+        TrackPull(1, "B", "Wanted Uber", U),
+        TrackPull(2, "A", "A Legend", L),
+    ]
+    assert find_cats({"X": pulls}, set()) == []  # nothing picked -> nothing found
+    found = find_cats({"X": pulls}, {"Wanted Uber", "A Legend"})
+    assert [(f["name"], f["rarity"], f["pos"]) for f in found] == [
+        ("Wanted Uber", "Uber Super Rare", "1B"),
+        ("A Legend", "Legend Rare", "2A"),
+    ]
+
+
+def test_find_cats_reports_each_target_at_its_earliest_position():
+    pulls = [TrackPull(5, "A", "Aphrodite", U), TrackPull(2, "B", "Aphrodite", U)]
+    found = find_cats({"X": pulls}, {"Aphrodite"})
+    assert len(found) == 1
+    assert found[0]["pos"] == "2B"
+
+
+def test_find_cats_prefers_a_guaranteed_hit_only_when_strictly_earlier():
+    pulls = [TrackPull(9, "A", "Aphrodite", U)]  # normal roll, far off
+    guaranteed = {"X": [TrackPull(3, "A", "Aphrodite", U)]}  # guaranteed column, early
+    found = find_cats({"X": pulls}, {"Aphrodite"}, guaranteed=guaranteed)
+    assert (found[0]["pos"], found[0]["guaranteed"]) == ("3AG", True)
+    # Skipping the guaranteed column falls back to the normal-roll position.
+    skipped = find_cats(
+        {"X": pulls}, {"Aphrodite"}, guaranteed=guaranteed, include_guaranteed=False
+    )
+    assert (skipped[0]["pos"], skipped[0]["guaranteed"]) == ("9A", False)
+
+
+def test_find_cats_keeps_the_plain_roll_on_a_tie():
+    pulls = [TrackPull(3, "A", "A Legend", L)]
+    guaranteed = {"X": [TrackPull(3, "A", "A Legend", L)]}
+    found = find_cats({"X": pulls}, {"A Legend"}, guaranteed=guaranteed)
+    assert found[0]["guaranteed"] is False

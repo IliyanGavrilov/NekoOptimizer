@@ -307,6 +307,57 @@ def test_tracks_endpoint_hides_the_guaranteed_column_without_a_guarantee(client,
 
 
 @pytest.mark.django_db
+def test_tracks_endpoint_lists_found_positions_for_picked_targets(client, monkeypatch):
+    monkeypatch.setattr(
+        "planner.views.fetch_banners", fixed_banners(TrackPull(1, "B", "Aphrodite", U))
+    )
+    cat = cat_with_unit("Aphrodite")
+    html = client.post("/tracks/", {"seed": 7, "targets": [cat.pk]}).content.decode()
+    assert "found-cats" in html
+    assert "Aphrodite" in html
+    assert ">1B<" in html  # the clickable position chip
+
+
+@pytest.mark.django_db
+def test_tracks_endpoint_omits_the_found_panel_without_picked_cats(client, monkeypatch):
+    monkeypatch.setattr(
+        "planner.views.fetch_banners", fixed_banners(TrackPull(1, "A", "Aphrodite", U))
+    )
+    cat_with_unit("Aphrodite")
+    assert b"found-cats" not in client.post("/tracks/", {"seed": 7}).content
+
+
+@pytest.mark.django_db
+def test_tracks_endpoint_find_includes_the_wishlist_when_enabled(client, monkeypatch):
+    monkeypatch.setattr(
+        "planner.views.fetch_banners", fixed_banners(TrackPull(2, "A", "Aphrodite", U))
+    )
+    cat_with_unit("Aphrodite", wanted=True)
+    assert b"found-cats" not in client.post("/tracks/", {"seed": 7}).content  # off by default
+    html = client.post("/tracks/", {"seed": 7, "use_wishlist": "on"}).content.decode()
+    assert "found-cats" in html
+    assert ">2A<" in html
+
+
+@pytest.mark.django_db
+def test_tracks_endpoint_find_can_skip_the_guaranteed_column(client, monkeypatch):
+    rolls = BannerRolls(
+        [TrackPull(9, "A", "Aphrodite", U)],  # normal roll, far off
+        [TrackPull(1, "A", "Aphrodite", U)],  # guaranteed column, early
+    )
+    monkeypatch.setattr("planner.views.fetch_banners", fixed_rolls(rolls))
+    cat = cat_with_unit("Aphrodite")
+    # Default includes the guaranteed column, so the earlier ...G position wins.
+    assert b">1AG<" in client.post("/tracks/", {"seed": 7, "targets": [cat.pk]}).content
+    # Skipping it falls back to the normal-roll position.
+    skipped = client.post(
+        "/tracks/", {"seed": 7, "targets": [cat.pk], "exclude_guaranteed": "1"}
+    ).content
+    assert b">9A<" in skipped
+    assert b">1AG<" not in skipped
+
+
+@pytest.mark.django_db
 def test_tracks_endpoint_renders_a_dice_per_branch_of_a_dupe_cell(client, monkeypatch):
     rolls = BannerRolls(
         [TrackPull(1, "A", "Pogo", R, seed=3), TrackPull(2, "A", "Pogo", R, seed=5)],
@@ -334,8 +385,17 @@ def test_tracks_endpoint_forwards_the_dupe_memory(client, monkeypatch):
     assert seen["last_cat"] == "Pogo"
 
 
+def _many_pulls(upto):
+    """A double whose rolls cover positions 1..upto on both tracks, so the display cap is
+    observable (the seed is always rolled deep for Find; track_length only caps rendering)."""
+    pulls = [TrackPull(pos, t, "Pogo", R) for pos in range(1, upto + 1) for t in ("A", "B")]
+    return fixed_rolls(BannerRolls(pulls, []))
+
+
 @pytest.mark.django_db
-def test_tracks_endpoint_uses_the_requested_track_length(client, monkeypatch):
+def test_tracks_endpoint_rolls_deep_for_find(client, monkeypatch):
+    # The roll always reaches godfat's Find ceiling so "Find next" can look past the table,
+    # regardless of how few rows the user asked to show.
     seen = {}
 
     def fake(seed, count, last_cat="", simulate_guaranteed=0, future_ubers=None):
@@ -343,23 +403,24 @@ def test_tracks_endpoint_uses_the_requested_track_length(client, monkeypatch):
         return RollResult({"x": BannerRolls([TrackPull(1, "A", "Pogo", R)], [])}, {})
 
     monkeypatch.setattr("planner.views.fetch_banners", fake)
-    client.post("/tracks/", {"seed": 7, "track_length": 250})
-    assert seen["count"] == 250
-
-
-@pytest.mark.django_db
-def test_tracks_endpoint_clamps_the_track_length(client, monkeypatch):
-    seen = {}
-
-    def fake(seed, count, last_cat="", simulate_guaranteed=0, future_ubers=None):
-        seen["count"] = count
-        return RollResult({"x": BannerRolls([TrackPull(1, "A", "Pogo", R)], [])}, {})
-
-    monkeypatch.setattr("planner.views.fetch_banners", fake)
-    client.post("/tracks/", {"seed": 7, "track_length": 5000})
+    client.post("/tracks/", {"seed": 7, "track_length": 100})
     assert seen["count"] == MAX_TRACK_LENGTH
-    client.post("/tracks/", {"seed": 7, "track_length": "junk"})
-    assert seen["count"] == DEFAULT_COUNT
+
+
+@pytest.mark.django_db
+def test_tracks_endpoint_shows_the_requested_number_of_rows(client, monkeypatch):
+    monkeypatch.setattr("planner.views.fetch_banners", _many_pulls(300))
+    html = client.post("/tracks/", {"seed": 7, "track_length": 250}).content.decode()
+    assert html.count('scope="row"') == 250  # one <th scope="row"> per rendered A/B row
+
+
+@pytest.mark.django_db
+def test_tracks_endpoint_clamps_the_displayed_rows(client, monkeypatch):
+    monkeypatch.setattr("planner.views.fetch_banners", _many_pulls(MAX_TRACK_LENGTH + 50))
+    over = client.post("/tracks/", {"seed": 7, "track_length": 5000}).content.decode()
+    assert over.count('scope="row"') == MAX_TRACK_LENGTH
+    junk = client.post("/tracks/", {"seed": 7, "track_length": "junk"}).content.decode()
+    assert junk.count('scope="row"') == DEFAULT_COUNT
 
 
 @pytest.mark.django_db
