@@ -88,6 +88,8 @@ if (picker) {
   const trackLengthEl = document.getElementById("id_track_length");
   const detailsToggleEl = document.getElementById("detailsToggle");
   const simGuaranteedEl = document.getElementById("simGuaranteed");
+  const excludeGuaranteedEl = document.getElementById("excludeGuaranteed");
+  const findGuaranteedCtl = document.querySelector(".find-guaranteed-ctl");
   const rollDisplayEl = document.getElementById("rollDisplay");
   const rollFormEl = document.getElementById("rollForm");
   const horizonRow = document.querySelector(".explore-horizon");
@@ -169,6 +171,9 @@ if (picker) {
     chipsFor(pk).forEach((c) => c.classList.toggle("selected", on));
     render();
     save();
+    // Targets double as "Find next" cats on the browse track - refresh its found list
+    // (only while browsing; a shown plan keeps its own tracks).
+    if (browseTrack && !browseTrack.hidden) scheduleTracks();
   }
 
   picker.addEventListener("click", (e) => {
@@ -485,7 +490,11 @@ if (picker) {
   syncExplore();
   ticketsEl.addEventListener("input", save);
   catfoodEl.addEventListener("input", save);
-  wishlistEl.addEventListener("change", save);
+  wishlistEl.addEventListener("change", () => {
+    save();
+    // The wishlist feeds the browse "Find next" list too (when "search my wishlist" is on).
+    if (browseTrack && !browseTrack.hidden) scheduleTracks();
+  });
   ticketValueEl.addEventListener("input", save);
   platLegendCapEl.addEventListener("input", save);
   exploreEl.addEventListener("change", () => {
@@ -501,6 +510,8 @@ if (picker) {
   });
   // Simulating a guaranteed multi changes the server-side roll, so re-fetch the table.
   simGuaranteedEl.addEventListener("change", () => scheduleTracks());
+  // Skipping the guaranteed column changes which positions "Find next" reports.
+  excludeGuaranteedEl.addEventListener("change", () => scheduleTracks());
 
   render();
 
@@ -648,6 +659,7 @@ if (picker) {
     const body = new FormData(plannerForm);
     body.set("track_length", trackLengthEl.value);
     body.set("simulate_guaranteed", simGuaranteedEl.value);
+    body.set("exclude_guaranteed", excludeGuaranteedEl.checked ? "1" : "0");
     // Future-uber padding is per banner: each legend stepper covers the run names of
     // the banner group it sits on (the server re-renders the values it applied).
     const future = {};
@@ -756,6 +768,7 @@ if (picker) {
   // (no implicit "current banners" fallback).
   let trackTimer;
   let traceState = null; // the traced cell, kept only across its own re-render
+  let pendingFind = null; // a "Find next" position to scroll to once the table re-renders
   const anyBanner = () => includes.some((b) => b.getAttribute("aria-pressed") === "true");
   // The banner legend sticks under the site header; the sticky thead sits just below it,
   // so measure the visible legend's height into --legend-h whenever a track is (re)rendered.
@@ -781,6 +794,35 @@ if (picker) {
     trackHost.querySelectorAll(".future-ubers").forEach(scrubNumberInput);
     syncRollDisplay(); // re-inject icons if the fresh cells need them
     setLegendHeight();
+    // "Skip guaranteed in Find" only makes sense when the track has guaranteed columns.
+    if (findGuaranteedCtl) findGuaranteedCtl.hidden = !trackHost.querySelector(".guaranteed-col");
+    // A Find-position click that had to grow the table scrolls once the rows are here.
+    if (pendingFind) {
+      const { idx, guaranteed } = pendingFind;
+      pendingFind = null;
+      scrollToFind(idx, guaranteed);
+    }
+  }
+  // Scroll the browse track to a found cat's cell and flash it. When the position sits past
+  // the rows on screen, first grow "Show N rolls" to reach it (the seed is rolled deep
+  // server-side, but only N rows render), then scroll once the fresh table arrives.
+  function scrollToFind(idx, guaranteed) {
+    const pos = Math.floor(idx / 2) + 1;
+    if (pos > Number(trackLengthEl.value)) {
+      trackLengthEl.value = Math.min(pos, 999);
+      pendingFind = { idx, guaranteed };
+      requestTracks();
+      return;
+    }
+    const tbody = trackHost.querySelector(".track tbody");
+    const row = tbody && tbody.children[pos - 1];
+    if (!row) return;
+    const sel = guaranteed ? "td.cell.guaranteed-col" : "td.cell:not(.guaranteed-col)";
+    const cell = row.querySelectorAll(sel)[idx & 1 ? 1 : 0] || row;
+    cell.scrollIntoView({ behavior: "smooth", block: "center" });
+    cell.classList.remove("flash-locate");
+    void cell.offsetWidth; // restart the pulse on a repeat click
+    cell.classList.add("flash-locate");
   }
   async function requestTracks() {
     // Changing the seed/banners invalidates any plan: drop back to browsing the rolls.
@@ -808,6 +850,12 @@ if (picker) {
   // listen on the host; changing one re-rolls the table with the new padding.
   trackHost.addEventListener("input", (e) => {
     if (e.target.closest(".future-ubers")) scheduleTracks();
+  });
+  // "Find next" position chip: scroll the track to that cell (growing the table first if
+  // the position is past what's on screen).
+  trackHost.addEventListener("click", (e) => {
+    const chip = e.target.closest(".find-pos");
+    if (chip) scrollToFind(Number(chip.dataset.idx), chip.dataset.guaranteed === "1");
   });
 
   // ---- Click-to-trace: plan-style marks for the rolls UP TO a cell --------
