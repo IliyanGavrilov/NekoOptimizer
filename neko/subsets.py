@@ -58,6 +58,16 @@ def solve_subsets(
                 bounds[wanted] = plan.cost + plan.tickets_used * ticket_value
                 plans.append(SubsetPlan(wanted, plan))
 
-    plans.sort(key=lambda result: (-len(result.targets), result.plan.cost))
+    def rank(result: SubsetPlan) -> tuple:
+        # Most cats first, then least spent. `plan.cost` is catfood only (tickets are
+        # free there), so ranking on it alone leaves every all-ticket plan tied at 0 and
+        # ordered arbitrarily. Fold tickets into a catfood-equivalent total - the same
+        # figure used for `bounds` above - so a 140-ticket plan sorts ahead of a 300-ticket
+        # one; break remaining ties on catfood held (spend tickets first), then name.
+        plan = result.plan
+        spent = plan.cost + plan.tickets_used * ticket_value
+        return (-len(result.targets), spent, plan.cost, tuple(sorted(result.targets)))
+
+    plans.sort(key=rank)
 
     return plans

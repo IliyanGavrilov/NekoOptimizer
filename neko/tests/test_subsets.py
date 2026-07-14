@@ -33,6 +33,18 @@ def test_singletons_ordered_by_cost():
     assert costs == [CATFOOD_PER_DRAW, 2 * CATFOOD_PER_DRAW, 3 * CATFOOD_PER_DRAW]
 
 
+def test_same_size_subsets_ordered_by_tickets_spent_not_name():
+    # "Zzz" sits at position 1 (1 ticket), "Aaa" at position 3 (3 tickets): all-ticket
+    # plans, so both cost 0 catfood. The cheaper one must come first even though its name
+    # sorts last - ordering must follow resources spent, not the alphabet.
+    graph = BannerGraph(
+        "x", [TrackPull(1, "A", "Zzz", U), TrackPull(2, "A", "Bbb", U), TrackPull(3, "A", "Aaa", U)]
+    )
+    plans = solve_subsets([graph], {"Aaa", "Zzz"}, start(tickets=3))
+    singletons = [p.targets for p in plans if len(p.targets) == 1]
+    assert singletons == [frozenset({"Zzz"}), frozenset({"Aaa"})]
+
+
 def test_drops_subsets_that_are_unaffordable():
     plans = solve_subsets([banner()], {"Aaa", "Bbb"}, start(catfood=1))
     assert [p.targets for p in plans] == [frozenset({"Aaa"})]
