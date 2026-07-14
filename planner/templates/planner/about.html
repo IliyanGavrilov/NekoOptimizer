@@ -1,0 +1,60 @@
+{% extends "planner/base.html" %}
+
+{% block title %}About &mdash; Neko Optimizer{% endblock %}
+
+{% block content %}
+  <h1>About</h1>
+
+  <section class="about-section">
+    <h2>The tool</h2>
+    <p class="muted">
+      <strong>Neko Optimizer</strong> is a planning tool for <em>The Battle Cats</em> gacha.
+      Give it a set of target cats and a budget of tickets and catfood, and it works out
+      <strong>where and when to pull, in which order, for the lowest resource cost</strong>.
+    </p>
+    <p class="muted">
+      Every banner is driven by a single shared XOR-shift PRNG seed, so the whole future
+      pull sequence is deterministic once the seed is known. Neko Optimizer rolls that
+      sequence locally with its own engine, treats the pulls as a state graph, and searches
+      it with A* and beam search for the cheapest path that collects your wishlist.
+    </p>
+  </section>
+
+  <section class="about-section">
+    <h2>Who made it</h2>
+    <p class="muted">
+      Built by <strong>Iliyan Gavrilov</strong> as a personal project &mdash; an excuse to
+      dig into pathfinding, deterministic RNG, and a full Django app end to end. The source
+      lives on
+      <a href="https://github.com/IliyanGavrilov/NekoOptimizer" target="_blank" rel="noopener">GitHub &#8599;</a>.
+    </p>
+  </section>
+
+  <section class="about-section">
+    <h2>Built with</h2>
+    <ul class="about-list muted">
+      <li><strong>Python 3.14</strong> for the pure engine &mdash; RNG, roll engine, graph builder, and the A*/beam/subset search.</li>
+      <li><strong>Django 6.0</strong> for the web app, ORM, forms, and templates.</li>
+      <li><strong>pytest</strong> and <strong>ruff</strong> for the test suite and linting, wired into CI.</li>
+      <li>File-based <strong>SQLite</strong> and committed JSON data &mdash; no server, runs fully offline.</li>
+    </ul>
+  </section>
+
+  <section class="about-section">
+    <h2>Credits</h2>
+    <p class="muted">
+      The reverse-engineered gacha mechanics &mdash; the XOR-shift RNG and the roll-engine
+      internals (dupe rerolls, bounces, guaranteed multis, track interleaving) &mdash; come
+      from <a href="https://bc.godfat.org/" target="_blank" rel="noopener">godfat's Battle Cats seed tracker &#8599;</a>
+      (Apache-2.0). Neko Optimizer ports them to Python and validates the port byte-for-byte
+      against godfat's output with a golden test; the planning layer on top is its own work.
+    </p>
+    <p class="muted">
+      Unit data and icons come from the
+      <a href="https://battlecatsinfo.github.io/" target="_blank" rel="noopener">battlecatsinfo &#8599;</a>
+      catalogue, and the tier ranking from
+      <a href="https://battle-cats.fandom.com/wiki/The_Battle_Cats_Tier_List" target="_blank" rel="noopener">The Battle Cats Tier List &#8599;</a>.
+      Neko Optimizer is a fan-made tool and is not affiliated with PONOS.
+    </p>
+  </section>
+{% endblock %}
