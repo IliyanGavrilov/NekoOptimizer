@@ -624,6 +624,11 @@ def tier_list(request):
     return render(request, "planner/tiers.html", context)
 
 
+def about(request):
+    """Static "about" page: what the tool is, who built it, and what's credited."""
+    return render(request, "planner/about.html")
+
+
 @require_POST
 def apply_plan(request):
     """Mark the cats a plan gets you as owned and drop them from the wishlist. Applying

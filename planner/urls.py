@@ -1,6 +1,7 @@
 from django.urls import path
 
 from planner.views import (
+    about,
     apply_plan,
     collection,
     collection_bulk,
@@ -44,6 +45,7 @@ urlpatterns = [
     path("unit/forms/", unit_forms, name="unit_forms"),
     path("collection/", collection, name="collection"),
     path("tiers/", tier_list, name="tier_list"),
+    path("about/", about, name="about"),
     path("collection/toggle/", collection_toggle, name="collection_toggle"),
     path("collection/bulk/", collection_bulk, name="collection_bulk"),
     path("collection/export/", collection_export, name="collection_export"),
