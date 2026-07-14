@@ -1,4 +1,20 @@
 {% if track.rows %}
+  {% if track.found_cats %}
+    {# godfat's "Find next": the next position of each cat you've picked (target / wishlist). #}
+    {# Browse view only - plan-solution tracks don't set found_cats, so no panel there. #}
+    <div class="found-cats">
+      <span class="found-label" title="The next place each cat you've picked (a target, or your wishlist) lands in these rolls. Click a position to jump to its cell.">Find next</span>
+      <ul class="found-list">
+        {% for f in track.found_cats %}
+          <li class="found-item">
+            <button type="button" class="catlink" data-name="{{ f.name }}"><span class="catname">{{ f.name }}</span></button>
+            <span class="rarity" data-rarity="{{ f.rarity }}">{{ f.rarity }}</span>
+            <button type="button" class="find-pos" data-idx="{{ f.index }}"{% if f.guaranteed %} data-guaranteed="1"{% endif %} title="Jump to {{ f.pos }} in the track">{{ f.pos }}</button>
+          </li>
+        {% endfor %}
+      </ul>
+    </div>
+  {% endif %}
   <details class="track-guide">
     <summary>Legend</summary>
     {# Each sample reuses the track cells' own classes, so the guide always looks #}

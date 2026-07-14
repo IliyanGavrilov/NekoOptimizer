@@ -35,6 +35,7 @@ from planner.services import (
     export_collection,
     fetch_banners,
     fetch_for_banners,
+    find_cats,
     import_collection,
     newly_added_ubers,
     normal_banner_choices,
@@ -223,6 +224,19 @@ def _unit_ids():
     return dict(Unit.objects.values_list("name", "unit_id"))
 
 
+def _find_targets(request):
+    """Cat names to also locate in the Rolls "Find next" panel: the plan's picked targets
+    plus, when "search my wishlist" is on, the wishlist - mirroring find_plan's target set,
+    read straight from the tracks POST (app.js posts the whole planner form)."""
+    names = set(
+        Cat.objects.filter(pk__in=request.POST.getlist("targets")).values_list("name", flat=True)
+    )
+    if request.POST.get("use_wishlist"):
+        names |= _wanted_names()
+
+    return names
+
+
 @require_POST
 def tracks(request):
     """A/B track tables for the current seed + banners, before any plan is run.
@@ -235,8 +249,11 @@ def tracks(request):
         return HttpResponse("")
 
     last_cat = request.POST.get("last_cat", "").strip()
-    count = _track_length(request)
+    display = _track_length(request)
     future_ubers = _future_ubers(request)
+    # Roll the find window deep (godfat's Find ceiling): the "Find next" panel locates cats
+    # far past the visible table, but only ``display`` rows render (build_tracks caps them).
+    count = max(display, MAX_TRACK_LENGTH)
     result = _roll(
         seed,
         request.POST.getlist("banners"),
@@ -273,11 +290,20 @@ def tracks(request):
         guaranteed=guaranteed,
         wanted=_wanted_names(),
         titles=display_titles(),
-        rows=count,
+        rows=display,
         debuts=newly_added_ubers(),
         future=future_ubers,
         unit_ids=_unit_ids(),
         tiers=tier_badges(),
+    )
+    # The browse view's "Find next" summary (godfat's Find): the next position of each cat
+    # you've picked (targets / wishlist) in these rolls. Attached here only, so the shared
+    # _tracks.html renders no panel on plan-solution tracks.
+    track["found_cats"] = find_cats(
+        pulls,
+        _find_targets(request),
+        guaranteed=guaranteed,
+        include_guaranteed=request.POST.get("exclude_guaranteed") != "1",
     )
 
     return render(request, "planner/_tracks.html", {"track": track})

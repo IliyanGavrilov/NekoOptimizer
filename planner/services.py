@@ -1048,6 +1048,58 @@ def build_tracks(
     }
 
 
+def _pos_label(index, guaranteed=False):
+    """godfat's position notation for a stream index: the 1-based position and its track
+    letter, with a trailing ``G`` for a guaranteed-column hit (e.g. ``108B``, ``11BG``)."""
+    return f"{index // 2 + 1}{'B' if index & 1 else 'A'}{'G' if guaranteed else ''}"
+
+
+def find_cats(banner_pulls, targets, guaranteed=None, include_guaranteed=True):
+    """godfat's "Find next", scoped to the cats you pick: the earliest position of each
+    ``targets`` name in the rolled tracks (the plan's target picker / wishlist feed it - no
+    automatic set, so the panel never floods a fest or capsule pool).
+
+    Each found cat lands once, at its earliest stream index across every banner and both
+    tracks. When ``include_guaranteed`` a guaranteed-column appearance counts too, but only
+    when it comes strictly earlier than a normal cell (a tie keeps the plain roll). Returns
+    items sorted by position: ``{"name", "rarity", "index", "guaranteed", "pos"}``. Only
+    targets that actually surface within the rolled window are listed."""
+    targets = set(targets)
+    if not targets:
+        return []
+
+    guaranteed = guaranteed or {}
+    best = {}  # name -> (earliest index, was it a guaranteed-column hit, rarity)
+
+    def offer(name, rarity, index, is_guaranteed):
+        if name in targets:
+            current = best.get(name)
+            if current is None or index < current[0]:
+                best[name] = (index, is_guaranteed, str(rarity))
+
+    for name, pulls in banner_pulls.items():
+        for tp in pulls:
+            offer(tp.cat, tp.rarity, stream_index(tp.position, tp.track), False)
+        if include_guaranteed:
+            for tp in guaranteed.get(name, ()):
+                if tp.cat:
+                    offer(tp.cat, tp.rarity, stream_index(tp.position, tp.track), True)
+
+    items = [
+        {
+            "name": name,
+            "rarity": rarity,
+            "index": index,
+            "guaranteed": is_guaranteed,
+            "pos": _pos_label(index, is_guaranteed),
+        }
+        for name, (index, is_guaranteed, rarity) in best.items()
+    ]
+    items.sort(key=lambda item: (item["index"], item["guaranteed"], item["name"]))
+
+    return items
+
+
 def plan_highlight(option, equivalents):
     """The plan's TrackMarks: a normal pull lights its track cell, a guaranteed pull the
     guaranteed COLUMN at the multi's first roll (where godfat shows the uber you get). The
