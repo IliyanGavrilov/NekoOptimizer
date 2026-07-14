@@ -2,4 +2,4 @@ asgiref==3.11.1
 Django==6.0.7
 numpy==2.5.1
 sqlparse==0.5.5
-tzdata==2026.2
+tzdata==2026.3
