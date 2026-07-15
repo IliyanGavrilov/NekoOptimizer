@@ -14,20 +14,6 @@
     </div>
     <label class="check-row">{{ form.use_wishlist }} {{ form.use_wishlist.label_tag }}</label>
 
-    <div class="roll-options">
-      <details class="advanced">
-        <summary>Advanced</summary>
-        <div class="opt-group">
-          <label class="check-row">{{ form.explore }} {{ form.explore.label_tag }}</label>
-          <label class="opt inline explore-horizon">{{ form.horizon.label_tag }} {{ form.horizon }}</label>
-        </div>
-        <div class="opt-group">
-          <label class="opt inline">1 rare ticket is worth {{ form.ticket_value }} catfood</label>
-          <p class="muted">One draw is 150 catfood, and the planner spends tickets first. Raise the ticket value above 150 if rare tickets are precious to you &mdash; the planner will then spend catfood to save them.</p>
-        </div>
-      </details>
-    </div>
-
     <fieldset id="targetsSection">
       <legend>Targets <span class="req" title="pick a target, or tick &ldquo;search my wishlist&rdquo;">*</span></legend>
       <p class="field-error" id="targetsError" aria-live="polite"></p>
@@ -86,21 +72,34 @@
     <div id="targetInputs"></div>
     <div id="bannerInputs"></div>
 
-    {# Budget lives here, next to the plan button. Rare tickets + catfood hide in explore #}
-    {# mode; the Platinum/Legend rows appear only when that capsule banner is selected #}
-    {# (they run on their own scarce tickets, regardless of explore mode). #}
-    <section class="resources" id="resources" hidden>
-      <h2 class="resources-title">Your resources</h2>
-      <div class="budget-fields">
-        <label>{{ form.tickets.label_tag }} {{ form.tickets }}</label>
-        <label>{{ form.catfood.label_tag }} {{ form.catfood }}</label>
-      </div>
-      <div class="capsule-fields" id="capsuleFields" hidden>
-        <label class="capsule-row plat" id="platRow" hidden>{{ form.platinum_cap.label_tag }} {{ form.platinum_cap }}</label>
-        <label class="capsule-row legend" id="legendRow" hidden>{{ form.legend_cap.label_tag }} {{ form.legend_cap }}</label>
-        <p class="muted capsule-hint">Capsules spend their own scarce tickets &mdash; set each to how many you have (0 to skip). They count like rare tickets in a plan, just marked apart, so lower the count if a pull isn&rsquo;t worth it.</p>
-      </div>
-    </section>
+    {# Advanced sits below the banners, by the plan button, and holds the budget. Rare #}
+    {# tickets + catfood hide in explore mode; the Platinum/Legend rows appear only when #}
+    {# that capsule banner is selected (they run on their own scarce tickets, always). #}
+    <div class="roll-options">
+      <details class="advanced">
+        <summary>Advanced</summary>
+        <div class="resources" id="resources">
+          <span class="resources-title">Your resources</span>
+          <div class="budget-fields">
+            <label>{{ form.tickets.label_tag }} {{ form.tickets }}</label>
+            <label>{{ form.catfood.label_tag }} {{ form.catfood }}</label>
+          </div>
+          <div class="capsule-fields" id="capsuleFields" hidden>
+            <label class="capsule-row platinum" id="platRow" hidden>{{ form.platinum_cap.label_tag }} {{ form.platinum_cap }}</label>
+            <label class="capsule-row legend" id="legendRow" hidden>{{ form.legend_cap.label_tag }} {{ form.legend_cap }}</label>
+            <p class="muted capsule-hint">Capsules spend their own scarce tickets &mdash; set each to how many you have (0 to skip). They count like rare tickets in a plan, just marked apart, so lower the count if a pull isn&rsquo;t worth it.</p>
+          </div>
+        </div>
+        <div class="opt-group">
+          <label class="check-row">{{ form.explore }} {{ form.explore.label_tag }}</label>
+          <label class="opt inline explore-horizon">{{ form.horizon.label_tag }} {{ form.horizon }}</label>
+        </div>
+        <div class="opt-group">
+          <label class="opt inline">1 rare ticket is worth {{ form.ticket_value }} catfood</label>
+          <p class="muted">One draw is 150 catfood, and the planner spends tickets first. Raise the ticket value above 150 if rare tickets are precious to you &mdash; the planner will then spend catfood to save them.</p>
+        </div>
+      </details>
+    </div>
 
     <button type="submit">Find plan</button>
     <button type="button" id="shareLink" class="share-link" title="Copy a link that reopens this seed and Rolls view (rolls shown, names/icons, form, details)">Copy link</button>

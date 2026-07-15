@@ -95,8 +95,8 @@ if (picker) {
   const rollFormEl = document.getElementById("rollForm");
   const horizonRow = document.querySelector(".explore-horizon");
   const budgetFields = document.querySelector(".budget-fields");
-  // The "Your resources" section by the plan button: rare/catfood budget always, plus
-  // the Platinum/Legend rows when that capsule banner is selected.
+  // The "Your resources" block at the top of Advanced: rare/catfood budget, plus the
+  // Platinum/Legend rows when that capsule banner is selected.
   const resourcesSection = document.getElementById("resources");
   const capsuleFields = document.getElementById("capsuleFields");
   const platRow = document.getElementById("platRow");

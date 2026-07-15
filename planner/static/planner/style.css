@@ -23,6 +23,11 @@
   --r-legend: #ff6060;
   --new: #34d399;  /* Uber/Legend cats not yet in your collection */
 
+  /* Capsule ticket colours, matched to the in-game tickets: the Platinum Ticket is
+     silver-white, the Legend Ticket is red. */
+  --tkt-platinum: #c8cfdd;
+  --tkt-legend: #ff5b6e;
+
   /* Tier-list bands (S..F), one colour per letter */
   --band-s: #ff5d5d;
   --band-a: #ff9f43;
@@ -60,6 +65,9 @@
   --r-uber: #8e3fd1;
   --r-legend: #d13a3a;
   --new: #0b8a5c;
+
+  --tkt-platinum: #7a8498;  /* darker silver-slate, legible on cream */
+  --tkt-legend: #d22f48;
 
   --band-s: #d13a3a;
   --band-a: #c76a10;
@@ -1229,23 +1237,16 @@ table.track th.guaranteed-col, table.track td.guaranteed-col {
 .apply-plan { margin: 0.1rem 0 0.6rem; font-size: 0.9rem; padding: 0.4rem 0.85rem; }
 .apply-plan:disabled { opacity: 0.6; cursor: default; }
 .apply-cost { font-weight: 600; opacity: 0.85; }
-/* ---- "Your resources": budget + capsule tickets, next to the plan button ---- */
+/* ---- "Your resources": the budget block at the top of Advanced ---- */
 .resources {
-  margin: 0.75rem 0;
-  padding: 0.75rem 1rem;
-  background: var(--panel);
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
   display: flex;
   flex-direction: column;
   gap: 0.6rem;
+  padding-bottom: 0.9rem;
+  margin-bottom: 0.9rem;
+  border-bottom: 1px solid var(--line);
 }
-.resources-title {
-  margin: 0;
-  font-family: var(--head-font);
-  font-size: 1rem;
-  color: var(--accent);
-}
+.resources-title { font-family: var(--head-font); font-size: 0.95rem; color: var(--accent); }
 .budget-fields,
 .capsule-fields {
   display: grid;
@@ -1262,11 +1263,11 @@ table.track th.guaranteed-col, table.track td.guaranteed-col {
   color: var(--ink);
 }
 .resources input { width: 100%; }
-/* Capsule rows get a left accent in their currency's colour, so the field reads as
+/* Capsule rows get a left accent in their ticket's colour, so the field reads as
    platinum/legend at a glance. */
 .capsule-row { padding-left: 0.55rem; border-left: 3px solid var(--line); }
-.capsule-row.plat { border-left-color: var(--r-super); }
-.capsule-row.legend { border-left-color: var(--r-legend); }
+.capsule-row.platinum { border-left-color: var(--tkt-platinum); }
+.capsule-row.legend { border-left-color: var(--tkt-legend); }
 
 /* Capsule currency badge (platinum/legend), shared by the steps and track legend. */
 .capsule-tag {
@@ -1280,14 +1281,14 @@ table.track th.guaranteed-col, table.track td.guaranteed-col {
   border: 1px solid currentColor;
   line-height: 1.35;
 }
-.capsule-tag.platinum { color: var(--r-super); }
-.capsule-tag.legend { color: var(--r-legend); }
-/* Per-leg cost parts joined with " + "; capsule parts wear the currency colour. */
+.capsule-tag.platinum { color: var(--tkt-platinum); }
+.capsule-tag.legend { color: var(--tkt-legend); }
+/* Per-leg cost parts joined with " + "; capsule parts wear the ticket's colour. */
 .cost-part + .cost-part::before { content: " + "; color: var(--muted); }
-.cost-part.platinum { color: var(--r-super); }
-.cost-part.legend { color: var(--r-legend); }
-.step-card.capsule.platinum { border-left: 3px solid var(--r-super); }
-.step-card.capsule.legend { border-left: 3px solid var(--r-legend); }
+.cost-part.platinum { color: var(--tkt-platinum); }
+.cost-part.legend { color: var(--tkt-legend); }
+.step-card.capsule.platinum { border-left: 3px solid var(--tkt-platinum); }
+.step-card.capsule.legend { border-left: 3px solid var(--tkt-legend); }
 
 .opt.inline { flex-direction: row; align-items: baseline; gap: 0.45rem; flex-wrap: wrap; }
 .opt.inline input[type="number"] { width: 5.5rem; }
