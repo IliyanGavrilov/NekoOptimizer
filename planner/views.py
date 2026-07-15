@@ -24,12 +24,12 @@ from planner.services import (
     NORMAL_TARGET_PRESETS,
     RARITY_ORDER,
     SECTION_NOTES,
+    banner_currencies,
     banner_debuts,
     banner_titles,
     build_normal_plan,
     build_normal_tracks,
     build_tracks,
-    capped_banner_limits,
     collection_sections,
     display_titles,
     equivalent_banners,
@@ -333,7 +333,11 @@ def find_plan(request):
     result = _roll(seed, request.POST.getlist("banners"), count, last_cat)
     equivalents = equivalent_banners(result.banners)
     pulls, guaranteed_pulls, rerolls, guaranteed_rerolls = _rolls_by_banner(result)
-    banner_limits = capped_banner_limits(pulls, form.cleaned_data["platinum_legend_cap"])
+    banner_currency = banner_currencies(pulls)
+    # Platinum/Legend Capsules always run on their own scarce ticket pools, so their counts
+    # come straight from the form even in explore mode (which only frees the rare/catfood budget).
+    platinum = form.cleaned_data["platinum_cap"]
+    legend = form.cleaned_data["legend_cap"]
 
     if explore:
         # Ignore the budget but still fund single pulls with tickets (their real
@@ -352,10 +356,12 @@ def find_plan(request):
         targets,
         tickets=tickets,
         catfood=catfood,
+        platinum=platinum,
+        legend=legend,
         guaranteed_pulls=guaranteed_pulls,
         multis=result.multis,
         ticket_value=form.cleaned_data["ticket_value"],
-        banner_limits=banner_limits,
+        banner_currency=banner_currency,
         owned=_owned_names(),
         wanted=_wanted_names(),
         titles=display_titles(),
