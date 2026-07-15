@@ -1534,10 +1534,9 @@ def plan_summary(plans, equivalents, owned=None, wanted=None, titles=None):
     return summaries
 
 
-# The exact per-subset breakdown is exponential in the target count - 2^n searches AND
-# 2^n accordion rows - so it only runs for target sets this small. Bigger sets (wishlist
-# searches) get the bounded view instead: plans over the targets actually obtainable in
-# the selected banners, and one flat "Not found" row per unobtainable target.
+# Unobtainable picks are always dropped first (in _subset_plans); of what's left, the exact
+# per-subset breakdown is exponential - 2^n searches AND 2^n accordion rows - so it only runs
+# when few enough are obtainable. Past this many, wishlist searches get the bounded view.
 SUBSET_TARGET_LIMIT = 10
 
 # Frontier width for the big-wishlist fallback's whole-set beam search.
@@ -1593,20 +1592,21 @@ def _wishlist_plans(graphs, wanted, start, multis, ticket_value, banner_limits):
 def _subset_plans(graphs, targets, start, multis, ticket_value, banner_limits):
     """The plan rows behind subset_solutions: ``(found plans, missing target-lists)``.
 
-    Up to SUBSET_TARGET_LIMIT targets get the exact per-subset breakdown. Past that there
-    are too many subsets to list (a 100-cat wishlist is 2^100 rows), so it narrows down to
-    the targets you can actually get on the selected banners - still per-subset when there
-    are few, otherwise the bounded whole-set + per-cat view (_wishlist_plans) - and every
-    target you can't get goes straight to missing."""
+    Picks that can't drop on any selected banner are filtered out first - out of the search
+    and the subset enumeration alike, since each one otherwise multiplies the missing rows -
+    and reported as one flat "Not found" row apiece. Of the rest, up to SUBSET_TARGET_LIMIT
+    get the exact per-subset breakdown; past that it's the bounded whole-set + per-cat view
+    (_wishlist_plans), too many subsets to list one by one (a 100-cat wishlist is 2^100)."""
     search = dict(multis=multis, ticket_value=ticket_value, banner_limits=banner_limits)
     items = sorted(set(targets))
 
-    if len(items) <= SUBSET_TARGET_LIMIT:
-        pool, unobtainable = items, []
-    else:
-        pool = sorted(obtainable(graphs, targets))
-        pooled = set(pool)
-        unobtainable = [[cat] for cat in items if cat not in pooled]
+    # Picks that can't drop on any selected banner are dropped up front - out of the search
+    # AND the subset enumeration - since an unreachable cat otherwise multiplies the missing
+    # rows into every combo it appears in (a few of them used to flood the page). Each still
+    # gets one flat "Not found" row below, so you can see it just isn't available here.
+    pool = sorted(obtainable(graphs, items))
+    pooled = set(pool)
+    unobtainable = [[cat] for cat in items if cat not in pooled]
 
     if len(pool) <= SUBSET_TARGET_LIMIT:
         found = solve_subsets(graphs, pool, start, **search)
