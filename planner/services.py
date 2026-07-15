@@ -3,6 +3,7 @@ from collections import Counter
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass, field
 from datetime import date, timedelta
+from functools import cache
 from itertools import combinations
 from urllib.parse import quote
 
@@ -318,6 +319,14 @@ def newly_added_ubers(events=None, pools=None, units=None) -> dict[str, set[str]
             added[event.name] = new
 
     return added
+
+
+@cache
+def banner_debuts() -> dict[str, set[str]]:
+    """``newly_added_ubers`` for the live committed data, memoized: the debut map only shifts
+    on a re-import (a fresh process), so the tracks/plan hot path computes the double-loop
+    once instead of on every roll. Read-only downstream (build_tracks only membership-tests)."""
+    return newly_added_ubers()
 
 
 def _by_rarity(cats: Iterable[Cat], reverse: bool = False) -> list[tuple[str, list[Cat]]]:

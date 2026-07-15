@@ -8,6 +8,7 @@ import tarfile
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 from datetime import date
+from functools import cache
 from pathlib import Path
 
 from neko.bcdata import METADATA_URL, _get, latest_version, release_url
@@ -282,8 +283,10 @@ def series_records(series: Mapping[int, list[int]], event_rows: Iterable[GachaEv
     return {str(pid): series[pid] for pid in sorted(referenced) if pid in series}
 
 
+@cache
 def load_events(path: Path = EVENTS_PATH) -> list[GachaEventRow]:
-    """Read the committed event schedule back into typed rows."""
+    """Read the committed event schedule back into typed rows. Memoized: the file only
+    changes on a re-import (a fresh process), and the rows are frozen and read-only."""
     return [
         GachaEventRow(
             r["event_id"],
@@ -302,8 +305,10 @@ def load_events(path: Path = EVENTS_PATH) -> list[GachaEventRow]:
     ]
 
 
+@cache
 def load_pools(path: Path = POOLS_PATH) -> dict[int, list[int]]:
-    """Read the committed pools back as {pool_id: [ids]}."""
+    """Read the committed pools back as {pool_id: [ids]}. Memoized alongside load_events -
+    same committed-until-reimport lifetime, consumed read-only (the roller types it Mapping)."""
     return {int(k): v for k, v in json.loads(path.read_text(encoding="utf-8")).items()}
 
 
