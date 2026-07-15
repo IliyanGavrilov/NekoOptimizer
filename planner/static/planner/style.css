@@ -650,6 +650,20 @@ tbody tr:hover, table tr:hover { background: var(--panel-2); }
 }
 .find-pos:hover { border-color: var(--accent); filter: none; }
 
+/* A picked cat that never turns up in the rolled window: godfat's "999+" ceiling. Muted
+   and unclickable - there's no cell to jump to. */
+.find-out {
+  font-size: 0.78rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--muted);
+  background: color-mix(in srgb, var(--muted) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--muted) 35%, transparent);
+  border-radius: 999px;
+  padding: 0.05rem 0.5rem;
+}
+.found-item.is-out .catname { color: var(--muted); }
+
 /* A found position clicked: briefly ring the cell it points to (outline, so it doesn't
    nudge layout or fight border-collapse). */
 @keyframes flash-cell {

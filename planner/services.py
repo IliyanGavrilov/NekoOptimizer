@@ -52,6 +52,7 @@ from neko.search import astar, beam_search, obtainable
 from neko.statsdata import load_stats
 from neko.subsets import SubsetPlan, solve_subsets
 from neko.tierdata import TIER_ORDER, load_tiers
+from planner.forms import MAX_TRACK_LENGTH
 from planner.models import Banner, Cat, Unit
 
 RARITY_ORDER = ["Normal", "Special", "Rare", "Super Rare", "Uber Super Rare", "Legend Rare"]
@@ -1054,25 +1055,39 @@ def _pos_label(index, guaranteed=False):
     return f"{index // 2 + 1}{'B' if index & 1 else 'A'}{'G' if guaranteed else ''}"
 
 
-def find_cats(banner_pulls, targets, guaranteed=None, include_guaranteed=True):
+def find_cats(
+    banner_pulls,
+    targets,
+    guaranteed=None,
+    include_guaranteed=True,
+    wishlist=(),
+    horizon=MAX_TRACK_LENGTH,
+):
     """godfat's "Find next", scoped to the cats you pick: the earliest position of each
-    ``targets`` name in the rolled tracks (the plan's target picker / wishlist feed it - no
+    picked name in the rolled tracks (the plan's target picker / wishlist feed it - no
     automatic set, so the panel never floods a fest or capsule pool).
+
+    ``targets`` is a ``{name: rarity}`` map of the cats you explicitly picked; every one is
+    reported - at its earliest position, or as a trailing ``{horizon}+`` (godfat's roll
+    ceiling) when it never surfaces, so a pick that isn't in these banners still shows, just
+    out of reach. ``wishlist`` names are searched too but listed only when found, so turning
+    on "search my wishlist" can't bury the panel under every unowned cat you want.
 
     Each found cat lands once, at its earliest stream index across every banner and both
     tracks. When ``include_guaranteed`` a guaranteed-column appearance counts too, but only
     when it comes strictly earlier than a normal cell (a tie keeps the plain roll). Returns
-    items sorted by position: ``{"name", "rarity", "index", "guaranteed", "pos"}``. Only
-    targets that actually surface within the rolled window are listed."""
-    targets = set(targets)
-    if not targets:
+    items sorted by position (misses last), each
+    ``{"name", "rarity", "index", "guaranteed", "pos", "found"}``."""
+    targets = dict(targets)
+    search = set(targets) | set(wishlist)
+    if not search:
         return []
 
     guaranteed = guaranteed or {}
     best = {}  # name -> (earliest index, was it a guaranteed-column hit, rarity)
 
     def offer(name, rarity, index, is_guaranteed):
-        if name in targets:
+        if name in search:
             current = best.get(name)
             if current is None or index < current[0]:
                 best[name] = (index, is_guaranteed, str(rarity))
@@ -1092,10 +1107,26 @@ def find_cats(banner_pulls, targets, guaranteed=None, include_guaranteed=True):
             "index": index,
             "guaranteed": is_guaranteed,
             "pos": _pos_label(index, is_guaranteed),
+            "found": True,
         }
         for name, (index, is_guaranteed, rarity) in best.items()
     ]
     items.sort(key=lambda item: (item["index"], item["guaranteed"], item["name"]))
+
+    # Picked targets that never turned up trail the found ones as godfat's ceiling: a cat
+    # you asked for but these banners don't roll within the window, so there's no cell to
+    # jump to (index None -> the template renders an unclickable "999+").
+    items += [
+        {
+            "name": name,
+            "rarity": targets[name],
+            "index": None,
+            "guaranteed": False,
+            "pos": f"{horizon}+",
+            "found": False,
+        }
+        for name in sorted(set(targets) - best.keys())
+    ]
 
     return items
 
