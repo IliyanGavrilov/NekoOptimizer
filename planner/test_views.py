@@ -340,9 +340,7 @@ def test_tracks_endpoint_find_includes_the_wishlist_when_enabled(client, monkeyp
 
 
 @pytest.mark.django_db
-def test_tracks_endpoint_lists_a_picked_target_that_never_rolls_as_the_ceiling(
-    client, monkeypatch
-):
+def test_tracks_endpoint_lists_a_picked_target_that_never_rolls_as_the_ceiling(client, monkeypatch):
     monkeypatch.setattr(
         "planner.views.fetch_banners", fixed_banners(TrackPull(1, "B", "Aphrodite", U))
     )
