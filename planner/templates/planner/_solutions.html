@@ -12,7 +12,9 @@
             <button type="button" class="apply-plan"
                     data-cats="{{ s.cats }}"
                     data-tickets="{{ s.tickets_used }}"
-                    data-catfood="{{ s.cost }}"{% if s.seed_after %}
+                    data-catfood="{{ s.cost }}"
+                    data-platinum="{{ s.platinum_used }}"
+                    data-legend="{{ s.legend_used }}"{% if s.seed_after %}
                     data-seed-after="{{ s.seed_after }}"
                     data-last-cat="{{ s.last_cat }}"{% endif %}>Apply this plan <span class="apply-cost">{{ s.cost_label }}</span></button>
           </div>

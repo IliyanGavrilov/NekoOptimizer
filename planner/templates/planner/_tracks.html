@@ -35,6 +35,7 @@
       {% if track.padded %}<li><span class="entry new sample"><span class="catlink future">Future Uber 1</span></span> an expected-but-unreleased Uber padding the pool</li>{% endif %}
       {% if track.has_guaranteed %}<li><span class="sym">Guaranteed</span> the Uber a guaranteed multi awards if started on that cell</li>{% endif %}
       {% if track.has_shared %}<li><span class="entry shared sample">dashed</span> another banner this plan step can roll on instead</li>{% endif %}
+      {% if track.has_currency %}<li><span class="capsule-tag platinum">platinum</span> / <span class="capsule-tag legend">legend</span> a capsule banner &mdash; its pulls spend that scarce ticket, not rare tickets or catfood</li>{% endif %}
     </ul>
     <div class="rarity-legend">
       <span class="rarity" data-rarity="Rare">Rare</span>
@@ -43,10 +44,10 @@
       <span class="rarity" data-rarity="Legend Rare">Legend Rare</span>
     </div>
   </details>
-  {% if track.legend|length > 1 or track.show_future %}
+  {% if track.legend|length > 1 or track.show_future or track.has_currency %}
     <ul class="track-legend">
       {% for b in track.legend %}
-        <li><span class="tag">{{ b.tag }}</span> {{ b.names|join:" · " }}{% if track.show_future %} <label class="future-ctl" title="Pad this banner's uber pool with expected-but-unreleased ubers (godfat's Count of future ubers) - its uber cells land as if those units were already in the pool; drag the box up/down to adjust">Add future ubers <input type="number" class="future-ubers" value="{{ b.future }}" min="0" max="99" data-names="{{ b.keys }}"></label>{% endif %}</li>
+        <li><span class="tag">{{ b.tag }}</span> {{ b.names|join:" · " }}{% if b.currency %} <span class="capsule-tag {{ b.currency }}">{{ b.currency }}</span>{% endif %}{% if track.show_future %} <label class="future-ctl" title="Pad this banner's uber pool with expected-but-unreleased ubers (godfat's Count of future ubers) - its uber cells land as if those units were already in the pool; drag the box up/down to adjust">Add future ubers <input type="number" class="future-ubers" value="{{ b.future }}" min="0" max="99" data-names="{{ b.keys }}"></label>{% endif %}</li>
       {% endfor %}
     </ul>
   {% endif %}

@@ -82,7 +82,8 @@ if (picker) {
   const catfoodEl = document.getElementById("id_catfood");
   const wishlistEl = document.getElementById("id_use_wishlist");
   const ticketValueEl = document.getElementById("id_ticket_value");
-  const platLegendCapEl = document.getElementById("id_platinum_legend_cap");
+  const platCapEl = document.getElementById("id_platinum_cap");
+  const legendCapEl = document.getElementById("id_legend_cap");
   const exploreEl = document.getElementById("id_explore");
   const horizonEl = document.getElementById("id_horizon");
   const trackLengthEl = document.getElementById("id_track_length");
@@ -94,6 +95,12 @@ if (picker) {
   const rollFormEl = document.getElementById("rollForm");
   const horizonRow = document.querySelector(".explore-horizon");
   const budgetFields = document.querySelector(".budget-fields");
+  // The "Your resources" section by the plan button: rare/catfood budget always, plus
+  // the Platinum/Legend rows when that capsule banner is selected.
+  const resourcesSection = document.getElementById("resources");
+  const capsuleFields = document.getElementById("capsuleFields");
+  const platRow = document.getElementById("platRow");
+  const legendRow = document.getElementById("legendRow");
   const stored = (() => {
     try {
       return JSON.parse(localStorage.getItem(STORE_KEY)) || {};
@@ -129,7 +136,8 @@ if (picker) {
         catfood: catfoodEl.value,
         useWishlist: wishlistEl.checked,
         ticketValue: ticketValueEl.value,
-        platLegendCap: platLegendCapEl.value,
+        platCap: platCapEl.value,
+        legendCap: legendCapEl.value,
         explore: exploreEl.checked,
         horizon: horizonEl.value,
         // The Rolls-table display controls (rolls-to-show, details, guaranteed,
@@ -305,8 +313,30 @@ if (picker) {
     bannerWarn.hidden = true; // a valid change clears any capsule-mismatch warning
     locateIdx = 0;
     syncBannerChips();
+    syncResources();
     updateWarnings();
     save();
+  }
+  // Whether a selected banner is a Platinum / a Legend capsule run: each capsule's
+  // ticket field shows only when its own banner is in the selection.
+  const PLAT = /platinum capsules/i;
+  const LEG = /legend capsules/i;
+  function selectedCapsule(re) {
+    return includes.some(
+      (btn) => btn.getAttribute("aria-pressed") === "true" && re.test(btn.dataset.banner),
+    );
+  }
+  // The "Your resources" section: rare/catfood budget hides in explore mode, and each
+  // capsule row shows only when its banner is selected (regardless of explore mode, since
+  // capsule tickets are always budget-scarce). The whole section hides when nothing shows.
+  function syncResources() {
+    const platOn = selectedCapsule(PLAT);
+    const legOn = selectedCapsule(LEG);
+    platRow.hidden = !platOn;
+    legendRow.hidden = !legOn;
+    capsuleFields.hidden = !(platOn || legOn);
+    if (budgetFields) budgetFields.hidden = exploreEl.checked;
+    resourcesSection.hidden = (!budgetFields || budgetFields.hidden) && capsuleFields.hidden;
   }
   // One chip per selected banner under the hint, labelled with the banner's set
   // title; clicking a chip scrolls the picker to that banner.
@@ -475,7 +505,8 @@ if (picker) {
   if (stored.catfood != null) catfoodEl.value = stored.catfood;
   wishlistEl.checked = !!stored.useWishlist;
   if (stored.ticketValue != null) ticketValueEl.value = stored.ticketValue;
-  if (stored.platLegendCap != null) platLegendCapEl.value = stored.platLegendCap;
+  if (stored.platCap != null) platCapEl.value = stored.platCap;
+  if (stored.legendCap != null) legendCapEl.value = stored.legendCap;
   if (stored.explore != null) exploreEl.checked = stored.explore; // else keep server default (on)
   if (stored.horizon != null) horizonEl.value = stored.horizon;
   if (fromLink) seedEl.value = linkParams.get("seed");
@@ -483,9 +514,8 @@ if (picker) {
   // here; the display mode and form restore from localStorage below. A permalink
   // overrides any of them for its one opening (see the fromLink block after them).
   const syncExplore = () => {
-    const on = exploreEl.checked;
-    horizonRow.hidden = !on;
-    if (budgetFields) budgetFields.hidden = on; // explore ignores budget, so hide those fields
+    horizonRow.hidden = !exploreEl.checked;
+    syncResources(); // explore hides the rare/catfood budget; capsule rows stay banner-driven
   };
   syncExplore();
   ticketsEl.addEventListener("input", save);
@@ -496,7 +526,8 @@ if (picker) {
     if (browseTrack && !browseTrack.hidden) scheduleTracks();
   });
   ticketValueEl.addEventListener("input", save);
-  platLegendCapEl.addEventListener("input", save);
+  platCapEl.addEventListener("input", save);
+  legendCapEl.addEventListener("input", save);
   exploreEl.addEventListener("change", () => {
     syncExplore();
     save();
@@ -750,6 +781,8 @@ if (picker) {
       (el.value = Math.max(0, (Number(el.value) || 0) - (Number(btn.dataset[key]) || 0)));
     spend(ticketsEl, "tickets");
     spend(catfoodEl, "catfood");
+    spend(platCapEl, "platinum"); // capsule tickets are their own pools; spend them too
+    spend(legendCapEl, "legend");
     save();
     // "You rolled it": the seed advances to just after the plan's final draw. The
     // solution stays on screen (its steps still need doing in game), and the Rolls
@@ -1001,7 +1034,8 @@ if (picker) {
     catfood: ["submitError", catfoodEl],
     horizon: ["submitError", horizonEl],
     ticket_value: ["submitError", ticketValueEl],
-    platinum_legend_cap: ["submitError", platLegendCapEl],
+    platinum_cap: ["submitError", platCapEl],
+    legend_cap: ["submitError", legendCapEl],
   };
 
   plannerForm.addEventListener("submit", async (e) => {

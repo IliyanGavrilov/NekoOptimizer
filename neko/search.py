@@ -252,40 +252,45 @@ def _reconstruct(goal: State, came_from: dict, start: State) -> Path:
         start.tickets_left - goal.tickets_left,
         start.catfood_draws - goal.catfood_draws,
         tuple(legs),
+        start.platinum_left - goal.platinum_left,
+        start.legend_left - goal.legend_left,
     )
 
 
-def _banner_pulls(state: State, banner_id: str) -> int:
-    for bid, used in state.banner_pulls:
-        if bid == banner_id:
-            return used
+def _capsule_pull(state: State, graph: BannerGraph, targets: frozenset[str], currency: str):
+    # A single pull on a Platinum/Legend Capsules banner: funded only by that capsule's own
+    # scarce ticket (never rare tickets or catfood), and only while the pool holds one. The
+    # pool size is the cap, so there's no separate limit check.
+    pool = state.platinum_left if currency == "platinum" else state.legend_left
+    if pool <= 0:
+        return
+    outcome = graph.resolve(state.position, state.last_cat)
+    if outcome is None:
+        return
 
-    return 0
+    found = state.found | {outcome.cat} if outcome.cat in targets else state.found
+    pull = Pull(state.position, graph.banner_id, outcome.cat, outcome.rarity)
+    platinum = state.platinum_left - (1 if currency == "platinum" else 0)
+    legend = state.legend_left - (1 if currency == "legend" else 0)
+    nxt = State(
+        outcome.next_position,
+        state.tickets_left,
+        state.catfood_draws,
+        found,
+        graph.banner_id,
+        platinum,
+        legend,
+        outcome.cat,
+    )
+
+    yield nxt, Leg(graph.banner_id, "Single pull", 0, (pull,), currency)
 
 
-def _bump(
-    counts: frozenset[tuple[str, int]], banner_id: str, delta: int
-) -> frozenset[tuple[str, int]]:
-    # Add `delta` to one banner's running pull count (only tracked for capped banners).
-    used = {bid: n for bid, n in counts}
-    used[banner_id] = used.get(banner_id, 0) + delta
-
-    return frozenset(used.items())
-
-
-def _pull_variants(
-    state: State,
-    graph: BannerGraph,
-    targets: frozenset[str],
-    limit: int | None,
-    ticket_value: int,
-):
+def _pull_variants(state: State, graph: BannerGraph, targets: frozenset[str], ticket_value: int):
     # Each affordable way to pull `graph` once at `state`: a ticket-funded move and/or a
     # catfood-funded one. They reach the same outcome, differing only in what they spend.
     outcome = graph.resolve(state.position, state.last_cat)
     if outcome is None:
-        return
-    if limit is not None and _banner_pulls(state, graph.banner_id) >= limit:
         return
 
     found = state.found
@@ -293,7 +298,6 @@ def _pull_variants(
         found = found | {outcome.cat}
 
     pull = Pull(state.position, graph.banner_id, outcome.cat, outcome.rarity)
-    counts = state.banner_pulls if limit is None else _bump(state.banner_pulls, graph.banner_id, 1)
     can_ticket = state.tickets_left > 0
     can_catfood = state.catfood_draws > 0
 
@@ -313,7 +317,8 @@ def _pull_variants(
             state.catfood_draws,
             found,
             graph.banner_id,
-            counts,
+            state.platinum_left,
+            state.legend_left,
             outcome.cat,
         )
 
@@ -326,16 +331,15 @@ def _pull_variants(
             state.catfood_draws - 1,
             found,
             graph.banner_id,
-            counts,
+            state.platinum_left,
+            state.legend_left,
             outcome.cat,
         )
 
         yield nxt, Leg(graph.banner_id, "Single pull", CATFOOD_PER_DRAW, (pull,))
 
 
-def _multi_move(
-    state: State, graph: BannerGraph, multi: Multi, targets: frozenset[str], limit: int | None
-):
+def _multi_move(state: State, graph: BannerGraph, multi: Multi, targets: frozenset[str]):
     # `rolls` normal pulls (the last one swapped for the guaranteed uber if guaranteed),
     # for a fixed catfood cost. The guaranteed uber is the column value at the multi's
     # FIRST roll (godfat's rule) - the duped column when the first roll comes up as a
@@ -343,8 +347,6 @@ def _multi_move(
     # one half-step past where the swapped last roll would have been, flipping the track.
     draws = multi.cost // CATFOOD_PER_DRAW
     if state.catfood_draws < draws:
-        return None
-    if limit is not None and _banner_pulls(state, graph.banner_id) + multi.rolls > limit:
         return None
 
     first = graph.resolve(state.position, state.last_cat)
@@ -381,18 +383,14 @@ def _multi_move(
         last = forced.cat
         position += 1
 
-    counts = (
-        state.banner_pulls
-        if limit is None
-        else _bump(state.banner_pulls, graph.banner_id, multi.rolls)
-    )
     nxt = State(
         position,
         state.tickets_left,
         state.catfood_draws - draws,
         found,
         graph.banner_id,
-        counts,
+        state.platinum_left,
+        state.legend_left,
         last,
     )
     kind = f"{multi.rolls}-roll" + (" (guaranteed)" if multi.guaranteed else "")
@@ -405,13 +403,17 @@ def _switch(state: State, leg: Leg) -> int:
     return 1 if state.last_banner and state.last_banner != leg.banner_id else 0
 
 
-def _candidate_moves(state, graph, targets, multis, banner_limits, ticket_value):
-    limit = banner_limits.get(graph.banner_id) if banner_limits else None
+def _candidate_moves(state, graph, targets, multis, banner_currency, ticket_value):
+    currency = banner_currency.get(graph.banner_id, "") if banner_currency else ""
+    if currency:
+        # Platinum/Legend Capsules are ticket-only single pulls - no catfood multis.
+        yield from _capsule_pull(state, graph, targets, currency)
+        return
 
-    yield from _pull_variants(state, graph, targets, limit, ticket_value)
+    yield from _pull_variants(state, graph, targets, ticket_value)
 
     for multi in multis.get(graph.banner_id, ()) if multis else ():
-        move = _multi_move(state, graph, multi, targets, limit)
+        move = _multi_move(state, graph, multi, targets)
         if move is not None:
             yield move
 
@@ -422,10 +424,13 @@ def _step_cost(state: State, nxt: State, leg: Leg, ticket_value: int):
 
     Tickets and catfood get combined into one number via ticket_value; when that ties,
     the plan spending less catfood wins (tickets only pay for singles, catfood also pays
-    for multis, so catfood is the resource worth holding on to)."""
+    for multis, so catfood is the resource worth holding on to). Platinum/Legend tickets
+    count the same as a rare ticket - the user judges worth by capping their supply."""
     tickets = state.tickets_left - nxt.tickets_left
+    platinum = state.platinum_left - nxt.platinum_left
+    legend = state.legend_left - nxt.legend_left
     catfood = (state.catfood_draws - nxt.catfood_draws) * CATFOOD_PER_DRAW
-    equivalent = catfood + tickets * ticket_value
+    equivalent = catfood + (tickets + platinum + legend) * ticket_value
 
     return equivalent, _switch(state, leg), catfood
 
@@ -437,14 +442,16 @@ def astar(
     upper_bound: float = INF,
     multis: Mapping[str, Sequence[Multi]] | None = None,
     ticket_value: int = CATFOOD_PER_DRAW,
-    banner_limits: Mapping[str, int] | None = None,
+    banner_currency: Mapping[str, str] | None = None,
 ) -> Path | None:
     """Cheapest pull plan collecting all targets, or None. A* over states.
 
     Pass upper_bound (e.g. a beam-search cost) to cut off branches that can't beat it.
     Pass multis to let it use each banner's multi-roll options too. ticket_value is what
     a rare ticket is worth in catfood: tickets get spent first unless they cost more than
-    a draw. banner_limits caps the total pulls allowed on a banner (0 leaves it out).
+    a draw. banner_currency ({banner: "platinum"/"legend"}) marks the capsule banners that
+    run on their own scarce ticket pools (State.platinum_left/legend_left) - one ticket per
+    pull, no catfood, capped by the pool size (a 0 pool leaves the banner out).
     """
     graphs = list(graphs)
     targets = frozenset(targets)
@@ -473,7 +480,7 @@ def astar(
             return _reconstruct(state, came_from, start)
 
         for graph in graphs:
-            moves = _candidate_moves(state, graph, targets, multis, banner_limits, ticket_value)
+            moves = _candidate_moves(state, graph, targets, multis, banner_currency, ticket_value)
             for nxt, leg in moves:
                 nxt = _canon(nxt, graphs)
                 dc, ds, dd = _step_cost(state, nxt, leg, ticket_value)
@@ -498,7 +505,7 @@ def beam_search(
     width: int,
     multis: Mapping[str, Sequence[Multi]] | None = None,
     ticket_value: int = CATFOOD_PER_DRAW,
-    banner_limits: Mapping[str, int] | None = None,
+    banner_currency: Mapping[str, str] | None = None,
     upper_bound: float = INF,
 ) -> Path | None:
     """Keep only the `width` most promising paths each step. Fast, not guaranteed optimal."""
@@ -530,7 +537,9 @@ def beam_search(
         for state in frontier:
             g = best_cost[state]
             for graph in graphs:
-                moves = _candidate_moves(state, graph, targets, multis, banner_limits, ticket_value)
+                moves = _candidate_moves(
+                    state, graph, targets, multis, banner_currency, ticket_value
+                )
                 for nxt, leg in moves:
                     nxt = _canon(nxt, graphs)
                     dc, ds, dd = _step_cost(state, nxt, leg, ticket_value)

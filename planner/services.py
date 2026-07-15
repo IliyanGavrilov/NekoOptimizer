@@ -159,16 +159,26 @@ def unit_stats(unit_id: int, doc=None) -> dict | None:
     return None
 
 
-# Platinum/Legend run on scarce tickets, not catfood, so the optimizer treats them as
-# info-only: capped (0 by default) rather than modelled as ordinary catfood gacha. Match
+# Platinum/Legend run on their own scarce tickets, not catfood, so the optimizer funds them
+# from dedicated per-capsule pools rather than modelling them as ordinary catfood gacha. Match
 # the ticket-capsule PHRASE, not a bare "legend"/"platinum" - loads of ordinary banners
 # (Evangelion's "Limited Legend", the fests' "Legend Rare drop rate") mention the word.
-_CAPPED_KEYWORDS = ("platinum capsules", "legend capsules")
+_CURRENCY_KEYWORDS = (("platinum capsules", "platinum"), ("legend capsules", "legend"))
 
 
-def capped_banner_limits(names: Iterable[str], cap: int) -> dict[str, int]:
-    """Cap pulls on Platinum/Legend Capsule banners (matched by name) at `cap`."""
-    return {name: cap for name in names if any(kw in name.lower() for kw in _CAPPED_KEYWORDS)}
+def banner_currencies(names: Iterable[str]) -> dict[str, str]:
+    """Map each Platinum/Legend Capsules banner (matched by name) to its ticket currency
+    ("platinum"/"legend") - the scarce pool the search funds its pulls from. Ordinary
+    banners aren't listed (they run on rare tickets/catfood)."""
+    currencies = {}
+    for name in names:
+        lowered = name.lower()
+        for keyword, currency in _CURRENCY_KEYWORDS:
+            if keyword in lowered:
+                currencies[name] = currency
+                break
+
+    return currencies
 
 
 def fetch_banners(
@@ -739,13 +749,18 @@ TRACK_ROW_CAP = 100  # A/B rows rendered by default, before a plan extends the w
 _VALUABLE_RARITIES = {Rarity.UBER_SUPER_RARE.value, Rarity.LEGEND_RARE.value}
 
 
-def cost_label(tickets, catfood):
-    """Spell out a plan's price in both currencies; pulls are ticket-funded first,
-    so a plan can be pure tickets, pure catfood, or a mix."""
+def cost_label(tickets, catfood, platinum=0, legend=0):
+    """Spell out a plan's price across every currency; pulls are ticket-funded first, and
+    Platinum/Legend Capsules spend their own scarce tickets, so a plan can be any mix of
+    rare tickets, platinum tickets, legend tickets and catfood."""
     parts = []
 
     if tickets:
         parts.append(f"{tickets} ticket{'s' if tickets != 1 else ''}")
+    if platinum:
+        parts.append(f"{platinum} platinum ticket{'s' if platinum != 1 else ''}")
+    if legend:
+        parts.append(f"{legend} legend ticket{'s' if legend != 1 else ''}")
     if catfood:
         parts.append(f"{catfood} catfood")
 
@@ -863,6 +878,7 @@ def build_tracks(
     future=None,
     unit_ids=None,
     tiers=None,
+    currencies=None,
 ):
     """One merged A/B table over every selected banner: each cell stacks each banner's
     cat at that shared stream position (like ubercarry), with rare-dupe switch arrows
@@ -893,6 +909,7 @@ def build_tracks(
     debuts = debuts or {}
     unit_ids = unit_ids or {}
     tiers = tiers or {}
+    currencies = currencies or {}
     groups = _banner_groups(banner_pulls, rerolls, equivalents, guaranteed)
     # "New to this banner" is per banner (newly_added_ubers keys by name); a group merges
     # equivalent banners, so its debut set is the union over the names it stands for.
@@ -1039,7 +1056,14 @@ def build_tracks(
         }
         for pos in range(1, max_pos + 1)
     ]
-    legend = [{"tag": g["tag"], "names": _titled(g["names"], titles)} for g in groups]
+    legend = [
+        {
+            "tag": g["tag"],
+            "names": _titled(g["names"], titles),
+            "currency": currencies.get(g["rep"], ""),
+        }
+        for g in groups
+    ]
     if future is not None:
         # The stepper posts its count for every run name its group merges (equivalent
         # banners share one pool, so one padding count). ``keys`` carries the raw run
@@ -1053,6 +1077,7 @@ def build_tracks(
         "rows": rows,
         "has_guaranteed": has_guaranteed,
         "has_shared": bool(marks.shared or marks.gshared),
+        "has_currency": any(entry["currency"] for entry in legend),
         "show_future": future is not None,
         "padded": bool(future) and any(future.values()),
     }
@@ -1496,8 +1521,10 @@ def plan_summary(plans, equivalents, owned=None, wanted=None, titles=None):
         for leg in option.plan.legs:
             rolls = len(leg.pulls)
             # Single pulls are paid per draw with a ticket (free) or 150 catfood;
-            # leg.cost only counts the catfood ones, so the rest are ticket-funded.
-            tickets = rolls - leg.cost // CATFOOD_PER_DRAW if leg.kind == "Single pull" else 0
+            # leg.cost only counts the catfood ones, so the rest are ticket-funded. A
+            # capsule leg's tickets are its own scarce currency (leg.currency), marked apart.
+            funded = rolls - leg.cost // CATFOOD_PER_DRAW if leg.kind == "Single pull" else 0
+            tickets = funded if not leg.currency else 0
             legs.append(
                 {
                     "n": len(legs) + 1,
@@ -1506,6 +1533,9 @@ def plan_summary(plans, equivalents, owned=None, wanted=None, titles=None):
                     "kind": leg.kind,
                     "cost": leg.cost,
                     "tickets": tickets,
+                    "currency": leg.currency,
+                    "platinum": funded if leg.currency == "platinum" else 0,
+                    "legend": funded if leg.currency == "legend" else 0,
                     "rolls": rolls,
                     "targets": [pull.cat for pull in leg.pulls if pull.cat in option.targets],
                     "cats": [
@@ -1525,7 +1555,14 @@ def plan_summary(plans, equivalents, owned=None, wanted=None, titles=None):
                 "targets": sorted(option.targets),
                 "cost": option.plan.cost,
                 "tickets_used": option.plan.tickets_used,
-                "cost_label": cost_label(option.plan.tickets_used, option.plan.cost),
+                "platinum_used": option.plan.platinum_used,
+                "legend_used": option.plan.legend_used,
+                "cost_label": cost_label(
+                    option.plan.tickets_used,
+                    option.plan.cost,
+                    option.plan.platinum_used,
+                    option.plan.legend_used,
+                ),
                 "cats": "|".join(option.plan.cats),
                 "legs": legs,
             }
@@ -1554,7 +1591,7 @@ def _missing_subsets(items, found_keys):
     ]
 
 
-def _wishlist_plans(graphs, wanted, start, multis, ticket_value, banner_limits):
+def _wishlist_plans(graphs, wanted, start, multis, ticket_value, banner_currency):
     """Bounded plans for when even the obtainable targets are too many to list out one by
     one: the whole set in a single beam search (fast, not guaranteed optimal) plus each
     target on its own, exactly. Linear in the wishlist where the full breakdown would be
@@ -1567,7 +1604,7 @@ def _wishlist_plans(graphs, wanted, start, multis, ticket_value, banner_limits):
         _WISHLIST_BEAM_WIDTH,
         multis=multis,
         ticket_value=ticket_value,
-        banner_limits=banner_limits,
+        banner_currency=banner_currency,
     )
     if full is not None:
         found.append(SubsetPlan(frozenset(wanted), full))
@@ -1579,7 +1616,7 @@ def _wishlist_plans(graphs, wanted, start, multis, ticket_value, banner_limits):
             start,
             multis=multis,
             ticket_value=ticket_value,
-            banner_limits=banner_limits,
+            banner_currency=banner_currency,
         )
         if single is not None:
             found.append(SubsetPlan(frozenset({cat}), single))
@@ -1589,7 +1626,7 @@ def _wishlist_plans(graphs, wanted, start, multis, ticket_value, banner_limits):
     return found
 
 
-def _subset_plans(graphs, targets, start, multis, ticket_value, banner_limits):
+def _subset_plans(graphs, targets, start, multis, ticket_value, banner_currency):
     """The plan rows behind subset_solutions: ``(found plans, missing target-lists)``.
 
     Picks that can't drop on any selected banner are filtered out first - out of the search
@@ -1597,7 +1634,7 @@ def _subset_plans(graphs, targets, start, multis, ticket_value, banner_limits):
     and reported as one flat "Not found" row apiece. Of the rest, up to SUBSET_TARGET_LIMIT
     get the exact per-subset breakdown; past that it's the bounded whole-set + per-cat view
     (_wishlist_plans), too many subsets to list one by one (a 100-cat wishlist is 2^100)."""
-    search = dict(multis=multis, ticket_value=ticket_value, banner_limits=banner_limits)
+    search = dict(multis=multis, ticket_value=ticket_value, banner_currency=banner_currency)
     items = sorted(set(targets))
 
     # Picks that can't drop on any selected banner are dropped up front - out of the search
@@ -1628,10 +1665,12 @@ def subset_solutions(
     *,
     tickets,
     catfood,
+    platinum=0,
+    legend=0,
     guaranteed_pulls=None,
     multis=None,
     ticket_value=CATFOOD_PER_DRAW,
-    banner_limits=None,
+    banner_currency=None,
     owned=None,
     wanted=None,
     titles=None,
@@ -1649,14 +1688,28 @@ def subset_solutions(
     search's first roll lands on a cell that repeats it, it comes up as a dupe. The
     subset/plan breakdown itself is _subset_plans."""
     graphs = build_graphs(pulls, guaranteed_pulls, rerolls, guaranteed_rerolls)
-    start = State(0, tickets, catfood // CATFOOD_PER_DRAW, frozenset(), last_cat=last_cat)
-    found, missing = _subset_plans(graphs, targets, start, multis, ticket_value, banner_limits)
+    start = State(
+        0,
+        tickets,
+        catfood // CATFOOD_PER_DRAW,
+        frozenset(),
+        platinum_left=platinum,
+        legend_left=legend,
+        last_cat=last_cat,
+    )
+    found, missing = _subset_plans(graphs, targets, start, multis, ticket_value, banner_currency)
+    # The capsule banners each render under one representative name; tag those so the track
+    # legend can badge them and their lit path cells read as platinum/legend pulls.
+    currencies = {
+        _representative(name, equivalents): currency
+        for name, currency in (banner_currency or {}).items()
+    }
     solutions = []
 
     for sp in found:
         marks = plan_highlight(sp, equivalents)
         marks.shared, marks.gshared = plan_shared(
-            sp, graphs, equivalents, multis, exclude=banner_limits or ()
+            sp, graphs, equivalents, multis, exclude=set(banner_currency or ())
         )
         # Stripe where the plan drops you: the cell the seed continues on after its
         # last draw, on the banner that draw was rolled on.
@@ -1681,6 +1734,7 @@ def subset_solutions(
             debuts=debuts,
             unit_ids=unit_ids,
             tiers=tiers,
+            currencies=currencies,
         )
         solutions.append(solution)
 

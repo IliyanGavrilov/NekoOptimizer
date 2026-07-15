@@ -10,8 +10,15 @@ def banner(banner_id, *rows):
     return BannerGraph(banner_id, [TrackPull(*row) for row in rows])
 
 
-def start(position=0, tickets=0, catfood=0, found=()):
-    return State(position, tickets, catfood, frozenset(found))
+def start(position=0, tickets=0, catfood=0, found=(), platinum=0, legend=0):
+    return State(
+        position,
+        tickets,
+        catfood,
+        frozenset(found),
+        platinum_left=platinum,
+        legend_left=legend,
+    )
 
 
 def test_dupe_reroll_target_is_credited():
@@ -258,43 +265,61 @@ def test_guaranteed_leg_is_labelled_and_separate():
     assert [(leg.kind, leg.cost) for leg in result.legs] == [("3-roll (guaranteed)", 450)]
 
 
-def test_banner_limit_zero_excludes_the_banner():
+def test_capsule_empty_pool_excludes_the_banner():
+    # A platinum capsule can't be pulled on rare tickets - only from its own pool.
     g = banner("x", (1, "A", "Bahamut", U))
-    assert astar([g], {"Bahamut"}, start(tickets=1), banner_limits={"x": 0}) is None
+    start_state = start(tickets=1, platinum=0)
+    assert astar([g], {"Bahamut"}, start_state, banner_currency={"x": "platinum"}) is None
 
 
-def test_banner_limit_caps_total_pulls():
+def test_capsule_pool_caps_total_pulls():
+    # Two pulls needed, but only one platinum ticket - and rare tickets can't help.
     g = banner("x", (1, "A", "Cat", R), (2, "A", "Bahamut", U))
-    assert astar([g], {"Bahamut"}, start(tickets=2), banner_limits={"x": 1}) is None
+    start_state = start(tickets=2, platinum=1)
+    assert astar([g], {"Bahamut"}, start_state, banner_currency={"x": "platinum"}) is None
 
 
-def test_banner_limit_allows_pulls_up_to_the_cap():
+def test_capsule_pool_allows_pulls_up_to_the_cap():
     g = banner("x", (1, "A", "Cat", R), (2, "A", "Bahamut", U))
-    result = astar([g], {"Bahamut"}, start(tickets=2), banner_limits={"x": 2})
+    start_state = start(platinum=2)
+    result = astar([g], {"Bahamut"}, start_state, banner_currency={"x": "platinum"})
     assert result.cats[-1] == "Bahamut"
+    assert result.platinum_used == 2
+    assert result.tickets_used == 0
 
 
-def test_banner_limit_routes_around_an_excluded_banner():
+def test_capsule_funds_only_from_its_own_currency():
+    # A legend pool doesn't fund a platinum capsule, and vice versa.
+    g = banner("x", (1, "A", "Bahamut", U))
+    start_state = start(legend=5)
+    assert astar([g], {"Bahamut"}, start_state, banner_currency={"x": "platinum"}) is None
+
+
+def test_capsule_routes_around_an_empty_pool_banner():
     x = banner("x", (1, "A", "Bahamut", U))
     y = banner("y", (1, "A", "Cat", R), (2, "A", "Dog", R), (3, "A", "Bahamut", U))
-    result = astar([x, y], {"Bahamut"}, start(tickets=3), banner_limits={"x": 0})
+    start_state = start(tickets=3, platinum=0)
+    result = astar([x, y], {"Bahamut"}, start_state, banner_currency={"x": "platinum"})
     assert len(result.cats) == 3
 
 
-def test_banner_limit_blocks_a_too_large_multi():
+def test_capsule_banner_offers_no_multi():
+    # Capsules are ticket-only single pulls; a guaranteed multi that would reach Mecha
+    # (its only spot) is never offered on a capsule banner, so the target is unreachable.
     result = astar(
         [guaranteed_banner()],
         {"Mecha"},
-        start(catfood=3),
+        start(catfood=3, platinum=3),
         multis={"x": [Multi(3, 450)]},
-        banner_limits={"x": 2},
+        banner_currency={"x": "platinum"},
     )
     assert result is None
 
 
-def test_beam_respects_banner_limit():
+def test_beam_respects_capsule_pool():
     g = banner("x", (1, "A", "Cat", R), (2, "A", "Bahamut", U))
-    assert beam_search([g], {"Bahamut"}, start(tickets=2), 5, banner_limits={"x": 1}) is None
+    start_state = start(tickets=2, platinum=1)
+    assert beam_search([g], {"Bahamut"}, start_state, 5, banner_currency={"x": "platinum"}) is None
 
 
 def test_prefers_single_banner_when_cost_is_equal():

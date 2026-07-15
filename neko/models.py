@@ -134,14 +134,19 @@ class Pull:
 
 @dataclass(frozen=True, slots=True)
 class State:
-    """A search node; frozen so it's hashable. `found` holds only wishlist targets so far."""
+    """A search node; frozen so it's hashable. `found` holds only wishlist targets so far.
+
+    Platinum/Legend Capsules run on their own scarce tickets, one currency each, kept apart
+    from the rare-ticket/catfood budget: ``platinum_left``/``legend_left`` are those pools,
+    and the pool size doubles as the pull cap (N tickets => at most N capsule pulls)."""
 
     position: int
     tickets_left: int
     catfood_draws: int
     found: frozenset[str]
     last_banner: str = ""  # banner of the previous pull, to count banner switches
-    banner_pulls: frozenset[tuple[str, int]] = frozenset()  # pulls so far on capped banners
+    platinum_left: int = 0  # Platinum Capsules tickets left (their own currency)
+    legend_left: int = 0  # Legend Capsules tickets left (their own currency)
     last_cat: str = ""  # what the previous pull got: a rare that repeats it will reroll
 
 
@@ -153,6 +158,7 @@ class Leg:
     kind: str  # "Single pull", "11-roll", "15-roll (guaranteed)", ...
     cost: int  # catfood spent on this leg (0 if ticket-funded)
     pulls: tuple[Pull, ...]
+    currency: str = ""  # "platinum"/"legend" when funded by that capsule's own ticket, else ""
 
 
 @dataclass(frozen=True, slots=True)
@@ -163,6 +169,8 @@ class Path:
     tickets_used: int
     catfood_draws_used: int
     moves: tuple[Leg, ...] = ()
+    platinum_used: int = 0  # Platinum Capsules tickets spent (their own currency)
+    legend_used: int = 0  # Legend Capsules tickets spent (their own currency)
 
     def __len__(self) -> int:
         return len(self.pulls)
@@ -189,7 +197,11 @@ class Path:
                 and last.banner_id == move.banner_id
             ):
                 merged[-1] = Leg(
-                    last.banner_id, last.kind, last.cost + move.cost, last.pulls + move.pulls
+                    last.banner_id,
+                    last.kind,
+                    last.cost + move.cost,
+                    last.pulls + move.pulls,
+                    last.currency,
                 )
             else:
                 merged.append(move)

@@ -101,7 +101,7 @@ def golden_cases():
             targets={"Windy", "Kasa Jizo"},
             tickets=4,
             catfood=600,
-            banner_limits={"Z": 0},
+            banner_currency={"Z": "platinum"},
         ),
     )
     yield (
@@ -122,7 +122,9 @@ def solve(case):
         guaranteed_pulls=case.pop("guaranteed_pulls"),
         multis=case.pop("multis", None),
         ticket_value=case.pop("ticket_value", CATFOOD_PER_DRAW),
-        banner_limits=case.pop("banner_limits", None),
+        banner_currency=case.pop("banner_currency", None),
+        platinum=case.pop("platinum", 0),
+        legend=case.pop("legend", 0),
         owned=case.pop("owned"),
         wanted=case.pop("wanted"),
         titles=case.pop("titles"),

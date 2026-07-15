@@ -111,7 +111,9 @@ def test_selected_banners_use_chosen_rolls(client, monkeypatch):
 
 
 @pytest.mark.django_db
-def test_platinum_legend_cap_zero_excludes_the_banner(client, monkeypatch):
+def test_platinum_cap_zero_excludes_the_banner(client, monkeypatch):
+    # A platinum capsule runs on platinum tickets only: an empty pool leaves it out even
+    # when rare tickets are on hand (they can't fund a capsule pull).
     cat = Cat.objects.create(name="Bahamut")
     result = RollResult(
         {"Platinum Capsules": BannerRolls([TrackPull(1, "A", "Bahamut", U)], [])}, {}
@@ -119,20 +121,33 @@ def test_platinum_legend_cap_zero_excludes_the_banner(client, monkeypatch):
     monkeypatch.setattr("planner.views.fetch_banners", returns(result))
     response = client.post(
         "/plan/",
-        {"seed": 7, "tickets": 1, "catfood": 0, "targets": [cat.pk], "platinum_legend_cap": 0},
+        {"seed": 7, "tickets": 1, "catfood": 0, "targets": [cat.pk], "platinum_cap": 0},
     )
     assert b"Not found" in response.content
 
 
 @pytest.mark.django_db
-def test_platinum_legend_allowed_by_default(client, monkeypatch):
+def test_platinum_pull_spends_a_platinum_ticket_by_default(client, monkeypatch):
     cat = Cat.objects.create(name="Bahamut")
     result = RollResult(
         {"Platinum Capsules": BannerRolls([TrackPull(1, "A", "Bahamut", U)], [])}, {}
     )
     monkeypatch.setattr("planner.views.fetch_banners", returns(result))
-    response = client.post("/plan/", {"seed": 7, "tickets": 1, "catfood": 0, "targets": [cat.pk]})
+    response = client.post("/plan/", {"seed": 7, "tickets": 0, "catfood": 0, "targets": [cat.pk]})
     assert b"Bahamut" in response.content
+    assert b"platinum ticket" in response.content
+
+
+@pytest.mark.django_db
+def test_legend_cap_zero_excludes_the_banner(client, monkeypatch):
+    cat = Cat.objects.create(name="Bahamut")
+    result = RollResult({"Legend Capsules": BannerRolls([TrackPull(1, "A", "Bahamut", U)], [])}, {})
+    monkeypatch.setattr("planner.views.fetch_banners", returns(result))
+    response = client.post(
+        "/plan/",
+        {"seed": 7, "tickets": 1, "catfood": 0, "targets": [cat.pk], "legend_cap": 0},
+    )
+    assert b"Not found" in response.content
 
 
 @pytest.mark.django_db
