@@ -1229,6 +1229,20 @@ def test_subset_solutions_start_dupe_memory_reaches_the_search():
     assert solution["found"] is True and solution["last_cat"] == "Jurassic Cat"
 
 
+def test_subset_solutions_lists_unobtainable_picks_individually_not_as_combos():
+    # Two picks that aren't on the banner: each shows as its own "Not found" row and never
+    # multiplies into combos (with each other or the reachable pick) - the exponential flood
+    # the small-target branch used to produce before filtering unobtainable up front.
+    pulls = {"X": [TrackPull(1, "A", "Pogo", R), TrackPull(2, "A", "Bahamut", U)]}
+    solutions = subset_solutions(
+        pulls, {}, {}, {"Bahamut", "Ghost", "Phantom"}, tickets=2, catfood=0
+    )
+    found = [s["targets"] for s in solutions if s["found"]]
+    not_found = sorted(s["targets"] for s in solutions if not s["found"])
+    assert found == [["Bahamut"]]
+    assert not_found == [["Ghost"], ["Phantom"]]
+
+
 @pytest.mark.parametrize(
     "rarity, title",
     [
