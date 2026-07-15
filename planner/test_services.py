@@ -1340,29 +1340,67 @@ def test_find_cats_locates_only_the_picked_targets():
         TrackPull(1, "B", "Wanted Uber", U),
         TrackPull(2, "A", "A Legend", L),
     ]
-    assert find_cats({"X": pulls}, set()) == []  # nothing picked -> nothing found
-    found = find_cats({"X": pulls}, {"Wanted Uber", "A Legend"})
-    assert [(f["name"], f["rarity"], f["pos"]) for f in found] == [
-        ("Wanted Uber", "Uber Super Rare", "1B"),
-        ("A Legend", "Legend Rare", "2A"),
+    assert find_cats({"X": pulls}, {}) == []  # nothing picked -> nothing found
+    found = find_cats({"X": pulls}, {"Wanted Uber": "Uber Super Rare", "A Legend": "Legend Rare"})
+    assert [(f["name"], f["rarity"], f["pos"], f["found"]) for f in found] == [
+        ("Wanted Uber", "Uber Super Rare", "1B", True),
+        ("A Legend", "Legend Rare", "2A", True),
     ]
 
 
 def test_find_cats_reports_each_target_at_its_earliest_position():
     pulls = [TrackPull(5, "A", "Aphrodite", U), TrackPull(2, "B", "Aphrodite", U)]
-    found = find_cats({"X": pulls}, {"Aphrodite"})
+    found = find_cats({"X": pulls}, {"Aphrodite": "Uber Super Rare"})
     assert len(found) == 1
     assert found[0]["pos"] == "2B"
+
+
+def test_find_cats_lists_a_picked_target_that_never_rolls_as_the_ceiling():
+    pulls = [TrackPull(1, "A", "Aphrodite", U)]  # the picked cat isn't here
+    (miss,) = find_cats({"X": pulls}, {"Absent Uber": "Uber Super Rare"})
+    # No cell to jump to: godfat's "999+" ceiling, its rarity read off the pick (no pull),
+    # and index None so the template renders it unclickable.
+    assert (miss["name"], miss["rarity"], miss["pos"]) == ("Absent Uber", "Uber Super Rare", "999+")
+    assert miss["found"] is False
+    assert miss["index"] is None
+    # The ceiling tracks the roll depth actually searched.
+    (deep,) = find_cats({"X": pulls}, {"Absent Uber": "Uber Super Rare"}, horizon=300)
+    assert deep["pos"] == "300+"
+
+
+def test_find_cats_lists_found_targets_before_the_misses():
+    pulls = [TrackPull(4, "A", "Aphrodite", U)]
+    found = find_cats(
+        {"X": pulls}, {"Absent Uber": "Uber Super Rare", "Aphrodite": "Uber Super Rare"}
+    )
+    assert [(f["name"], f["found"]) for f in found] == [
+        ("Aphrodite", True),  # found, at its position
+        ("Absent Uber", False),  # miss, trailing as 999+
+    ]
+
+
+def test_find_cats_searches_the_wishlist_but_lists_it_only_when_found():
+    pulls = [TrackPull(3, "A", "On Wishlist", U)]
+    found = find_cats(
+        {"X": pulls},
+        {},  # nothing explicitly picked
+        wishlist={"On Wishlist", "Absent Wishlist"},
+    )
+    # The found wishlist cat surfaces; the missing one stays out (only picks get a 999+).
+    assert [(f["name"], f["pos"]) for f in found] == [("On Wishlist", "3A")]
 
 
 def test_find_cats_prefers_a_guaranteed_hit_only_when_strictly_earlier():
     pulls = [TrackPull(9, "A", "Aphrodite", U)]  # normal roll, far off
     guaranteed = {"X": [TrackPull(3, "A", "Aphrodite", U)]}  # guaranteed column, early
-    found = find_cats({"X": pulls}, {"Aphrodite"}, guaranteed=guaranteed)
+    found = find_cats({"X": pulls}, {"Aphrodite": "Uber Super Rare"}, guaranteed=guaranteed)
     assert (found[0]["pos"], found[0]["guaranteed"]) == ("3AG", True)
     # Skipping the guaranteed column falls back to the normal-roll position.
     skipped = find_cats(
-        {"X": pulls}, {"Aphrodite"}, guaranteed=guaranteed, include_guaranteed=False
+        {"X": pulls},
+        {"Aphrodite": "Uber Super Rare"},
+        guaranteed=guaranteed,
+        include_guaranteed=False,
     )
     assert (skipped[0]["pos"], skipped[0]["guaranteed"]) == ("9A", False)
 
@@ -1370,5 +1408,5 @@ def test_find_cats_prefers_a_guaranteed_hit_only_when_strictly_earlier():
 def test_find_cats_keeps_the_plain_roll_on_a_tie():
     pulls = [TrackPull(3, "A", "A Legend", L)]
     guaranteed = {"X": [TrackPull(3, "A", "A Legend", L)]}
-    found = find_cats({"X": pulls}, {"A Legend"}, guaranteed=guaranteed)
+    found = find_cats({"X": pulls}, {"A Legend": "Legend Rare"}, guaranteed=guaranteed)
     assert found[0]["guaranteed"] is False

@@ -6,10 +6,14 @@
       <span class="found-label" title="The next place each cat you've picked (a target, or your wishlist) lands in these rolls. Click a position to jump to its cell.">Find next</span>
       <ul class="found-list">
         {% for f in track.found_cats %}
-          <li class="found-item">
+          <li class="found-item{% if not f.found %} is-out{% endif %}">
             <button type="button" class="catlink" data-name="{{ f.name }}"><span class="catname">{{ f.name }}</span></button>
-            <span class="rarity" data-rarity="{{ f.rarity }}">{{ f.rarity }}</span>
-            <button type="button" class="find-pos" data-idx="{{ f.index }}"{% if f.guaranteed %} data-guaranteed="1"{% endif %} title="Jump to {{ f.pos }} in the track">{{ f.pos }}</button>
+            {% if f.rarity %}<span class="rarity" data-rarity="{{ f.rarity }}">{{ f.rarity }}</span>{% endif %}
+            {% if f.found %}
+              <button type="button" class="find-pos" data-idx="{{ f.index }}"{% if f.guaranteed %} data-guaranteed="1"{% endif %} title="Jump to {{ f.pos }} in the track">{{ f.pos }}</button>
+            {% else %}
+              <span class="find-out" title="Doesn't turn up in the first {{ f.pos|cut:'+' }} rolls">{{ f.pos }}</span>
+            {% endif %}
           </li>
         {% endfor %}
       </ul>

@@ -340,6 +340,38 @@ def test_tracks_endpoint_find_includes_the_wishlist_when_enabled(client, monkeyp
 
 
 @pytest.mark.django_db
+def test_tracks_endpoint_lists_a_picked_target_that_never_rolls_as_the_ceiling(
+    client, monkeypatch
+):
+    monkeypatch.setattr(
+        "planner.views.fetch_banners", fixed_banners(TrackPull(1, "B", "Aphrodite", U))
+    )
+    ghost = cat_with_unit("Ghost Cat")  # picked, but these rolls never produce it
+    ghost.rarity = "Legend Rare"
+    ghost.save()
+    html = client.post("/tracks/", {"seed": 7, "targets": [ghost.pk]}).content.decode()
+    assert "found-cats" in html
+    assert "Ghost Cat" in html
+    assert ">999+<" in html  # godfat's ceiling for a pick that never turns up
+    assert "Legend Rare" in html  # its rarity is read off the pick, not a roll
+    # Rendered as a muted label, not a clickable jump chip (there's no cell to reach).
+    assert "find-out" in html and "find-pos" not in html
+
+
+@pytest.mark.django_db
+def test_tracks_endpoint_find_does_not_ceiling_a_wishlist_miss(client, monkeypatch):
+    monkeypatch.setattr(
+        "planner.views.fetch_banners", fixed_banners(TrackPull(1, "A", "Aphrodite", U))
+    )
+    cat_with_unit("Ghost Cat", wanted=True)  # on the wishlist, but never rolled
+    html = client.post("/tracks/", {"seed": 7, "use_wishlist": "on"}).content.decode()
+    # A wishlist cat that never surfaces is simply omitted (only explicit picks get a 999+),
+    # so with nothing found the panel stays hidden.
+    assert "999+" not in html
+    assert "found-cats" not in html
+
+
+@pytest.mark.django_db
 def test_tracks_endpoint_find_can_skip_the_guaranteed_column(client, monkeypatch):
     rolls = BannerRolls(
         [TrackPull(9, "A", "Aphrodite", U)],  # normal roll, far off

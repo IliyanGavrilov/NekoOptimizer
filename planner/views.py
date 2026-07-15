@@ -225,16 +225,19 @@ def _unit_ids():
 
 
 def _find_targets(request):
-    """Cat names to also locate in the Rolls "Find next" panel: the plan's picked targets
-    plus, when "search my wishlist" is on, the wishlist - mirroring find_plan's target set,
-    read straight from the tracks POST (app.js posts the whole planner form)."""
-    names = set(
-        Cat.objects.filter(pk__in=request.POST.getlist("targets")).values_list("name", flat=True)
-    )
-    if request.POST.get("use_wishlist"):
-        names |= _wanted_names()
+    """The cats the Rolls "Find next" panel reports, read straight from the tracks POST
+    (app.js posts the whole planner form), mirroring find_plan's target set.
 
-    return names
+    Returns ``(targets, wishlist)``: ``targets`` is the plan's picked cats as a
+    ``{name: rarity}`` map - always listed, as a "999+" ceiling when they miss these
+    banners; ``wishlist`` (when "search my wishlist" is on) is searched too but listed
+    only when found."""
+    targets = dict(
+        Cat.objects.filter(pk__in=request.POST.getlist("targets")).values_list("name", "rarity")
+    )
+    wishlist = _wanted_names() if request.POST.get("use_wishlist") else set()
+
+    return targets, wishlist
 
 
 @require_POST
@@ -299,11 +302,13 @@ def tracks(request):
     # The browse view's "Find next" summary (godfat's Find): the next position of each cat
     # you've picked (targets / wishlist) in these rolls. Attached here only, so the shared
     # _tracks.html renders no panel on plan-solution tracks.
+    targets, wishlist = _find_targets(request)
     track["found_cats"] = find_cats(
         pulls,
-        _find_targets(request),
+        targets,
         guaranteed=guaranteed,
         include_guaranteed=request.POST.get("exclude_guaranteed") != "1",
+        wishlist=wishlist,
     )
 
     return render(request, "planner/_tracks.html", {"track": track})
