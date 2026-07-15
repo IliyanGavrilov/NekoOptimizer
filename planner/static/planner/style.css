@@ -1229,7 +1229,66 @@ table.track th.guaranteed-col, table.track td.guaranteed-col {
 .apply-plan { margin: 0.1rem 0 0.6rem; font-size: 0.9rem; padding: 0.4rem 0.85rem; }
 .apply-plan:disabled { opacity: 0.6; cursor: default; }
 .apply-cost { font-weight: 600; opacity: 0.85; }
-.budget-fields { display: contents; }
+/* ---- "Your resources": budget + capsule tickets, next to the plan button ---- */
+.resources {
+  margin: 0.75rem 0;
+  padding: 0.75rem 1rem;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+.resources-title {
+  margin: 0;
+  font-family: var(--head-font);
+  font-size: 1rem;
+  color: var(--accent);
+}
+.budget-fields,
+.capsule-fields {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 0.6rem 1rem;
+}
+.capsule-fields { padding-top: 0.6rem; border-top: 1px solid var(--line); }
+.capsule-fields .capsule-hint { grid-column: 1 / -1; margin: 0; }
+.budget-fields label,
+.capsule-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  color: var(--ink);
+}
+.resources input { width: 100%; }
+/* Capsule rows get a left accent in their currency's colour, so the field reads as
+   platinum/legend at a glance. */
+.capsule-row { padding-left: 0.55rem; border-left: 3px solid var(--line); }
+.capsule-row.plat { border-left-color: var(--r-super); }
+.capsule-row.legend { border-left-color: var(--r-legend); }
+
+/* Capsule currency badge (platinum/legend), shared by the steps and track legend. */
+.capsule-tag {
+  font-family: var(--head-font);
+  font-size: 0.6rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  padding: 0.03rem 0.35rem;
+  border-radius: 999px;
+  border: 1px solid currentColor;
+  line-height: 1.35;
+}
+.capsule-tag.platinum { color: var(--r-super); }
+.capsule-tag.legend { color: var(--r-legend); }
+/* Per-leg cost parts joined with " + "; capsule parts wear the currency colour. */
+.cost-part + .cost-part::before { content: " + "; color: var(--muted); }
+.cost-part.platinum { color: var(--r-super); }
+.cost-part.legend { color: var(--r-legend); }
+.step-card.capsule.platinum { border-left: 3px solid var(--r-super); }
+.step-card.capsule.legend { border-left: 3px solid var(--r-legend); }
+
 .opt.inline { flex-direction: row; align-items: baseline; gap: 0.45rem; flex-wrap: wrap; }
 .opt.inline input[type="number"] { width: 5.5rem; }
 .opt-group { display: flex; flex-wrap: wrap; gap: 1rem 1.5rem; align-items: flex-end; }

@@ -15,9 +15,9 @@ from planner.services import (
     WIKI_BASE,
     TrackMarks,
     _pos_label,
+    banner_currencies,
     banner_titles,
     build_tracks,
-    capped_banner_limits,
     collection_sections,
     cost_label,
     equivalent_banners,
@@ -44,20 +44,23 @@ R = Rarity.RARE
 L = Rarity.LEGEND_RARE
 
 
-def test_capped_banner_limits_matches_only_platinum_and_legend():
+def test_banner_currencies_classifies_platinum_and_legend():
     names = ["Platinum Capsules", "Legend Capsules", "Epicfest"]
-    assert capped_banner_limits(names, 0) == {"Platinum Capsules": 0, "Legend Capsules": 0}
+    assert banner_currencies(names) == {
+        "Platinum Capsules": "platinum",
+        "Legend Capsules": "legend",
+    }
 
 
-def test_capped_banner_limits_matches_the_real_capsule_run_names():
+def test_banner_currencies_matches_the_real_capsule_run_names():
     names = [
         "Get an Uber Rare Cat!! 100% Uber drop Rate in the PLATINUM CAPSULES!",
         "Get a Guaranteed Uber or Legend Rare from the Legend Capsules!",
     ]
-    assert capped_banner_limits(names, 0) == dict.fromkeys(names, 0)
+    assert banner_currencies(names) == {names[0]: "platinum", names[1]: "legend"}
 
 
-def test_capped_banner_limits_ignores_banners_that_merely_mention_legend():
+def test_banner_currencies_ignores_banners_that_merely_mention_legend():
     # Collabs/fests name a "Limited Legend" or "Legend Rare drop rate" but roll on
     # catfood like any banner - they must not be treated as scarce-ticket capsules.
     names = [
@@ -65,7 +68,7 @@ def test_capped_banner_limits_ignores_banners_that_merely_mention_legend():
         "Increased Uber and Legend Rare drop rate! 90M DL Special Capsules!",
         "Double the Uber / Legend chances! ★ Glorious gods of the Cat pantheon!",
     ]
-    assert capped_banner_limits(names, 0) == {}
+    assert banner_currencies(names) == {}
 
 
 def test_collection_sections_orders_rarities_cheapest_to_rarest():
@@ -354,10 +357,35 @@ def test_cost_label_spells_out_both_currencies(tickets, catfood, expected):
     assert cost_label(tickets, catfood) == expected
 
 
+@pytest.mark.parametrize(
+    "tickets,catfood,platinum,legend,expected",
+    [
+        (0, 0, 1, 0, "1 platinum ticket"),
+        (0, 0, 0, 2, "2 legend tickets"),
+        (0, 0, 3, 1, "3 platinum tickets + 1 legend ticket"),
+        (2, 300, 1, 1, "2 tickets + 1 platinum ticket + 1 legend ticket + 300 catfood"),
+    ],
+)
+def test_cost_label_spells_out_capsule_tickets(tickets, catfood, platinum, legend, expected):
+    assert cost_label(tickets, catfood, platinum, legend) == expected
+
+
 def test_build_tracks_merges_equivalent_banners_into_one_legend_entry():
     pulls = [TrackPull(1, "A", "Bahamut", U)]
     track = build_tracks({"X": pulls, "Y": pulls}, {}, {"X": ["X", "Y"], "Y": ["X", "Y"]})
     assert len(track["legend"]) == 1
+
+
+def test_build_tracks_tags_a_capsule_banner_with_its_currency():
+    pulls = [TrackPull(1, "A", "Bahamut", U)]
+    track = build_tracks(
+        {"Platinum Capsules": pulls, "X": pulls},
+        {},
+        {},
+        currencies={"Platinum Capsules": "platinum"},
+    )
+    tagged = {entry["names"][0]: entry["currency"] for entry in track["legend"]}
+    assert tagged == {"Platinum Capsules": "platinum", "X": ""}
 
 
 def _gacha_event(name, start, pool_id):
@@ -1041,6 +1069,17 @@ def test_plan_summary_never_reads_a_catfood_multi_roll_as_tickets():
     assert plan_summary([option], {"X": ["X"]})[0]["legs"][0]["tickets"] == 0
 
 
+def test_plan_summary_counts_capsule_pulls_as_their_own_currency():
+    pulls = tuple(Pull(i, "Platinum Capsules", "Bahamut", U) for i in range(2))
+    leg = Leg("Platinum Capsules", "Single pull", 0, pulls, currency="platinum")
+    option = SubsetPlan(frozenset({"Bahamut"}), Path(pulls, 0, 0, (leg,), platinum_used=2))
+    summary = plan_summary([option], {"Platinum Capsules": ["Platinum Capsules"]})[0]
+    leg_summary = summary["legs"][0]
+    # A platinum leg spends platinum tickets, never rare ones, and the label reads apart.
+    assert (leg_summary["tickets"], leg_summary["platinum"], leg_summary["legend"]) == (0, 2, 0)
+    assert summary["cost_label"] == "2 platinum tickets"
+
+
 def _single(index, banner, cat, rarity, cost=0):
     return Leg(banner, "Single pull", cost, (Pull(index, banner, cat, rarity),))
 
@@ -1143,7 +1182,7 @@ def test_plan_shared_never_offers_a_capped_ticket_gacha_as_an_alternative():
     pulls = [TrackPull(1, "A", "Pogo", R)]
     graphs = build_graphs({"X": list(pulls), "Platinum Capsules": list(pulls)})
     option = _plan({"Pogo"}, (_single(0, "X", "Pogo", R),), 1)
-    shared, _gshared = plan_shared(option, graphs, {}, exclude={"Platinum Capsules": 0})
+    shared, _gshared = plan_shared(option, graphs, {}, exclude={"Platinum Capsules"})
     assert shared == {}
 
 
