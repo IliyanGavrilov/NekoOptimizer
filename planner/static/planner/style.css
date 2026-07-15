@@ -23,10 +23,9 @@
   --r-legend: #ff6060;
   --new: #34d399;  /* Uber/Legend cats not yet in your collection */
 
-  /* Capsule ticket colours, matched to the in-game tickets: the Platinum Ticket is
-     silver-white, the Legend Ticket is red. */
-  --tkt-platinum: #c8cfdd;
-  --tkt-legend: #ff5b6e;
+  /* Capsule ticket colours: platinum uses the Super Rare gold, legend uses the Legend red. */
+  --tkt-platinum: var(--r-super);
+  --tkt-legend: var(--r-legend);
 
   /* Tier-list bands (S..F), one colour per letter */
   --band-s: #ff5d5d;
@@ -65,9 +64,6 @@
   --r-uber: #8e3fd1;
   --r-legend: #d13a3a;
   --new: #0b8a5c;
-
-  --tkt-platinum: #7a8498;  /* darker silver-slate, legible on cream */
-  --tkt-legend: #d22f48;
 
   --band-s: #d13a3a;
   --band-a: #c76a10;
