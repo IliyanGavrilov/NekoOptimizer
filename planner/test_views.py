@@ -84,6 +84,23 @@ def test_use_wishlist_searches_wanted_cats(client, monkeypatch):
 
 
 @pytest.mark.django_db
+def test_find_plan_drops_off_banner_targets_instead_of_flooding_not_found_rows(client, monkeypatch):
+    monkeypatch.setattr(
+        "planner.views.fetch_banners", fixed_banners(TrackPull(1, "A", "Bahamut", U))
+    )
+    on_banner = cat_with_unit("Bahamut")  # in this banner's pool
+    cat_with_unit("Off Banner Cat", wanted=True)  # wishlisted, but not in the pool
+    html = client.post(
+        "/plan/",
+        {"seed": 7, "tickets": 1, "catfood": 0, "targets": [on_banner.pk], "use_wishlist": "on"},
+    ).content.decode()
+    # The picked/wishlisted cat these banners can drop still gets its plan; the off-banner one
+    # is dropped entirely rather than listed as a "Not found" row that floods the accordion.
+    assert "Bahamut" in html
+    assert "Off Banner Cat" not in html
+
+
+@pytest.mark.django_db
 def test_guaranteed_config_reaches_target(client, monkeypatch):
     cat = Cat.objects.create(name="Target")
     result = RollResult(
@@ -187,7 +204,11 @@ def test_multiple_targets_list_every_subset(client, monkeypatch):
 def test_unreachable_subset_is_listed_not_found(client, monkeypatch):
     a = Cat.objects.create(name="Aaa")
     b = Cat.objects.create(name="Bbb")
-    monkeypatch.setattr("planner.views.fetch_banners", fixed_banners(TrackPull(1, "A", "Aaa", U)))
+    # Bbb CAN drop on this banner (in its pool) but never rolls in the window: genuinely
+    # unreachable rather than off-banner, so it stays as a "Not found" row.
+    monkeypatch.setattr(
+        "planner.views.fetch_banners", fixed_banners(TrackPull(1, "A", "Aaa", U), pool=["Bbb"])
+    )
     response = client.post(
         "/plan/", {"seed": 7, "tickets": 5, "catfood": 0, "targets": [a.pk, b.pk]}
     )

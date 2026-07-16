@@ -13,7 +13,14 @@ MAX_SEEK_ROLLS = 30
 
 
 class PlannerForm(forms.Form):
-    seed = forms.IntegerField(min_value=0, initial=0)
+    # A plain text box, not a number spinner: no native up/down arrows, and since app.js only
+    # scrubs input[type=number], no hold-and-drag-to-nudge either - the seed is typed, never
+    # stepped. inputmode keeps the mobile numeric keypad; it's still validated as an integer.
+    seed = forms.IntegerField(
+        min_value=0,
+        initial=0,
+        widget=forms.TextInput(attrs={"inputmode": "numeric", "pattern": "[0-9]*"}),
+    )
     # Optional: explore mode hides the budget, and a blank field just means zero.
     tickets = forms.IntegerField(min_value=0, initial=0, required=False)
     catfood = forms.IntegerField(min_value=0, initial=0, required=False)

@@ -336,6 +336,12 @@ def find_plan(request):
     count = form.cleaned_data["horizon"] if explore else DEFAULT_COUNT
     last_cat = request.POST.get("last_cat", "").strip()
     result = _roll(seed, request.POST.getlist("banners"), count, last_cat)
+    # Scope targets to what the selected banners can actually drop (their unioned pools), the
+    # same rule the Find-next panel uses: a picked or wishlisted cat that isn't in these
+    # banners is dropped rather than listed as a "Not found" row, which otherwise floods the
+    # accordion with one dead row per off-banner cat (a whole wishlist against one banner).
+    if result.pools:
+        targets &= frozenset().union(*result.pools.values())
     equivalents = equivalent_banners(result.banners)
     pulls, guaranteed_pulls, rerolls, guaranteed_rerolls = _rolls_by_banner(result)
     banner_currency = banner_currencies(pulls)

@@ -590,6 +590,15 @@ tbody tr:hover, table tr:hover { background: var(--panel-2); }
 }
 .results-h { font-size: 1rem; margin: 0; }
 
+/* Return from a plan's solutions to browsing the rolls, without a page reload. */
+.back-to-rolls {
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  color: var(--muted);
+  margin: 0 0 0.6rem;
+}
+.back-to-rolls:hover { color: var(--accent); border-color: var(--accent); filter: none; }
+
 /* The Rolls table's live display controls: title on the left, controls on the right,
    wrapping under it on narrow screens. */
 .rolls-head {

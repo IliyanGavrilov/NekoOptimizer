@@ -145,6 +145,9 @@
       </div>
       <div id="trackHost" data-tracks-url="{% url 'tracks' %}" data-plan-url="{% url 'find_plan' %}" data-backtrack-url="{% url 'seed_backtrack' %}"></div>
     </div>
+    {# Shown only while a plan is on screen: drops the solutions and brings the Rolls table #}
+    {# back, so you can browse again without reloading the page. #}
+    <button type="button" id="backToRolls" class="back-to-rolls" hidden>&larr; Back to rolls</button>
     <div id="solutions" aria-live="polite"></div>
   </div>
 {% endblock %}
