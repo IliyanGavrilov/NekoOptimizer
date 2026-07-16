@@ -1439,14 +1439,53 @@ def test_find_cats_ceilings_a_wishlist_miss_like_a_picked_target():
         {},  # nothing explicitly picked
         wishlist={"On Wishlist": "Uber Super Rare", "Absent Wishlist": "Uber Super Rare"},
     )
-    # The found one surfaces; the missing one ceilings at 999+, the same as an explicit pick -
-    # so "search my wishlist" confirms a wanted cat isn't coming, not just where it is.
+    # With no pool given (unscoped), the found one surfaces and the missing one ceilings at
+    # 999+, the same as an explicit pick - it confirms a wanted cat isn't coming.
     assert [(f["name"], f["pos"], f["found"]) for f in found] == [
         ("On Wishlist", "3A", True),
         ("Absent Wishlist", "999+", False),
     ]
     # Both stay flagged wishlist (found and miss alike), so the panel stars them apart.
     assert all(f["wishlist"] for f in found)
+
+
+def test_find_cats_drops_a_wishlist_cat_the_selected_banners_cant_give():
+    pulls = [TrackPull(3, "A", "In Pool", U)]
+    found = find_cats(
+        {"X": pulls},
+        {},  # nothing explicitly picked
+        wishlist={"In Pool": "Uber Super Rare", "Off Banner": "Uber Super Rare"},
+        pool={"In Pool"},  # only this cat can drop on the selected banners
+    )
+    # "Off Banner" can't drop here, so the wishlist search skips it entirely - no 999+ flood
+    # of every unowned cat you want, only the ones these banners actually offer.
+    assert [(f["name"], f["pos"]) for f in found] == [("In Pool", "3A")]
+
+
+def test_find_cats_ceilings_an_in_pool_wishlist_miss():
+    pulls = [TrackPull(3, "A", "Rolled", U)]
+    found = find_cats(
+        {"X": pulls},
+        {},
+        wishlist={"Rolled": "Uber Super Rare", "In Pool Miss": "Uber Super Rare"},
+        pool={"Rolled", "In Pool Miss"},
+    )
+    # "In Pool Miss" CAN drop here but doesn't in the window, so it still ceilings at 999+.
+    assert [(f["name"], f["pos"], f["wishlist"]) for f in found] == [
+        ("Rolled", "3A", True),
+        ("In Pool Miss", "999+", True),
+    ]
+
+
+def test_find_cats_keeps_an_off_pool_explicit_pick_as_the_ceiling():
+    pulls = [TrackPull(3, "A", "Aphrodite", U)]
+    found = find_cats(
+        {"X": pulls},
+        {"Absent Pick": "Legend Rare"},  # picked on purpose, not in the pool
+        pool={"Aphrodite"},
+    )
+    # A deliberate pick still ceilings out even off-pool - the scoping only trims the wishlist.
+    assert (found[0]["name"], found[0]["pos"], found[0]["found"]) == ("Absent Pick", "999+", False)
 
 
 def test_find_cats_flags_a_name_that_is_both_pick_and_wishlist_as_a_plain_target():

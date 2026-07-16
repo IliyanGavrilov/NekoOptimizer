@@ -1096,6 +1096,7 @@ def find_cats(
     include_guaranteed=True,
     wishlist=(),
     horizon=MAX_TRACK_LENGTH,
+    pool=None,
 ):
     """godfat's "Find next", scoped to the cats you pick: the earliest position of each
     wanted name in the rolled tracks (the plan's target picker / wishlist feed it - no
@@ -1104,9 +1105,16 @@ def find_cats(
     ``targets`` and ``wishlist`` are both ``{name: rarity}`` maps - the cats you explicitly
     picked and (when "search my wishlist" is on) your unowned wanted cats. Every one is
     reported: at its earliest position, or as a trailing ``{horizon}+`` (godfat's roll
-    ceiling) when it never surfaces, so the panel confirms even a wishlist cat isn't coming.
-    A wishlist entry that isn't also an explicit pick is flagged ``wishlist`` so the template
-    stars it apart from a plain target; on a name clash the explicit pick wins (no star).
+    ceiling) when it never surfaces. A wishlist entry that isn't also an explicit pick is
+    flagged ``wishlist`` so the template stars it apart from a plain target; on a name clash
+    the explicit pick wins (no star).
+
+    ``pool`` (the selected banners' droppable-cat set) scopes the wishlist to what these
+    banners can actually give: a wishlisted cat that isn't in ``pool`` is dropped rather than
+    ceilinged, so turning on "search my wishlist" lists only cats these banners offer - the
+    same rule the plan uses to drop unobtainable picks. Explicit picks always ceiling out,
+    even off-pool, so a deliberate search still confirms "not in these banners". ``pool`` of
+    None means no scoping (every wanted cat reported).
 
     Each found cat lands once, at its earliest stream index across every banner and both
     tracks. When ``include_guaranteed`` a guaranteed-column appearance counts too, but only
@@ -1115,6 +1123,10 @@ def find_cats(
     ``{"name", "rarity", "index", "guaranteed", "pos", "found", "wishlist"}``."""
     targets = dict(targets)
     wishlist = dict(wishlist)
+    if pool is not None:
+        # Drop wishlist-only cats these banners can't give (kills the off-banner flood); an
+        # explicit pick is kept even off-pool, so its 999+ still confirms it isn't coming.
+        wishlist = {name: r for name, r in wishlist.items() if name in targets or name in pool}
     wanted = {**wishlist, **targets}  # rarity map of everything to report; picks win a clash
     if not wanted:
         return []
