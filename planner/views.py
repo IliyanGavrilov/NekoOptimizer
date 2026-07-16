@@ -225,18 +225,18 @@ def _unit_ids():
 
 
 def _find_targets(request):
-    """The cats the Rolls "Find next" panel reports, read straight from the tracks POST
-    (app.js posts the whole planner form), mirroring find_plan's target set.
+    """The cats the Rolls "Find next" panel reports, read straight from the tracks POST.
 
-    Returns ``(targets, wishlist)``: ``targets`` is the plan's picked cats as a
-    ``{name: rarity}`` map - always listed, as a "999+" ceiling when they miss these
-    banners; ``wishlist`` (when "search my wishlist" is on) is searched too but listed
-    only when found."""
+    Returns ``(targets, wishlist)``: ``targets`` is a ``{name: rarity}`` map of explicitly
+    picked cats — always reported (found or as "999+"). ``wishlist`` names are searched too
+    but listed only when found, so turning on "search my wishlist" can't flood the panel with
+    every unowned cat that doesn't roll in this window."""
     targets = dict(
         Cat.objects.filter(pk__in=request.POST.getlist("targets")).values_list("name", "rarity")
     )
-    wishlist = _wanted_names() if request.POST.get("use_wishlist") else set()
-
+    wishlist: set[str] = set()
+    if request.POST.get("use_wishlist"):
+        wishlist = set(Unit.objects.wishlist().values_list("name", flat=True))
     return targets, wishlist
 
 
