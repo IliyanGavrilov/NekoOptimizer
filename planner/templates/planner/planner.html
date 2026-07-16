@@ -70,24 +70,28 @@
     <div id="targetInputs"></div>
     <div id="bannerInputs"></div>
 
-    {# Advanced sits below the banners, by the plan button, and holds the budget. Rare #}
-    {# tickets + catfood hide in explore mode; the Platinum/Legend rows appear only when #}
-    {# that capsule banner is selected (they run on their own scarce tickets, always). #}
+    {# "Your resources" is kept OUT of Advanced so the fields you must fill are visible #}
+    {# exactly when they matter, with no need to know they're tucked away: the rare/catfood #}
+    {# budget once explore mode is off, and a capsule's own tickets once that capsule banner #}
+    {# is selected. syncResources() (app.js) shows/hides this whole block and each row. #}
+    <div class="resources" id="resources" hidden>
+      <span class="resources-title">Your resources</span>
+      <div class="budget-fields">
+        <label>{{ form.tickets.label_tag }} {{ form.tickets }}</label>
+        <label>{{ form.catfood.label_tag }} {{ form.catfood }}</label>
+      </div>
+      <div class="capsule-fields" id="capsuleFields" hidden>
+        <label class="capsule-row platinum" id="platRow" hidden>{{ form.platinum_cap.label_tag }} {{ form.platinum_cap }}</label>
+        <label class="capsule-row legend" id="legendRow" hidden>{{ form.legend_cap.label_tag }} {{ form.legend_cap }}</label>
+        <p class="muted capsule-hint">Capsules spend their own scarce tickets &mdash; set each to how many you have (0 to skip). They count like rare tickets in a plan, just marked apart, so lower the count if a pull isn&rsquo;t worth it.</p>
+      </div>
+    </div>
+
+    {# Advanced sits by the plan button and holds the mode/tuning knobs: explore mode #}
+    {# (which frees the budget above) and how much a rare ticket is worth. #}
     <div class="roll-options">
       <details class="advanced">
         <summary>Advanced</summary>
-        <div class="resources" id="resources">
-          <span class="resources-title">Your resources</span>
-          <div class="budget-fields">
-            <label>{{ form.tickets.label_tag }} {{ form.tickets }}</label>
-            <label>{{ form.catfood.label_tag }} {{ form.catfood }}</label>
-          </div>
-          <div class="capsule-fields" id="capsuleFields" hidden>
-            <label class="capsule-row platinum" id="platRow" hidden>{{ form.platinum_cap.label_tag }} {{ form.platinum_cap }}</label>
-            <label class="capsule-row legend" id="legendRow" hidden>{{ form.legend_cap.label_tag }} {{ form.legend_cap }}</label>
-            <p class="muted capsule-hint">Capsules spend their own scarce tickets &mdash; set each to how many you have (0 to skip). They count like rare tickets in a plan, just marked apart, so lower the count if a pull isn&rsquo;t worth it.</p>
-          </div>
-        </div>
         <div class="opt-group">
           <label class="check-row">{{ form.explore }} {{ form.explore.label_tag }}</label>
           <label class="opt inline explore-horizon">{{ form.horizon.label_tag }} {{ form.horizon }}</label>
