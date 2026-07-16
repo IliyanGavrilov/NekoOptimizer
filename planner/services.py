@@ -1098,30 +1098,32 @@ def find_cats(
     horizon=MAX_TRACK_LENGTH,
 ):
     """godfat's "Find next", scoped to the cats you pick: the earliest position of each
-    picked name in the rolled tracks (the plan's target picker / wishlist feed it - no
+    wanted name in the rolled tracks (the plan's target picker / wishlist feed it - no
     automatic set, so the panel never floods a fest or capsule pool).
 
-    ``targets`` is a ``{name: rarity}`` map of the cats you explicitly picked; every one is
-    reported - at its earliest position, or as a trailing ``{horizon}+`` (godfat's roll
-    ceiling) when it never surfaces, so a pick that isn't in these banners still shows, just
-    out of reach. ``wishlist`` names are searched too but listed only when found, so turning
-    on "search my wishlist" can't bury the panel under every unowned cat you want.
+    ``targets`` and ``wishlist`` are both ``{name: rarity}`` maps - the cats you explicitly
+    picked and (when "search my wishlist" is on) your unowned wanted cats. Every one is
+    reported: at its earliest position, or as a trailing ``{horizon}+`` (godfat's roll
+    ceiling) when it never surfaces, so the panel confirms even a wishlist cat isn't coming.
+    A wishlist entry that isn't also an explicit pick is flagged ``wishlist`` so the template
+    stars it apart from a plain target; on a name clash the explicit pick wins (no star).
 
     Each found cat lands once, at its earliest stream index across every banner and both
     tracks. When ``include_guaranteed`` a guaranteed-column appearance counts too, but only
     when it comes strictly earlier than a normal cell (a tie keeps the plain roll). Returns
     items sorted by position (misses last), each
-    ``{"name", "rarity", "index", "guaranteed", "pos", "found"}``."""
+    ``{"name", "rarity", "index", "guaranteed", "pos", "found", "wishlist"}``."""
     targets = dict(targets)
-    search = set(targets) | set(wishlist)
-    if not search:
+    wishlist = dict(wishlist)
+    wanted = {**wishlist, **targets}  # rarity map of everything to report; picks win a clash
+    if not wanted:
         return []
 
     guaranteed = guaranteed or {}
     best = {}  # name -> (earliest index, was it a guaranteed-column hit, rarity)
 
     def offer(name, rarity, index, is_guaranteed):
-        if name in search:
+        if name in wanted:
             current = best.get(name)
             if current is None or index < current[0]:
                 best[name] = (index, is_guaranteed, str(rarity))
@@ -1134,10 +1136,11 @@ def find_cats(
                 if tp.cat:
                     offer(tp.cat, tp.rarity, stream_index(tp.position, tp.track), True)
 
-    # A wishlist-only hit (in the wishlist, not an explicit pick) gets a star in the panel,
-    # the same "I want this" mark the track uses - so the two kinds of cat the panel mixes
-    # stay distinct from a plain picked target.
-    wishlist = set(wishlist)
+    def is_wish(name):
+        # A wishlist cat that isn't also an explicit pick: the panel stars it, the same "I
+        # want this" mark the track uses, so the two kinds of cat it mixes stay distinct.
+        return name in wishlist and name not in targets
+
     items = [
         {
             "name": name,
@@ -1146,27 +1149,26 @@ def find_cats(
             "guaranteed": is_guaranteed,
             "pos": _pos_label(index, is_guaranteed),
             "found": True,
-            "wishlist": name in wishlist and name not in targets,
+            "wishlist": is_wish(name),
         }
         for name, (index, is_guaranteed, rarity) in best.items()
     ]
     items.sort(key=lambda item: (item["index"], item["guaranteed"], item["name"]))
 
-    # Picked targets that never turned up trail the found ones as godfat's ceiling: a cat
-    # you asked for but these banners don't roll within the window, so there's no cell to
-    # jump to (index None -> the template renders an unclickable "999+"). Only explicit
-    # picks ceiling out (wishlist misses are dropped), so these are never wishlist stars.
+    # Wanted cats that never turned up trail the found ones as godfat's ceiling: a cat you
+    # asked for (picked or wishlisted) but these banners don't roll within the window, so
+    # there's no cell to jump to (index None -> the template renders an unclickable "999+").
     items += [
         {
             "name": name,
-            "rarity": targets[name],
+            "rarity": wanted[name],
             "index": None,
             "guaranteed": False,
             "pos": f"{horizon}+",
             "found": False,
-            "wishlist": False,
+            "wishlist": is_wish(name),
         }
-        for name in sorted(set(targets) - best.keys())
+        for name in sorted(set(wanted) - best.keys())
     ]
 
     return items
