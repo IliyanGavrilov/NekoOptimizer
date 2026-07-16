@@ -1441,6 +1441,15 @@ def test_find_cats_searches_the_wishlist_but_lists_it_only_when_found():
     )
     # The found wishlist cat surfaces; the missing one stays out (only picks get a 999+).
     assert [(f["name"], f["pos"]) for f in found] == [("On Wishlist", "3A")]
+    # It's flagged a wishlist hit, so the panel can star it apart from a picked target.
+    assert found[0]["wishlist"] is True
+
+
+def test_find_cats_flags_a_name_that_is_both_pick_and_wishlist_as_a_plain_target():
+    pulls = [TrackPull(3, "A", "Both", U)]
+    (found,) = find_cats({"X": pulls}, {"Both": "Uber Super Rare"}, wishlist={"Both"})
+    # An explicit pick outranks the wishlist: no star, it's a target.
+    assert found["wishlist"] is False
 
 
 def test_find_cats_prefers_a_guaranteed_hit_only_when_strictly_earlier():
