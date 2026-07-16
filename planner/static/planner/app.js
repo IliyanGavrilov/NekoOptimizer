@@ -563,6 +563,7 @@ if (picker) {
   const trackHost = document.getElementById("trackHost");
   const resultsRegion = document.getElementById("resultsRegion");
   const planLoading = document.getElementById("planLoading");
+  const backToRolls = document.getElementById("backToRolls");
 
   // ---- Details view: reveal each cell's raw RNG seeds -------------------
   // Pure display toggle (the seeds are always in the rendered cells, hidden by
@@ -857,10 +858,18 @@ if (picker) {
     void cell.offsetWidth; // restart the pulse on a repeat click
     cell.classList.add("flash-locate");
   }
-  async function requestTracks() {
-    // Changing the seed/banners invalidates any plan: drop back to browsing the rolls.
+  // Drop the plan accordion and bring the Rolls table back. The track was only hidden (its
+  // rows are still rendered), so this just flips visibility - no re-roll needed.
+  function showRolls() {
     solutions.innerHTML = "";
     browseTrack.hidden = false;
+    backToRolls.hidden = true;
+    resultsRegion.hidden = !trackHost.firstElementChild;
+  }
+  backToRolls.addEventListener("click", showRolls);
+  async function requestTracks() {
+    // Changing the seed/banners invalidates any plan: drop back to browsing the rolls.
+    showRolls();
     await refreshTracks();
   }
   const scheduleTracks = () => {
@@ -1058,9 +1067,11 @@ if (picker) {
       const resp = await post(trackHost.dataset.planUrl);
       if (resp.ok) {
         const data = await resp.json();
-        // Swap the browse track for the subset-solution accordion.
+        // Swap the browse track for the subset-solution accordion, with a "Back to rolls"
+        // button so you can return to browsing without reloading the page.
         solutions.innerHTML = data.solutions_html;
         browseTrack.hidden = true;
+        backToRolls.hidden = false;
         resultsRegion.hidden = !solutions.firstElementChild;
         syncRollDisplay(); // the solution tracks carry icons too
         wireFollowAlong(solutions); // step list + track walk together
