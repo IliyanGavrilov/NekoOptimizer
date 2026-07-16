@@ -24,19 +24,20 @@ from planner.services import (
     NORMAL_TARGET_PRESETS,
     RARITY_ORDER,
     SECTION_NOTES,
+    banner_currencies,
+    banner_debuts,
     banner_titles,
     build_normal_plan,
     build_normal_tracks,
     build_tracks,
-    capped_banner_limits,
     collection_sections,
     display_titles,
     equivalent_banners,
     export_collection,
     fetch_banners,
     fetch_for_banners,
+    find_cats,
     import_collection,
-    newly_added_ubers,
     normal_banner_choices,
     normal_item_options,
     normal_seek_banner,
@@ -223,6 +224,23 @@ def _unit_ids():
     return dict(Unit.objects.values_list("name", "unit_id"))
 
 
+def _find_targets(request):
+    """The cats the Rolls "Find next" panel reports, read straight from the tracks POST.
+
+    Returns ``(targets, wishlist)``, each a ``{name: rarity}`` map: ``targets`` is the cats
+    you explicitly picked, ``wishlist`` (when "search my wishlist" is on) your unowned wanted
+    cats. Both are always reported - found at their position, or as a "999+" ceiling when they
+    never roll - so the panel confirms a wishlist cat isn't coming, just like a pick. Wishlist
+    entries are starred (see find_cats) to stay distinct from picks."""
+    targets = dict(
+        Cat.objects.filter(pk__in=request.POST.getlist("targets")).values_list("name", "rarity")
+    )
+    wishlist: dict[str, str] = {}
+    if request.POST.get("use_wishlist"):
+        wishlist = dict(Unit.objects.wishlist().values_list("name", "rarity"))
+    return targets, wishlist
+
+
 @require_POST
 def tracks(request):
     """A/B track tables for the current seed + banners, before any plan is run.
@@ -235,8 +253,11 @@ def tracks(request):
         return HttpResponse("")
 
     last_cat = request.POST.get("last_cat", "").strip()
-    count = _track_length(request)
+    display = _track_length(request)
     future_ubers = _future_ubers(request)
+    # Roll the find window deep (godfat's Find ceiling): the "Find next" panel locates cats
+    # far past the visible table, but only ``display`` rows render (build_tracks caps them).
+    count = max(display, MAX_TRACK_LENGTH)
     result = _roll(
         seed,
         request.POST.getlist("banners"),
@@ -273,11 +294,26 @@ def tracks(request):
         guaranteed=guaranteed,
         wanted=_wanted_names(),
         titles=display_titles(),
-        rows=count,
-        debuts=newly_added_ubers(),
+        rows=display,
+        debuts=banner_debuts(),
         future=future_ubers,
         unit_ids=_unit_ids(),
         tiers=tier_badges(),
+    )
+    # The browse view's "Find next" summary (godfat's Find): the next position of each cat
+    # you've picked (targets / wishlist) in these rolls. Attached here only, so the shared
+    # _tracks.html renders no panel on plan-solution tracks.
+    targets, wishlist = _find_targets(request)
+    # Scope the wishlist search to what these banners can actually drop (their unioned pools),
+    # so "search my wishlist" lists only obtainable cats, not every unowned cat you want.
+    obtainable = frozenset().union(*result.pools.values()) if result.pools else None
+    track["found_cats"] = find_cats(
+        pulls,
+        targets,
+        guaranteed=guaranteed,
+        include_guaranteed=request.POST.get("exclude_guaranteed") != "1",
+        wishlist=wishlist,
+        pool=obtainable,
     )
 
     return render(request, "planner/_tracks.html", {"track": track})
@@ -302,7 +338,11 @@ def find_plan(request):
     result = _roll(seed, request.POST.getlist("banners"), count, last_cat)
     equivalents = equivalent_banners(result.banners)
     pulls, guaranteed_pulls, rerolls, guaranteed_rerolls = _rolls_by_banner(result)
-    banner_limits = capped_banner_limits(pulls, form.cleaned_data["platinum_legend_cap"])
+    banner_currency = banner_currencies(pulls)
+    # Platinum/Legend Capsules always run on their own scarce ticket pools, so their counts
+    # come straight from the form even in explore mode (which only frees the rare/catfood budget).
+    platinum = form.cleaned_data["platinum_cap"]
+    legend = form.cleaned_data["legend_cap"]
 
     if explore:
         # Ignore the budget but still fund single pulls with tickets (their real
@@ -321,16 +361,18 @@ def find_plan(request):
         targets,
         tickets=tickets,
         catfood=catfood,
+        platinum=platinum,
+        legend=legend,
         guaranteed_pulls=guaranteed_pulls,
         multis=result.multis,
         ticket_value=form.cleaned_data["ticket_value"],
-        banner_limits=banner_limits,
+        banner_currency=banner_currency,
         owned=_owned_names(),
         wanted=_wanted_names(),
         titles=display_titles(),
         guaranteed_rerolls=guaranteed_rerolls,
         last_cat=last_cat,
-        debuts=newly_added_ubers(),
+        debuts=banner_debuts(),
         unit_ids=_unit_ids(),
         tiers=tier_badges(),
     )
@@ -622,6 +664,11 @@ def tier_list(request):
     }
 
     return render(request, "planner/tiers.html", context)
+
+
+def about(request):
+    """Static "about" page: what the tool is, who built it, and what's credited."""
+    return render(request, "planner/about.html")
 
 
 @require_POST

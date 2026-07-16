@@ -11,30 +11,8 @@
 
     <div class="field-grid">
       <label><span class="label-row">{{ form.seed.label_tag }} <span class="req" title="required">*</span></span><span class="seed-row">{{ form.seed }}<button type="button" id="seedBack" class="seed-back" title="Step the seed back one roll">&#9665; back</button><button type="button" id="seedUndo" class="seed-undo" hidden>&#8630; undo</button></span><span class="field-error" id="seedError" aria-live="polite"></span></label>
-      <div class="budget-fields">
-        <label>{{ form.tickets.label_tag }} {{ form.tickets }}</label>
-        <label>{{ form.catfood.label_tag }} {{ form.catfood }}</label>
-      </div>
     </div>
     <label class="check-row">{{ form.use_wishlist }} {{ form.use_wishlist.label_tag }}</label>
-
-    <div class="roll-options">
-      <details class="advanced">
-        <summary>Advanced</summary>
-        <div class="opt-group">
-          <label class="check-row">{{ form.explore }} {{ form.explore.label_tag }}</label>
-          <label class="opt inline explore-horizon">{{ form.horizon.label_tag }} {{ form.horizon }}</label>
-        </div>
-        <div class="opt-group">
-          <label class="opt inline">1 rare ticket is worth {{ form.ticket_value }} catfood</label>
-          <p class="muted">One draw is 150 catfood, and the planner spends tickets first. Raise the ticket value above 150 if rare tickets are precious to you &mdash; the planner will then spend catfood to save them.</p>
-        </div>
-        <div class="opt-group">
-          <label class="opt">{{ form.platinum_legend_cap.label_tag }} {{ form.platinum_legend_cap }}</label>
-          <p class="muted">Platinum and Legend tickets are scarce, so the planner pulls those banners at most this many times. Set 0 to skip them entirely.</p>
-        </div>
-      </details>
-    </div>
 
     <fieldset id="targetsSection">
       <legend>Targets <span class="req" title="pick a target, or tick &ldquo;search my wishlist&rdquo;">*</span></legend>
@@ -94,6 +72,35 @@
     <div id="targetInputs"></div>
     <div id="bannerInputs"></div>
 
+    {# Advanced sits below the banners, by the plan button, and holds the budget. Rare #}
+    {# tickets + catfood hide in explore mode; the Platinum/Legend rows appear only when #}
+    {# that capsule banner is selected (they run on their own scarce tickets, always). #}
+    <div class="roll-options">
+      <details class="advanced">
+        <summary>Advanced</summary>
+        <div class="resources" id="resources">
+          <span class="resources-title">Your resources</span>
+          <div class="budget-fields">
+            <label>{{ form.tickets.label_tag }} {{ form.tickets }}</label>
+            <label>{{ form.catfood.label_tag }} {{ form.catfood }}</label>
+          </div>
+          <div class="capsule-fields" id="capsuleFields" hidden>
+            <label class="capsule-row platinum" id="platRow" hidden>{{ form.platinum_cap.label_tag }} {{ form.platinum_cap }}</label>
+            <label class="capsule-row legend" id="legendRow" hidden>{{ form.legend_cap.label_tag }} {{ form.legend_cap }}</label>
+            <p class="muted capsule-hint">Capsules spend their own scarce tickets &mdash; set each to how many you have (0 to skip). They count like rare tickets in a plan, just marked apart, so lower the count if a pull isn&rsquo;t worth it.</p>
+          </div>
+        </div>
+        <div class="opt-group">
+          <label class="check-row">{{ form.explore }} {{ form.explore.label_tag }}</label>
+          <label class="opt inline explore-horizon">{{ form.horizon.label_tag }} {{ form.horizon }}</label>
+        </div>
+        <div class="opt-group">
+          <label class="opt inline">1 rare ticket is worth {{ form.ticket_value }} catfood</label>
+          <p class="muted">One draw is 150 catfood, and the planner spends tickets first. Raise the ticket value above 150 if rare tickets are precious to you &mdash; the planner will then spend catfood to save them.</p>
+        </div>
+      </details>
+    </div>
+
     <button type="submit">Find plan</button>
     <button type="button" id="shareLink" class="share-link" title="Copy a link that reopens this seed and Rolls view (rolls shown, names/icons, form, details)">Copy link</button>
     <span class="field-error" id="submitError" aria-live="polite"></span>
@@ -133,6 +140,7 @@
               <option value="15">15</option>
             </select>
           </label>
+          <label class="ctrl find-guaranteed-ctl" title="When a guaranteed multi is in play, ignore the guaranteed column when finding cats - so Find next lists only normal-roll positions" hidden><input type="checkbox" id="excludeGuaranteed"> Skip guaranteed in Find</label>
         </div>
       </div>
       <div id="trackHost" data-tracks-url="{% url 'tracks' %}" data-plan-url="{% url 'find_plan' %}" data-backtrack-url="{% url 'seed_backtrack' %}"></div>

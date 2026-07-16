@@ -3,6 +3,7 @@ from collections import Counter
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass, field
 from datetime import date, timedelta
+from functools import cache
 from itertools import combinations
 from urllib.parse import quote
 
@@ -52,6 +53,7 @@ from neko.search import astar, beam_search, obtainable
 from neko.statsdata import load_stats
 from neko.subsets import SubsetPlan, solve_subsets
 from neko.tierdata import TIER_ORDER, load_tiers
+from planner.forms import MAX_TRACK_LENGTH
 from planner.models import Banner, Cat, Unit
 
 RARITY_ORDER = ["Normal", "Special", "Rare", "Super Rare", "Uber Super Rare", "Legend Rare"]
@@ -157,16 +159,26 @@ def unit_stats(unit_id: int, doc=None) -> dict | None:
     return None
 
 
-# Platinum/Legend run on scarce tickets, not catfood, so the optimizer treats them as
-# info-only: capped (0 by default) rather than modelled as ordinary catfood gacha. Match
+# Platinum/Legend run on their own scarce tickets, not catfood, so the optimizer funds them
+# from dedicated per-capsule pools rather than modelling them as ordinary catfood gacha. Match
 # the ticket-capsule PHRASE, not a bare "legend"/"platinum" - loads of ordinary banners
 # (Evangelion's "Limited Legend", the fests' "Legend Rare drop rate") mention the word.
-_CAPPED_KEYWORDS = ("platinum capsules", "legend capsules")
+_CURRENCY_KEYWORDS = (("platinum capsules", "platinum"), ("legend capsules", "legend"))
 
 
-def capped_banner_limits(names: Iterable[str], cap: int) -> dict[str, int]:
-    """Cap pulls on Platinum/Legend Capsule banners (matched by name) at `cap`."""
-    return {name: cap for name in names if any(kw in name.lower() for kw in _CAPPED_KEYWORDS)}
+def banner_currencies(names: Iterable[str]) -> dict[str, str]:
+    """Map each Platinum/Legend Capsules banner (matched by name) to its ticket currency
+    ("platinum"/"legend") - the scarce pool the search funds its pulls from. Ordinary
+    banners aren't listed (they run on rare tickets/catfood)."""
+    currencies = {}
+    for name in names:
+        lowered = name.lower()
+        for keyword, currency in _CURRENCY_KEYWORDS:
+            if keyword in lowered:
+                currencies[name] = currency
+                break
+
+    return currencies
 
 
 def fetch_banners(
@@ -317,6 +329,14 @@ def newly_added_ubers(events=None, pools=None, units=None) -> dict[str, set[str]
             added[event.name] = new
 
     return added
+
+
+@cache
+def banner_debuts() -> dict[str, set[str]]:
+    """``newly_added_ubers`` for the live committed data, memoized: the debut map only shifts
+    on a re-import (a fresh process), so the tracks/plan hot path computes the double-loop
+    once instead of on every roll. Read-only downstream (build_tracks only membership-tests)."""
+    return newly_added_ubers()
 
 
 def _by_rarity(cats: Iterable[Cat], reverse: bool = False) -> list[tuple[str, list[Cat]]]:
@@ -729,13 +749,18 @@ TRACK_ROW_CAP = 100  # A/B rows rendered by default, before a plan extends the w
 _VALUABLE_RARITIES = {Rarity.UBER_SUPER_RARE.value, Rarity.LEGEND_RARE.value}
 
 
-def cost_label(tickets, catfood):
-    """Spell out a plan's price in both currencies; pulls are ticket-funded first,
-    so a plan can be pure tickets, pure catfood, or a mix."""
+def cost_label(tickets, catfood, platinum=0, legend=0):
+    """Spell out a plan's price across every currency; pulls are ticket-funded first, and
+    Platinum/Legend Capsules spend their own scarce tickets, so a plan can be any mix of
+    rare tickets, platinum tickets, legend tickets and catfood."""
     parts = []
 
     if tickets:
         parts.append(f"{tickets} ticket{'s' if tickets != 1 else ''}")
+    if platinum:
+        parts.append(f"{platinum} platinum ticket{'s' if platinum != 1 else ''}")
+    if legend:
+        parts.append(f"{legend} legend ticket{'s' if legend != 1 else ''}")
     if catfood:
         parts.append(f"{catfood} catfood")
 
@@ -853,6 +878,7 @@ def build_tracks(
     future=None,
     unit_ids=None,
     tiers=None,
+    currencies=None,
 ):
     """One merged A/B table over every selected banner: each cell stacks each banner's
     cat at that shared stream position (like ubercarry), with rare-dupe switch arrows
@@ -883,6 +909,7 @@ def build_tracks(
     debuts = debuts or {}
     unit_ids = unit_ids or {}
     tiers = tiers or {}
+    currencies = currencies or {}
     groups = _banner_groups(banner_pulls, rerolls, equivalents, guaranteed)
     # "New to this banner" is per banner (newly_added_ubers keys by name); a group merges
     # equivalent banners, so its debut set is the union over the names it stands for.
@@ -1029,7 +1056,14 @@ def build_tracks(
         }
         for pos in range(1, max_pos + 1)
     ]
-    legend = [{"tag": g["tag"], "names": _titled(g["names"], titles)} for g in groups]
+    legend = [
+        {
+            "tag": g["tag"],
+            "names": _titled(g["names"], titles),
+            "currency": currencies.get(g["rep"], ""),
+        }
+        for g in groups
+    ]
     if future is not None:
         # The stepper posts its count for every run name its group merges (equivalent
         # banners share one pool, so one padding count). ``keys`` carries the raw run
@@ -1043,9 +1077,113 @@ def build_tracks(
         "rows": rows,
         "has_guaranteed": has_guaranteed,
         "has_shared": bool(marks.shared or marks.gshared),
+        "has_currency": any(entry["currency"] for entry in legend),
         "show_future": future is not None,
         "padded": bool(future) and any(future.values()),
     }
+
+
+def _pos_label(index, guaranteed=False):
+    """godfat's position notation for a stream index: the 1-based position and its track
+    letter, with a trailing ``G`` for a guaranteed-column hit (e.g. ``108B``, ``11BG``)."""
+    return f"{index // 2 + 1}{'B' if index & 1 else 'A'}{'G' if guaranteed else ''}"
+
+
+def find_cats(
+    banner_pulls,
+    targets,
+    guaranteed=None,
+    include_guaranteed=True,
+    wishlist=(),
+    horizon=MAX_TRACK_LENGTH,
+    pool=None,
+):
+    """godfat's "Find next", scoped to the cats you pick: the earliest position of each
+    wanted name in the rolled tracks (the plan's target picker / wishlist feed it - no
+    automatic set, so the panel never floods a fest or capsule pool).
+
+    ``targets`` and ``wishlist`` are both ``{name: rarity}`` maps - the cats you explicitly
+    picked and (when "search my wishlist" is on) your unowned wanted cats. Every one is
+    reported: at its earliest position, or as a trailing ``{horizon}+`` (godfat's roll
+    ceiling) when it never surfaces. A wishlist entry that isn't also an explicit pick is
+    flagged ``wishlist`` so the template stars it apart from a plain target; on a name clash
+    the explicit pick wins (no star).
+
+    ``pool`` (the selected banners' droppable-cat set) scopes the wishlist to what these
+    banners can actually give: a wishlisted cat that isn't in ``pool`` is dropped rather than
+    ceilinged, so turning on "search my wishlist" lists only cats these banners offer - the
+    same rule the plan uses to drop unobtainable picks. Explicit picks always ceiling out,
+    even off-pool, so a deliberate search still confirms "not in these banners". ``pool`` of
+    None means no scoping (every wanted cat reported).
+
+    Each found cat lands once, at its earliest stream index across every banner and both
+    tracks. When ``include_guaranteed`` a guaranteed-column appearance counts too, but only
+    when it comes strictly earlier than a normal cell (a tie keeps the plain roll). Returns
+    items sorted by position (misses last), each
+    ``{"name", "rarity", "index", "guaranteed", "pos", "found", "wishlist"}``."""
+    targets = dict(targets)
+    wishlist = dict(wishlist)
+    if pool is not None:
+        # Drop wishlist-only cats these banners can't give (kills the off-banner flood); an
+        # explicit pick is kept even off-pool, so its 999+ still confirms it isn't coming.
+        wishlist = {name: r for name, r in wishlist.items() if name in targets or name in pool}
+    wanted = {**wishlist, **targets}  # rarity map of everything to report; picks win a clash
+    if not wanted:
+        return []
+
+    guaranteed = guaranteed or {}
+    best = {}  # name -> (earliest index, was it a guaranteed-column hit, rarity)
+
+    def offer(name, rarity, index, is_guaranteed):
+        if name in wanted:
+            current = best.get(name)
+            if current is None or index < current[0]:
+                best[name] = (index, is_guaranteed, str(rarity))
+
+    for name, pulls in banner_pulls.items():
+        for tp in pulls:
+            offer(tp.cat, tp.rarity, stream_index(tp.position, tp.track), False)
+        if include_guaranteed:
+            for tp in guaranteed.get(name, ()):
+                if tp.cat:
+                    offer(tp.cat, tp.rarity, stream_index(tp.position, tp.track), True)
+
+    def is_wish(name):
+        # A wishlist cat that isn't also an explicit pick: the panel stars it, the same "I
+        # want this" mark the track uses, so the two kinds of cat it mixes stay distinct.
+        return name in wishlist and name not in targets
+
+    items = [
+        {
+            "name": name,
+            "rarity": rarity,
+            "index": index,
+            "guaranteed": is_guaranteed,
+            "pos": _pos_label(index, is_guaranteed),
+            "found": True,
+            "wishlist": is_wish(name),
+        }
+        for name, (index, is_guaranteed, rarity) in best.items()
+    ]
+    items.sort(key=lambda item: (item["index"], item["guaranteed"], item["name"]))
+
+    # Wanted cats that never turned up trail the found ones as godfat's ceiling: a cat you
+    # asked for (picked or wishlisted) but these banners don't roll within the window, so
+    # there's no cell to jump to (index None -> the template renders an unclickable "999+").
+    items += [
+        {
+            "name": name,
+            "rarity": wanted[name],
+            "index": None,
+            "guaranteed": False,
+            "pos": f"{horizon}+",
+            "found": False,
+            "wishlist": is_wish(name),
+        }
+        for name in sorted(set(wanted) - best.keys())
+    ]
+
+    return items
 
 
 def plan_highlight(option, equivalents):
@@ -1404,8 +1542,10 @@ def plan_summary(plans, equivalents, owned=None, wanted=None, titles=None):
         for leg in option.plan.legs:
             rolls = len(leg.pulls)
             # Single pulls are paid per draw with a ticket (free) or 150 catfood;
-            # leg.cost only counts the catfood ones, so the rest are ticket-funded.
-            tickets = rolls - leg.cost // CATFOOD_PER_DRAW if leg.kind == "Single pull" else 0
+            # leg.cost only counts the catfood ones, so the rest are ticket-funded. A
+            # capsule leg's tickets are its own scarce currency (leg.currency), marked apart.
+            funded = rolls - leg.cost // CATFOOD_PER_DRAW if leg.kind == "Single pull" else 0
+            tickets = funded if not leg.currency else 0
             legs.append(
                 {
                     "n": len(legs) + 1,
@@ -1414,6 +1554,9 @@ def plan_summary(plans, equivalents, owned=None, wanted=None, titles=None):
                     "kind": leg.kind,
                     "cost": leg.cost,
                     "tickets": tickets,
+                    "currency": leg.currency,
+                    "platinum": funded if leg.currency == "platinum" else 0,
+                    "legend": funded if leg.currency == "legend" else 0,
                     "rolls": rolls,
                     "targets": [pull.cat for pull in leg.pulls if pull.cat in option.targets],
                     "cats": [
@@ -1433,7 +1576,14 @@ def plan_summary(plans, equivalents, owned=None, wanted=None, titles=None):
                 "targets": sorted(option.targets),
                 "cost": option.plan.cost,
                 "tickets_used": option.plan.tickets_used,
-                "cost_label": cost_label(option.plan.tickets_used, option.plan.cost),
+                "platinum_used": option.plan.platinum_used,
+                "legend_used": option.plan.legend_used,
+                "cost_label": cost_label(
+                    option.plan.tickets_used,
+                    option.plan.cost,
+                    option.plan.platinum_used,
+                    option.plan.legend_used,
+                ),
                 "cats": "|".join(option.plan.cats),
                 "legs": legs,
             }
@@ -1442,10 +1592,9 @@ def plan_summary(plans, equivalents, owned=None, wanted=None, titles=None):
     return summaries
 
 
-# The exact per-subset breakdown is exponential in the target count - 2^n searches AND
-# 2^n accordion rows - so it only runs for target sets this small. Bigger sets (wishlist
-# searches) get the bounded view instead: plans over the targets actually obtainable in
-# the selected banners, and one flat "Not found" row per unobtainable target.
+# Unobtainable picks are always dropped first (in _subset_plans); of what's left, the exact
+# per-subset breakdown is exponential - 2^n searches AND 2^n accordion rows - so it only runs
+# when few enough are obtainable. Past this many, wishlist searches get the bounded view.
 SUBSET_TARGET_LIMIT = 10
 
 # Frontier width for the big-wishlist fallback's whole-set beam search.
@@ -1463,7 +1612,7 @@ def _missing_subsets(items, found_keys):
     ]
 
 
-def _wishlist_plans(graphs, wanted, start, multis, ticket_value, banner_limits):
+def _wishlist_plans(graphs, wanted, start, multis, ticket_value, banner_currency):
     """Bounded plans for when even the obtainable targets are too many to list out one by
     one: the whole set in a single beam search (fast, not guaranteed optimal) plus each
     target on its own, exactly. Linear in the wishlist where the full breakdown would be
@@ -1476,7 +1625,7 @@ def _wishlist_plans(graphs, wanted, start, multis, ticket_value, banner_limits):
         _WISHLIST_BEAM_WIDTH,
         multis=multis,
         ticket_value=ticket_value,
-        banner_limits=banner_limits,
+        banner_currency=banner_currency,
     )
     if full is not None:
         found.append(SubsetPlan(frozenset(wanted), full))
@@ -1488,7 +1637,7 @@ def _wishlist_plans(graphs, wanted, start, multis, ticket_value, banner_limits):
             start,
             multis=multis,
             ticket_value=ticket_value,
-            banner_limits=banner_limits,
+            banner_currency=banner_currency,
         )
         if single is not None:
             found.append(SubsetPlan(frozenset({cat}), single))
@@ -1498,23 +1647,24 @@ def _wishlist_plans(graphs, wanted, start, multis, ticket_value, banner_limits):
     return found
 
 
-def _subset_plans(graphs, targets, start, multis, ticket_value, banner_limits):
+def _subset_plans(graphs, targets, start, multis, ticket_value, banner_currency):
     """The plan rows behind subset_solutions: ``(found plans, missing target-lists)``.
 
-    Up to SUBSET_TARGET_LIMIT targets get the exact per-subset breakdown. Past that there
-    are too many subsets to list (a 100-cat wishlist is 2^100 rows), so it narrows down to
-    the targets you can actually get on the selected banners - still per-subset when there
-    are few, otherwise the bounded whole-set + per-cat view (_wishlist_plans) - and every
-    target you can't get goes straight to missing."""
-    search = dict(multis=multis, ticket_value=ticket_value, banner_limits=banner_limits)
+    Picks that can't drop on any selected banner are filtered out first - out of the search
+    and the subset enumeration alike, since each one otherwise multiplies the missing rows -
+    and reported as one flat "Not found" row apiece. Of the rest, up to SUBSET_TARGET_LIMIT
+    get the exact per-subset breakdown; past that it's the bounded whole-set + per-cat view
+    (_wishlist_plans), too many subsets to list one by one (a 100-cat wishlist is 2^100)."""
+    search = dict(multis=multis, ticket_value=ticket_value, banner_currency=banner_currency)
     items = sorted(set(targets))
 
-    if len(items) <= SUBSET_TARGET_LIMIT:
-        pool, unobtainable = items, []
-    else:
-        pool = sorted(obtainable(graphs, targets))
-        pooled = set(pool)
-        unobtainable = [[cat] for cat in items if cat not in pooled]
+    # Picks that can't drop on any selected banner are dropped up front - out of the search
+    # AND the subset enumeration - since an unreachable cat otherwise multiplies the missing
+    # rows into every combo it appears in (a few of them used to flood the page). Each still
+    # gets one flat "Not found" row below, so you can see it just isn't available here.
+    pool = sorted(obtainable(graphs, items))
+    pooled = set(pool)
+    unobtainable = [[cat] for cat in items if cat not in pooled]
 
     if len(pool) <= SUBSET_TARGET_LIMIT:
         found = solve_subsets(graphs, pool, start, **search)
@@ -1536,10 +1686,12 @@ def subset_solutions(
     *,
     tickets,
     catfood,
+    platinum=0,
+    legend=0,
     guaranteed_pulls=None,
     multis=None,
     ticket_value=CATFOOD_PER_DRAW,
-    banner_limits=None,
+    banner_currency=None,
     owned=None,
     wanted=None,
     titles=None,
@@ -1557,14 +1709,28 @@ def subset_solutions(
     search's first roll lands on a cell that repeats it, it comes up as a dupe. The
     subset/plan breakdown itself is _subset_plans."""
     graphs = build_graphs(pulls, guaranteed_pulls, rerolls, guaranteed_rerolls)
-    start = State(0, tickets, catfood // CATFOOD_PER_DRAW, frozenset(), last_cat=last_cat)
-    found, missing = _subset_plans(graphs, targets, start, multis, ticket_value, banner_limits)
+    start = State(
+        0,
+        tickets,
+        catfood // CATFOOD_PER_DRAW,
+        frozenset(),
+        platinum_left=platinum,
+        legend_left=legend,
+        last_cat=last_cat,
+    )
+    found, missing = _subset_plans(graphs, targets, start, multis, ticket_value, banner_currency)
+    # The capsule banners each render under one representative name; tag those so the track
+    # legend can badge them and their lit path cells read as platinum/legend pulls.
+    currencies = {
+        _representative(name, equivalents): currency
+        for name, currency in (banner_currency or {}).items()
+    }
     solutions = []
 
     for sp in found:
         marks = plan_highlight(sp, equivalents)
         marks.shared, marks.gshared = plan_shared(
-            sp, graphs, equivalents, multis, exclude=banner_limits or ()
+            sp, graphs, equivalents, multis, exclude=set(banner_currency or ())
         )
         # Stripe where the plan drops you: the cell the seed continues on after its
         # last draw, on the banner that draw was rolled on.
@@ -1589,6 +1755,7 @@ def subset_solutions(
             debuts=debuts,
             unit_ids=unit_ids,
             tiers=tiers,
+            currencies=currencies,
         )
         solutions.append(solution)
 

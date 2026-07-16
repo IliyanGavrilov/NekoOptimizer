@@ -82,16 +82,25 @@ if (picker) {
   const catfoodEl = document.getElementById("id_catfood");
   const wishlistEl = document.getElementById("id_use_wishlist");
   const ticketValueEl = document.getElementById("id_ticket_value");
-  const platLegendCapEl = document.getElementById("id_platinum_legend_cap");
+  const platCapEl = document.getElementById("id_platinum_cap");
+  const legendCapEl = document.getElementById("id_legend_cap");
   const exploreEl = document.getElementById("id_explore");
   const horizonEl = document.getElementById("id_horizon");
   const trackLengthEl = document.getElementById("id_track_length");
   const detailsToggleEl = document.getElementById("detailsToggle");
   const simGuaranteedEl = document.getElementById("simGuaranteed");
+  const excludeGuaranteedEl = document.getElementById("excludeGuaranteed");
+  const findGuaranteedCtl = document.querySelector(".find-guaranteed-ctl");
   const rollDisplayEl = document.getElementById("rollDisplay");
   const rollFormEl = document.getElementById("rollForm");
   const horizonRow = document.querySelector(".explore-horizon");
   const budgetFields = document.querySelector(".budget-fields");
+  // The "Your resources" block at the top of Advanced: rare/catfood budget, plus the
+  // Platinum/Legend rows when that capsule banner is selected.
+  const resourcesSection = document.getElementById("resources");
+  const capsuleFields = document.getElementById("capsuleFields");
+  const platRow = document.getElementById("platRow");
+  const legendRow = document.getElementById("legendRow");
   const stored = (() => {
     try {
       return JSON.parse(localStorage.getItem(STORE_KEY)) || {};
@@ -127,7 +136,8 @@ if (picker) {
         catfood: catfoodEl.value,
         useWishlist: wishlistEl.checked,
         ticketValue: ticketValueEl.value,
-        platLegendCap: platLegendCapEl.value,
+        platCap: platCapEl.value,
+        legendCap: legendCapEl.value,
         explore: exploreEl.checked,
         horizon: horizonEl.value,
         // The Rolls-table display controls (rolls-to-show, details, guaranteed,
@@ -169,6 +179,9 @@ if (picker) {
     chipsFor(pk).forEach((c) => c.classList.toggle("selected", on));
     render();
     save();
+    // Targets double as "Find next" cats on the browse track - refresh its found list
+    // (only while browsing; a shown plan keeps its own tracks).
+    if (browseTrack && !browseTrack.hidden) scheduleTracks();
   }
 
   picker.addEventListener("click", (e) => {
@@ -300,8 +313,30 @@ if (picker) {
     bannerWarn.hidden = true; // a valid change clears any capsule-mismatch warning
     locateIdx = 0;
     syncBannerChips();
+    syncResources();
     updateWarnings();
     save();
+  }
+  // Whether a selected banner is a Platinum / a Legend capsule run: each capsule's
+  // ticket field shows only when its own banner is in the selection.
+  const PLAT = /platinum capsules/i;
+  const LEG = /legend capsules/i;
+  function selectedCapsule(re) {
+    return includes.some(
+      (btn) => btn.getAttribute("aria-pressed") === "true" && re.test(btn.dataset.banner),
+    );
+  }
+  // The "Your resources" section: rare/catfood budget hides in explore mode, and each
+  // capsule row shows only when its banner is selected (regardless of explore mode, since
+  // capsule tickets are always budget-scarce). The whole section hides when nothing shows.
+  function syncResources() {
+    const platOn = selectedCapsule(PLAT);
+    const legOn = selectedCapsule(LEG);
+    platRow.hidden = !platOn;
+    legendRow.hidden = !legOn;
+    capsuleFields.hidden = !(platOn || legOn);
+    if (budgetFields) budgetFields.hidden = exploreEl.checked;
+    resourcesSection.hidden = (!budgetFields || budgetFields.hidden) && capsuleFields.hidden;
   }
   // One chip per selected banner under the hint, labelled with the banner's set
   // title; clicking a chip scrolls the picker to that banner.
@@ -470,7 +505,8 @@ if (picker) {
   if (stored.catfood != null) catfoodEl.value = stored.catfood;
   wishlistEl.checked = !!stored.useWishlist;
   if (stored.ticketValue != null) ticketValueEl.value = stored.ticketValue;
-  if (stored.platLegendCap != null) platLegendCapEl.value = stored.platLegendCap;
+  if (stored.platCap != null) platCapEl.value = stored.platCap;
+  if (stored.legendCap != null) legendCapEl.value = stored.legendCap;
   if (stored.explore != null) exploreEl.checked = stored.explore; // else keep server default (on)
   if (stored.horizon != null) horizonEl.value = stored.horizon;
   if (fromLink) seedEl.value = linkParams.get("seed");
@@ -478,16 +514,20 @@ if (picker) {
   // here; the display mode and form restore from localStorage below. A permalink
   // overrides any of them for its one opening (see the fromLink block after them).
   const syncExplore = () => {
-    const on = exploreEl.checked;
-    horizonRow.hidden = !on;
-    if (budgetFields) budgetFields.hidden = on; // explore ignores budget, so hide those fields
+    horizonRow.hidden = !exploreEl.checked;
+    syncResources(); // explore hides the rare/catfood budget; capsule rows stay banner-driven
   };
   syncExplore();
   ticketsEl.addEventListener("input", save);
   catfoodEl.addEventListener("input", save);
-  wishlistEl.addEventListener("change", save);
+  wishlistEl.addEventListener("change", () => {
+    save();
+    // The wishlist feeds the browse "Find next" list too (when "search my wishlist" is on).
+    if (browseTrack && !browseTrack.hidden) scheduleTracks();
+  });
   ticketValueEl.addEventListener("input", save);
-  platLegendCapEl.addEventListener("input", save);
+  platCapEl.addEventListener("input", save);
+  legendCapEl.addEventListener("input", save);
   exploreEl.addEventListener("change", () => {
     syncExplore();
     save();
@@ -501,6 +541,8 @@ if (picker) {
   });
   // Simulating a guaranteed multi changes the server-side roll, so re-fetch the table.
   simGuaranteedEl.addEventListener("change", () => scheduleTracks());
+  // Skipping the guaranteed column changes which positions "Find next" reports.
+  excludeGuaranteedEl.addEventListener("change", () => scheduleTracks());
 
   render();
 
@@ -648,6 +690,7 @@ if (picker) {
     const body = new FormData(plannerForm);
     body.set("track_length", trackLengthEl.value);
     body.set("simulate_guaranteed", simGuaranteedEl.value);
+    body.set("exclude_guaranteed", excludeGuaranteedEl.checked ? "1" : "0");
     // Future-uber padding is per banner: each legend stepper covers the run names of
     // the banner group it sits on (the server re-renders the values it applied).
     const future = {};
@@ -738,6 +781,8 @@ if (picker) {
       (el.value = Math.max(0, (Number(el.value) || 0) - (Number(btn.dataset[key]) || 0)));
     spend(ticketsEl, "tickets");
     spend(catfoodEl, "catfood");
+    spend(platCapEl, "platinum"); // capsule tickets are their own pools; spend them too
+    spend(legendCapEl, "legend");
     save();
     // "You rolled it": the seed advances to just after the plan's final draw. The
     // solution stays on screen (its steps still need doing in game), and the Rolls
@@ -756,6 +801,7 @@ if (picker) {
   // (no implicit "current banners" fallback).
   let trackTimer;
   let traceState = null; // the traced cell, kept only across its own re-render
+  let pendingFind = null; // a "Find next" position to scroll to once the table re-renders
   const anyBanner = () => includes.some((b) => b.getAttribute("aria-pressed") === "true");
   // The banner legend sticks under the site header; the sticky thead sits just below it,
   // so measure the visible legend's height into --legend-h whenever a track is (re)rendered.
@@ -781,6 +827,35 @@ if (picker) {
     trackHost.querySelectorAll(".future-ubers").forEach(scrubNumberInput);
     syncRollDisplay(); // re-inject icons if the fresh cells need them
     setLegendHeight();
+    // "Skip guaranteed in Find" only makes sense when the track has guaranteed columns.
+    if (findGuaranteedCtl) findGuaranteedCtl.hidden = !trackHost.querySelector(".guaranteed-col");
+    // A Find-position click that had to grow the table scrolls once the rows are here.
+    if (pendingFind) {
+      const { idx, guaranteed } = pendingFind;
+      pendingFind = null;
+      scrollToFind(idx, guaranteed);
+    }
+  }
+  // Scroll the browse track to a found cat's cell and flash it. When the position sits past
+  // the rows on screen, first grow "Show N rolls" to reach it (the seed is rolled deep
+  // server-side, but only N rows render), then scroll once the fresh table arrives.
+  function scrollToFind(idx, guaranteed) {
+    const pos = Math.floor(idx / 2) + 1;
+    if (pos > Number(trackLengthEl.value)) {
+      trackLengthEl.value = Math.min(pos, 999);
+      pendingFind = { idx, guaranteed };
+      requestTracks();
+      return;
+    }
+    const tbody = trackHost.querySelector(".track tbody");
+    const row = tbody && tbody.children[pos - 1];
+    if (!row) return;
+    const sel = guaranteed ? "td.cell.guaranteed-col" : "td.cell:not(.guaranteed-col)";
+    const cell = row.querySelectorAll(sel)[idx & 1 ? 1 : 0] || row;
+    cell.scrollIntoView({ behavior: "smooth", block: "center" });
+    cell.classList.remove("flash-locate");
+    void cell.offsetWidth; // restart the pulse on a repeat click
+    cell.classList.add("flash-locate");
   }
   async function requestTracks() {
     // Changing the seed/banners invalidates any plan: drop back to browsing the rolls.
@@ -808,6 +883,12 @@ if (picker) {
   // listen on the host; changing one re-rolls the table with the new padding.
   trackHost.addEventListener("input", (e) => {
     if (e.target.closest(".future-ubers")) scheduleTracks();
+  });
+  // "Find next" position chip: scroll the track to that cell (growing the table first if
+  // the position is past what's on screen).
+  trackHost.addEventListener("click", (e) => {
+    const chip = e.target.closest(".find-pos");
+    if (chip) scrollToFind(Number(chip.dataset.idx), chip.dataset.guaranteed === "1");
   });
 
   // ---- Click-to-trace: plan-style marks for the rolls UP TO a cell --------
@@ -953,7 +1034,8 @@ if (picker) {
     catfood: ["submitError", catfoodEl],
     horizon: ["submitError", horizonEl],
     ticket_value: ["submitError", ticketValueEl],
-    platinum_legend_cap: ["submitError", platLegendCapEl],
+    platinum_cap: ["submitError", platCapEl],
+    legend_cap: ["submitError", legendCapEl],
   };
 
   plannerForm.addEventListener("submit", async (e) => {
