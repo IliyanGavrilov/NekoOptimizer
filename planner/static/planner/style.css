@@ -1309,14 +1309,18 @@ table.track th.guaranteed-col, table.track td.guaranteed-col {
 .apply-plan { margin: 0.1rem 0 0.6rem; font-size: 0.9rem; padding: 0.4rem 0.85rem; }
 .apply-plan:disabled { opacity: 0.6; cursor: default; }
 .apply-cost { font-weight: 600; opacity: 0.85; }
-/* ---- "Your resources": the budget block at the top of Advanced ---- */
+/* ---- "Your resources": a standalone card (out of Advanced) that surfaces the budget
+   fields when explore mode is off, and a capsule's own tickets when it's selected, so
+   the inputs you must fill are visible right when they matter. ---- */
 .resources {
   display: flex;
   flex-direction: column;
   gap: 0.6rem;
-  padding-bottom: 0.9rem;
-  margin-bottom: 0.9rem;
-  border-bottom: 1px solid var(--line);
+  padding: 0.75rem 0.9rem;
+  margin: 0.75rem 0;
+  background: var(--bg-2);
+  border: 1px solid var(--accent);
+  border-radius: 10px;
 }
 .resources-title { font-family: var(--head-font); font-size: 0.95rem; color: var(--accent); }
 .budget-fields,
