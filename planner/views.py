@@ -304,12 +304,16 @@ def tracks(request):
     # you've picked (targets / wishlist) in these rolls. Attached here only, so the shared
     # _tracks.html renders no panel on plan-solution tracks.
     targets, wishlist = _find_targets(request)
+    # Scope the wishlist search to what these banners can actually drop (their unioned pools),
+    # so "search my wishlist" lists only obtainable cats, not every unowned cat you want.
+    obtainable = frozenset().union(*result.pools.values()) if result.pools else None
     track["found_cats"] = find_cats(
         pulls,
         targets,
         guaranteed=guaranteed,
         include_guaranteed=request.POST.get("exclude_guaranteed") != "1",
         wishlist=wishlist,
+        pool=obtainable,
     )
 
     return render(request, "planner/_tracks.html", {"track": track})
