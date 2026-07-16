@@ -110,7 +110,9 @@ def test_future_ubers_pad_the_pool_but_shift_only_uber_names():
     padded = roll_selected(123, ["Alpha Banner"], future_ubers={"Alpha Banner": 3}, **kw).banners[
         "Alpha Banner"
     ]
-    placeholders = set(future_uber_names(3))
+    # The roller qualifies each placeholder with the banner it pads, so its Future Uber n
+    # is a distinct target from another banner's.
+    placeholders = set(future_uber_names(3, "Alpha Banner"))
 
     for before, after in zip(plain.pulls, padded.pulls, strict=True):
         assert (after.position, after.track, after.rarity, after.seed) == (
