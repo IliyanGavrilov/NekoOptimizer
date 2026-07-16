@@ -1,19 +1,28 @@
 {% if track.rows %}
   {% if track.found_cats %}
-    {# godfat's "Find next": the next position of each cat you've picked (target / wishlist). #}
-    {# Browse view only - plan-solution tracks don't set found_cats, so no panel there. #}
+    {# The unified targets panel: every cat you're searching for - picks, wishlist and #}
+    {# toggled future ubers - with the picker's rarity / owned ✓ / wishlisted ★ marks and #}
+    {# its next position (or a ⚠ when no selected banner carries it). Browse view only - #}
+    {# plan-solution tracks don't set found_cats, so no panel there. #}
     <div class="found-cats">
-      <span class="found-label" title="The next place each cat you've picked (a target, or your wishlist) lands in these rolls. Click a position to jump to its cell.">Find next</span>
+      <span class="found-label" title="Every cat you're searching for - the targets you picked, your wishlist (when that search is on), and any future ubers you've toggled - with its next spot in these rolls. Click a position to jump to its cell.">Targets</span>
       <ul class="found-list">
         {% for f in track.found_cats %}
-          <li class="found-item{% if not f.found %} is-out{% endif %}">
-            <button type="button" class="catlink" data-name="{{ f.name }}"><span class="catname">{{ f.name }}</span>{% if f.wishlist %} <span class="wish-star" title="On your wishlist">&#9733;</span>{% endif %}</button>
+          <li class="found-item{% if f.unreachable %} is-unreachable{% elif not f.found %} is-out{% endif %}{% if f.owned %} owned{% endif %}{% if f.wanted %} wanted{% endif %}">
             {% if f.rarity %}<span class="rarity" data-rarity="{{ f.rarity }}">{{ f.rarity }}</span>{% endif %}
+            {% if f.future %}
+              <span class="found-cat future" title="An uber not released yet - a stand-in for whatever joins this banner's pool next"><span class="catname">{{ f.future_label }}</span></span>{% if f.banner %} <span class="found-banner" title="{{ f.banner }}">{{ f.banner }}</span>{% endif %}
+            {% else %}
+              <button type="button" class="catlink found-cat" data-name="{{ f.name }}"><span class="catname">{{ f.name }}</span></button>
+            {% endif %}
             {% if f.found %}
               <button type="button" class="find-pos" data-idx="{{ f.index }}"{% if f.guaranteed %} data-guaranteed="1"{% endif %} title="Jump to {{ f.pos }} in the track">{{ f.pos }}</button>
+            {% elif f.unreachable %}
+              <span class="find-warn" role="img" aria-label="Won't drop on the selected banners" title="Won't drop on the selected banners: {{ track.selected_titles }}. Add a banner that carries it, or remove it.">&#9888;</span>
             {% else %}
               <span class="find-out" title="Doesn't turn up in the first {{ f.pos|cut:'+' }} rolls">{{ f.pos }}</span>
             {% endif %}
+            {% if f.pk %}<button type="button" class="found-remove" data-pk="{{ f.pk }}" title="Remove {{ f.name }} from your targets" aria-label="Remove target">&times;</button>{% elif f.future %}<button type="button" class="found-remove" data-future-name="{{ f.name }}" title="Stop searching for this future uber" aria-label="Remove target">&times;</button>{% endif %}
           </li>
         {% endfor %}
       </ul>
@@ -31,7 +40,7 @@
       <li><span class="entry next sample">striped</span> you land here next &mdash; the first cat one more roll would give after the lit draws</li>
       <li><span class="entry new sample"><span class="catlink">green name</span></span> Uber/Legend not in your collection</li>
       <li><span class="entry owned sample"><span class="catlink"></span></span> owned <span class="sep">&middot;</span> <span class="entry wanted sample"><span class="catlink"><span class="catname">cat</span></span></span> wishlisted</li>
-      <li><span class="entry target sample"><span class="catlink"><span class="catname">cat</span></span></span> a target you picked &mdash; gold here, and its next spot shows in <em>Find next</em> above</li>
+      <li><span class="entry target sample"><span class="catlink"><span class="catname">cat</span></span></span> a target you picked &mdash; gold here, and its next spot shows in <em>Targets</em> above</li>
       <li><span class="debut">new</span> Uber debuting with this banner (its first event anywhere)</li>
       {% if track.padded %}<li><span class="entry new sample"><span class="catlink future">Future Uber 1</span></span> an expected-but-unreleased Uber padding the pool</li>{% endif %}
       {% if track.has_guaranteed %}<li><span class="sym">Guaranteed</span> the Uber a guaranteed multi awards if started on that cell</li>{% endif %}
@@ -48,7 +57,7 @@
   {% if track.legend|length > 1 or track.show_future or track.has_currency %}
     <ul class="track-legend">
       {% for b in track.legend %}
-        <li><span class="tag">{{ b.tag }}</span> {{ b.names|join:" · " }}{% if b.currency %} <span class="capsule-tag {{ b.currency }}">{{ b.currency }}</span>{% endif %}{% if track.show_future %} <label class="future-ctl" title="Pad this banner's uber pool with expected-but-unreleased ubers (godfat's Count of future ubers) - its uber cells land as if those units were already in the pool; drag the box up/down to adjust">Add future ubers <input type="number" class="future-ubers" value="{{ b.future }}" min="0" max="99" data-names="{{ b.keys }}"></label>{% endif %}</li>
+        <li><span class="tag">{{ b.tag }}</span> {{ b.names|join:" · " }}{% if b.currency %} <span class="capsule-tag {{ b.currency }}">{{ b.currency }}</span>{% endif %}{% if track.show_future %} <label class="future-ctl" title="Pad this banner's uber pool with expected-but-unreleased ubers (godfat's Count of future ubers) - its uber cells land as if those units were already in the pool; drag the box up/down to adjust">Add future ubers <input type="number" class="future-ubers" value="{{ b.future }}" min="0" max="99" data-names="{{ b.keys }}"></label>{% if b.future_chips %} <span class="future-targets" title="Toggle a future uber to search for it - it joins your Targets above and glows on this banner's cells">{% for fc in b.future_chips %}<button type="button" class="future-target" aria-pressed="false" data-future-name="{{ fc.name }}" title="Search for {{ fc.label }} on {{ b.names|join:' · ' }}">{{ fc.label }}</button>{% endfor %}</span>{% endif %}{% endif %}</li>
       {% endfor %}
     </ul>
   {% endif %}

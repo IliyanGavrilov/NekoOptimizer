@@ -1,6 +1,8 @@
+import json
+
 from django import forms
 
-from neko.models import CATFOOD_PER_DRAW
+from neko.models import CATFOOD_PER_DRAW, is_future_uber
 from planner.models import Cat, Unit
 
 EXPLORE_HORIZON = 1000  # default rolls to look ahead per banner in explore mode
@@ -30,6 +32,10 @@ class PlannerForm(forms.Form):
     use_wishlist = forms.BooleanField(
         required=False, label="Also search my wishlist (unowned cats I marked wanted)"
     )
+    # The future-uber placeholders toggled as targets: a JSON list of qualified names posted
+    # by the legend chips. Not a real model field (they're pool padding, not catalogue units),
+    # so it rides alongside ``targets`` and counts as a target for the "pick something" check.
+    future_targets = forms.CharField(required=False)
     ticket_value = forms.IntegerField(
         min_value=1,
         initial=CATFOOD_PER_DRAW,
@@ -82,6 +88,18 @@ class PlannerForm(forms.Form):
 
         return 1 if cap is None else cap
 
+    def clean_future_targets(self):
+        """Parse the posted JSON list into the qualified placeholder names, dropping anything
+        that isn't a future-uber placeholder (a stray post can't smuggle in a real name)."""
+        try:
+            data = json.loads(self.cleaned_data.get("future_targets") or "[]")
+        except json.JSONDecodeError, TypeError:
+            return []
+        if not isinstance(data, list):
+            return []
+
+        return [str(name) for name in data if is_future_uber(str(name))]
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.label_suffix = ""  # no trailing colons; required fields are marked with *
@@ -89,13 +107,11 @@ class PlannerForm(forms.Form):
 
     def clean(self):
         cleaned = super().clean()
-        if not cleaned.get("targets") and not cleaned.get("use_wishlist"):
+        # A future uber toggled on its own is a valid search, so it counts as a target here.
+        has_target = cleaned.get("targets") or cleaned.get("future_targets")
+        if not has_target and not cleaned.get("use_wishlist"):
             raise forms.ValidationError("Pick at least one target, or tick 'search my wishlist'.")
-        if (
-            cleaned.get("use_wishlist")
-            and not cleaned.get("targets")
-            and not Unit.objects.wishlist()
-        ):
+        if cleaned.get("use_wishlist") and not has_target and not Unit.objects.wishlist():
             raise forms.ValidationError("Your wishlist is empty - mark some cats as wanted first.")
 
         return cleaned

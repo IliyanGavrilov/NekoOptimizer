@@ -67,11 +67,12 @@ function setupFollowAlong(follow) {
 // ---- Planner: target selection ---------------------------------------
 const picker = document.getElementById("targetPicker");
 if (picker) {
-  const panel = document.getElementById("selectedPanel");
-  const panelChips = document.getElementById("selectedChips");
-  const count = document.getElementById("selectedCount");
   const inputs = document.getElementById("targetInputs");
   const selected = new Map(); // pk -> name
+  // Future ubers toggled as targets, by qualified name ("Future Uber n @ banner"). Held in
+  // memory only (like the future-uber counts, they reset each visit); the legend toggle
+  // chips and the panel's × drive them, and post() ships them as future_targets.
+  const futureTargets = new Set();
 
   // ---- Persist the form to localStorage (no accounts, so this is the only
   // memory of seed/catfood/tickets/options between visits). Targets and banner
@@ -149,27 +150,17 @@ if (picker) {
 
   const chipsFor = (pk) => picker.querySelectorAll(`.chip[data-pk="${pk}"]`);
 
+  // The picked cats become hidden ``targets`` inputs the form posts; the review/remove UI
+  // for them lives in the unified Targets panel on the track (server-rendered), not here.
   function render() {
-    panel.hidden = selected.size === 0;
-    count.textContent = selected.size;
-    panelChips.replaceChildren();
     inputs.replaceChildren();
-    for (const [pk, name] of selected) {
-      const tag = document.createElement("button");
-      tag.type = "button";
-      tag.className = "chip selected removable";
-      tag.dataset.pk = pk;
-      tag.innerHTML = `${name} <span aria-hidden="true">&times;</span>`;
-      tag.addEventListener("click", () => toggle(pk, name));
-      panelChips.appendChild(tag);
-
+    for (const pk of selected.keys()) {
       const hidden = document.createElement("input");
       hidden.type = "hidden";
       hidden.name = "targets";
       hidden.value = pk;
       inputs.appendChild(hidden);
     }
-    updateWarnings();
   }
 
   function toggle(pk, name) {
@@ -196,26 +187,10 @@ if (picker) {
   const bannerCount = document.getElementById("bannerCount");
   const includes = [...browser.querySelectorAll(".banner-include")];
 
-  // A target can only drop on a banner that carries it, so a target picked while
-  // its banner isn't in the selected session can never come out. Flag those
-  // (dashed chip + a note) live, recomputed whenever targets or banners change.
-  // Cats are keyed by banner NAME and only a name's newest row carries chips (the
-  // Past list is one row per rerun), so reachability unions chips across every row
-  // sharing a selected banner's name.
-  const warnSlot = document.getElementById("targetsWarn");
-  function reachablePks() {
-    const pks = new Set();
-    const names = new Set();
-    for (const btn of includes) {
-      if (btn.getAttribute("aria-pressed") === "true") names.add(btn.dataset.banner);
-    }
-    if (!names.size) return pks;
-    for (const btn of includes) {
-      if (!names.has(btn.dataset.banner)) continue;
-      btn.closest(".banner-group").querySelectorAll(".chip[data-pk]").forEach((c) => pks.add(c.dataset.pk));
-    }
-    return pks;
-  }
+  // A target can only drop on a banner that carries it. That reachability check now lives
+  // server-side: the unified Targets panel on the track flags each unreachable pick with a
+  // ⚠ (find_cats compares it against the selected banners' real pools), so there's no
+  // client-side warning to recompute here as targets or banners change.
 
   // Opening a rerun row without chips borrows them from the name's carrier row, so
   // every Past run is browsable without rendering ~100k chips upfront. ("toggle"
@@ -252,7 +227,6 @@ if (picker) {
       pastGroup.insertAdjacentHTML("beforeend", await resp.text());
       includes.push(...pastGroup.querySelectorAll(".banner-include"));
       if (note) note.remove();
-      updateWarnings();
       applySearch(); // rows that arrived mid-search must obey the current query
     } catch {
       pastLoaded = false; // reopen retries
@@ -264,21 +238,6 @@ if (picker) {
       if (pastGroup.open) loadPast();
     });
   }
-  function updateWarnings() {
-    if (!warnSlot) return;
-    const reach = reachablePks();
-    const stranded = [];
-    for (const [pk, name] of selected) if (!reach.has(pk)) stranded.push(name);
-    panelChips.querySelectorAll(".chip[data-pk]").forEach((c) => {
-      c.classList.toggle("unreachable", !reach.has(c.dataset.pk));
-    });
-    const it = stranded.length === 1 ? "it" : "them";
-    warnSlot.hidden = stranded.length === 0;
-    warnSlot.textContent = stranded.length
-      ? `Won't drop on the selected banners: ${stranded.join(", ")}. Add a banner that carries ${it}, or remove ${it}.`
-      : "";
-  }
-
   const rangeOf = (btn) => {
     const d = btn.closest(".banner-group");
     return [d.dataset.start, d.dataset.end];
@@ -314,7 +273,6 @@ if (picker) {
     locateIdx = 0;
     syncBannerChips();
     syncResources();
-    updateWarnings();
     save();
   }
   // Whether a selected banner is a Platinum / a Legend capsule run: each capsule's
@@ -700,6 +658,8 @@ if (picker) {
       for (const name of JSON.parse(input.dataset.names)) future[name] = count;
     });
     body.set("future_ubers", JSON.stringify(future));
+    // Future ubers toggled as targets (searched like picks, and gilded on the track).
+    body.set("future_targets", JSON.stringify([...futureTargets]));
     if (traceState) {
       body.set("trace_tag", traceState.tag);
       body.set("trace_idx", traceState.idx);
@@ -826,6 +786,7 @@ if (picker) {
     // These steppers are (re)rendered with the fragment, so wire up drag-to-scrub
     // each time - the page-load pass never saw them.
     trackHost.querySelectorAll(".future-ubers").forEach(scrubNumberInput);
+    syncFutureTargets(); // restore the toggle chips' pressed state; prune any now gone
     syncRollDisplay(); // re-inject icons if the fresh cells need them
     setLegendHeight();
     // "Skip guaranteed in Find" only makes sense when the track has guaranteed columns.
@@ -893,11 +854,48 @@ if (picker) {
   trackHost.addEventListener("input", (e) => {
     if (e.target.closest(".future-ubers")) scheduleTracks();
   });
-  // "Find next" position chip: scroll the track to that cell (growing the table first if
-  // the position is past what's on screen).
+  // Toggle a future uber as a target, then re-roll so it joins the Targets panel + glows.
+  const setFutureTarget = (name, on) => {
+    if (on) futureTargets.add(name);
+    else futureTargets.delete(name);
+    scheduleTracks();
+  };
+  // The legend toggle chips are re-rendered with each fragment (aria-pressed defaults to
+  // false), so restore their state from futureTargets, and drop any toggled future uber
+  // whose chip is gone (its banner deselected, or its count lowered past it) so a stale
+  // name can't linger in the posted set. A prune needs one more roll to clear its panel row.
+  function syncFutureTargets() {
+    const available = new Set();
+    trackHost.querySelectorAll(".future-target").forEach((chip) => {
+      available.add(chip.dataset.futureName);
+      chip.setAttribute("aria-pressed", futureTargets.has(chip.dataset.futureName));
+    });
+    let pruned = false;
+    for (const name of [...futureTargets]) {
+      if (!available.has(name)) {
+        futureTargets.delete(name);
+        pruned = true;
+      }
+    }
+    if (pruned) scheduleTracks();
+  }
+  // The unified Targets panel and legend future-uber chips ride inside the re-rendered
+  // fragment, so drive them by delegation: a position chip scrolls the track, a × removes
+  // its pick / future target, and a legend chip toggles a future uber.
   trackHost.addEventListener("click", (e) => {
     const chip = e.target.closest(".find-pos");
-    if (chip) scrollToFind(Number(chip.dataset.idx), chip.dataset.guaranteed === "1");
+    if (chip) return scrollToFind(Number(chip.dataset.idx), chip.dataset.guaranteed === "1");
+    const remove = e.target.closest(".found-remove");
+    if (remove) {
+      if (remove.dataset.pk) toggle(remove.dataset.pk); // untoggle the pick (name unneeded)
+      else if (remove.dataset.futureName) setFutureTarget(remove.dataset.futureName, false);
+      return;
+    }
+    const toggleChip = e.target.closest(".future-target");
+    if (toggleChip) {
+      const name = toggleChip.dataset.futureName;
+      setFutureTarget(name, !futureTargets.has(name));
+    }
   });
 
   // ---- Click-to-trace: plan-style marks for the rolls UP TO a cell --------
@@ -1055,7 +1053,7 @@ if (picker) {
     if (!anyBanner()) {
       return setError("targetsError", "Select at least one banner to roll.", targetsSection);
     }
-    if (inputs.childElementCount === 0 && !wishlistEl.checked) {
+    if (inputs.childElementCount === 0 && !wishlistEl.checked && futureTargets.size === 0) {
       return setError(
         "targetsError",
         "Pick a target cat, or tick \"search my wishlist\".",
