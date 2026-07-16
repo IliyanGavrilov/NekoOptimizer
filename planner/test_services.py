@@ -1432,22 +1432,28 @@ def test_find_cats_lists_found_targets_before_the_misses():
     ]
 
 
-def test_find_cats_searches_the_wishlist_but_lists_it_only_when_found():
+def test_find_cats_ceilings_a_wishlist_miss_like_a_picked_target():
     pulls = [TrackPull(3, "A", "On Wishlist", U)]
     found = find_cats(
         {"X": pulls},
         {},  # nothing explicitly picked
-        wishlist={"On Wishlist", "Absent Wishlist"},
+        wishlist={"On Wishlist": "Uber Super Rare", "Absent Wishlist": "Uber Super Rare"},
     )
-    # The found wishlist cat surfaces; the missing one stays out (only picks get a 999+).
-    assert [(f["name"], f["pos"]) for f in found] == [("On Wishlist", "3A")]
-    # It's flagged a wishlist hit, so the panel can star it apart from a picked target.
-    assert found[0]["wishlist"] is True
+    # The found one surfaces; the missing one ceilings at 999+, the same as an explicit pick -
+    # so "search my wishlist" confirms a wanted cat isn't coming, not just where it is.
+    assert [(f["name"], f["pos"], f["found"]) for f in found] == [
+        ("On Wishlist", "3A", True),
+        ("Absent Wishlist", "999+", False),
+    ]
+    # Both stay flagged wishlist (found and miss alike), so the panel stars them apart.
+    assert all(f["wishlist"] for f in found)
 
 
 def test_find_cats_flags_a_name_that_is_both_pick_and_wishlist_as_a_plain_target():
     pulls = [TrackPull(3, "A", "Both", U)]
-    (found,) = find_cats({"X": pulls}, {"Both": "Uber Super Rare"}, wishlist={"Both"})
+    (found,) = find_cats(
+        {"X": pulls}, {"Both": "Uber Super Rare"}, wishlist={"Both": "Uber Super Rare"}
+    )
     # An explicit pick outranks the wishlist: no star, it's a target.
     assert found["wishlist"] is False
 

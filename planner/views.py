@@ -227,16 +227,17 @@ def _unit_ids():
 def _find_targets(request):
     """The cats the Rolls "Find next" panel reports, read straight from the tracks POST.
 
-    Returns ``(targets, wishlist)``: ``targets`` is a ``{name: rarity}`` map of explicitly
-    picked cats — always reported (found or as "999+"). ``wishlist`` names are searched too
-    but listed only when found, so turning on "search my wishlist" can't flood the panel with
-    every unowned cat that doesn't roll in this window."""
+    Returns ``(targets, wishlist)``, each a ``{name: rarity}`` map: ``targets`` is the cats
+    you explicitly picked, ``wishlist`` (when "search my wishlist" is on) your unowned wanted
+    cats. Both are always reported - found at their position, or as a "999+" ceiling when they
+    never roll - so the panel confirms a wishlist cat isn't coming, just like a pick. Wishlist
+    entries are starred (see find_cats) to stay distinct from picks."""
     targets = dict(
         Cat.objects.filter(pk__in=request.POST.getlist("targets")).values_list("name", "rarity")
     )
-    wishlist: set[str] = set()
+    wishlist: dict[str, str] = {}
     if request.POST.get("use_wishlist"):
-        wishlist = set(Unit.objects.wishlist().values_list("name", flat=True))
+        wishlist = dict(Unit.objects.wishlist().values_list("name", "rarity"))
     return targets, wishlist
 
 
