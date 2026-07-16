@@ -236,13 +236,17 @@ def download_events(lang: str = "en") -> list[GachaEventRow]:
     return merge_events(lists)
 
 
-def download_gatya(country: str = "en") -> tuple[dict[int, list[int]], dict[int, list[int]]]:
+def download_gatya(
+    country: str = "en", tarball: bytes | None = None
+) -> tuple[dict[int, list[int]], dict[int, list[int]]]:
     """Fetch the newest BCData tarball; parse GatyaDataSetR1 into pools and the option
-    file into the pool->series map (network)."""
-    metadata = json.loads(_get(METADATA_URL))
-    raw = _get(release_url(metadata, latest_version(metadata, country), country))
+    file into the pool->series map (network). Pass pre-downloaded bytes via *tarball* to
+    skip the network fetch (workaround for the expired BCData TLS cert)."""
+    if tarball is None:
+        metadata = json.loads(_get(METADATA_URL))
+        tarball = _get(release_url(metadata, latest_version(metadata, country), country))
 
-    with tarfile.open(fileobj=io.BytesIO(raw), mode="r:xz") as tar:
+    with tarfile.open(fileobj=io.BytesIO(tarball), mode="r:xz") as tar:
         r1 = tar.extractfile("./DataLocal/GatyaDataSetR1.csv").read().decode("utf-8", "replace")
         opt = tar.extractfile("./DataLocal/GatyaData_Option_SetR.tsv").read()
 
@@ -322,11 +326,11 @@ def load_tickets(path: Path = SERIES_PATH) -> dict[int, int]:
     return {int(k): v[1] for k, v in json.loads(path.read_text(encoding="utf-8")).items()}
 
 
-def refresh(lang: str = "en") -> tuple[int, int]:
+def refresh(lang: str = "en", tarball: bytes | None = None) -> tuple[int, int]:
     """Fetch the live schedule + pools + series and rewrite the committed data files
-    (network)."""
+    (network). Pass pre-downloaded BCData bytes via *tarball* to skip that TLS fetch."""
     events = download_events(lang)
-    pools, series = download_gatya(lang)
+    pools, series = download_gatya(lang, tarball=tarball)
     kept = pool_records(pools, events)
 
     EVENTS_PATH.write_text(json.dumps(event_records(events), ensure_ascii=False), encoding="utf-8")
