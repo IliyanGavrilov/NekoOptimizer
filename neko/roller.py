@@ -20,11 +20,16 @@ _DATED = re.compile(r"^(\d{4}-\d{2}-\d{2})\|")
 
 @dataclass(frozen=True, slots=True)
 class RollResult:
-    """The rolled banners plus each banner's multi-roll options and run dates."""
+    """The rolled banners plus each banner's multi-roll options and run dates.
+
+    ``pools`` is each banner's full droppable-cat set (who CAN drop, every rarity) - not the
+    rolled sample - so callers can scope a wishlist search to what these banners actually
+    offer, the way the plan drops unobtainable picks."""
 
     banners: dict[str, BannerRolls]
     multis: dict[str, tuple[Multi, ...]]
     dates: dict[str, tuple[date, date]] = field(default_factory=dict)
+    pools: dict[str, frozenset[str]] = field(default_factory=dict)
 
 
 def active_events(
@@ -146,21 +151,24 @@ def _roll_events(
     latest = _latest_runs(events)
     configs = multi_configs(latest.values(), rules)
     future_ubers = future_ubers or {}
-    banners, multis, dates = {}, {}, {}
+    banners, multis, dates, banner_pools = {}, {}, {}, {}
 
     for name, event in latest.items():
-        banner = build_banner(event, pools, units).with_future_ubers(future_ubers.get(name, 0))
+        base = build_banner(event, pools, units)
+        banner = base.with_future_ubers(future_ubers.get(name, 0))
         guaranteed_rolls = _guaranteed_rolls(event, force=simulate_guaranteed)
         banners[name] = roll_banner(
             seed, banner, count, guaranteed_rolls=guaranteed_rolls, last_cat=last_cat
         )
+        # The banner's real pool (no future-uber placeholders), for scoping a wishlist search.
+        banner_pools[name] = frozenset(cat for pool in base.pools.values() for cat in pool)
 
         if event.event_id in configs:
             multis[name] = _event_multis(configs[event.event_id], guaranteed_rolls)
 
         dates[name] = (event.start, event.end)
 
-    return RollResult(banners, multis, dates)
+    return RollResult(banners, multis, dates, banner_pools)
 
 
 def _load(events, pools, units, rules):
@@ -241,7 +249,7 @@ def catalogue_banners(
     """Every scheduled banner's cats straight from its latest run's pool - the catalogue
     needs who CAN drop on a banner, not a rolled sample, so no seed and no rolling."""
     events, pools, units, _ = _load(events, pools, units, [])
-    banners, dates = {}, {}
+    banners, dates, banner_pools = {}, {}, {}
     latest = _latest_runs(events)
 
     for name, event in latest.items():
@@ -250,6 +258,7 @@ def catalogue_banners(
             TrackPull(1, "A", cat, rarity) for rarity, pool in banner.pools.items() for cat in pool
         ]
         banners[name] = BannerRolls(cats, [])
+        banner_pools[name] = frozenset(cat for pool in banner.pools.values() for cat in pool)
         dates[name] = (event.start, event.end)
 
-    return RollResult(banners, {}, dates)
+    return RollResult(banners, {}, dates, banner_pools)

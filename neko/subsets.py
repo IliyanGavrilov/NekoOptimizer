@@ -13,6 +13,14 @@ class SubsetPlan:
     plan: Path
 
 
+def _spent(plan: Path, ticket_value: int) -> int:
+    """A plan's total price in catfood-equivalent: catfood plus every ticket kind (rare,
+    platinum, legend all count as ``ticket_value``), for bounds and ranking."""
+    tickets = plan.tickets_used + plan.platinum_used + plan.legend_used
+
+    return plan.cost + tickets * ticket_value
+
+
 def solve_subsets(
     graphs: Iterable[BannerGraph],
     targets: Iterable[str],
@@ -20,7 +28,7 @@ def solve_subsets(
     search: Callable[..., Path | None] = astar,
     multis: Mapping[str, Sequence[Multi]] | None = None,
     ticket_value: int = CATFOOD_PER_DRAW,
-    banner_limits: Mapping[str, int] | None = None,
+    banner_currency: Mapping[str, str] | None = None,
 ) -> list[SubsetPlan]:
     """Best plan for every reachable non-empty target subset, biggest first then cheapest.
 
@@ -50,14 +58,28 @@ def solve_subsets(
                 start,
                 multis=multis,
                 ticket_value=ticket_value,
-                banner_limits=banner_limits,
+                banner_currency=banner_currency,
                 upper_bound=bound,
             )
 
             if plan is not None:
-                bounds[wanted] = plan.cost + plan.tickets_used * ticket_value
+                bounds[wanted] = _spent(plan, ticket_value)
                 plans.append(SubsetPlan(wanted, plan))
 
-    plans.sort(key=lambda result: (-len(result.targets), result.plan.cost))
+    def rank(result: SubsetPlan) -> tuple:
+        # Most cats first, then least spent. `plan.cost` is catfood only (tickets are
+        # free there), so ranking on it alone leaves every all-ticket plan tied at 0 and
+        # ordered arbitrarily. Fold tickets into a catfood-equivalent total - the same
+        # figure used for `bounds` above - so a 140-ticket plan sorts ahead of a 300-ticket
+        # one; break remaining ties on catfood held (spend tickets first), then name.
+        plan = result.plan
+        return (
+            -len(result.targets),
+            _spent(plan, ticket_value),
+            plan.cost,
+            tuple(sorted(result.targets)),
+        )
+
+    plans.sort(key=rank)
 
     return plans

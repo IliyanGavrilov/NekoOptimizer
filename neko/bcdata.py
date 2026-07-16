@@ -3,6 +3,7 @@ import json
 import tarfile
 import urllib.request
 from collections.abc import Mapping
+from functools import cache
 from pathlib import Path
 
 from neko.catalogue import Unit, build_catalogue, parse_forms, parse_rarities, parse_sets
@@ -92,6 +93,8 @@ def download_catalogue(country: str = "en") -> tuple[str, dict[int, Unit]]:
     return version, catalogue_from_tarball(raw)
 
 
+@cache
 def load_records(path: Path = UNITS_PATH) -> list[dict]:
-    """The catalogue records previously written to units.json."""
+    """The catalogue records previously written to units.json. Memoized: the committed file
+    only changes on a re-import (a fresh process), and every caller treats it read-only."""
     return json.loads(path.read_text(encoding="utf-8"))

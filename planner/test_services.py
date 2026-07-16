@@ -14,12 +14,14 @@ from planner.services import (
     REGULARS_LABEL,
     WIKI_BASE,
     TrackMarks,
+    _pos_label,
+    banner_currencies,
     banner_titles,
     build_tracks,
-    capped_banner_limits,
     collection_sections,
     cost_label,
     equivalent_banners,
+    find_cats,
     newly_added_ubers,
     picker_groups,
     plan_highlight,
@@ -39,22 +41,26 @@ from planner.services import (
 
 U = Rarity.UBER_SUPER_RARE
 R = Rarity.RARE
+L = Rarity.LEGEND_RARE
 
 
-def test_capped_banner_limits_matches_only_platinum_and_legend():
+def test_banner_currencies_classifies_platinum_and_legend():
     names = ["Platinum Capsules", "Legend Capsules", "Epicfest"]
-    assert capped_banner_limits(names, 0) == {"Platinum Capsules": 0, "Legend Capsules": 0}
+    assert banner_currencies(names) == {
+        "Platinum Capsules": "platinum",
+        "Legend Capsules": "legend",
+    }
 
 
-def test_capped_banner_limits_matches_the_real_capsule_run_names():
+def test_banner_currencies_matches_the_real_capsule_run_names():
     names = [
         "Get an Uber Rare Cat!! 100% Uber drop Rate in the PLATINUM CAPSULES!",
         "Get a Guaranteed Uber or Legend Rare from the Legend Capsules!",
     ]
-    assert capped_banner_limits(names, 0) == dict.fromkeys(names, 0)
+    assert banner_currencies(names) == {names[0]: "platinum", names[1]: "legend"}
 
 
-def test_capped_banner_limits_ignores_banners_that_merely_mention_legend():
+def test_banner_currencies_ignores_banners_that_merely_mention_legend():
     # Collabs/fests name a "Limited Legend" or "Legend Rare drop rate" but roll on
     # catfood like any banner - they must not be treated as scarce-ticket capsules.
     names = [
@@ -62,7 +68,7 @@ def test_capped_banner_limits_ignores_banners_that_merely_mention_legend():
         "Increased Uber and Legend Rare drop rate! 90M DL Special Capsules!",
         "Double the Uber / Legend chances! ★ Glorious gods of the Cat pantheon!",
     ]
-    assert capped_banner_limits(names, 0) == {}
+    assert banner_currencies(names) == {}
 
 
 def test_collection_sections_orders_rarities_cheapest_to_rarest():
@@ -351,10 +357,35 @@ def test_cost_label_spells_out_both_currencies(tickets, catfood, expected):
     assert cost_label(tickets, catfood) == expected
 
 
+@pytest.mark.parametrize(
+    "tickets,catfood,platinum,legend,expected",
+    [
+        (0, 0, 1, 0, "1 platinum ticket"),
+        (0, 0, 0, 2, "2 legend tickets"),
+        (0, 0, 3, 1, "3 platinum tickets + 1 legend ticket"),
+        (2, 300, 1, 1, "2 tickets + 1 platinum ticket + 1 legend ticket + 300 catfood"),
+    ],
+)
+def test_cost_label_spells_out_capsule_tickets(tickets, catfood, platinum, legend, expected):
+    assert cost_label(tickets, catfood, platinum, legend) == expected
+
+
 def test_build_tracks_merges_equivalent_banners_into_one_legend_entry():
     pulls = [TrackPull(1, "A", "Bahamut", U)]
     track = build_tracks({"X": pulls, "Y": pulls}, {}, {"X": ["X", "Y"], "Y": ["X", "Y"]})
     assert len(track["legend"]) == 1
+
+
+def test_build_tracks_tags_a_capsule_banner_with_its_currency():
+    pulls = [TrackPull(1, "A", "Bahamut", U)]
+    track = build_tracks(
+        {"Platinum Capsules": pulls, "X": pulls},
+        {},
+        {},
+        currencies={"Platinum Capsules": "platinum"},
+    )
+    tagged = {entry["names"][0]: entry["currency"] for entry in track["legend"]}
+    assert tagged == {"Platinum Capsules": "platinum", "X": ""}
 
 
 def _gacha_event(name, start, pool_id):
@@ -1038,6 +1069,17 @@ def test_plan_summary_never_reads_a_catfood_multi_roll_as_tickets():
     assert plan_summary([option], {"X": ["X"]})[0]["legs"][0]["tickets"] == 0
 
 
+def test_plan_summary_counts_capsule_pulls_as_their_own_currency():
+    pulls = tuple(Pull(i, "Platinum Capsules", "Bahamut", U) for i in range(2))
+    leg = Leg("Platinum Capsules", "Single pull", 0, pulls, currency="platinum")
+    option = SubsetPlan(frozenset({"Bahamut"}), Path(pulls, 0, 0, (leg,), platinum_used=2))
+    summary = plan_summary([option], {"Platinum Capsules": ["Platinum Capsules"]})[0]
+    leg_summary = summary["legs"][0]
+    # A platinum leg spends platinum tickets, never rare ones, and the label reads apart.
+    assert (leg_summary["tickets"], leg_summary["platinum"], leg_summary["legend"]) == (0, 2, 0)
+    assert summary["cost_label"] == "2 platinum tickets"
+
+
 def _single(index, banner, cat, rarity, cost=0):
     return Leg(banner, "Single pull", cost, (Pull(index, banner, cat, rarity),))
 
@@ -1140,7 +1182,7 @@ def test_plan_shared_never_offers_a_capped_ticket_gacha_as_an_alternative():
     pulls = [TrackPull(1, "A", "Pogo", R)]
     graphs = build_graphs({"X": list(pulls), "Platinum Capsules": list(pulls)})
     option = _plan({"Pogo"}, (_single(0, "X", "Pogo", R),), 1)
-    shared, _gshared = plan_shared(option, graphs, {}, exclude={"Platinum Capsules": 0})
+    shared, _gshared = plan_shared(option, graphs, {}, exclude={"Platinum Capsules"})
     assert shared == {}
 
 
@@ -1224,6 +1266,20 @@ def test_subset_solutions_start_dupe_memory_reaches_the_search():
         pulls, rerolls, {}, {"Jurassic Cat"}, tickets=1, catfood=0, last_cat="Pogo"
     )
     assert solution["found"] is True and solution["last_cat"] == "Jurassic Cat"
+
+
+def test_subset_solutions_lists_unobtainable_picks_individually_not_as_combos():
+    # Two picks that aren't on the banner: each shows as its own "Not found" row and never
+    # multiplies into combos (with each other or the reachable pick) - the exponential flood
+    # the small-target branch used to produce before filtering unobtainable up front.
+    pulls = {"X": [TrackPull(1, "A", "Pogo", R), TrackPull(2, "A", "Bahamut", U)]}
+    solutions = subset_solutions(
+        pulls, {}, {}, {"Bahamut", "Ghost", "Phantom"}, tickets=2, catfood=0
+    )
+    found = [s["targets"] for s in solutions if s["found"]]
+    not_found = sorted(s["targets"] for s in solutions if not s["found"])
+    assert found == [["Bahamut"]]
+    assert not_found == [["Ghost"], ["Phantom"]]
 
 
 @pytest.mark.parametrize(
@@ -1319,3 +1375,145 @@ def test_unit_stats_pairs_the_forms_with_the_quoted_level():
 
 def test_unit_stats_is_none_for_an_unlisted_unit():
     assert unit_stats(99, {"level": 30, "units": [{"id": 25, "forms": []}]}) is None
+
+
+# ---- find_cats (godfat's "Find next", scoped to picked targets) -------------
+
+
+def test_pos_label_reads_a_stream_index_as_godfat_notation():
+    assert _pos_label(0) == "1A"
+    assert _pos_label(1) == "1B"
+    assert _pos_label(214) == "108A"
+    assert _pos_label(215, guaranteed=True) == "108BG"
+
+
+def test_find_cats_locates_only_the_picked_targets():
+    pulls = [
+        TrackPull(1, "A", "Ignored Uber", U),  # not picked - skipped
+        TrackPull(1, "B", "Wanted Uber", U),
+        TrackPull(2, "A", "A Legend", L),
+    ]
+    assert find_cats({"X": pulls}, {}) == []  # nothing picked -> nothing found
+    found = find_cats({"X": pulls}, {"Wanted Uber": "Uber Super Rare", "A Legend": "Legend Rare"})
+    assert [(f["name"], f["rarity"], f["pos"], f["found"]) for f in found] == [
+        ("Wanted Uber", "Uber Super Rare", "1B", True),
+        ("A Legend", "Legend Rare", "2A", True),
+    ]
+
+
+def test_find_cats_reports_each_target_at_its_earliest_position():
+    pulls = [TrackPull(5, "A", "Aphrodite", U), TrackPull(2, "B", "Aphrodite", U)]
+    found = find_cats({"X": pulls}, {"Aphrodite": "Uber Super Rare"})
+    assert len(found) == 1
+    assert found[0]["pos"] == "2B"
+
+
+def test_find_cats_lists_a_picked_target_that_never_rolls_as_the_ceiling():
+    pulls = [TrackPull(1, "A", "Aphrodite", U)]  # the picked cat isn't here
+    (miss,) = find_cats({"X": pulls}, {"Absent Uber": "Uber Super Rare"})
+    # No cell to jump to: godfat's "999+" ceiling, its rarity read off the pick (no pull),
+    # and index None so the template renders it unclickable.
+    assert (miss["name"], miss["rarity"], miss["pos"]) == ("Absent Uber", "Uber Super Rare", "999+")
+    assert miss["found"] is False
+    assert miss["index"] is None
+    # The ceiling tracks the roll depth actually searched.
+    (deep,) = find_cats({"X": pulls}, {"Absent Uber": "Uber Super Rare"}, horizon=300)
+    assert deep["pos"] == "300+"
+
+
+def test_find_cats_lists_found_targets_before_the_misses():
+    pulls = [TrackPull(4, "A", "Aphrodite", U)]
+    found = find_cats(
+        {"X": pulls}, {"Absent Uber": "Uber Super Rare", "Aphrodite": "Uber Super Rare"}
+    )
+    assert [(f["name"], f["found"]) for f in found] == [
+        ("Aphrodite", True),  # found, at its position
+        ("Absent Uber", False),  # miss, trailing as 999+
+    ]
+
+
+def test_find_cats_ceilings_a_wishlist_miss_like_a_picked_target():
+    pulls = [TrackPull(3, "A", "On Wishlist", U)]
+    found = find_cats(
+        {"X": pulls},
+        {},  # nothing explicitly picked
+        wishlist={"On Wishlist": "Uber Super Rare", "Absent Wishlist": "Uber Super Rare"},
+    )
+    # With no pool given (unscoped), the found one surfaces and the missing one ceilings at
+    # 999+, the same as an explicit pick - it confirms a wanted cat isn't coming.
+    assert [(f["name"], f["pos"], f["found"]) for f in found] == [
+        ("On Wishlist", "3A", True),
+        ("Absent Wishlist", "999+", False),
+    ]
+    # Both stay flagged wishlist (found and miss alike), so the panel stars them apart.
+    assert all(f["wishlist"] for f in found)
+
+
+def test_find_cats_drops_a_wishlist_cat_the_selected_banners_cant_give():
+    pulls = [TrackPull(3, "A", "In Pool", U)]
+    found = find_cats(
+        {"X": pulls},
+        {},  # nothing explicitly picked
+        wishlist={"In Pool": "Uber Super Rare", "Off Banner": "Uber Super Rare"},
+        pool={"In Pool"},  # only this cat can drop on the selected banners
+    )
+    # "Off Banner" can't drop here, so the wishlist search skips it entirely - no 999+ flood
+    # of every unowned cat you want, only the ones these banners actually offer.
+    assert [(f["name"], f["pos"]) for f in found] == [("In Pool", "3A")]
+
+
+def test_find_cats_ceilings_an_in_pool_wishlist_miss():
+    pulls = [TrackPull(3, "A", "Rolled", U)]
+    found = find_cats(
+        {"X": pulls},
+        {},
+        wishlist={"Rolled": "Uber Super Rare", "In Pool Miss": "Uber Super Rare"},
+        pool={"Rolled", "In Pool Miss"},
+    )
+    # "In Pool Miss" CAN drop here but doesn't in the window, so it still ceilings at 999+.
+    assert [(f["name"], f["pos"], f["wishlist"]) for f in found] == [
+        ("Rolled", "3A", True),
+        ("In Pool Miss", "999+", True),
+    ]
+
+
+def test_find_cats_keeps_an_off_pool_explicit_pick_as_the_ceiling():
+    pulls = [TrackPull(3, "A", "Aphrodite", U)]
+    found = find_cats(
+        {"X": pulls},
+        {"Absent Pick": "Legend Rare"},  # picked on purpose, not in the pool
+        pool={"Aphrodite"},
+    )
+    # A deliberate pick still ceilings out even off-pool - the scoping only trims the wishlist.
+    assert (found[0]["name"], found[0]["pos"], found[0]["found"]) == ("Absent Pick", "999+", False)
+
+
+def test_find_cats_flags_a_name_that_is_both_pick_and_wishlist_as_a_plain_target():
+    pulls = [TrackPull(3, "A", "Both", U)]
+    (found,) = find_cats(
+        {"X": pulls}, {"Both": "Uber Super Rare"}, wishlist={"Both": "Uber Super Rare"}
+    )
+    # An explicit pick outranks the wishlist: no star, it's a target.
+    assert found["wishlist"] is False
+
+
+def test_find_cats_prefers_a_guaranteed_hit_only_when_strictly_earlier():
+    pulls = [TrackPull(9, "A", "Aphrodite", U)]  # normal roll, far off
+    guaranteed = {"X": [TrackPull(3, "A", "Aphrodite", U)]}  # guaranteed column, early
+    found = find_cats({"X": pulls}, {"Aphrodite": "Uber Super Rare"}, guaranteed=guaranteed)
+    assert (found[0]["pos"], found[0]["guaranteed"]) == ("3AG", True)
+    # Skipping the guaranteed column falls back to the normal-roll position.
+    skipped = find_cats(
+        {"X": pulls},
+        {"Aphrodite": "Uber Super Rare"},
+        guaranteed=guaranteed,
+        include_guaranteed=False,
+    )
+    assert (skipped[0]["pos"], skipped[0]["guaranteed"]) == ("9A", False)
+
+
+def test_find_cats_keeps_the_plain_roll_on_a_tie():
+    pulls = [TrackPull(3, "A", "A Legend", L)]
+    guaranteed = {"X": [TrackPull(3, "A", "A Legend", L)]}
+    found = find_cats({"X": pulls}, {"A Legend": "Legend Rare"}, guaranteed=guaranteed)
+    assert found[0]["guaranteed"] is False

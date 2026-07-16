@@ -13,14 +13,14 @@ follow-along). Included next to the track by _solutions.html.{% endcomment %}
   </div>
   <div class="step-list">
     {% for leg in legs %}
-      <button type="button" class="step-card" data-step="{{ leg.n }}">
+      <button type="button" class="step-card{% if leg.currency %} capsule {{ leg.currency }}{% endif %}" data-step="{{ leg.n }}">
         <span class="step-card-head">
           <span class="step-dot">{{ leg.n }}</span>
-          <span class="step-banner">{{ leg.names|join:" · " }}{% if leg.names|length > 1 %} <span class="equiv-note">same rolls</span>{% endif %}</span>
+          <span class="step-banner">{{ leg.names|join:" · " }}{% if leg.names|length > 1 %} <span class="equiv-note">same rolls</span>{% endif %}{% if leg.currency %} <span class="capsule-tag {{ leg.currency }}">{{ leg.currency }}</span>{% endif %}</span>
         </span>
         <span class="step-meta">
           <span class="step-kind">{% if leg.kind == "Single pull" %}{{ leg.rolls }}&times; single pull{{ leg.rolls|pluralize }}{% else %}{{ leg.kind }}{% endif %}</span>
-          <span class="step-cost">{% if leg.tickets %}{{ leg.tickets }} ticket{{ leg.tickets|pluralize }}{% endif %}{% if leg.tickets and leg.cost %} + {% endif %}{% if leg.cost %}{{ leg.cost }} catfood{% endif %}{% if not leg.tickets and not leg.cost %}free{% endif %}</span>
+          <span class="step-cost">{% if leg.tickets %}<span class="cost-part">{{ leg.tickets }} ticket{{ leg.tickets|pluralize }}</span>{% endif %}{% if leg.platinum %}<span class="cost-part platinum">{{ leg.platinum }} platinum ticket{{ leg.platinum|pluralize }}</span>{% endif %}{% if leg.legend %}<span class="cost-part legend">{{ leg.legend }} legend ticket{{ leg.legend|pluralize }}</span>{% endif %}{% if leg.cost %}<span class="cost-part">{{ leg.cost }} catfood</span>{% endif %}{% if not leg.tickets and not leg.platinum and not leg.legend and not leg.cost %}free{% endif %}</span>
         </span>
         {% if leg.targets %}<span class="step-gets">gets {% for c in leg.targets %}{% if not forloop.first %}, {% endif %}<span class="step-get">{{ c }}</span>{% endfor %}</span>{% endif %}
       </button>

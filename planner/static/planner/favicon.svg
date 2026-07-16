@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" role="img" aria-label="Neko Optimizer">
+  <rect width="32" height="32" rx="8" fill="#f4a93b"/>
+  <!-- Cat head: two ears and a round face, in the deep-brown accent ink. -->
+  <path fill="#2a1c08" d="M6 5 L12.5 11 Q16 9.5 19.5 11 L26 5 L25 14 A9 9 0 0 1 7 14 Z"/>
+  <!-- Eyes and nose punched back out in the gold, so it reads at 16px. -->
+  <circle cx="12.6" cy="15.2" r="1.6" fill="#f4a93b"/>
+  <circle cx="19.4" cy="15.2" r="1.6" fill="#f4a93b"/>
+  <path fill="#f4a93b" d="M14.7 18.2 h2.6 L16 20.1 Z"/>
+</svg>
