@@ -1134,6 +1134,10 @@ def find_cats(
                 if tp.cat:
                     offer(tp.cat, tp.rarity, stream_index(tp.position, tp.track), True)
 
+    # A wishlist-only hit (in the wishlist, not an explicit pick) gets a star in the panel,
+    # the same "I want this" mark the track uses - so the two kinds of cat the panel mixes
+    # stay distinct from a plain picked target.
+    wishlist = set(wishlist)
     items = [
         {
             "name": name,
@@ -1142,6 +1146,7 @@ def find_cats(
             "guaranteed": is_guaranteed,
             "pos": _pos_label(index, is_guaranteed),
             "found": True,
+            "wishlist": name in wishlist and name not in targets,
         }
         for name, (index, is_guaranteed, rarity) in best.items()
     ]
@@ -1149,7 +1154,8 @@ def find_cats(
 
     # Picked targets that never turned up trail the found ones as godfat's ceiling: a cat
     # you asked for but these banners don't roll within the window, so there's no cell to
-    # jump to (index None -> the template renders an unclickable "999+").
+    # jump to (index None -> the template renders an unclickable "999+"). Only explicit
+    # picks ceiling out (wishlist misses are dropped), so these are never wishlist stars.
     items += [
         {
             "name": name,
@@ -1158,6 +1164,7 @@ def find_cats(
             "guaranteed": False,
             "pos": f"{horizon}+",
             "found": False,
+            "wishlist": False,
         }
         for name in sorted(set(targets) - best.keys())
     ]

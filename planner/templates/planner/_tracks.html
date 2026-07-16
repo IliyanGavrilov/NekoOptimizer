@@ -7,7 +7,7 @@
       <ul class="found-list">
         {% for f in track.found_cats %}
           <li class="found-item{% if not f.found %} is-out{% endif %}">
-            <button type="button" class="catlink" data-name="{{ f.name }}"><span class="catname">{{ f.name }}</span></button>
+            <button type="button" class="catlink" data-name="{{ f.name }}"><span class="catname">{{ f.name }}</span>{% if f.wishlist %} <span class="wish-star" title="On your wishlist">&#9733;</span>{% endif %}</button>
             {% if f.rarity %}<span class="rarity" data-rarity="{{ f.rarity }}">{{ f.rarity }}</span>{% endif %}
             {% if f.found %}
               <button type="button" class="find-pos" data-idx="{{ f.index }}"{% if f.guaranteed %} data-guaranteed="1"{% endif %} title="Jump to {{ f.pos }} in the track">{{ f.pos }}</button>
@@ -30,7 +30,8 @@
       <li><span class="entry on-path sample">path</span> click a cell's name-free space: the rolls up to it light like a plan</li>
       <li><span class="entry next sample">striped</span> you land here next &mdash; the first cat one more roll would give after the lit draws</li>
       <li><span class="entry new sample"><span class="catlink">green name</span></span> Uber/Legend not in your collection</li>
-      <li><span class="entry owned sample"><span class="catlink"></span></span> owned <span class="sep">&middot;</span> <span class="entry wanted sample"><span class="catlink"></span></span> wishlisted</li>
+      <li><span class="entry owned sample"><span class="catlink"></span></span> owned <span class="sep">&middot;</span> <span class="entry wanted sample"><span class="catlink"><span class="catname">cat</span></span></span> wishlisted</li>
+      <li><span class="entry target sample"><span class="catlink"><span class="catname">cat</span></span></span> a target you picked &mdash; gold here, and its next spot shows in <em>Find next</em> above</li>
       <li><span class="debut">new</span> Uber debuting with this banner (its first event anywhere)</li>
       {% if track.padded %}<li><span class="entry new sample"><span class="catlink future">Future Uber 1</span></span> an expected-but-unreleased Uber padding the pool</li>{% endif %}
       {% if track.has_guaranteed %}<li><span class="sym">Guaranteed</span> the Uber a guaranteed multi awards if started on that cell</li>{% endif %}

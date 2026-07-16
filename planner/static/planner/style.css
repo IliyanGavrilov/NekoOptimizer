@@ -640,6 +640,9 @@ tbody tr:hover, table tr:hover { background: var(--panel-2); }
 }
 .found-item { display: inline-flex; align-items: baseline; gap: 0.35rem; }
 .found-item .rarity { font-size: 0.68rem; padding: 0 0.4rem; }
+/* Wishlist hits in this panel carry the same star the track marks them with, so a
+   "search my wishlist" entry reads apart from a target you explicitly picked. */
+.wish-star { color: var(--r-super); }
 .find-pos {
   font: inherit;
   font-size: 0.78rem;
@@ -951,15 +954,19 @@ table.track td.cell:has(.entry.on-path) { background: var(--panel-2); }
   font-weight: 600;
   border-radius: 2px;
 }
-/* A searched-for cat: a gold pill hugging just its name, so the highlight can't
-   spill over the tag box or the cell's dice button. */
-table.track .entry.target { color: var(--ink); font-weight: 700; }
-table.track .entry.target .catlink {
+/* A picked target - the cats "Find next" tracks: a gold pill hugging just its name, so the
+   highlight can't spill over the tag box or the cell's dice button. Left unscoped (like the
+   owned/wanted/new marks below) so the Rolls legend sample reuses it verbatim. Wishlisted
+   cats are marked separately, with a star (see .entry.wanted below) - a lighter "I want this"
+   note, not this bright "I'm hunting this" pill. */
+.entry.target { color: var(--ink); font-weight: 700; }
+.entry.target .catlink {
   background: color-mix(in srgb, var(--accent) 22%, transparent);
   box-shadow: inset 0 0 0 1.5px var(--accent);
   border-radius: 999px;
   padding: 0 0.45rem;
 }
+
 /* Where you land NEXT (godfat's next-position marker): the cell the seed continues on
    after a traced pick or the plan's last draw. Striped, not solid - this cat isn't part
    of the plan; it's what the first roll AFTER it would give. */
