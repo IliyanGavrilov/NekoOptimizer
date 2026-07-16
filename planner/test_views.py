@@ -1,3 +1,4 @@
+import json
 from itertools import count
 
 import pytest
@@ -380,20 +381,21 @@ def test_tracks_endpoint_find_includes_the_wishlist_when_enabled(client, monkeyp
 
 
 @pytest.mark.django_db
-def test_tracks_endpoint_lists_a_picked_target_that_never_rolls_as_the_ceiling(client, monkeypatch):
+def test_tracks_endpoint_flags_a_pick_no_banner_carries_as_unreachable(client, monkeypatch):
     monkeypatch.setattr(
         "planner.views.fetch_banners", fixed_banners(TrackPull(1, "B", "Aphrodite", U))
     )
-    ghost = cat_with_unit("Ghost Cat")  # picked, but these rolls never produce it
+    ghost = cat_with_unit("Ghost Cat")  # picked, but no selected banner carries it
     ghost.rarity = "Legend Rare"
     ghost.save()
     html = client.post("/tracks/", {"seed": 7, "targets": [ghost.pk]}).content.decode()
     assert "found-cats" in html
     assert "Ghost Cat" in html
-    assert ">999+<" in html  # godfat's ceiling for a pick that never turns up
     assert "Legend Rare" in html  # its rarity is read off the pick, not a roll
-    # Rendered as a muted label, not a clickable jump chip (there's no cell to reach).
-    assert "find-out" in html and "find-pos" not in html
+    # A ⚠ with the "won't drop on the selected banners" note, not a position or a 999+ ceiling.
+    assert "find-warn" in html
+    assert "Won't drop on the selected banners" in html
+    assert ">999+<" not in html and "find-pos" not in html
 
 
 @pytest.mark.django_db
@@ -406,11 +408,60 @@ def test_tracks_endpoint_find_ceilings_an_in_pool_wishlist_miss(client, monkeypa
     cat_with_unit("Ghost Cat", wanted=True)  # on the wishlist, in the pool, but never rolled
     html = client.post("/tracks/", {"seed": 7, "use_wishlist": "on"}).content.decode()
     # A searched wishlist cat these banners CAN give but that never surfaces ceilings at 999+,
-    # the same as a picked target - confirmed not coming, with a star marking it wishlist.
+    # the same as a picked target - confirmed not coming, with the ★ wishlist mark (a "wanted"
+    # row) so it reads apart from a plain pick.
     assert "found-cats" in html
     assert "Ghost Cat" in html
     assert ">999+<" in html
-    assert "wish-star" in html
+    assert "found-item is-out wanted" in html
+
+
+@pytest.mark.django_db
+def test_tracks_endpoint_gilds_a_picked_target_on_the_browse_track(client, monkeypatch):
+    monkeypatch.setattr(
+        "planner.views.fetch_banners", fixed_banners(TrackPull(1, "A", "Aphrodite", U))
+    )
+    cat = cat_with_unit("Aphrodite")
+    plain = client.post("/tracks/", {"seed": 7}).content.decode()
+    assert "catlink target" not in plain  # nothing picked -> no gold
+    html = client.post("/tracks/", {"seed": 7, "targets": [cat.pk]}).content.decode()
+    # Picked, so its cell gilds gold on the browse track before any plan is run.
+    assert "catlink target" in html
+
+
+@pytest.mark.django_db
+def test_tracks_endpoint_searches_a_toggled_future_uber(client, monkeypatch):
+    monkeypatch.setattr(
+        "planner.views.fetch_banners",
+        fixed_banners(TrackPull(1, "A", "Future Uber 1 @ Epicfest", U)),
+    )
+    html = client.post(
+        "/tracks/",
+        {"seed": 7, "future_targets": json.dumps(["Future Uber 1 @ Epicfest"])},
+    ).content.decode()
+    # The toggled future uber joins the Targets panel (as a removable future row, its full
+    # qualified name in data-future-name) and gilds its cell, displayed by the short label.
+    assert "found-cats" in html
+    assert 'data-future-name="Future Uber 1 @ Epicfest"' in html
+    assert "entry target" in html
+    assert ">Future Uber 1</span>" in html  # shown short - the "@ banner" qualifier is hidden
+
+
+@pytest.mark.django_db
+def test_find_plan_can_target_a_future_uber(client, monkeypatch):
+    monkeypatch.setattr(
+        "planner.views.fetch_banners",
+        fixed_banners(TrackPull(1, "A", "Future Uber 1 @ Epicfest", U)),
+    )
+    # No Cat target and no wishlist - a future uber toggled on its own is a valid search.
+    resp = client.post(
+        "/plan/",
+        {"seed": 7, "explore": "on", "future_targets": json.dumps(["Future Uber 1 @ Epicfest"])},
+    )
+    assert resp.status_code == 200
+    html = resp.json()["solutions_html"]
+    assert "apply-plan" in html  # a found plan, not a "Not found" row
+    assert "Future Uber 1" in html
 
 
 @pytest.mark.django_db

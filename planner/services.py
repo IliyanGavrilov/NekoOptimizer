@@ -26,6 +26,8 @@ from neko.models import (
     Pull,
     Rarity,
     State,
+    future_uber_banner,
+    future_uber_label,
     is_future_uber,
 )
 from neko.normal import (
@@ -790,16 +792,18 @@ def _collection_marks(cat, rarity, owned, wanted, debuts=()):
     }
 
 
-def _dupe_branch(outcome, obtained):
+def _dupe_branch(outcome, obtained, target_names=()):
     """A cell's "if dupe" line: the reroll you get when a dupe lands here, where it jumps
     to, and the seed just after it (its own dice). ``obtained`` - the cat the plan pulled
-    at this cell, if lit - puts the gold target pill on this branch when it collected it."""
+    at this cell, if lit - puts the gold target pill on this branch when it collected it;
+    ``target_names`` (the browse view's searched cats) gilds the branch when its reroll is
+    one of them, so a target glows wherever it lands, plan or not."""
     return {
         "cat": outcome.cat,
         "to": _pos_label(outcome.next_position),
         "left": outcome.next_position % 2 == 0,
         "seed": outcome.seed,
-        "target": obtained == outcome.cat,
+        "target": obtained == outcome.cat or outcome.cat in target_names,
     }
 
 
@@ -879,6 +883,7 @@ def build_tracks(
     unit_ids=None,
     tiers=None,
     currencies=None,
+    target_names=None,
 ):
     """One merged A/B table over every selected banner: each cell stacks each banner's
     cat at that shared stream position (like ubercarry), with rare-dupe switch arrows
@@ -901,6 +906,11 @@ def build_tracks(
     ``tiers`` ({unit_id: badge}, tier_badges) tags each cell with its tier-list placement
     so the track shows the same rank chip the picker does; uncatalogued or unranked cats
     carry none.
+
+    ``target_names`` (the browse view's searched cats: picks, wishlist, toggled future
+    ubers) gilds every cell holding one of them - the gold "you picked this" pill the
+    legend promises - so a target glows across all its positions before any plan is run.
+    A plan passes its own highlighting via ``marks`` and leaves this empty.
     """
     marks = marks or TrackMarks()
     owned = owned or set()
@@ -910,6 +920,7 @@ def build_tracks(
     unit_ids = unit_ids or {}
     tiers = tiers or {}
     currencies = currencies or {}
+    target_names = target_names or set()
     groups = _banner_groups(banner_pulls, rerolls, equivalents, guaranteed)
     # "New to this banner" is per banner (newly_added_ubers keys by name); a group merges
     # equivalent banners, so its debut set is the union over the names it stands for.
@@ -953,26 +964,33 @@ def build_tracks(
 
             # The cat the plan got here, if lit: the gold pill follows the branch the
             # plan actually pulls (a dupe-collected target lights the "if dupe" name,
-            # not the clean one).
+            # not the clean one). On the browse view (no plan), a searched cat gilds its
+            # clean cell too, so a target glows wherever it turns up.
             obtained = marks.targets.get(group["rep"], {}).get(index)
-            cells.append(
-                {
-                    "tag": group["tag"],
-                    "idx": index,
-                    "cat": tp.cat,
-                    "uid": unit_ids.get(tp.cat),
-                    "tier": tiers.get(unit_ids.get(tp.cat)),
-                    "rarity": rarity,
-                    "switch": switched,
-                    "alt": _dupe_branch(branch, obtained) if branch is not None else None,
-                    "on_path": on_path,
-                    "step": marks.steps.get(group["rep"], {}).get(index),
-                    "target": obtained == tp.cat,
-                    "shared": not on_path and index in marks.shared.get(group["rep"], ()),
-                    "next": index in marks.nexts.get(group["rep"], ()),
-                    **_collection_marks(tp.cat, rarity, owned, wanted, group["debuts"]),
-                }
-            )
+            cell_marks = _collection_marks(tp.cat, rarity, owned, wanted, group["debuts"])
+            entry = {
+                "tag": group["tag"],
+                "idx": index,
+                "cat": tp.cat,
+                "uid": unit_ids.get(tp.cat),
+                "tier": tiers.get(unit_ids.get(tp.cat)),
+                "rarity": rarity,
+                "switch": switched,
+                "alt": (
+                    _dupe_branch(branch, obtained, target_names) if branch is not None else None
+                ),
+                "on_path": on_path,
+                "step": marks.steps.get(group["rep"], {}).get(index),
+                "target": obtained == tp.cat or tp.cat in target_names,
+                "shared": not on_path and index in marks.shared.get(group["rep"], ()),
+                "next": index in marks.nexts.get(group["rep"], ()),
+                **cell_marks,
+            }
+            # A future-uber cell shows the short "Future Uber n" (the column already names the
+            # banner); real cells display ``cat`` as-is, so they carry no separate label.
+            if cell_marks["future"]:
+                entry["future_label"] = future_uber_label(tp.cat)
+            cells.append(entry)
 
         return cells
 
@@ -1017,25 +1035,28 @@ def build_tracks(
 
             rarity = str(tp.rarity)
             on_path = index in marks.gpath.get(group["rep"], ())
-            cells.append(
-                {
-                    "tag": group["tag"],
-                    "idx": index,
-                    "cat": tp.cat,
-                    "uid": unit_ids.get(tp.cat),
-                    "tier": tiers.get(unit_ids.get(tp.cat)),
-                    "rarity": rarity,
-                    # The state after the multi's final (guaranteed) draw - "as if you
-                    # rolled this multi": what its dice jumps to. Rolling TO the multi
-                    # is the track cell's own dice (same start anchor).
-                    "seed": tp.seed,
-                    "on_path": on_path,
-                    "step": marks.gsteps.get(group["rep"], {}).get(index),
-                    "target": marks.gtargets.get(group["rep"], {}).get(index) == tp.cat,
-                    "shared": not on_path and index in marks.gshared.get(group["rep"], ()),
-                    **_collection_marks(tp.cat, rarity, owned, wanted, group["debuts"]),
-                }
-            )
+            cell_marks = _collection_marks(tp.cat, rarity, owned, wanted, group["debuts"])
+            entry = {
+                "tag": group["tag"],
+                "idx": index,
+                "cat": tp.cat,
+                "uid": unit_ids.get(tp.cat),
+                "tier": tiers.get(unit_ids.get(tp.cat)),
+                "rarity": rarity,
+                # The state after the multi's final (guaranteed) draw - "as if you
+                # rolled this multi": what its dice jumps to. Rolling TO the multi
+                # is the track cell's own dice (same start anchor).
+                "seed": tp.seed,
+                "on_path": on_path,
+                "step": marks.gsteps.get(group["rep"], {}).get(index),
+                "target": marks.gtargets.get(group["rep"], {}).get(index) == tp.cat
+                or tp.cat in target_names,
+                "shared": not on_path and index in marks.gshared.get(group["rep"], ()),
+                **cell_marks,
+            }
+            if cell_marks["future"]:
+                entry["future_label"] = future_uber_label(tp.cat)
+            cells.append(entry)
 
         return cells
 
@@ -1068,9 +1089,17 @@ def build_tracks(
         # The stepper posts its count for every run name its group merges (equivalent
         # banners share one pool, so one padding count). ``keys`` carries the raw run
         # names - the legend shows titles, but the roller keys banners by run name.
+        # ``future_chips`` are this banner's added placeholders as toggleable targets:
+        # padding qualifies each name by the banner, so a group with padding is a single
+        # banner (its rep), and Future Uber 1..n there are distinct searchable units.
         for entry, group in zip(legend, groups, strict=True):
             entry["keys"] = json.dumps(group["names"])
-            entry["future"] = max((future.get(name, 0) for name in group["names"]), default=0)
+            count = max((future.get(name, 0) for name in group["names"]), default=0)
+            entry["future"] = count
+            entry["future_chips"] = [
+                {"name": f"Future Uber {n} @ {group['rep']}", "label": f"Future Uber {n}"}
+                for n in range(1, count + 1)
+            ]
 
     return {
         "legend": legend,
@@ -1097,35 +1126,47 @@ def find_cats(
     wishlist=(),
     horizon=MAX_TRACK_LENGTH,
     pool=None,
+    owned=(),
+    wishlisted=(),
+    pks=None,
 ):
-    """godfat's "Find next", scoped to the cats you pick: the earliest position of each
-    wanted name in the rolled tracks (the plan's target picker / wishlist feed it - no
-    automatic set, so the panel never floods a fest or capsule pool).
+    """The unified targets panel (godfat's "Find next", scoped to the cats you pick): one
+    row per wanted name, carrying the same rarity / owned ✓ / wishlisted ★ marks the picker
+    shows, plus its earliest position in the rolled tracks. The plan's target picker,
+    wishlist and toggled future ubers feed it - no automatic set, so the panel never floods
+    a fest or capsule pool.
 
     ``targets`` and ``wishlist`` are both ``{name: rarity}`` maps - the cats you explicitly
-    picked and (when "search my wishlist" is on) your unowned wanted cats. Every one is
-    reported: at its earliest position, or as a trailing ``{horizon}+`` (godfat's roll
-    ceiling) when it never surfaces. A wishlist entry that isn't also an explicit pick is
-    flagged ``wishlist`` so the template stars it apart from a plain target; on a name clash
-    the explicit pick wins (no star).
+    picked (future-uber targets included) and (when "search my wishlist" is on) your unowned
+    wanted cats. Every one is reported: at its earliest position, as a trailing ``{horizon}+``
+    (godfat's roll ceiling) when it's on these banners but never surfaces in the window, or
+    as ``unreachable`` when no selected banner carries it at all. A wishlist entry that isn't
+    also an explicit pick is flagged ``wishlist``; on a name clash the explicit pick wins.
 
     ``pool`` (the selected banners' droppable-cat set) scopes the wishlist to what these
     banners can actually give: a wishlisted cat that isn't in ``pool`` is dropped rather than
-    ceilinged, so turning on "search my wishlist" lists only cats these banners offer - the
-    same rule the plan uses to drop unobtainable picks. Explicit picks always ceiling out,
-    even off-pool, so a deliberate search still confirms "not in these banners". ``pool`` of
-    None means no scoping (every wanted cat reported).
+    listed, so turning on "search my wishlist" lists only cats these banners offer - the same
+    rule the plan uses. An explicit pick off ``pool`` is kept but flagged ``unreachable`` (the
+    ⚠ row), so a deliberate search still says "not on these banners". Future-uber picks are in
+    their padded pool by construction, so they never flag unreachable. ``pool`` of None means
+    no scoping.
+
+    ``owned`` / ``wishlisted`` are the name sets behind the ✓ / ★ chip marks; ``pks``
+    ({name: Cat pk}) tags real-cat rows so the client can remove a pick (future ubers carry
+    no pk - they're removed via their legend toggle).
 
     Each found cat lands once, at its earliest stream index across every banner and both
     tracks. When ``include_guaranteed`` a guaranteed-column appearance counts too, but only
     when it comes strictly earlier than a normal cell (a tie keeps the plain roll). Returns
-    items sorted by position (misses last), each
-    ``{"name", "rarity", "index", "guaranteed", "pos", "found", "wishlist"}``."""
+    items sorted by position (misses last)."""
     targets = dict(targets)
     wishlist = dict(wishlist)
+    owned = set(owned)
+    wishlisted = set(wishlisted)
+    pks = pks or {}
     if pool is not None:
         # Drop wishlist-only cats these banners can't give (kills the off-banner flood); an
-        # explicit pick is kept even off-pool, so its 999+ still confirms it isn't coming.
+        # explicit pick is kept even off-pool, so it can flag unreachable below.
         wishlist = {name: r for name, r in wishlist.items() if name in targets or name in pool}
     wanted = {**wishlist, **targets}  # rarity map of everything to report; picks win a clash
     if not wanted:
@@ -1153,6 +1194,18 @@ def find_cats(
         # want this" mark the track uses, so the two kinds of cat it mixes stay distinct.
         return name in wishlist and name not in targets
 
+    def marks(name):
+        # The chip marks and remove affordance every row carries, matching the picker.
+        return {
+            "wishlist": is_wish(name),
+            "owned": name in owned,
+            "wanted": name in wishlisted,
+            "pk": pks.get(name),
+            "future": is_future_uber(name),
+            "future_label": future_uber_label(name),
+            "banner": future_uber_banner(name),
+        }
+
     items = [
         {
             "name": name,
@@ -1161,27 +1214,32 @@ def find_cats(
             "guaranteed": is_guaranteed,
             "pos": _pos_label(index, is_guaranteed),
             "found": True,
-            "wishlist": is_wish(name),
+            "unreachable": False,
+            **marks(name),
         }
         for name, (index, is_guaranteed, rarity) in best.items()
     ]
     items.sort(key=lambda item: (item["index"], item["guaranteed"], item["name"]))
 
-    # Wanted cats that never turned up trail the found ones as godfat's ceiling: a cat you
-    # asked for (picked or wishlisted) but these banners don't roll within the window, so
-    # there's no cell to jump to (index None -> the template renders an unclickable "999+").
-    items += [
-        {
-            "name": name,
-            "rarity": wanted[name],
-            "index": None,
-            "guaranteed": False,
-            "pos": f"{horizon}+",
-            "found": False,
-            "wishlist": is_wish(name),
-        }
-        for name in sorted(set(wanted) - best.keys())
-    ]
+    # Wanted cats that never turned up trail the found ones. A pick no selected banner
+    # carries at all (off-pool, real cat) is ``unreachable`` - the ⚠ row, no cell to jump
+    # to; one that IS on these banners but doesn't roll within the window ceilings to
+    # godfat's "999+" (index None -> the template renders it unclickable).
+    for name in sorted(set(wanted) - best.keys()):
+        row = marks(name)
+        unreachable = pool is not None and name not in pool and not row["future"]
+        items.append(
+            {
+                "name": name,
+                "rarity": wanted[name],
+                "index": None,
+                "guaranteed": False,
+                "pos": "" if unreachable else f"{horizon}+",
+                "found": False,
+                "unreachable": unreachable,
+                **row,
+            }
+        )
 
     return items
 

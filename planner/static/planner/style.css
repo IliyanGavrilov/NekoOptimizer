@@ -647,11 +647,49 @@ tbody tr:hover, table tr:hover { background: var(--panel-2); }
   padding: 0;
   list-style: none;
 }
-.found-item { display: inline-flex; align-items: baseline; gap: 0.35rem; }
+/* One pill per searched cat, laid out like a picker chip: rarity, name, its ✓/★ collection
+   mark, then the position (or ⚠) and a × to drop it. */
+.found-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.12rem 0.28rem 0.12rem 0.5rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--bg-2);
+}
 .found-item .rarity { font-size: 0.68rem; padding: 0 0.4rem; }
-/* Wishlist hits in this panel carry the same star the track marks them with, so a
-   "search my wishlist" entry reads apart from a target you explicitly picked. */
-.wish-star { color: var(--r-super); }
+.found-cat { font-weight: 600; }
+/* A future-uber row: italic stand-in (no popup), in the uncollected-green like its cells. */
+.found-cat.future { font-style: italic; color: var(--new); cursor: default; }
+/* The same ✓ owned / ★ wishlisted marks the picker chips carry, so the panel reads like the
+   targets selector - just after the name. */
+.found-item.owned .found-cat::after { content: " \2713"; color: var(--accent); font-weight: 700; }
+.found-item.wanted:not(.owned) .found-cat::after { content: " \2605"; color: var(--r-super); }
+/* Which banner a future uber pads, so two banners' "Future Uber 1" read apart. */
+.found-banner {
+  font-size: 0.68rem;
+  color: var(--muted);
+  max-width: 8rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+/* No selected banner carries this pick: a ⚠ in place of a position, details on hover. */
+.find-warn { color: var(--warn); font-weight: 700; cursor: help; }
+.found-item.is-unreachable { border-color: color-mix(in srgb, var(--warn) 55%, var(--line)); }
+.found-item.is-unreachable .found-cat { color: var(--warn); }
+/* Drop this target: greys until hovered, so the pill stays about the cat. */
+.found-remove {
+  font: inherit;
+  line-height: 1;
+  color: var(--muted);
+  background: none;
+  border: 0;
+  padding: 0 0.15rem;
+  cursor: pointer;
+}
+.found-remove:hover { color: var(--r-legend); }
 .find-pos {
   font: inherit;
   font-size: 0.78rem;
@@ -907,6 +945,35 @@ td.cell.flash-locate {
   padding: 0.1rem 0.4rem;
   border-radius: 6px;
   font-size: 0.75rem;
+}
+/* The added future ubers as toggle chips: tap one to search for it (it joins the Targets
+   panel above and gilds this banner's cells). On their own line under the banner so the
+   long names above stay readable. */
+.track-legend .future-targets {
+  flex-basis: 100%;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  margin-left: 1.5rem;
+}
+.future-target {
+  font: inherit;
+  font-size: 0.72rem;
+  font-style: italic;
+  color: var(--new);
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 0.05rem 0.5rem;
+  cursor: pointer;
+}
+.future-target:hover { border-color: var(--accent); }
+.future-target[aria-pressed="true"] {
+  background: color-mix(in srgb, var(--accent) 18%, transparent);
+  border-color: var(--accent);
+  color: var(--accent);
+  font-weight: 700;
+  box-shadow: 0 0 0 1px var(--accent) inset;
 }
 .tag {
   display: inline-block;
@@ -1211,15 +1278,8 @@ table.track th.guaranteed-col, table.track td.guaranteed-col {
 .field-error:not(:empty) { display: block; margin-top: 0.25rem; }
 .field-error:empty { display: none; }
 
-/* Advisory (not a hard error): a chosen target that no selected banner can drop. */
+/* Advisory (not a hard error): the capsule-run mismatch note under the banner hint. */
 .field-warning { color: var(--warn); font-size: 0.8rem; font-weight: 600; margin: 0.45rem 0 0; }
-.chip.selected.unreachable {
-  background: color-mix(in srgb, var(--warn) 12%, transparent);
-  border-color: var(--warn);
-  border-style: dashed;
-  color: var(--warn);
-  box-shadow: 0 0 0 1px var(--warn) inset;
-}
 
 /* Themed validation feedback: flash the offending field instead of the browser popup. */
 @keyframes flash-error {
@@ -1356,27 +1416,11 @@ table.track th.guaranteed-col, table.track td.guaranteed-col {
   box-shadow: 0 0 0 1px var(--accent) inset;
 }
 
-.chip.removable span { opacity: 0.8; margin-left: 0.15rem; }
-
 /* Collection status on target-picker chips: owned dimmed with a check, wishlist starred. */
 .chip.owned { opacity: 0.5; }
 .chip.owned::after { content: " \2713"; color: var(--accent); font-weight: 700; }
 .chip.wanted:not(.owned)::after { content: " \2605"; color: var(--r-super); }
 .chip.owned.selected { opacity: 1; }
-
-/* Selected-targets panel */
-.selected-panel {
-  background: var(--bg-2);
-  border: 1px solid var(--accent);
-  border-radius: 10px;
-  padding: 0.6rem 0.75rem;
-  margin-bottom: 0.6rem;
-}
-.selected-head { font-family: var(--head-font); font-size: 0.85rem; color: var(--muted); margin-bottom: 0.4rem; }
-.selected-head .count {
-  background: var(--accent); color: var(--accent-ink);
-  border-radius: 999px; padding: 0 0.45rem; font-weight: 700;
-}
 
 /* ---- Collection chips (owned / wishlist) ----------------------------- */
 .own-chip {

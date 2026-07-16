@@ -563,6 +563,50 @@ def test_build_tracks_target_pill_follows_the_dupe_branch():
     assert (cell["target"], cell["alt"]["target"]) == (False, True)
 
 
+def test_build_tracks_gilds_a_browse_target_across_all_its_cells():
+    banner_pulls = {"X": [TrackPull(1, "A", "Bahamut", U), TrackPull(3, "A", "Bahamut", U)]}
+    track = build_tracks(banner_pulls, {}, {}, target_names={"Bahamut"})
+    # No plan, no marks: a searched cat gilds every cell it lands in, not just the first.
+    assert track["rows"][0]["a"][0]["target"] is True
+    assert track["rows"][2]["a"][0]["target"] is True
+    # A cat you're not searching for stays plain.
+    plain = build_tracks(banner_pulls, {}, {}, target_names={"Someone Else"})
+    assert plain["rows"][0]["a"][0]["target"] is False
+
+
+def test_build_tracks_gilds_a_browse_target_on_its_dupe_branch():
+    banner_pulls = {"X": [TrackPull(1, "A", "Pogo", R), TrackPull(2, "A", "Pogo", R)]}
+    rerolls = {"X": [TrackPull(2, "A", "Jurassic Cat", R)]}
+    cell = build_tracks(banner_pulls, rerolls, {}, target_names={"Jurassic Cat"})["rows"][1]["a"][0]
+    # The clean roll (Pogo) isn't a target, but its dupe reroll (Jurassic Cat) is - gilded there.
+    assert (cell["target"], cell["alt"]["target"]) == (False, True)
+
+
+def test_build_tracks_future_uber_cell_shows_the_short_label():
+    banner_pulls = {"X": [TrackPull(1, "A", "Future Uber 1 @ Epicfest", U)]}
+    entry = build_tracks(banner_pulls, {}, {})["rows"][0]["a"][0]
+    # The banner-qualified name is the identity; the cell displays the short label (its
+    # column already names the banner). A real cell carries no separate label.
+    assert (entry["future"], entry["future_label"]) == (True, "Future Uber 1")
+    assert (
+        "future_label"
+        not in build_tracks({"X": [TrackPull(1, "A", "Bahamut", U)]}, {}, {})["rows"][0]["a"][0]
+    )
+
+
+def test_build_tracks_lists_added_future_ubers_as_toggle_chips():
+    banner_pulls = {"Epicfest": [TrackPull(1, "A", "Bahamut", U)]}
+    legend = build_tracks(banner_pulls, {}, {}, future={"Epicfest": 2})["legend"][0]
+    # Each added future uber is a toggle chip: the short label to show, the banner-qualified
+    # name (unique per banner) to search on.
+    assert [(c["label"], c["name"]) for c in legend["future_chips"]] == [
+        ("Future Uber 1", "Future Uber 1 @ Epicfest"),
+        ("Future Uber 2", "Future Uber 2 @ Epicfest"),
+    ]
+    # No padding -> no chips.
+    assert build_tracks(banner_pulls, {}, {}, future={})["legend"][0]["future_chips"] == []
+
+
 def test_plan_highlight_keys_indices_by_representative_banner():
     option = SubsetPlan(frozenset({"Bahamut"}), Path((Pull(0, "Y", "Bahamut", U),), 1, 0))
     marks = plan_highlight(option, {"X": ["X", "Y"], "Y": ["X", "Y"]})
@@ -1477,15 +1521,36 @@ def test_find_cats_ceilings_an_in_pool_wishlist_miss():
     ]
 
 
-def test_find_cats_keeps_an_off_pool_explicit_pick_as_the_ceiling():
+def test_find_cats_flags_an_off_pool_explicit_pick_as_unreachable():
     pulls = [TrackPull(3, "A", "Aphrodite", U)]
     found = find_cats(
         {"X": pulls},
         {"Absent Pick": "Legend Rare"},  # picked on purpose, not in the pool
         pool={"Aphrodite"},
     )
-    # A deliberate pick still ceilings out even off-pool - the scoping only trims the wishlist.
-    assert (found[0]["name"], found[0]["pos"], found[0]["found"]) == ("Absent Pick", "999+", False)
+    # A deliberate pick no selected banner carries is kept (not dropped like the wishlist) but
+    # flagged unreachable - the ⚠ row - rather than ceilinged, so it reads "not on these banners".
+    assert (found[0]["name"], found[0]["found"], found[0]["unreachable"]) == (
+        "Absent Pick",
+        False,
+        True,
+    )
+    assert found[0]["pos"] == ""  # no cell to jump to, so no position label
+
+
+def test_find_cats_carries_the_picker_marks_and_a_removable_pk():
+    pulls = [TrackPull(1, "A", "Owned Uber", U), TrackPull(1, "B", "Wished Uber", U)]
+    found = find_cats(
+        {"X": pulls},
+        {"Owned Uber": "Uber Super Rare", "Wished Uber": "Uber Super Rare"},
+        owned={"Owned Uber"},
+        wishlisted={"Wished Uber"},
+        pks={"Owned Uber": 7, "Wished Uber": 9},
+    )
+    # Each row carries the same ✓ owned / ★ wishlisted marks the picker chips show, plus its
+    # Cat pk so the panel's × can drop the pick.
+    marks = {f["name"]: (f["owned"], f["wanted"], f["pk"]) for f in found}
+    assert marks == {"Owned Uber": (True, False, 7), "Wished Uber": (False, True, 9)}
 
 
 def test_find_cats_flags_a_name_that_is_both_pick_and_wishlist_as_a_plain_target():

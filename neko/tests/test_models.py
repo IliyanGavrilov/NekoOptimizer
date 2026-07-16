@@ -4,6 +4,8 @@ from neko.models import (
     Path,
     Rarity,
     State,
+    future_uber_banner,
+    future_uber_label,
     future_uber_names,
     is_future_uber,
 )
@@ -29,23 +31,44 @@ def test_future_uber_names_run_up_to_the_pool_front():
     assert future_uber_names(0) == ()
 
 
-def test_is_future_uber_matches_only_the_placeholders():
+def test_future_uber_names_qualify_by_banner():
+    assert future_uber_names(2, "Epicfest") == (
+        "Future Uber 2 @ Epicfest",
+        "Future Uber 1 @ Epicfest",
+    )
+
+
+def test_is_future_uber_matches_bare_and_qualified_placeholders():
     assert is_future_uber("Future Uber 1")
     assert is_future_uber("Future Uber 12")
+    assert is_future_uber("Future Uber 1 @ Epicfest")
     assert not is_future_uber("Baby Gao")
     assert not is_future_uber("Future Uber 1 Cat")
 
 
-def test_with_future_ubers_prepends_placeholders_and_leaves_the_rest():
+def test_future_uber_label_and_banner_split_the_qualifier():
+    assert future_uber_label("Future Uber 1 @ Epicfest") == "Future Uber 1"
+    assert future_uber_banner("Future Uber 1 @ Epicfest") == "Epicfest"
+    # A bare placeholder reads as itself, with no banner.
+    assert future_uber_label("Future Uber 1") == "Future Uber 1"
+    assert future_uber_banner("Future Uber 1") == ""
+
+
+def test_with_future_ubers_prepends_banner_qualified_placeholders_and_leaves_the_rest():
     banner = Banner(
         "id",
-        "name",
+        "Epicfest",
         "",
         {Rarity.UBER_SUPER_RARE: 500},
         {Rarity.UBER_SUPER_RARE: ("U1", "U2"), Rarity.RARE: ("R1",)},
     )
     padded = banner.with_future_ubers(2)
-    assert padded.pool(Rarity.UBER_SUPER_RARE) == ("Future Uber 2", "Future Uber 1", "U1", "U2")
+    assert padded.pool(Rarity.UBER_SUPER_RARE) == (
+        "Future Uber 2 @ Epicfest",
+        "Future Uber 1 @ Epicfest",
+        "U1",
+        "U2",
+    )
     assert padded.pool(Rarity.RARE) == ("R1",)
     assert padded.rates == banner.rates
     assert banner.with_future_ubers(0) is banner

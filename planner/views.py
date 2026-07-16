@@ -5,7 +5,7 @@ from django.shortcuts import get_object_or_404, render
 from django.template.loader import render_to_string
 from django.views.decorators.http import require_POST
 
-from neko.models import CATFOOD_PER_DRAW, GACHA_RARITIES
+from neko.models import CATFOOD_PER_DRAW, GACHA_RARITIES, Rarity, is_future_uber
 from neko.normal import BANNERS_BY_KEY
 from neko.rng import backtrack
 from neko.roller import DEFAULT_COUNT, GUARANTEED_OPTIONS
@@ -225,20 +225,37 @@ def _unit_ids():
 
 
 def _find_targets(request):
-    """The cats the Rolls "Find next" panel reports, read straight from the tracks POST.
+    """The cats the unified targets panel reports, read straight from the tracks POST.
 
-    Returns ``(targets, wishlist)``, each a ``{name: rarity}`` map: ``targets`` is the cats
-    you explicitly picked, ``wishlist`` (when "search my wishlist" is on) your unowned wanted
-    cats. Both are always reported - found at their position, or as a "999+" ceiling when they
-    never roll - so the panel confirms a wishlist cat isn't coming, just like a pick. Wishlist
-    entries are starred (see find_cats) to stay distinct from picks."""
-    targets = dict(
-        Cat.objects.filter(pk__in=request.POST.getlist("targets")).values_list("name", "rarity")
+    Returns ``(targets, wishlist, pks)``: ``targets`` and ``wishlist`` are ``{name: rarity}``
+    maps - the cats you explicitly picked and (when "search my wishlist" is on) your unowned
+    wanted cats; ``pks`` is ``{name: Cat pk}`` for the picks, so the panel can offer a remove.
+    Both maps are always reported - at their position, a "999+" ceiling, or a ⚠ when no
+    selected banner carries them - so the panel confirms a wishlist cat isn't coming, just
+    like a pick."""
+    picked = Cat.objects.filter(pk__in=request.POST.getlist("targets")).values_list(
+        "name", "rarity", "pk"
     )
+    targets = {name: rarity for name, rarity, _ in picked}
+    pks = {name: pk for name, _, pk in picked}
     wishlist: dict[str, str] = {}
     if request.POST.get("use_wishlist"):
         wishlist = dict(Unit.objects.wishlist().values_list("name", "rarity"))
-    return targets, wishlist
+    return targets, wishlist, pks
+
+
+def _future_targets(request):
+    """The future-uber placeholders toggled as targets: a JSON list of qualified
+    ``Future Uber n @ <banner>`` names posted by the legend toggle chips. Non-placeholder
+    strings are dropped, so a stray post can't smuggle in an arbitrary name."""
+    try:
+        raw = json.loads(request.POST.get("future_targets", "") or "[]")
+    except json.JSONDecodeError:
+        return []
+    if not isinstance(raw, list):
+        return []
+
+    return [str(name) for name in raw if is_future_uber(str(name))]
 
 
 @require_POST
@@ -285,36 +302,56 @@ def tracks(request):
                 name: rolls.guaranteed_rolls for name, rolls in result.banners.items()
             },
         )
-    track = build_tracks(
-        pulls,
-        rerolls,
-        equivalents,
-        marks=marks,
-        owned=_owned_names(),
-        guaranteed=guaranteed,
-        wanted=_wanted_names(),
-        titles=display_titles(),
-        rows=display,
-        debuts=banner_debuts(),
-        future=future_ubers,
-        unit_ids=_unit_ids(),
-        tiers=tier_badges(),
-    )
-    # The browse view's "Find next" summary (godfat's Find): the next position of each cat
-    # you've picked (targets / wishlist) in these rolls. Attached here only, so the shared
-    # _tracks.html renders no panel on plan-solution tracks.
-    targets, wishlist = _find_targets(request)
+    owned, wanted, titles = _owned_names(), _wanted_names(), display_titles()
+    # The unified targets panel (godfat's Find, enriched): every cat you're searching for -
+    # picks, wishlist and toggled future ubers - with its next position or a ⚠. Attached to
+    # the browse track only, so the shared _tracks.html renders no panel on plan tracks.
+    targets, wishlist, pks = _find_targets(request)
+    # A toggled future uber searches like an explicit pick (its qualified name is already in
+    # the padded pool), so fold it into the target map at uber rarity.
+    future_targets = _future_targets(request)
+    targets = {**targets, **{name: str(Rarity.UBER_SUPER_RARE) for name in future_targets}}
     # Scope the wishlist search to what these banners can actually drop (their unioned pools),
     # so "search my wishlist" lists only obtainable cats, not every unowned cat you want.
     obtainable = frozenset().union(*result.pools.values()) if result.pools else None
-    track["found_cats"] = find_cats(
+    found_cats = find_cats(
         pulls,
         targets,
         guaranteed=guaranteed,
         include_guaranteed=request.POST.get("exclude_guaranteed") != "1",
         wishlist=wishlist,
         pool=obtainable,
+        owned=owned,
+        wishlisted=wanted,
+        pks=pks,
     )
+    # Every reported target gilds all its track cells (the browse glow the legend promises) -
+    # the same set the panel lists, so panel and glow stay in lockstep.
+    target_names = {item["name"] for item in found_cats}
+    track = build_tracks(
+        pulls,
+        rerolls,
+        equivalents,
+        marks=marks,
+        owned=owned,
+        guaranteed=guaranteed,
+        wanted=wanted,
+        titles=titles,
+        rows=display,
+        debuts=banner_debuts(),
+        future=future_ubers,
+        unit_ids=_unit_ids(),
+        tiers=tier_badges(),
+        target_names=target_names,
+    )
+    # A future-uber row is qualified by its banner's run name; show the short display title
+    # instead (the same "June Bride" the legend and picker use), not the long marketing text.
+    for item in found_cats:
+        if item["future"] and item["banner"]:
+            item["banner"] = titles.get(item["banner"], item["banner"])
+    track["found_cats"] = found_cats
+    # The selected banners' titles, for the ⚠ row's "won't drop on: …" tooltip.
+    track["selected_titles"] = ", ".join(sorted({titles.get(n, n) for n in result.banners}))
 
     return render(request, "planner/_tracks.html", {"track": track})
 
@@ -331,17 +368,25 @@ def find_plan(request):
     targets = {cat.name for cat in form.cleaned_data["targets"]}
     if form.cleaned_data["use_wishlist"]:
         targets |= _wanted_names()
+    # Future-uber targets are qualified placeholders, searchable only once the pool is
+    # padded - so the plan must roll WITH that padding, and the target set keeps them even
+    # though they're absent from the real (unpadded) pool the scoping below prunes against.
+    future_targets = set(form.cleaned_data["future_targets"])
+    future_ubers = _future_ubers(request)
 
     explore = form.cleaned_data["explore"]
     count = form.cleaned_data["horizon"] if explore else DEFAULT_COUNT
     last_cat = request.POST.get("last_cat", "").strip()
-    result = _roll(seed, request.POST.getlist("banners"), count, last_cat)
-    # Scope targets to what the selected banners can actually drop (their unioned pools), the
-    # same rule the Find-next panel uses: a picked or wishlisted cat that isn't in these
-    # banners is dropped rather than listed as a "Not found" row, which otherwise floods the
-    # accordion with one dead row per off-banner cat (a whole wishlist against one banner).
+    result = _roll(
+        seed, request.POST.getlist("banners"), count, last_cat, future_ubers=future_ubers
+    )
+    # Scope real-cat targets to what the selected banners can actually drop (their unioned
+    # pools), the same rule the panel uses: a picked or wishlisted cat that isn't in these
+    # banners is dropped rather than listed as a dead "Not found" row (a whole wishlist against
+    # one banner). Future-uber placeholders are always in their padded pool, so keep them.
     if result.pools:
         targets &= frozenset().union(*result.pools.values())
+    targets |= future_targets
     equivalents = equivalent_banners(result.banners)
     pulls, guaranteed_pulls, rerolls, guaranteed_rerolls = _rolls_by_banner(result)
     banner_currency = banner_currencies(pulls)

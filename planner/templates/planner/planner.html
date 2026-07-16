@@ -21,11 +21,9 @@
       <div class="banner-chips" id="bannerChips" hidden></div>
       <p class="field-warning" id="bannerWarn" role="alert" aria-live="polite" hidden></p>
 
-      <div class="selected-panel" id="selectedPanel" hidden>
-        <div class="selected-head">Selected <span class="count" id="selectedCount">0</span></div>
-        <div class="chips" id="selectedChips"></div>
-        <p class="field-warning" id="targetsWarn" role="alert" aria-live="polite" hidden></p>
-      </div>
+      {# Picked targets, your wishlist and toggled future ubers are reviewed and removed in #}
+      {# one place: the Targets panel above the Rolls track (server-rendered by _tracks.html). #}
+      {# Here, picking just highlights the chip and adds a hidden `targets` input (#targetInputs). #}
 
       <div class="search-wrap">
         <input type="search" id="targetSearch" placeholder="Search cats &amp; banners&hellip;" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">

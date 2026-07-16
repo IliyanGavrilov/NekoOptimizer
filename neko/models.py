@@ -72,20 +72,40 @@ class BannerRolls:
     guaranteed_rolls: int = 0
 
 
-def future_uber_names(count: int) -> tuple[str, ...]:
+def future_uber_names(count: int, banner: str = "") -> tuple[str, ...]:
     """The placeholder names of ``count`` future ubers, in uber-pool order. godfat gives
     them negative ids and unshifts each onto the pool front (its "(-n?)" cells), so the
     pool reads Future Uber count, ..., Future Uber 2, Future Uber 1 before the real
-    ubers - our Future Uber n sits exactly where godfat shows (-n?)."""
-    return tuple(f"Future Uber {n}" for n in range(count, 0, -1))
+    ubers - our Future Uber n sits exactly where godfat shows (-n?).
+
+    ``banner`` qualifies each name (``Future Uber n @ <banner>``) so a placeholder is
+    unique to the banner it pads: since the run name differs per selected banner, its
+    "Future Uber 1" is a distinct target from another banner's, which the planner (all
+    name-keyed) then tells apart. Leave it blank for the bare, banner-agnostic form."""
+    suffix = f" @ {banner}" if banner else ""
+    return tuple(f"Future Uber {n}{suffix}" for n in range(count, 0, -1))
 
 
-_FUTURE_UBER = re.compile(r"Future Uber \d+")
+_FUTURE_UBER = re.compile(r"Future Uber \d+( @ .+)?")
 
 
 def is_future_uber(cat: str) -> bool:
-    """Whether this cat is a future-uber placeholder rather than a real unit."""
+    """Whether this cat is a future-uber placeholder rather than a real unit (bare or
+    banner-qualified)."""
     return _FUTURE_UBER.fullmatch(cat) is not None
+
+
+def future_uber_label(cat: str) -> str:
+    """A future-uber placeholder's short display label - the bare ``Future Uber n``, with
+    any ``@ <banner>`` qualifier stripped. The track column already shows which banner a
+    cell belongs to, so cells read cleanly; the qualifier only disambiguates targets."""
+    return cat.split(" @ ", 1)[0]
+
+
+def future_uber_banner(cat: str) -> str:
+    """The banner run name a qualified future-uber placeholder pads, or "" for a bare one."""
+    parts = cat.split(" @ ", 1)
+    return parts[1] if len(parts) > 1 else ""
 
 
 @dataclass(frozen=True)
@@ -115,7 +135,7 @@ class Banner:
 
         pools = dict(self.pools)
         uber = Rarity.UBER_SUPER_RARE
-        pools[uber] = future_uber_names(count) + self.pool(uber)
+        pools[uber] = future_uber_names(count, self.name) + self.pool(uber)
 
         return Banner(self.banner_id, self.name, self.url, self.rates, pools)
 
