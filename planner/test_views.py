@@ -29,12 +29,16 @@ def returns(result):
     return _fetch
 
 
-def fixed_rolls(rolls):
-    return returns(RollResult({"x": rolls}, {}))
+def fixed_rolls(rolls, pool=None):
+    # The banner pool defaults to whatever it rolled (a rolled cat is in the pool); pass
+    # ``pool`` to add cats that CAN drop but this sample didn't produce (a Find-next miss).
+    names = {tp.cat for tp in rolls.pulls} | {tp.cat for tp in rolls.guaranteed}
+    names |= set(pool or ())
+    return returns(RollResult({"x": rolls}, {}, pools={"x": frozenset(names)}))
 
 
-def fixed_banners(*pulls):
-    return fixed_rolls(BannerRolls(list(pulls), []))
+def fixed_banners(*pulls, pool=None):
+    return fixed_rolls(BannerRolls(list(pulls), []), pool=pool)
 
 
 @pytest.mark.django_db
@@ -372,18 +376,33 @@ def test_tracks_endpoint_lists_a_picked_target_that_never_rolls_as_the_ceiling(c
 
 
 @pytest.mark.django_db
-def test_tracks_endpoint_find_ceilings_a_wishlist_miss(client, monkeypatch):
+def test_tracks_endpoint_find_ceilings_an_in_pool_wishlist_miss(client, monkeypatch):
     monkeypatch.setattr(
-        "planner.views.fetch_banners", fixed_banners(TrackPull(1, "A", "Aphrodite", U))
+        "planner.views.fetch_banners",
+        # Ghost Cat can drop on this banner (in its pool) but doesn't in the rolled window.
+        fixed_banners(TrackPull(1, "A", "Aphrodite", U), pool=["Ghost Cat"]),
     )
-    cat_with_unit("Ghost Cat", wanted=True)  # on the wishlist, but never rolled
+    cat_with_unit("Ghost Cat", wanted=True)  # on the wishlist, in the pool, but never rolled
     html = client.post("/tracks/", {"seed": 7, "use_wishlist": "on"}).content.decode()
-    # A searched wishlist cat that never surfaces ceilings at 999+, the same as a picked
-    # target - the panel confirms it isn't coming, with a star marking it a wishlist cat.
+    # A searched wishlist cat these banners CAN give but that never surfaces ceilings at 999+,
+    # the same as a picked target - confirmed not coming, with a star marking it wishlist.
     assert "found-cats" in html
     assert "Ghost Cat" in html
     assert ">999+<" in html
     assert "wish-star" in html
+
+
+@pytest.mark.django_db
+def test_tracks_endpoint_find_drops_an_off_banner_wishlist_cat(client, monkeypatch):
+    monkeypatch.setattr(
+        "planner.views.fetch_banners", fixed_banners(TrackPull(1, "A", "Aphrodite", U))
+    )
+    cat_with_unit("Off Banner Cat", wanted=True)  # wishlisted, but not in this banner's pool
+    html = client.post("/tracks/", {"seed": 7, "use_wishlist": "on"}).content.decode()
+    # Not in the pool: the wishlist search skips it rather than ceilinging it, so the panel
+    # doesn't flood with every off-banner cat you want - it stays hidden with nothing to show.
+    assert "Off Banner Cat" not in html
+    assert "found-cats" not in html
 
 
 @pytest.mark.django_db
