@@ -372,16 +372,18 @@ def test_tracks_endpoint_lists_a_picked_target_that_never_rolls_as_the_ceiling(c
 
 
 @pytest.mark.django_db
-def test_tracks_endpoint_find_does_not_ceiling_a_wishlist_miss(client, monkeypatch):
+def test_tracks_endpoint_find_ceilings_a_wishlist_miss(client, monkeypatch):
     monkeypatch.setattr(
         "planner.views.fetch_banners", fixed_banners(TrackPull(1, "A", "Aphrodite", U))
     )
     cat_with_unit("Ghost Cat", wanted=True)  # on the wishlist, but never rolled
     html = client.post("/tracks/", {"seed": 7, "use_wishlist": "on"}).content.decode()
-    # A wishlist cat that never surfaces is simply omitted (only explicit picks get a 999+),
-    # so with nothing found the panel stays hidden.
-    assert "999+" not in html
-    assert "found-cats" not in html
+    # A searched wishlist cat that never surfaces ceilings at 999+, the same as a picked
+    # target - the panel confirms it isn't coming, with a star marking it a wishlist cat.
+    assert "found-cats" in html
+    assert "Ghost Cat" in html
+    assert ">999+<" in html
+    assert "wish-star" in html
 
 
 @pytest.mark.django_db
