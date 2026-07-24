@@ -724,10 +724,12 @@ def about(request):
 
 @require_POST
 def apply_plan(request):
-    """Mark the cats a plan gets you as owned and drop them from the wishlist. Applying
-    means "you rolled it", so the plan's seed-after becomes the stored seed."""
+    """Mark the cats a plan gets you as owned. The wishlist mark is left as-is - getting a
+    cat doesn't un-want it (an owned cat is already excluded from wishlist searches), so the
+    star stays for when you browse your collection. Applying means "you rolled it", so the
+    plan's seed-after becomes the stored seed."""
     names = request.POST.getlist("cats")
-    applied = Unit.objects.filter(name__in=names).update(owned=True, wanted=False)
+    applied = Unit.objects.filter(name__in=names).update(owned=True)
 
     try:
         Seed.store(int(request.POST["seed_after"]))

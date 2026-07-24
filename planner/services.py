@@ -1447,33 +1447,36 @@ def trace_marks(
     reached = bool(walk) and walk[-1][0] == index
 
     if guaranteed:
-        # The gold pill sits on the guaranteed uber; when the start cell is reachable, the
-        # singles that get there light too, otherwise it stands alone (unreachable start).
+        # The gold pill sits on the guaranteed uber. The multi's own draws light either
+        # way: starting a guaranteed multi on the clicked cell plays through those cells
+        # whether or not clean singles reach it. When the start IS reachable, the walk that
+        # gets there lights too; when it isn't, only the multi's own run lights - no faked
+        # route in, but the cells it visits are still shown.
         marks = TrackMarks(gtargets={rep: {index: gpull.cat}})
         sizes = guaranteed_sizes or {}
         size = max((sizes.get(name, 0) for name in picked["names"]), default=0)
-        # godfat lights what the multi itself draws as well: its first draw is the
-        # clicked cell (arriving as the walk did, or nominally for an unreachable
-        # start), then size - 2 more singles along the play chain (dupes hop like any
-        # single). The final roll is swapped for the uber - its cell's shown cat is
-        # never obtained, so it stays unlit - and the seed continues one half-step
-        # past it, track flipped: that landing cell gets the striped next mark.
+        # godfat lights what the multi itself draws: its first draw is the clicked cell
+        # (arriving as the walk did, or nominally for an unreachable start), then size - 2
+        # more singles along the play chain (dupes hop like any single). The final roll is
+        # swapped for the uber - its cell's shown cat is never obtained, so it stays unlit -
+        # and the seed continues one half-step past it, track flipped: that landing cell
+        # gets the striped next mark.
         steps = {step for step, _ in walk} if reached else set()
         first = walk[-1][1] if reached else graph.resolve(index)
-        if size >= 2:
+        if size >= 2 and first is not None:
+            steps.add(index)  # the multi's first draw (already walked when reachable)
             last, at = first.cat, first.next_position
             for _ in range(size - 2):
                 outcome = graph.resolve(at, last)
                 if outcome is None:  # the multi runs off the rolled window
                     break
 
-                if reached:
-                    steps.add(at)
+                steps.add(at)
                 last, at = outcome.cat, outcome.next_position
             else:
                 marks.nexts = {rep: {at + 1}}
 
-        if reached:
+        if steps:
             marks.path = {rep: steps}
             marks.gpath = {rep: {index}}
         return marks

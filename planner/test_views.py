@@ -245,11 +245,12 @@ def test_seed_field_starts_empty(client):
 
 
 @pytest.mark.django_db
-def test_apply_plan_owns_cats_and_clears_wishlist(client):
+def test_apply_plan_owns_cats_and_keeps_the_wishlist_mark(client):
     cat = cat_with_unit("Bahamut", owned=False, wanted=True)
     client.post("/apply/", {"cats": ["Bahamut"]})
     cat.refresh_from_db()
-    assert (cat.owned, cat.wanted) == (True, False)
+    # Getting a cat doesn't un-want it: owned wins, but the wishlist star is left intact.
+    assert (cat.owned, cat.wanted) == (True, True)
 
 
 @pytest.mark.django_db
