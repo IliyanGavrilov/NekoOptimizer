@@ -821,12 +821,43 @@ def test_trace_marks_unreachable_guaranteed_still_stripes_the_landing():
         guaranteed=True,
         guaranteed_sizes={"X": 2},
     )
-    # No lit path to 3A, but starting a 2-roll guaranteed there still lands one
-    # half-step past the swapped 4A: stripe 4B, keeping the uber pill on its own.
-    assert marks.path == {}
-    assert marks.gpath == {}
+    # No clean route to 3A, but the multi started there still plays: its first draw is 3A
+    # itself (lit), its second is swapped for G3, and the seed lands one half-step past the
+    # swapped 4A - stripe 4B. The walk in stays dark (no faked path to an unreachable cell).
+    assert marks.path == {"X": {4}}
+    assert marks.gpath == {"X": {4}}
     assert marks.gtargets == {"X": {4: "G3"}}
     assert marks.nexts == {"X": {7}}
+
+
+def test_trace_marks_unreachable_guaranteed_lights_the_multis_own_draws():
+    banner_pulls = {
+        "X": [
+            TrackPull(1, "A", "Pogo", R),
+            TrackPull(2, "A", "Pogo", R),
+            TrackPull(3, "A", "X", U),
+            TrackPull(4, "A", "Bath Cat", R),
+            TrackPull(5, "A", "Sniper Cat", R),
+        ]
+    }
+    guaranteed = {"X": [TrackPull(3, "A", "G3", U)]}
+    rerolls = {"X": [TrackPull(2, "A", "Sniper Cat", R, steps=1, realized=True)]}
+    marks = trace_marks(
+        banner_pulls,
+        rerolls,
+        {},
+        "1",
+        4,
+        guaranteed_pulls=guaranteed,
+        guaranteed=True,
+        guaranteed_sizes={"X": 3},
+    )
+    # 3A is unreachable by clean singles, but a 3-roll guaranteed started there draws 3A
+    # then 4A (its in-between cell), swaps its last roll for G3, and lands past 5A: the
+    # cells the multi visits light even without a lit route in.
+    assert marks.path == {"X": {4, 6}}
+    assert marks.gpath == {"X": {4}}
+    assert marks.gtargets == {"X": {4: "G3"}}
 
 
 def test_trace_marks_guaranteed_click_without_a_guarantee_marks_nothing():

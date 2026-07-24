@@ -254,8 +254,7 @@ if (picker) {
   }
   function syncBanners() {
     bannerInputs.replaceChildren();
-    for (const btn of includes) {
-      if (btn.getAttribute("aria-pressed") !== "true") continue;
+    for (const btn of pressedIncludes()) {
       const input = document.createElement("input");
       input.type = "hidden";
       input.name = "banners";
@@ -284,6 +283,18 @@ if (picker) {
       (btn) => btn.getAttribute("aria-pressed") === "true" && re.test(btn.dataset.banner),
     );
   }
+  // The selection posts - and lists its chips - in track order: the regular banners in
+  // picker (date) order, then the capsules last, platinum before legend. Capsules are
+  // opt-in tickets tacked onto a session, not part of its natural sequence, so they always
+  // trail the run they're rolled alongside (the server rolls banners in the posted order).
+  function pressedIncludes() {
+    const on = includes.filter((btn) => btn.getAttribute("aria-pressed") === "true");
+    const rank = (btn) => (PLAT.test(btn.dataset.banner) ? 1 : LEG.test(btn.dataset.banner) ? 2 : 0);
+    return on
+      .map((btn, i) => [btn, i])
+      .sort(([a, ai], [b, bi]) => rank(a) - rank(b) || ai - bi)
+      .map(([btn]) => btn);
+  }
   // The "Your resources" section: rare/catfood budget hides in explore mode, and each
   // capsule row shows only when its banner is selected (regardless of explore mode, since
   // capsule tickets are always budget-scarce). The whole section hides when nothing shows.
@@ -302,8 +313,7 @@ if (picker) {
   const bannerWarn = document.getElementById("bannerWarn");
   function syncBannerChips() {
     bannerChips.replaceChildren();
-    for (const btn of includes) {
-      if (btn.getAttribute("aria-pressed") !== "true") continue;
+    for (const btn of pressedIncludes()) {
       const group = btn.closest(".banner-group");
       const chip = document.createElement("button");
       chip.type = "button";
@@ -738,6 +748,13 @@ if (picker) {
       body,
     });
     if (!resp.ok) return;
+    // Reflect the new ownership in the target picker without a reload: the applied cats are
+    // now owned server-side, so grey their chips the way the collection toggle does. The
+    // wishlist star stays (applying doesn't drop it), and .chip.owned hides it anyway.
+    const appliedNames = new Set(btn.dataset.cats ? btn.dataset.cats.split("|") : []);
+    picker.querySelectorAll(".chip[data-name]").forEach((c) => {
+      if (appliedNames.has(c.dataset.name)) c.classList.add("owned");
+    });
     const spend = (el, key) =>
       (el.value = Math.max(0, (Number(el.value) || 0) - (Number(btn.dataset[key]) || 0)));
     spend(ticketsEl, "tickets");
