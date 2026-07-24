@@ -586,7 +586,9 @@ tbody tr:hover, table tr:hover { background: var(--panel-2); }
   position: relative;
   left: 50%;
   transform: translateX(-50%);
-  width: min(1200px, calc(100vw - 3.5rem));
+  /* Wide enough that a cell's one-line entries (name + tier + marks + rarity + dice)
+     never wrap even with the guaranteed columns on. */
+  width: min(1500px, calc(100vw - 2rem));
 }
 .results-h { font-size: 1rem; margin: 0; }
 
@@ -1019,6 +1021,9 @@ table.track .entry {
   padding: 0.1rem 0.5rem;
   margin: 0 -0.5rem;
   border-radius: 2px;
+  /* One line per unit (tag, name, tier, marks, rarity, dice) - branches get their own
+     line via .arrow's display:block; short rarity labels keep the width in check. */
+  white-space: nowrap;
 }
 /* Two-level highlight: the whole on-path cell greys out, and inside it the exact
    banner+unit you pull lights up gold (target units, below, glow brightest). */
@@ -1034,9 +1039,11 @@ table.track td.cell:has(.entry.on-path) { background: var(--panel-2); }
    highlight can't spill over the tag box or the cell's dice button. Left unscoped (like the
    owned/wanted/new marks below) so the Rolls legend sample reuses it verbatim. Wishlisted
    cats are marked separately, with a star (see .entry.wanted below) - a lighter "I want this"
-   note, not this bright "I'm hunting this" pill. */
+   note, not this bright "I'm hunting this" pill. The pill sits on the exact catlink that's
+   the target (``.catlink.target``), not every name in the cell - so a clean roll and its
+   "if dupe" branch (each its own catlink) light up one at a time, marked separately. */
 .entry.target { color: var(--ink); font-weight: 700; }
-.entry.target .catlink {
+.catlink.target {
   background: color-mix(in srgb, var(--accent) 22%, transparent);
   box-shadow: inset 0 0 0 1.5px var(--accent);
   border-radius: 999px;

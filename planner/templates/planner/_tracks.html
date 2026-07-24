@@ -40,7 +40,7 @@
       <li><span class="entry next sample">striped</span> you land here next &mdash; the first cat one more roll would give after the lit draws</li>
       <li><span class="entry new sample"><span class="catlink">green name</span></span> Uber/Legend not in your collection</li>
       <li><span class="entry owned sample"><span class="catlink"></span></span> owned <span class="sep">&middot;</span> <span class="entry wanted sample"><span class="catlink"><span class="catname">cat</span></span></span> wishlisted</li>
-      <li><span class="entry target sample"><span class="catlink"><span class="catname">cat</span></span></span> a target you picked &mdash; gold here, and its next spot shows in <em>Targets</em> above</li>
+      <li><span class="entry target sample"><span class="catlink target"><span class="catname">cat</span></span></span> a target you picked &mdash; gold here, and its next spot shows in <em>Targets</em> above</li>
       <li><span class="debut">new</span> Uber debuting with this banner (its first event anywhere)</li>
       {% if track.padded %}<li><span class="entry new sample"><span class="catlink future">Future Uber 1</span></span> an expected-but-unreleased Uber padding the pool</li>{% endif %}
       {% if track.has_guaranteed %}<li><span class="sym">Guaranteed</span> the Uber a guaranteed multi awards if started on that cell</li>{% endif %}
@@ -73,9 +73,9 @@
       {% for row in track.rows %}
         <tr>
           <th scope="row" class="pos">{{ row.pos }}</th>
-          {% include "planner/_track_cell.html" with entries=row.a multi=track.legend|length cell_seed=row.a_seed cell_cat=row.a_cat cell_track="A" details=row.a_details %}
+          {% include "planner/_track_cell.html" with entries=row.a multi=track.legend|length details=row.a_details %}
           {% if track.has_guaranteed %}{% include "planner/_track_cell.html" with entries=row.ga multi=track.legend|length cell_class="guaranteed-col" %}{% endif %}
-          {% include "planner/_track_cell.html" with entries=row.b multi=track.legend|length cell_seed=row.b_seed cell_cat=row.b_cat cell_track="B" details=row.b_details %}
+          {% include "planner/_track_cell.html" with entries=row.b multi=track.legend|length details=row.b_details %}
           {% if track.has_guaranteed %}{% include "planner/_track_cell.html" with entries=row.gb multi=track.legend|length cell_class="guaranteed-col" %}{% endif %}
         </tr>
       {% endfor %}

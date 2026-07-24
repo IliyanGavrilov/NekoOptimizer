@@ -674,6 +674,7 @@ if (picker) {
       body.set("trace_tag", traceState.tag);
       body.set("trace_idx", traceState.idx);
       if (traceState.guaranteed) body.set("trace_guaranteed", "1");
+      if (traceState.reroll) body.set("trace_reroll", "1");
     }
     return fetch(url, { method: "POST", body, headers: { "X-CSRFToken": token } });
   };
@@ -922,17 +923,23 @@ if (picker) {
   // shared dashes on other banners that could roll a step without changing the
   // path. Clicking the same line again clears it.
   trackHost.addEventListener("click", (e) => {
-    if (e.target.closest("button, a, input, label, .arrow")) return;
+    if (e.target.closest("button, a, input, label")) return;
     const entry = e.target.closest(".entry");
     if (!entry || !entry.dataset.idx) return;
     // A guaranteed-column click traces the uber that column's multi would award instead.
     const guaranteed = !!entry.closest(".guaranteed-col");
+    // A click on the "if dupe" line marks that cell's reroll branch, separately from its
+    // clean roll (and separately in the regular and guaranteed columns).
+    const reroll = !!e.target.closest(".arrow");
     const same =
       traceState &&
       traceState.tag === entry.dataset.tag &&
       traceState.idx === entry.dataset.idx &&
-      traceState.guaranteed === guaranteed;
-    traceState = same ? null : { tag: entry.dataset.tag, idx: entry.dataset.idx, guaranteed };
+      traceState.guaranteed === guaranteed &&
+      traceState.reroll === reroll;
+    traceState = same
+      ? null
+      : { tag: entry.dataset.tag, idx: entry.dataset.idx, guaranteed, reroll };
     refreshTracks(true);
   });
 

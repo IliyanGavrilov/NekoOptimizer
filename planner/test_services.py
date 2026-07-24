@@ -536,7 +536,7 @@ def test_build_tracks_switch_cell_keeps_both_branch_seeds():
         "seed": 9,
         "target": False,
     }
-    assert (row["a_seed"], row["a_cat"]) == (5, "Pogo")
+    assert cell["seed"] == 5  # the clean line's own dice: the state after the clean pull
 
 
 def test_build_tracks_guaranteed_entry_carries_its_after_seed():
@@ -882,6 +882,126 @@ def test_trace_marks_ignore_a_stale_click():
     assert trace_marks(banner_pulls, {}, {}, "1", 400).path == {}
 
 
+def test_trace_marks_reroll_click_targets_the_dupe_branch_not_the_clean_roll():
+    banner_pulls = {
+        "X": [
+            TrackPull(1, "A", "Pogo", R),
+            TrackPull(2, "A", "Kasa Jizo", U),
+            TrackPull(3, "A", "Onmyoji", R),
+        ]
+    }
+    rerolls = {"X": [TrackPull(3, "A", "Sniper Cat", R, steps=1)]}
+    clean = trace_marks(banner_pulls, rerolls, {}, "1", 4)
+    dupe = trace_marks(banner_pulls, rerolls, {}, "1", 4, reroll=True)
+    # The clean click keeps the same track (+2 next); the dupe pick pills the reroll and
+    # stripes past its extra hop (4 + 2 + 1 step = 7, flipping the track). The straight
+    # chain arrives clean here, so only the clean pick lights the walk in.
+    assert clean.targets == {"X": {4: "Onmyoji"}}
+    assert (clean.path, clean.nexts) == ({"X": {0, 2, 4}}, {"X": {6}})
+    assert dupe.targets == {"X": {4: "Sniper Cat"}}
+    assert (dupe.path, dupe.nexts) == ({}, {"X": {7}})
+
+
+def test_trace_marks_on_a_switched_cell_pick_the_two_branches_separately():
+    banner_pulls = {"X": [TrackPull(1, "A", "Pogo", R), TrackPull(2, "A", "Pogo", R)]}
+    rerolls = {"X": [TrackPull(2, "A", "Jurassic Cat", R, steps=1, realized=True)]}
+    clean = trace_marks(banner_pulls, rerolls, {}, "1", 2)
+    dupe = trace_marks(banner_pulls, rerolls, {}, "1", 2, reroll=True)
+    # The straight chain dupes on arrival, so it's the DUPE pick that lights the walk and
+    # follows the track switch; the clean roll is a "had you arrived otherwise" pill that
+    # keeps the same track (+2).
+    assert clean.targets == {"X": {2: "Pogo"}}
+    assert (clean.path, clean.nexts) == ({}, {"X": {4}})
+    assert dupe.targets == {"X": {2: "Jurassic Cat"}}
+    assert (dupe.path, dupe.nexts) == ({"X": {0, 2}}, {"X": {5}})
+
+
+def test_trace_marks_reroll_click_marks_nothing_without_a_dupe_branch():
+    banner_pulls = {"X": [TrackPull(1, "A", "Pogo", R), TrackPull(2, "A", "Kasa Jizo", U)]}
+    assert trace_marks(banner_pulls, {}, {}, "1", 2, reroll=True) == TrackMarks()
+
+
+def test_trace_marks_guaranteed_reroll_click_marks_the_reroll_column_uber():
+    banner_pulls = {"X": [TrackPull(1, "A", "Pogo", R), TrackPull(2, "A", "Pogo", R)]}
+    rerolls = {"X": [TrackPull(2, "A", "Jurassic Cat", R)]}
+    guaranteed = {"X": [TrackPull(2, "A", "Bahamut", U)]}
+    guaranteed_rerolls = {"X": [TrackPull(2, "A", "Kasli", U)]}
+    clean = trace_marks(
+        banner_pulls, rerolls, {}, "1", 2, guaranteed_pulls=guaranteed, guaranteed=True
+    )
+    dupe = trace_marks(
+        banner_pulls,
+        rerolls,
+        {},
+        "1",
+        2,
+        guaranteed_pulls=guaranteed,
+        guaranteed=True,
+        guaranteed_rerolls=guaranteed_rerolls,
+        reroll=True,
+    )
+    assert clean.gtargets == {"X": {2: "Bahamut"}}
+    assert dupe.gtargets == {"X": {2: "Kasli"}}
+
+
+def test_trace_marks_guaranteed_branch_picks_follow_their_own_chains():
+    # 2A dupes 1A: the clean guaranteed pick plays the multi from the clean roll (3A next),
+    # the dupe pick from the reroll's hop (steps=1 -> 3B next), so their draws differ.
+    banner_pulls = {
+        "X": [
+            TrackPull(1, "A", "Pogo", R),
+            TrackPull(2, "A", "Pogo", R),
+            TrackPull(3, "A", "Bath Cat", R),
+            TrackPull(3, "B", "Tin Cat", R),
+        ]
+    }
+    rerolls = {"X": [TrackPull(2, "A", "Jurassic Cat", R, steps=1, realized=True)]}
+    guaranteed = {"X": [TrackPull(2, "A", "Kasli", U)]}
+    guaranteed_rerolls = {"X": [TrackPull(2, "A", "Kasli", U)]}
+    common = dict(
+        guaranteed_pulls=guaranteed,
+        guaranteed=True,
+        guaranteed_sizes={"X": 3},
+        guaranteed_rerolls=guaranteed_rerolls,
+    )
+    clean = trace_marks(banner_pulls, rerolls, {}, "1", 2, **common)
+    dupe = trace_marks(banner_pulls, rerolls, {}, "1", 2, reroll=True, **common)
+    # Clean: multi draws 2A + 3A (clean chain), landing striped past the swap; no walk in
+    # (the straight chain dupes on arrival, disagreeing with the clean pick).
+    assert clean.path == {"X": {2, 4}}
+    assert clean.galt_targets == {}
+    # Dupe: the walk in lights (the chain does dupe), and the multi hops to 3B instead.
+    assert dupe.path == {"X": {0, 2, 5}}
+    assert dupe.galt_targets == {"X": {2}}
+    assert clean.gtargets == dupe.gtargets == {"X": {2: "Kasli"}}
+
+
+def test_build_tracks_guaranteed_pill_lands_on_the_picked_branch_only():
+    # Clean and dupe guaranteed columns award the SAME uber: only galt_targets can say
+    # which line the pill sits on.
+    banner_pulls = {"X": [TrackPull(1, "A", "Pogo", R), TrackPull(2, "A", "Pogo", R)]}
+    rerolls = {"X": [TrackPull(2, "A", "Jurassic Cat", R)]}
+    guaranteed = {"X": [TrackPull(2, "A", "Kasli", U)]}
+    guaranteed_rerolls = {"X": [TrackPull(2, "A", "Kasli", U)]}
+    clean_marks = TrackMarks(gtargets={"X": {2: "Kasli"}})
+    dupe_marks = TrackMarks(gtargets={"X": {2: "Kasli"}}, galt_targets={"X": {2}})
+    kwargs = dict(guaranteed=guaranteed, guaranteed_rerolls=guaranteed_rerolls)
+    clean = build_tracks(banner_pulls, rerolls, {}, marks=clean_marks, **kwargs)
+    dupe = build_tracks(banner_pulls, rerolls, {}, marks=dupe_marks, **kwargs)
+    clean_cell, dupe_cell = clean["rows"][1]["ga"][0], dupe["rows"][1]["ga"][0]
+    assert (clean_cell["target"], clean_cell["alt"]["target"]) == (True, False)
+    assert (dupe_cell["target"], dupe_cell["alt"]["target"]) == (False, True)
+
+
+def test_trace_marks_guaranteed_reroll_click_without_a_reroll_column_marks_nothing():
+    banner_pulls = {"X": [TrackPull(1, "A", "Pogo", R), TrackPull(2, "A", "Pogo", R)]}
+    guaranteed = {"X": [TrackPull(2, "A", "Bahamut", U)]}
+    marks = trace_marks(
+        banner_pulls, {}, {}, "1", 2, guaranteed_pulls=guaranteed, guaranteed=True, reroll=True
+    )
+    assert marks == TrackMarks()
+
+
 def test_build_tracks_stripes_the_next_cell_and_extends_to_show_it():
     banner_pulls = {
         "X": [
@@ -978,13 +1098,60 @@ def test_build_tracks_skips_an_empty_guaranteed_cell():
     assert track["rows"][0]["ga"] == []
 
 
-def test_build_tracks_row_carries_the_cell_dice_seed_and_cat():
-    banner_pulls = {"X": [TrackPull(1, "A", "Bahamut", U, seed=111)]}
-    row = build_tracks(banner_pulls, {}, {})["rows"][0]
-    assert (row["a_seed"], row["a_cat"]) == (111, "Bahamut")
+def test_build_tracks_guaranteed_cell_shows_the_dupe_reroll():
+    # 2A repeats 1A, so it dupes: the guaranteed multi started there rerolls its first
+    # roll and ends on a different uber - godfat's guaranteed R cell.
+    banner_pulls = {"X": [TrackPull(1, "A", "Pogo", R), TrackPull(2, "A", "Pogo", R)]}
+    rerolls = {"X": [TrackPull(2, "A", "Jurassic Cat", R)]}
+    guaranteed = {"X": [TrackPull(2, "A", "Bahamut", U)]}
+    guaranteed_rerolls = {"X": [TrackPull(2, "A", "Kasli", U, seed=77)]}
+    cell = build_tracks(
+        banner_pulls, rerolls, {}, guaranteed=guaranteed, guaranteed_rerolls=guaranteed_rerolls
+    )["rows"][1]["ga"][0]
+    assert cell["cat"] == "Bahamut"
+    assert cell["alt"] == {
+        "cat": "Kasli",
+        "seed": 77,
+        "guaranteed": True,
+        "future": False,
+        "target": False,
+    }
 
 
-def test_build_tracks_cell_dice_reads_any_banner_rolled_there():
+def test_build_tracks_guaranteed_dupe_line_rides_a_realized_bounce():
+    banner_pulls = {"X": [TrackPull(1, "A", "Aset", U), TrackPull(2, "A", "Onmyoji", R)]}
+    rerolls = {"X": [TrackPull(2, "A", "Pirate", R, steps=1, realized=True)]}
+    guaranteed = {"X": [TrackPull(2, "A", "Bahamut", U)]}
+    guaranteed_rerolls = {"X": [TrackPull(2, "A", "Kasli", U, seed=9)]}
+    cell = build_tracks(
+        banner_pulls, rerolls, {}, guaranteed=guaranteed, guaranteed_rerolls=guaranteed_rerolls
+    )["rows"][1]["ga"][0]
+    assert cell["alt"]["cat"] == "Kasli"
+
+
+def test_build_tracks_guaranteed_dupe_line_quiet_when_the_cell_cannot_dupe():
+    # No reroll on the normal cell -> no "if dupe" line in its guaranteed column either.
+    banner_pulls = {"X": [TrackPull(1, "A", "Shaman Cat", R)]}
+    guaranteed = {"X": [TrackPull(1, "A", "Bahamut", U)]}
+    guaranteed_rerolls = {"X": [TrackPull(1, "A", "Kasli", U, seed=9)]}
+    cell = build_tracks(
+        banner_pulls, {}, {}, guaranteed=guaranteed, guaranteed_rerolls=guaranteed_rerolls
+    )["rows"][0]["ga"][0]
+    assert cell.get("alt") is None
+
+
+def test_build_tracks_guaranteed_dupe_line_can_be_a_future_uber():
+    banner_pulls = {"X": [TrackPull(1, "A", "Pogo", R), TrackPull(2, "A", "Pogo", R)]}
+    rerolls = {"X": [TrackPull(2, "A", "Jurassic Cat", R)]}
+    guaranteed = {"X": [TrackPull(2, "A", "Bahamut", U)]}
+    guaranteed_rerolls = {"X": [TrackPull(2, "A", "Future Uber 1 @ X", U, seed=9)]}
+    cell = build_tracks(
+        banner_pulls, rerolls, {}, guaranteed=guaranteed, guaranteed_rerolls=guaranteed_rerolls
+    )["rows"][1]["ga"][0]
+    assert (cell["alt"]["future"], cell["alt"]["future_label"]) == (True, "Future Uber 1")
+
+
+def test_build_tracks_every_entry_carries_its_own_dice_seed():
     banner_pulls = {
         "X": [TrackPull(1, "A", "Pogo", R, seed=5)],
         "Y": [
@@ -993,8 +1160,8 @@ def test_build_tracks_cell_dice_reads_any_banner_rolled_there():
         ],
     }
     track = build_tracks(banner_pulls, {}, {})
-    assert (track["rows"][0]["a_seed"], track["rows"][1]["a_seed"]) == (5, 7)
-    assert (track["rows"][0]["a_cat"], track["rows"][1]["a_cat"]) == ("", "Pogo")
+    assert [e["seed"] for e in track["rows"][0]["a"]] == [5, 5]
+    assert [e["seed"] for e in track["rows"][1]["a"]] == [7]
 
 
 def test_plan_seed_is_the_state_after_the_last_pull():

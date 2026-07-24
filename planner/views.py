@@ -169,8 +169,9 @@ def _future_ubers(request):
 
 def _trace(request):
     """The cell a trace click picked (godfat's pick), as (legend tag, stream index,
-    guaranteed) - or None when nothing was clicked or the post is malformed. ``guaranteed``
-    is set for a click in the guaranteed column."""
+    guaranteed, reroll) - or None when nothing was clicked or the post is malformed.
+    ``guaranteed`` is set for a click in the guaranteed column; ``reroll`` for a click on a
+    cell's "if dupe" branch (marked separately from its clean roll)."""
     tag = request.POST.get("trace_tag", "")
     try:
         index = int(request.POST.get("trace_idx", ""))
@@ -180,7 +181,12 @@ def _trace(request):
     if not (tag.isdigit() and index >= 0):
         return None
 
-    return (tag, index, request.POST.get("trace_guaranteed") == "1")
+    return (
+        tag,
+        index,
+        request.POST.get("trace_guaranteed") == "1",
+        request.POST.get("trace_reroll") == "1",
+    )
 
 
 @require_POST
@@ -284,7 +290,7 @@ def tracks(request):
         future_ubers=future_ubers,
     )
     equivalents = equivalent_banners(result.banners)
-    pulls, guaranteed, rerolls, _ = _rolls_by_banner(result)
+    pulls, guaranteed, rerolls, guaranteed_rerolls = _rolls_by_banner(result)
     trace = _trace(request)
     marks = None
     if trace is not None:
@@ -301,6 +307,8 @@ def tracks(request):
             guaranteed_sizes={
                 name: rolls.guaranteed_rolls for name, rolls in result.banners.items()
             },
+            guaranteed_rerolls=guaranteed_rerolls,
+            reroll=trace[3],
         )
     owned, wanted, titles = _owned_names(), _wanted_names(), display_titles()
     # The unified targets panel (godfat's Find, enriched): every cat you're searching for -
@@ -343,6 +351,7 @@ def tracks(request):
         unit_ids=_unit_ids(),
         tiers=tier_badges(),
         target_names=target_names,
+        guaranteed_rerolls=guaranteed_rerolls,
     )
     # A future-uber row is qualified by its banner's run name; show the short display title
     # instead (the same "June Bride" the legend and picker use), not the long marketing text.

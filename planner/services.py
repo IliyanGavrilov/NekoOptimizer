@@ -792,6 +792,16 @@ def _collection_marks(cat, rarity, owned, wanted, debuts=()):
     }
 
 
+# Track-cell rarity chips: short labels so a cell's line never wraps (the guide and
+# picker keep the full names; data-rarity still carries the full value for colour).
+_SHORT_RARITY = {
+    str(Rarity.RARE): "Rare",
+    str(Rarity.SUPER_RARE): "Super",
+    str(Rarity.UBER_SUPER_RARE): "Uber",
+    str(Rarity.LEGEND_RARE): "Legend",
+}
+
+
 def _dupe_branch(outcome, obtained, target_names=()):
     """A cell's "if dupe" line: the reroll you get when a dupe lands here, where it jumps
     to, and the seed just after it (its own dice). ``obtained`` - the cat the plan pulled
@@ -824,6 +834,9 @@ class TrackMarks:
     shared: dict[str, set[int]] = field(default_factory=dict)
     gshared: dict[str, set[int]] = field(default_factory=dict)
     nexts: dict[str, set[int]] = field(default_factory=dict)
+    # Guaranteed cells where the pill sits on the "if dupe" branch (a reroll trace): the
+    # clean and dupe columns can award the SAME uber, so a name match can't tell them apart.
+    galt_targets: dict[str, set[int]] = field(default_factory=dict)
     # Which plan step (1-based leg number) each lit cell belongs to, so the track can
     # be walked step by step alongside the step list; ``gsteps`` twins the guaranteed
     # columns. Empty on the browse view.
@@ -836,10 +849,12 @@ def _representative(name, equivalents):
     return sorted(equivalents.get(name, [name]))[0]
 
 
-def _banner_groups(banner_pulls, rerolls, equivalents, guaranteed=None):
+def _banner_groups(banner_pulls, rerolls, equivalents, guaranteed=None, guaranteed_rerolls=None):
     """Distinct selected banners (equivalent ones merged), each tagged 1, 2, 3...
-    with its stream grid, outcome graph and guaranteed-uber grid."""
+    with its stream grid, outcome graph and guaranteed-uber grids (clean, plus the
+    ``guaranteed_rerolls`` column for a start whose first roll comes up as a dupe)."""
     guaranteed = guaranteed or {}
+    guaranteed_rerolls = guaranteed_rerolls or {}
     groups = []
     seen = set()
 
@@ -861,6 +876,9 @@ def _banner_groups(banner_pulls, rerolls, equivalents, guaranteed=None):
                 "graph": graph,
                 "guaranteed": {
                     stream_index(p.position, p.track): p for p in guaranteed.get(name, ())
+                },
+                "guaranteed_rerolls": {
+                    stream_index(p.position, p.track): p for p in guaranteed_rerolls.get(name, ())
                 },
             }
         )
@@ -884,6 +902,7 @@ def build_tracks(
     tiers=None,
     currencies=None,
     target_names=None,
+    guaranteed_rerolls=None,
 ):
     """One merged A/B table over every selected banner: each cell stacks each banner's
     cat at that shared stream position (like ubercarry), with rare-dupe switch arrows
@@ -895,7 +914,10 @@ def build_tracks(
     collection). ``guaranteed`` maps a banner to its guaranteed-uber column (godfat's:
     the uber a guaranteed multi gives you when STARTED on that cell); banners without a
     guaranteed multi have none, and when no selected banner has any, the columns are left
-    out entirely (``has_guaranteed``). ``titles`` (display_titles) shortens the legend's
+    out entirely (``has_guaranteed``). ``guaranteed_rerolls`` is the twin column for a
+    start whose first roll comes up as a dupe: it puts an "if dupe" line under a guaranteed
+    cell (the uber the rerolled multi ends on), shown wherever the normal cell shows one.
+    ``titles`` (display_titles) shortens the legend's
     banner names. ``rows`` is how many A/B rows to render (the browse view passes the
     user's "rolls to show"); a plan always extends past it to reach its furthest lit cell.
     ``future`` ({banner name: future-uber count}, browse view only) puts a per-banner
@@ -921,7 +943,7 @@ def build_tracks(
     tiers = tiers or {}
     currencies = currencies or {}
     target_names = target_names or set()
-    groups = _banner_groups(banner_pulls, rerolls, equivalents, guaranteed)
+    groups = _banner_groups(banner_pulls, rerolls, equivalents, guaranteed, guaranteed_rerolls)
     # "New to this banner" is per banner (newly_added_ubers keys by name); a group merges
     # equivalent banners, so its debut set is the union over the names it stands for.
     for group in groups:
@@ -975,6 +997,7 @@ def build_tracks(
                 "uid": unit_ids.get(tp.cat),
                 "tier": tiers.get(unit_ids.get(tp.cat)),
                 "rarity": rarity,
+                "rarity_label": _SHORT_RARITY.get(rarity, rarity),
                 "switch": switched,
                 "alt": (
                     _dupe_branch(branch, obtained, target_names) if branch is not None else None
@@ -984,6 +1007,9 @@ def build_tracks(
                 "target": obtained == tp.cat or tp.cat in target_names,
                 "shared": not on_path and index in marks.shared.get(group["rep"], ()),
                 "next": index in marks.nexts.get(group["rep"], ()),
+                # The line's own dice: the RNG state just after this clean pull (the dupe
+                # branch's different state rides on the branch dice).
+                "seed": tp.seed,
                 **cell_marks,
             }
             # A future-uber cell shows the short "Future Uber n" (the column already names the
@@ -993,26 +1019,6 @@ def build_tracks(
             cells.append(entry)
 
         return cells
-
-    def cell_seed(index):
-        # The cell's docked dice: "I rolled this cell" - the state just after its normal
-        # pull, so the next cell becomes the new 1A. It doesn't depend on the banner (a
-        # clean roll uses the same two stream values whatever the pool), so one dice
-        # serves the whole cell - read it off any banner rolled there. The dupe branch's
-        # different state lives on the branch dice.
-        for group in groups:
-            tp = group["grid"].get(index)
-            if tp is not None:
-                return tp.seed
-
-        return 0
-
-    def cell_cat(index):
-        # What the docked dice got, feeding the dupe memory - we only know it when every
-        # banner stacked in the cell rolls the same name there.
-        names = {g["grid"][index].cat for g in groups if index in g["grid"]}
-
-        return names.pop() if len(names) == 1 else ""
 
     def cell_details(index):
         # The cell's raw RNG values for the details view (godfat's seed column): the
@@ -1036,6 +1042,11 @@ def build_tracks(
             rarity = str(tp.rarity)
             on_path = index in marks.gpath.get(group["rep"], ())
             cell_marks = _collection_marks(tp.cat, rarity, owned, wanted, group["debuts"])
+            # The clean and dupe guaranteed columns can award the SAME uber, so the pill
+            # placement can't ride on a name match alone: galt_targets says a reroll trace
+            # picked the "if dupe" line, pinning the pill there and off the clean one.
+            gobtained = marks.gtargets.get(group["rep"], {}).get(index)
+            gpicked_alt = index in marks.galt_targets.get(group["rep"], ())
             entry = {
                 "tag": group["tag"],
                 "idx": index,
@@ -1043,19 +1054,45 @@ def build_tracks(
                 "uid": unit_ids.get(tp.cat),
                 "tier": tiers.get(unit_ids.get(tp.cat)),
                 "rarity": rarity,
+                "rarity_label": _SHORT_RARITY.get(rarity, rarity),
                 # The state after the multi's final (guaranteed) draw - "as if you
                 # rolled this multi": what its dice jumps to. Rolling TO the multi
                 # is the track cell's own dice (same start anchor).
                 "seed": tp.seed,
                 "on_path": on_path,
                 "step": marks.gsteps.get(group["rep"], {}).get(index),
-                "target": marks.gtargets.get(group["rep"], {}).get(index) == tp.cat
-                or tp.cat in target_names,
+                "target": (gobtained == tp.cat and not gpicked_alt) or tp.cat in target_names,
                 "shared": not on_path and index in marks.gshared.get(group["rep"], ()),
                 **cell_marks,
             }
             if cell_marks["future"]:
                 entry["future_label"] = future_uber_label(tp.cat)
+
+            # The guaranteed column's "if dupe" line: when this cell (the multi's first
+            # roll) arrives as a dupe, the reroll jumps the chain, so the multi ends on a
+            # different cell and can hand you a different uber (godfat's guaranteed R cell).
+            # Shown under exactly the condition the normal cell shows its own dupe line, so
+            # the two "if dupe" rows line up across the A/B and guaranteed columns.
+            graph = group["graph"]
+            outcome = graph.outcome(index)
+            if (outcome and outcome.switched) or graph.realized(index):
+                dupe = group["guaranteed_rerolls"].get(index)
+                if dupe is not None and dupe.cat:
+                    dupe_marks = _collection_marks(
+                        dupe.cat, str(dupe.rarity), owned, wanted, group["debuts"]
+                    )
+                    alt = {
+                        "cat": dupe.cat,
+                        "seed": dupe.seed,
+                        "guaranteed": True,
+                        "future": dupe_marks["future"],
+                        "target": (gobtained == dupe.cat and (gpicked_alt or gobtained != tp.cat))
+                        or dupe.cat in target_names,
+                    }
+                    if dupe_marks["future"]:
+                        alt["future_label"] = future_uber_label(dupe.cat)
+                    entry["alt"] = alt
+
             cells.append(entry)
 
         return cells
@@ -1066,10 +1103,6 @@ def build_tracks(
             "pos": pos,
             "a": entries(2 * (pos - 1)),
             "b": entries(2 * (pos - 1) + 1),
-            "a_seed": cell_seed(2 * (pos - 1)),
-            "b_seed": cell_seed(2 * (pos - 1) + 1),
-            "a_cat": cell_cat(2 * (pos - 1)),
-            "b_cat": cell_cat(2 * (pos - 1) + 1),
             "a_details": cell_details(2 * (pos - 1)),
             "b_details": cell_details(2 * (pos - 1) + 1),
             "ga": guaranteed_entries(2 * (pos - 1)) if has_guaranteed else [],
@@ -1398,6 +1431,8 @@ def trace_marks(
     guaranteed_pulls=None,
     guaranteed=False,
     guaranteed_sizes=None,
+    guaranteed_rerolls=None,
+    reroll=False,
 ):
     """Plan-style marks for a clicked cell (godfat's pick), on the clicked banner (its
     legend ``tag``). The single-pull walk from the table start (1A) tries to reach the
@@ -1418,19 +1453,35 @@ def trace_marks(
     click (unknown tag, cell beyond the rolled window, or a guaranteed click on a banner
     with no guarantee there) marks nothing.
 
+    ``reroll`` marks the "if dupe" branch instead of the clean roll (a click on the cell's
+    dupe line): the reroll a dupe arrival lands on for a normal cell, or - with
+    ``guaranteed`` - the uber a guaranteed multi whose first roll dupes ends on (needs the
+    ``guaranteed_rerolls`` column). It targets a different cat than the clean click, so the
+    two mark separately.
+
     Every trace also stripes the cell the seed continues on afterwards (``nexts``,
     godfat's next position): the clicked pull's own continuation - nominal (+2) for an
     unreachable cell - or the guaranteed multi's landing, one half-step past its
     swapped final roll."""
-    groups = _banner_groups(banner_pulls, rerolls, equivalents, guaranteed_pulls)
+    groups = _banner_groups(
+        banner_pulls, rerolls, equivalents, guaranteed_pulls, guaranteed_rerolls
+    )
     picked = next((g for g in groups if g["tag"] == str(tag)), None)
     if picked is None or index not in picked["grid"]:
         return TrackMarks()
 
     graph, rep = picked["graph"], picked["rep"]
-    # A guaranteed click needs the column's uber; bail when this banner has none there.
-    gpull = picked["guaranteed"].get(index) if guaranteed else None
+    # A guaranteed click needs the column's uber (the reroll column for an "if dupe"
+    # click); bail when this banner has none there.
+    gcolumn = picked["guaranteed_rerolls"] if reroll else picked["guaranteed"]
+    gpull = gcolumn.get(index) if guaranteed else None
     if guaranteed and (gpull is None or not gpull.cat):
+        return TrackMarks()
+
+    # An "if dupe" click on a normal cell targets that cell's reroll; bail when the cell
+    # has no rare-dupe branch to mark.
+    branch = graph.reroll(index) if reroll else None
+    if reroll and not guaranteed and (branch is None or not branch.cat):
         return TrackMarks()
 
     walk, last, at = [], last_cat, 0
@@ -1445,26 +1496,32 @@ def trace_marks(
         last, at = outcome.cat, outcome.next_position
 
     reached = bool(walk) and walk[-1][0] == index
+    # Which branch the straight chain takes at the cell: the reroll (it dupes on arrival)
+    # or the clean roll. A click picks a branch; the walk in lights only when the chain
+    # agrees with the pick - the other branch is a "had you arrived otherwise" pill alone.
+    duped_arrival = reached and walk[-1][1].switched
+    walked = {step for step, _ in walk} if reached and duped_arrival == reroll else set()
 
     if guaranteed:
-        # The gold pill sits on the guaranteed uber. The multi's own draws light either
-        # way: starting a guaranteed multi on the clicked cell plays through those cells
-        # whether or not clean singles reach it. When the start IS reachable, the walk that
-        # gets there lights too; when it isn't, only the multi's own run lights - no faked
-        # route in, but the cells it visits are still shown.
+        # The gold pill sits on the picked branch's uber (galt_targets pins it to the
+        # "if dupe" line on a reroll pick - the two columns can award the same name). The
+        # multi's own draws light either way: starting it on the clicked cell plays through
+        # those cells whether or not the straight chain agrees with the picked branch.
         marks = TrackMarks(gtargets={rep: {index: gpull.cat}})
+        if reroll:
+            marks.galt_targets = {rep: {index}}
         sizes = guaranteed_sizes or {}
         size = max((sizes.get(name, 0) for name in picked["names"]), default=0)
-        # godfat lights what the multi itself draws: its first draw is the clicked cell
-        # (arriving as the walk did, or nominally for an unreachable start), then size - 2
+        # godfat lights what the multi itself draws: its first draw is the clicked branch
+        # (the reroll's hop for an "if dupe" pick, the clean roll otherwise), then size - 2
         # more singles along the play chain (dupes hop like any single). The final roll is
         # swapped for the uber - its cell's shown cat is never obtained, so it stays unlit -
         # and the seed continues one half-step past it, track flipped: that landing cell
         # gets the striped next mark.
-        steps = {step for step, _ in walk} if reached else set()
-        first = walk[-1][1] if reached else graph.resolve(index)
+        steps = set(walked)
+        first = branch if reroll else graph.resolve(index)
         if size >= 2 and first is not None:
-            steps.add(index)  # the multi's first draw (already walked when reachable)
+            steps.add(index)  # the multi's first draw (already walked when the chain agrees)
             last, at = first.cat, first.next_position
             for _ in range(size - 2):
                 outcome = graph.resolve(at, last)
@@ -1481,9 +1538,20 @@ def trace_marks(
             marks.gpath = {rep: {index}}
         return marks
 
-    if not reached:
-        # No clean-singles route to the cell: mark just the cat that lands here, and
-        # stripe where getting it would drop you (the nominal continuation, +2).
+    # An "if dupe" click marks the reroll branch: pill on the reroll cat, the walk in lit
+    # only when the straight chain really dupes here, and the striped next past the
+    # reroll's extra hop - the track switch the branch takes.
+    if reroll:
+        return TrackMarks(
+            path={rep: walked} if walked else {},
+            targets={rep: {index: branch.cat}},
+            nexts={rep: {branch.next_position}},
+        )
+
+    if not reached or duped_arrival:
+        # The straight chain can't hand you the clean roll here (it never arrives, or it
+        # dupes on arrival and rerolls): pill the nominal cat alone, striping its own
+        # same-track continuation (+2) - no faked route in.
         return TrackMarks(
             targets={rep: {index: picked["grid"][index].cat}},
             nexts={rep: {index + 2}},
@@ -1817,6 +1885,7 @@ def subset_solutions(
             unit_ids=unit_ids,
             tiers=tiers,
             currencies=currencies,
+            guaranteed_rerolls=guaranteed_rerolls,
         )
         solutions.append(solution)
 
