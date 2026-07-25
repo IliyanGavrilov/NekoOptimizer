@@ -1,9 +1,8 @@
-from django.core.management.base import BaseCommand
-
+from planner.management.base import RegionCommand
 from planner.services import fetch_catalogue, import_cats
 
 
-class Command(BaseCommand):
+class Command(RegionCommand):
     help = "Populate the catalogue with every scheduled banner's cats from the gacha pools."
 
     def handle(self, *args, **options):

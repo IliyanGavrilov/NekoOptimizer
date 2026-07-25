@@ -1,4 +1,22 @@
-from neko.tierdata import eligible_units, parse_tiers, resolve_names, tier_records
+from neko.tierdata import (
+    CAPSULE,
+    EVERYTHING,
+    UBERS,
+    discover_lists,
+    eligible_units,
+    parse_tiers,
+    resolve_names,
+    tier_records,
+)
+
+
+def _nav(*paths):
+    """The site nav's leaf links, as the per-set pages render them."""
+    return "".join(
+        f'<a data-navtype="1" href="{path}" data-url="{path}" data-type="1" '
+        f'data-level="3">{label}</a>'
+        for path, label in paths
+    )
 
 
 def _records(*rows):
@@ -31,6 +49,41 @@ def test_parse_unescapes_html_entities_in_names():
 def test_parse_skips_script_and_style_blocks():
     page = "<style>S: Nope</style><script>SS: Nope</script><p>S: Real</p>"
     assert parse_tiers(page) == [("S", "Real", None)]
+
+
+def test_parse_reads_the_per_set_pages_hyphen_separator():
+    assert parse_tiers("<p>SS - Balrog, Lasvoss</p>") == [
+        ("SS", "Balrog", None),
+        ("SS", "Lasvoss", None),
+    ]
+
+
+def test_parse_drops_an_empty_tier():
+    assert parse_tiers("<p>F - n/a</p>") == []
+
+
+def test_discover_lists_reads_label_and_category_off_the_nav():
+    page = _nav(("/tier-lists/base-tier-lists/dynamites", "Dynamites"))
+    (entry,) = discover_lists(page)
+    assert (entry.path, entry.label, entry.category) == (
+        "/tier-lists/base-tier-lists/dynamites",
+        "Dynamites",
+        "Base",
+    )
+
+
+def test_discover_lists_keeps_one_entry_per_path_across_the_repeated_nav():
+    link = ("/tier-lists/seasonal-tier-lists/june-bride", "June Bride")
+    assert len(discover_lists(_nav(link) + _nav(link))) == 1
+
+
+def test_discover_lists_scopes_each_category_to_the_units_it_can_rank():
+    page = _nav(
+        ("/tier-lists/collab-tier-lists/evangelion", "Evangelion"),
+        ("/tier-lists/non-uber-tier-lists/crazed-cats", "Crazed Cats"),
+        ("/tier-lists/base-tier-lists/nekolugas", "Nekolugas"),
+    )
+    assert [entry.scope for entry in discover_lists(page)] == [UBERS, EVERYTHING, CAPSULE]
 
 
 def test_resolve_matches_an_exact_catalogue_name():

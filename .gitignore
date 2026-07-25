@@ -220,6 +220,9 @@ __marimo__/
 # Neko Optimizer scrape cache
 rollcache/
 
+# Cat icons fetched by `manage.py fetch_icons` (~20MB of third-party PNGs)
+planner/static/planner/icons/
+
 # graphify knowledge-graph output
 graphify-out/
 

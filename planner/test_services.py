@@ -19,7 +19,9 @@ from planner.services import (
     banner_titles,
     build_tracks,
     collection_sections,
+    combo_filter_groups,
     cost_label,
+    dictionary_sections,
     equivalent_banners,
     find_cats,
     newly_added_ubers,
@@ -33,8 +35,11 @@ from planner.services import (
     set_sections,
     subset_solutions,
     tier_badges,
+    tier_list_doc,
+    tier_list_index,
     tier_list_rows,
     trace_marks,
+    unit_facets,
     unit_stats,
     wiki_url,
 )
@@ -60,6 +65,19 @@ def test_banner_currencies_matches_the_real_capsule_run_names():
     assert banner_currencies(names) == {names[0]: "platinum", names[1]: "legend"}
 
 
+def test_banner_currencies_matches_the_other_versions_capsule_names():
+    names = [
+        "超激レアのキャラクターが必ず１体手に入る「プラチナガチャ」！",
+        "必定可以獲得1隻以上超激稀有角色的「傳說轉蛋」！",
+        "울트라 슈퍼 레어 캐릭터 100% 획득 가능! ★플래티넘 뽑기★",
+    ]
+    assert banner_currencies(names) == {
+        names[0]: "platinum",
+        names[1]: "legend",
+        names[2]: "platinum",
+    }
+
+
 def test_banner_currencies_ignores_banners_that_merely_mention_legend():
     # Collabs/fests name a "Limited Legend" or "Legend Rare drop rate" but roll on
     # catfood like any banner - they must not be treated as scarce-ticket capsules.
@@ -79,6 +97,66 @@ def test_collection_sections_orders_rarities_cheapest_to_rarest():
 def test_collection_sections_puts_blank_rarity_under_unknown_last():
     units = [Unit(rarity=""), Unit(rarity="Legend Rare")]
     assert [r for r, _ in collection_sections(units)] == ["Legend Rare", "Unknown"]
+
+
+def test_dictionary_sections_follow_the_guide_order_within_a_rarity():
+    units = [Unit(unit_id=n, rarity="Normal") for n in (0, 1, 2)]
+    sections = dictionary_sections(units, [2, 0, 1])
+    assert [unit.unit_id for unit in sections[0][1]] == [2, 0, 1]
+
+
+def test_dictionary_sections_trail_unlisted_units_in_id_order():
+    units = [Unit(unit_id=n, rarity="Rare") for n in (5, 3, 9)]
+    sections = dictionary_sections(units, [9])
+    assert [unit.unit_id for unit in sections[0][1]] == [9, 3, 5]
+
+
+def _form(**overrides):
+    return {"targets": [], "abilities": [], "immune": [], "area": False, **overrides}
+
+
+def _facets(forms, combos=(), talents=None):
+    stats = {"units": [{"id": 0, "forms": forms}]}
+    return unit_facets(stats, {"combos": list(combos)}, talents or {})[0]
+
+
+def test_facets_union_targets_over_forms():
+    facet = _facets([_form(targets=["Red"]), _form(targets=["Alien", "Red"])])
+    assert facet["t"] == ["Alien", "Red"]
+
+
+def test_facets_carry_both_attack_types_when_forms_differ():
+    facet = _facets([_form(), _form(area=True)])
+    assert facet["a"] == ["area", "single"]
+
+
+def test_facets_collect_combo_effects_without_duplicates():
+    combos = [
+        {"effect": 5, "units": [[0, 0], [1, 0]]},
+        {"effect": 5, "units": [[0, 1]]},
+        {"effect": 9, "units": [[0, 0]]},
+    ]
+    assert _facets([_form()], combos)["c"] == [5, 9]
+
+
+def test_facets_ignore_combos_of_unknown_units():
+    assert _facets([_form()], [{"effect": 5, "units": [[7, 0]]}])["c"] == []
+
+
+def test_facets_flag_talents_from_string_keys():
+    facet = _facets([_form()], talents={"0": [{"ultra": False}, {"ultra": True}]})
+    assert (facet["n"], facet["u"]) == (True, True)
+
+
+_COMBO_DOC = {"effects": ["A", "B", "C", "D"], "categories": [[0, 1], [3]]}
+
+
+def test_combo_groups_follow_the_games_categories_with_labels():
+    assert combo_filter_groups(_COMBO_DOC)[0] == ("Units", [(0, "A"), (1, "B")])
+
+
+def test_combo_groups_append_unlisted_effects_under_other():
+    assert combo_filter_groups(_COMBO_DOC)[-1] == ("Other", [(2, "C")])
 
 
 def _dated_banner(name, start, end):
@@ -1608,6 +1686,45 @@ def test_tier_list_rows_keep_a_boosted_entry_undimmed():
     doc = _tier_doc(("SS", [(5, "UF")]), ("B", [(5, None)]))
     boosted = next(e for row in tier_list_rows(doc) for e in row["entries"] if e["boost"] == "UF")
     assert boosted["dimmed"] is False
+
+
+def _list_doc(*lists):
+    """A tiers.json doc whose per-set lists are (path, label, category) triples."""
+    return {
+        "tiers": [],
+        "lists": [
+            {"path": path, "label": label, "category": category, "tiers": []}
+            for path, label, category in lists
+        ],
+    }
+
+
+def test_tier_list_index_groups_the_per_set_lists_by_category():
+    doc = _list_doc(
+        ("/tier-lists/base-tier-lists/dynamites", "Dynamites", "Base"),
+        ("/tier-lists/base-tier-lists/nekolugas", "Nekolugas", "Base"),
+        ("/tier-lists/collab-tier-lists/evangelion", "Evangelion", "Collab"),
+    )
+    assert tier_list_index(doc) == [
+        (
+            "Base",
+            [
+                {"label": "Dynamites", "slug": "base-tier-lists/dynamites"},
+                {"label": "Nekolugas", "slug": "base-tier-lists/nekolugas"},
+            ],
+        ),
+        ("Collab", [{"label": "Evangelion", "slug": "collab-tier-lists/evangelion"}]),
+    ]
+
+
+def test_tier_list_doc_finds_a_list_by_its_slug():
+    doc = _list_doc(("/tier-lists/base-tier-lists/dynamites", "Dynamites", "Base"))
+    assert tier_list_doc("base-tier-lists/dynamites", doc)["label"] == "Dynamites"
+
+
+def test_tier_list_doc_is_none_for_an_unknown_slug():
+    doc = _list_doc(("/tier-lists/base-tier-lists/dynamites", "Dynamites", "Base"))
+    assert tier_list_doc("base-tier-lists/nope", doc) is None
 
 
 def test_unit_stats_pairs_the_forms_with_the_quoted_level():

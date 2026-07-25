@@ -9,7 +9,8 @@
   <input type="hidden" id="csrfToken" value="{{ csrf_token }}">
   <div class="collection-controls">
     <div class="view-toggle" id="collectionViews" role="tablist">
-      <button type="button" class="view-btn is-active" data-view="rarity" aria-selected="true">By rarity</button>
+      <button type="button" class="view-btn is-active" data-view="dictionary" aria-selected="true" title="The in-game Cat Guide arrangement">Dictionary</button>
+      <button type="button" class="view-btn" data-view="rarity" aria-selected="false">By rarity</button>
       <button type="button" class="view-btn" data-view="sets" aria-selected="false">By gacha set</button>
     </div>
     <input type="search" id="collectionSearch" placeholder="Search cats &amp; sets&hellip;">
@@ -39,14 +40,62 @@
     {% endfor %}
   </div>
 
+  <details class="facet-panel" id="facetPanel">
+    <summary>Filters <span id="facetCount" class="muted"></span></summary>
+    <div class="facet-controls">
+      <div class="view-toggle" id="facetMode" role="group" aria-label="Combine selected filters with">
+        <button type="button" class="view-btn is-active" data-mode="and" title="Show cats matching every selected filter">Match all</button>
+        <button type="button" class="view-btn" data-mode="or" title="Show cats matching any selected filter">Match any</button>
+      </div>
+      <label class="ctrl">In a combo of:
+        <select id="comboFilter">
+          <option value="">&mdash;</option>
+          {% for group, effects in combo_groups %}
+            <optgroup label="{{ group }}">
+              {% for eid, name in effects %}<option value="{{ eid }}">{{ name }}</option>{% endfor %}
+            </optgroup>
+          {% endfor %}
+        </select>
+      </label>
+      <button type="button" class="io-btn" id="facetClear">Clear</button>
+    </div>
+    <div class="facet-filter" data-group="t" role="group" aria-label="Filter by targeted trait">
+      <span class="facet-label">Targets</span>
+      {% for label in filter_targets %}<button type="button" data-value="{{ label }}" aria-pressed="false">{{ label }}</button>{% endfor %}
+    </div>
+    <div class="facet-filter" data-group="a" role="group" aria-label="Filter by attack type">
+      <span class="facet-label">Attack</span>
+      {% for key, label in filter_attack %}<button type="button" data-value="{{ key }}" aria-pressed="false">{{ label }}</button>{% endfor %}
+    </div>
+    <div class="facet-filter" data-group="a" role="group" aria-label="Filter by ability">
+      <span class="facet-label">Abilities</span>
+      {% for key, label in filter_abilities %}<button type="button" data-value="{{ key }}" aria-pressed="false">{{ label }}</button>{% endfor %}
+    </div>
+    <div class="facet-filter" data-group="i" role="group" aria-label="Filter by immunity">
+      <span class="facet-label">Immune to</span>
+      {% for label in filter_immune %}<button type="button" data-value="{{ label }}" aria-pressed="false">{{ label }}</button>{% endfor %}
+    </div>
+    <div class="facet-filter" data-group="k" role="group" aria-label="Filter by talents">
+      <span class="facet-label">Talents</span>
+      <button type="button" data-value="n" aria-pressed="false">Has Talents</button>
+      <button type="button" data-value="u" aria-pressed="false">Has Ultra Talents</button>
+    </div>
+  </details>
+  {{ facets|json_script:"catFacets" }}
+
   <div class="cat-browser" id="collectionBrowser"
        data-toggle-url="{% url 'collection_toggle' %}" data-bulk-url="{% url 'collection_bulk' %}"
        data-import-url="{% url 'collection_import' %}">
-    <div class="collection-view" data-view="rarity">
-      {% for label, note, rarities in rarity_sections %}
+    <div class="collection-view" data-view="dictionary">
+      {% for label, note, rarities in dict_sections %}
         {% include "planner/_collection_section.html" with is_rarity=True %}
       {% empty %}
         <p class="muted">The catalogue is empty &mdash; run the import first.</p>
+      {% endfor %}
+    </div>
+    <div class="collection-view" data-view="rarity" hidden>
+      {% for label, note, rarities in rarity_sections %}
+        {% include "planner/_collection_section.html" with is_rarity=True %}
       {% endfor %}
     </div>
     <div class="collection-view" data-view="sets" hidden>

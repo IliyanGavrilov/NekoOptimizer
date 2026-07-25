@@ -7,6 +7,9 @@ from neko.normal_plan import plan_normal
 from neko.seek import SeekMatch, SeekResult
 from planner.forms import MIN_SEEK_ROLLS
 
+# Every request reads the persisted region row (planner.middleware.region_scope).
+pytestmark = pytest.mark.django_db
+
 # The ampuri-verified golden seed the engine fixtures use: on Normal Capsules its
 # cell 1A is Fish Cat, and with Fish Cat as the remembered last pull that cell
 # dupes into Bird Cat (see neko/tests/fixtures/normal_golden_lastcat.json).

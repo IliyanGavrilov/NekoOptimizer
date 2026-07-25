@@ -1,8 +1,10 @@
 import csv
+import re
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 
 from neko.models import Rarity
+from neko.region import DEFAULT_REGION, spec
 
 # Unit id = the row's 0-based index in unitbuy.csv (no header/id column); this column
 # holds the rarity code.
@@ -35,13 +37,15 @@ class Unit:
         return self.forms[0] if self.forms else ""
 
 
-def parse_forms(text: str) -> tuple[str, ...]:
-    """Form names from one Unit_Explanation file (one per line, name in pipe-field 0).
+def parse_forms(text: str, region: str = DEFAULT_REGION) -> tuple[str, ...]:
+    """Form names from one Unit_Explanation file (one per line, name in field 0).
     A line that repeats the previous name is an evolution the game hasn't released (or
     named) here yet - a placeholder row, not a real form - so it's dropped."""
+    separator = spec(region).separator
+
     forms = []
     for line in text.splitlines():
-        name = line.split("|", 1)[0].strip()
+        name = line.split(separator, 1)[0].strip()
         if name and (not forms or name != forms[-1]):
             forms.append(name)
 
@@ -68,22 +72,43 @@ def parse_rarities(unitbuy_text: str) -> dict[int, Rarity]:
 
 
 # The Cat Guide names a unit's gacha set only for capsule units; for stage/collab units
-# the same field holds a stage or event name instead, so it must be gated on the source.
-_CAPSULE_SOURCES = ("From Rare Capsule Event", "Collect from Limited Rare Capsules")
+# the same field holds a stage or event name instead, so it must be gated on the source -
+# in the region's own words.
+_CAPSULE_SOURCES = {
+    "en": ("From Rare Capsule Event", "Collect from Limited Rare Capsules"),
+    "jp": (
+        "レアガチャイベント",
+        "期間限定レアガチャイベント",
+        "期間限定レアガチャイベントで入手可能",
+    ),
+    "tw": ("稀有轉蛋活動", "期間限定稀有轉蛋活動", "期間限定稀有轉蛋活動中可獲得"),
+    "kr": (
+        "레어 뽑기 이벤트",
+        "기간 한정 레어 뽑기 이벤트",
+        "기간 한정 레어 뽑기 이벤트로 획득 가능",
+    ),
+}
 _EMPTY_FIELD = "＠"
 
+# Outside English the set name arrives inside a sentence: 「The Dynamites」で入手可能.
+_QUOTED = re.compile("「(.+?)」")
 
-def parse_sets(picture_book_text: str) -> dict[int, str]:
+
+def parse_sets(picture_book_text: str, region: str = DEFAULT_REGION) -> dict[int, str]:
     """Map unit id (its nyankoPictureBook row) to its official gacha set name, e.g.
     'The Dynamites' - the name shown on the in-game banner image, which the event
     data's text field (a per-run marketing subtitle) never carries."""
+    separator = spec(region).separator
+    sources = _CAPSULE_SOURCES[region]
+
     sets: dict[int, str] = {}
     for unit_id, line in enumerate(picture_book_text.splitlines()):
-        fields = line.split("|")
-        if len(fields) < 2 or fields[0].strip() not in _CAPSULE_SOURCES:
+        fields = line.split(separator)
+        if len(fields) < 2 or fields[0].strip() not in sources:
             continue
 
-        name = fields[1].strip()
+        quoted = _QUOTED.search(fields[1])
+        name = quoted.group(1).strip() if quoted else fields[1].strip()
         if name and name != _EMPTY_FIELD:
             sets[unit_id] = name
 

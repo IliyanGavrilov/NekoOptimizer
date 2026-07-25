@@ -41,6 +41,25 @@
   </section>
 
   <section class="about-section">
+    <h2>Community tools</h2>
+    <p class="muted">
+      Neko Optimizer plans rolls; it deliberately doesn't try to be a stat calculator or a
+      stage database. These are the tools worth keeping in the other tab.
+    </p>
+    {% for group, links in tool_directory %}
+      <h3 class="about-group">{{ group }}</h3>
+      <ul class="about-list muted">
+        {% for link in links %}
+          <li>
+            <a href="{{ link.url }}" target="_blank" rel="noopener">{{ link.label }} &#8599;</a>
+            &mdash; {{ link.note }}
+          </li>
+        {% endfor %}
+      </ul>
+    {% endfor %}
+  </section>
+
+  <section class="about-section">
     <h2>Credits</h2>
     <p class="muted">
       The reverse-engineered gacha mechanics &mdash; the XOR-shift RNG and the roll-engine
