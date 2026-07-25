@@ -7,6 +7,7 @@ import re
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 from datetime import date
+from functools import cache
 from pathlib import Path
 
 from neko.bcdata import _get, load_records
@@ -254,8 +255,10 @@ def tier_records(
     }
 
 
+@cache
 def load_tiers(path: Path = TIERS_PATH) -> dict:
-    """The committed tier-list document."""
+    """The committed tier-list document. Memoized: it only changes on a refresh (a fresh
+    process), and every caller reads it."""
     return json.loads(path.read_text(encoding="utf-8"))
 
 

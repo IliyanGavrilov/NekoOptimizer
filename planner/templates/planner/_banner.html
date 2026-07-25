@@ -1,15 +1,15 @@
-<details class="banner-group" data-title="{{ title }}"{% if is_open %} open{% endif %}{% if dates %} data-start="{{ dates.0|date:'Y-m-d' }}" data-end="{{ dates.1|date:'Y-m-d' }}"{% endif %}>
+<details class="banner-group" data-title="{{ title }}"{% if is_open %} open{% endif %}{% if dates %} data-start="{{ dates.iso_start }}" data-end="{{ dates.iso_end }}"{% endif %}>
   <summary>
-    {% if dates %}<button type="button" class="banner-include" aria-pressed="false" data-banner="{{ banner }}" data-run="{{ dates.0|date:'Y-m-d' }}" title="Roll this banner's session" aria-label="Include banner">&plus;</button>{% endif %}
+    {% if dates %}<button type="button" class="banner-include" aria-pressed="false" data-banner="{{ banner }}" data-run="{{ dates.iso_start }}" title="Roll this banner's session" aria-label="Include banner">&plus;</button>{% endif %}
     <span class="banner-name">{{ title }}{% if title != banner %} <span class="banner-sub">{{ banner }}</span>{% endif %}</span>
     {% if dates %}
-      {% if dates.1.year >= 2030 %}
-        <span class="dates">Since {{ dates.0|date:"M j, Y" }}</span>
-      {% elif dates.0.year != dates.1.year %}
+      {% if dates.end.year >= 2030 %}
+        <span class="dates">Since {{ dates.start|date:"M j, Y" }}</span>
+      {% elif dates.start.year != dates.end.year %}
         {# A run spanning New Year needs both years or "Dec 29 - Jan 1, 2026" misreads. #}
-        <span class="dates">{{ dates.0|date:"M j, Y" }} &ndash; {{ dates.1|date:"M j, Y" }}</span>
+        <span class="dates">{{ dates.start|date:"M j, Y" }} &ndash; {{ dates.end|date:"M j, Y" }}</span>
       {% else %}
-        <span class="dates">{{ dates.0|date:"M j" }} &ndash; {{ dates.1|date:"M j, Y" }}</span>
+        <span class="dates">{{ dates.start|date:"M j" }} &ndash; {{ dates.end|date:"M j, Y" }}</span>
       {% endif %}
     {% endif %}
   </summary>
@@ -17,10 +17,7 @@
     <div class="rarity-row" data-rarity-row>
       <span class="rarity" data-rarity="{{ rarity }}">{{ rarity }}</span>
       <div class="chips">
-        {% for cat in cats %}
-          <button type="button" class="chip{% if cat.owned %} owned{% endif %}{% if cat.wanted %} wanted{% endif %}" data-pk="{{ cat.pk }}"
-                  data-name="{{ cat.name }}" data-rarity="{{ cat.rarity }}">{{ cat.name }}{% include "planner/_tier_badge.html" with badge=cat.tier_badge %}</button>
-        {% endfor %}
+        {% for cat in cats %}{{ cat.chip }}{% endfor %}
       </div>
     </div>
   {% endfor %}

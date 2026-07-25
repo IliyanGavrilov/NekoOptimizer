@@ -73,10 +73,10 @@
       {% for row in track.rows %}
         <tr>
           <th scope="row" class="pos">{{ row.pos }}</th>
-          {% include "planner/_track_cell.html" with entries=row.a multi=track.legend|length details=row.a_details %}
-          {% if track.has_guaranteed %}{% include "planner/_track_cell.html" with entries=row.ga multi=track.legend|length cell_class="guaranteed-col" %}{% endif %}
-          {% include "planner/_track_cell.html" with entries=row.b multi=track.legend|length details=row.b_details %}
-          {% if track.has_guaranteed %}{% include "planner/_track_cell.html" with entries=row.gb multi=track.legend|length cell_class="guaranteed-col" %}{% endif %}
+          {% include "planner/_track_cell.html" with entries=row.a multi=track.multi details=row.a_details %}
+          {% if track.has_guaranteed %}{% include "planner/_track_cell.html" with entries=row.ga multi=track.multi cell_class="guaranteed-col" %}{% endif %}
+          {% include "planner/_track_cell.html" with entries=row.b multi=track.multi details=row.b_details %}
+          {% if track.has_guaranteed %}{% include "planner/_track_cell.html" with entries=row.gb multi=track.multi cell_class="guaranteed-col" %}{% endif %}
         </tr>
       {% endfor %}
     </tbody>
