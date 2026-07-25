@@ -275,27 +275,43 @@ input[type="search"]::-webkit-search-cancel-button { appearance: none; -webkit-a
 /* Resources page: a running total that stays on screen while you tick, then one card
    per cat and per base upgrade. Every row wraps rather than clipping - the cost lists
    are as long as the game makes them. */
-/* The two grinds sit side by side where there's room, stacked when there isn't - they
-   share nothing, so reading one shouldn't mean scrolling past the other. */
-.res-overview {
-  position: sticky;
-  top: calc(var(--header-h, 52px) + 0.3rem);
-  z-index: 3;
+/* The running total rides along in its own column so it can stay put without eating the
+   screen: cards on the left, totals pinned on the right. Both sit in row 1, which makes
+   the sidebar's grid area as tall as the cards - that's what lets it stick the whole way
+   down. Under 1100px the column is gone and it folds back above the cards, unpinned. */
+#resBoard {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(19rem, 1fr));
+  grid-template-columns: minmax(0, 1fr) minmax(17rem, 21rem);
+  gap: 1rem;
   align-items: start;
-  gap: 0.2rem 1.4rem;
+}
+.res-lists { grid-column: 1; grid-row: 1; min-width: 0; }
+.res-overview {
+  grid-column: 2;
+  grid-row: 1;
+  position: sticky;
+  top: calc(var(--header-h, 52px) + 0.5rem);
+  max-height: calc(100vh - var(--header-h, 52px) - 1.5rem);
+  overflow: auto;
   border: 1px solid var(--accent);
   border-radius: 10px;
   background: var(--bg-2);
   padding: 0.6rem 0.9rem;
-  margin-bottom: 1rem;
-  max-height: 45vh;
-  overflow-y: auto;
 }
-.res-overview > h2 { grid-column: 1 / -1; margin: 0 0 0.2rem; font-size: 0.95rem; color: var(--muted); }
-.res-overview > .muted { grid-column: 1 / -1; margin: 0; }
+.res-overview > h2 { margin: 0 0 0.3rem; font-size: 0.95rem; color: var(--muted); }
+.res-overview > .muted { margin: 0; }
+.res-sub { font-size: 0.78rem; opacity: 0.8; }
+
+@media (max-width: 1100px) {
+  #resBoard { grid-template-columns: minmax(0, 1fr); }
+  .res-lists, .res-overview { grid-column: 1; grid-row: auto; }
+  .res-overview { position: static; max-height: none; margin-bottom: 1rem; }
+}
+/* The sidebar is narrow, so a family table that outgrows it scrolls on its own rather
+   than pushing the column wider. */
+.res-block { min-width: 0; overflow-x: auto; }
 .res-block h3 { margin: 0 0 0.3rem; font-size: 0.85rem; font-weight: 700; }
+.res-overview .item-icon { width: 20px; }
 /* A family per row, a kind per column: the members of a family level in step, so lining
    them up says at a glance which colour is holding you back. */
 .res-grid { border-collapse: collapse; font-size: 0.9rem; }
