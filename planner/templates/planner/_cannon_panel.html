@@ -1,0 +1,40 @@
+{# The cannon developer: picker, per-part level ranges with costs, grind totals. #}
+<h2>Cannons</h2>
+<div class="materials-add">
+  <select class="materials-pick" aria-label="Add a cannon to the developer">
+    <option value="">Add a cannon&hellip;</option>
+    {% for cid, name in options %}<option value="{{ cid }}">{{ name }}</option>{% endfor %}
+  </select>
+</div>
+{% for row in panel.rows %}
+  <div class="materials-row">
+    <span class="materials-name">{{ row.name }}</span>
+    <button type="button" class="materials-remove" data-unit="{{ row.id }}" title="Remove from the developer" aria-label="Remove {{ row.name }}">&times;</button>
+    {% for part in row.parts %}
+      <div class="materials-part">
+        <strong>{{ part.label }}</strong>
+        <span class="materials-levels">Lv
+          <select data-unit="{{ row.id }}" data-part="{{ part.key }}" data-bound="now" aria-label="{{ row.name }} {{ part.label }} current level">
+            {% for lv in part.levels %}<option value="{{ lv }}"{% if lv == part.now %} selected{% endif %}>{{ lv }}</option>{% endfor %}
+          </select>
+          &rarr;
+          <select data-unit="{{ row.id }}" data-part="{{ part.key }}" data-bound="goal" aria-label="{{ row.name }} {{ part.label }} goal level">
+            {% for lv in part.levels %}<option value="{{ lv }}"{% if lv == part.goal %} selected{% endif %}>{{ lv }}</option>{% endfor %}
+          </select>
+        </span>
+        <span class="materials-cost">{% for count, name in part.items %}{{ count }}&times; {{ name }}{% if not forloop.last %}, {% endif %}{% endfor %}{% if part.items and part.time %} + {% endif %}{{ part.time }}</span>
+      </div>
+    {% endfor %}
+  </div>
+{% empty %}
+  <p class="muted">Nothing planned yet &mdash; pick a cannon above.</p>
+{% endfor %}
+{% if panel.totals or panel.time %}
+  <div class="materials-totals">
+    <h3>Total to grind</h3>
+    <ul>
+      {% for count, name in panel.totals %}<li><strong>{{ count }}&times;</strong> {{ name }}</li>{% endfor %}
+      {% if panel.time %}<li><strong>{{ panel.time }}</strong> build time</li>{% endif %}
+    </ul>
+  </div>
+{% endif %}

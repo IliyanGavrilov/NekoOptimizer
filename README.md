@@ -21,7 +21,7 @@ wishlist.
 | Path | Purpose |
 |------|---------|
 | `neko/` | Pure-Python core - RNG, roll engine, models, graph builder, A\*/beam search, subset solver, and the game-data loaders. Django-independent and unit-testable in isolation. |
-| `neko/data/` | Committed game data as JSON - the unit catalogue plus the gacha schedule, pools, series and multi-roll configs. Lets the app run fully offline. |
+| `neko/data/` | Committed game data as JSON, one directory per game version (`en/`, `jp/`, `tw/`, `kr/`) - the unit catalogue plus the gacha schedule, pools, series, stats and materials data - alongside the version-independent files (multi-roll configs, Cat Guide order, tier list). Lets the app run fully offline. |
 | `planner/` | The Django app - views, forms, models, `services.py` (the roll-to-plan glue), templates, and the data-fetch/import management commands. |
 | `nekosite/` | Django project configuration (settings, URLs, WSGI/ASGI). |
 | `manage.py` | Django entry point. |
@@ -57,9 +57,13 @@ pip install -r requirements.txt
 python manage.py migrate
 
 # 5. Load the unit catalogue and cats into the database
-python manage.py import_units       # from the committed neko/data/units.json
+python manage.py import_units       # from the committed neko/data/en/units.json
 python manage.py import_catalogue    # populate cats from every scheduled banner
 ```
+
+Every command that touches game data takes `--region {en,jp,tw,kr}` (default `en`).
+Each version keeps its own catalogue rows and its own collection, so repeat steps 5
+for any other version you want to plan for.
 
 ## Running it
 
@@ -77,9 +81,14 @@ newer game version:
 
 | Command | What it does |
 |---------|--------------|
-| `python manage.py fetch_units` | Download the latest unit catalogue from the BCData mirror into `neko/data/units.json`. |
-| `python manage.py fetch_gacha` | Download the gacha schedule (godfat event TSVs) and pools (BCData) into `neko/data/`. |
-| `python manage.py import_units` | Load `units.json` into the database. |
+| `python manage.py fetch_units` | Download the latest unit catalogue from the BCData mirror into `neko/data/<region>/units.json`. |
+| `python manage.py fetch_gacha` | Download the gacha schedule (godfat event TSVs) and pools (BCData) into `neko/data/<region>/`. |
+| `python manage.py fetch_gamedata` | Download combos, talents, evolution costs, item names, and cannon recipes (BCData) into `neko/data/<region>/`. |
+| `python manage.py fetch_guide` | Download the in-game Cat Guide order per region (wiki) into `neko/data/guide_order.json`. |
+| `python manage.py fetch_stats` | Download unit stats (BCData + battlecatsinfo) into `neko/data/<region>/stats.json`. |
+| `python manage.py fetch_tiers` | Download the cumulative tier list and every per-set one (battlecatstierlist.com) into `neko/data/tiers.json`. |
+| `python manage.py fetch_icons` | Download each unit's form icons (battlecatsinfo) into `planner/static/planner/icons/`. Once they are there the site serves its own copies instead of hotlinking; `NEKO_ICON_BASE` overrides the choice. |
+| `python manage.py import_units` | Load that region's `units.json` into the database. |
 | `python manage.py import_catalogue` | Populate the cat catalogue from every scheduled banner's pool. |
 | `python manage.py import_cats <seed>` | Populate the catalogue by rolling the active banners for a seed. |
 | `python manage.py match_units` | Report which cat names map to a canonical unit. |
@@ -98,8 +107,16 @@ newer game version:
    duplicate-reroll branches.
 6. **Apply plan** marks the obtained cats as owned and advances the stored seed,
    so you can plan the next stretch from where you left off.
-7. The **Collection** page (`/collection/`) is the full cat dictionary, browsable
-   by rarity or gacha set, where you manage owned / wishlist marks.
+7. The **Collection** page (`/collection/`) is the full cat dictionary in the
+   in-game Cat Guide order (or by rarity / gacha set), where you manage owned /
+   wishlist marks and filter by targets, abilities, combos, and talents.
+8. The **Materials** page (`/materials/`) tracks what to grind: pick cats to
+   evolve (catfruit / stones / gems + XP totals), talents to buy (NP totals),
+   and cannons to develop (per-part level ranges with material / engineer /
+   build-time totals).
+9. The **EN / JP / TW / KR** switch in the header picks the game version. Each
+   version has its own catalogue, schedule, pools and localized names, and keeps
+   its own seed and collection - the roll mechanics are identical across all four.
 
 ## Tech stack
 

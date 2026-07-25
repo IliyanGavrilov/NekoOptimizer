@@ -7,6 +7,9 @@ from neko.models import Rarity
 from neko.seek import SeekMatch, SeekResult
 from planner.forms import MIN_SEEK_ROLLS
 
+# Every request reads the persisted region row (planner.middleware.region_scope).
+pytestmark = pytest.mark.django_db
+
 BANNER = RollBanner(
     "test-run",
     "Test Banner",

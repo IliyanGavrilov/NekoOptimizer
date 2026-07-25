@@ -671,8 +671,8 @@ def test_unit_info_lists_a_units_forms(client):
 @pytest.mark.django_db
 def test_unit_info_links_to_the_wiki_page(client):
     Unit.objects.create(unit_id=25, name="Bahamut", rarity="Uber Super Rare")
-    wiki = client.get("/unit/info/", {"name": "Bahamut"}).json()["wiki"]
-    assert wiki.endswith("/Bahamut_(Uber_Rare_Cat)")
+    links = client.get("/unit/info/", {"name": "Bahamut"}).json()["links"]
+    assert any(link["url"].endswith("/Bahamut_(Uber_Rare_Cat)") for link in links)
 
 
 @pytest.mark.django_db
@@ -738,3 +738,29 @@ def test_tier_list_page_renders_a_ranked_unit(client, monkeypatch):
     monkeypatch.setattr("planner.views.load_tiers", lambda: _tier_doc(25))
     body = client.get("/tiers/").content
     assert b"Bahamut" in body and b"SS" in body
+
+
+def _set_list_doc():
+    doc = _tier_doc(25)
+    entry = {
+        **_tier_doc(44),
+        "path": "/tier-lists/base-tier-lists/dynamites",
+        "label": "Dynamites",
+        "category": "Base",
+    }
+    entry["tiers"][0]["entries"][0]["name"] = "Kasa Jizo"
+
+    return {**doc, "lists": [entry]}
+
+
+@pytest.mark.django_db
+def test_tier_list_page_renders_the_per_set_list_its_slug_names(client, monkeypatch):
+    monkeypatch.setattr("planner.views.load_tiers", _set_list_doc)
+    body = client.get("/tiers/base-tier-lists/dynamites/").content
+    assert b"Kasa Jizo" in body and b"Bahamut" not in body
+
+
+@pytest.mark.django_db
+def test_tier_list_page_404s_on_an_unknown_list(client, monkeypatch):
+    monkeypatch.setattr("planner.views.load_tiers", _set_list_doc)
+    assert client.get("/tiers/base-tier-lists/nope/").status_code == 404

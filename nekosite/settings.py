@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/6.0/ref/settings/
 """
 
+import os
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -50,6 +51,7 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "planner.middleware.region_scope",  # every view reads one game version's data
 ]
 
 ROOT_URLCONF = "nekosite.urls"
@@ -64,6 +66,9 @@ TEMPLATES = [
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
+                "planner.context_processors.region",
+                "planner.context_processors.icons",
+                "planner.context_processors.tools",
             ],
         },
     },
@@ -118,3 +123,12 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
 
 STATIC_URL = "static/"
+
+# Where a cat icon's "<unit id>/<form>.png" hangs off. `fetch_icons` downloads the whole
+# set into static/ (gitignored); the moment it has, we serve our own copies and stop
+# hotlinking battlecatsinfo. NEKO_ICON_BASE overrides either way.
+ICONS_DIR = BASE_DIR / "planner" / "static" / "planner" / "icons" / "u"
+ICON_BASE = os.environ.get(
+    "NEKO_ICON_BASE",
+    "/static/planner/icons/u" if ICONS_DIR.is_dir() else "https://battlecatsinfo.github.io/img/u",
+)

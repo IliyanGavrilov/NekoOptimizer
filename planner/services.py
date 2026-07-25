@@ -1,4 +1,5 @@
 import json
+import re
 from collections import Counter
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass, field
@@ -16,6 +17,7 @@ from neko.gachadata import (
     load_series,
     load_tickets,
 )
+from neko.gamedata import load_cannons, load_combos, load_evolve, load_items, load_talents
 from neko.graph import BannerGraph, build_graphs, stream_index
 from neko.models import (
     CATFOOD_PER_DRAW,
@@ -42,6 +44,7 @@ from neko.normal import (
     roll_normal,
 )
 from neko.normal_plan import CHEAP_KEYS, plan_normal
+from neko.region import current as active_region
 from neko.roller import (
     DEFAULT_COUNT,
     RollResult,
@@ -56,7 +59,7 @@ from neko.statsdata import load_stats
 from neko.subsets import SubsetPlan, solve_subsets
 from neko.tierdata import TIER_ORDER, load_tiers
 from planner.forms import MAX_TRACK_LENGTH
-from planner.models import Banner, Cat, Unit
+from planner.models import Banner, CannonPlan, Cat, EvolvePlan, TalentPlan, Unit
 
 RARITY_ORDER = ["Normal", "Special", "Rare", "Super Rare", "Uber Super Rare", "Legend Rare"]
 
@@ -87,7 +90,7 @@ def wiki_url(name: str, rarity: str = "") -> str:
 
 _TIER_RANK = {tier: rank for rank, tier in enumerate(TIER_ORDER)}
 
-_BOOST_LABEL = {"UF": "Ultra Form", "UT": "Ultra Talents"}
+_BOOST_LABEL = {"UF": "Ultra Form", "UT": "Ultra Talents", "T": "True Form"}
 
 
 def tier_badges(doc=None) -> dict[int, dict]:
@@ -150,6 +153,28 @@ def tier_list_rows(doc=None) -> list[dict]:
     ]
 
 
+def tier_list_index(doc=None) -> list[tuple[str, list[dict]]]:
+    """The per-set lists as ``[(category, [{"label", "slug"}])]`` in the source site's nav
+    order, for the tier page's list picker."""
+    doc = load_tiers() if doc is None else doc
+    grouped: dict[str, list[dict]] = {}
+    for entry in doc.get("lists", ()):
+        slug = entry["path"].removeprefix("/tier-lists/")
+        grouped.setdefault(entry["category"], []).append({"label": entry["label"], "slug": slug})
+
+    return list(grouped.items())
+
+
+def tier_list_doc(slug: str, doc=None) -> dict | None:
+    """One per-set list's document by its "<category>/<name>" slug, or None."""
+    doc = load_tiers() if doc is None else doc
+    for entry in doc.get("lists", ()):
+        if entry["path"] == f"/tier-lists/{slug}":
+            return entry
+
+    return None
+
+
 def unit_stats(unit_id: int, doc=None) -> dict | None:
     """The unit's per-form stat blocks (and the level they're quoted at) from the
     committed stats document; None when the unit has no stats."""
@@ -164,8 +189,19 @@ def unit_stats(unit_id: int, doc=None) -> dict | None:
 # Platinum/Legend run on their own scarce tickets, not catfood, so the optimizer funds them
 # from dedicated per-capsule pools rather than modelling them as ordinary catfood gacha. Match
 # the ticket-capsule PHRASE, not a bare "legend"/"platinum" - loads of ordinary banners
-# (Evangelion's "Limited Legend", the fests' "Legend Rare drop rate") mention the word.
-_CURRENCY_KEYWORDS = (("platinum capsules", "platinum"), ("legend capsules", "legend"))
+# (Evangelion's "Limited Legend", the fests' "Legend Rare drop rate") mention the word. Each
+# version names the two capsules its own way; every phrase here selects exactly the runs whose
+# pool carries the matching ticket item (29/145) in that version's schedule.
+_CURRENCY_KEYWORDS = (
+    ("platinum capsules", "platinum"),
+    ("プラチナガチャ", "platinum"),
+    ("白金轉蛋", "platinum"),
+    ("플래티넘 뽑기", "platinum"),
+    ("legend capsules", "legend"),
+    ("レジェンドガチャ", "legend"),
+    ("傳說轉蛋", "legend"),
+    ("레전드 뽑기", "legend"),
+)
 
 
 def banner_currencies(names: Iterable[str]) -> dict[str, str]:
@@ -334,11 +370,16 @@ def newly_added_ubers(events=None, pools=None, units=None) -> dict[str, set[str]
 
 
 @cache
-def banner_debuts() -> dict[str, set[str]]:
-    """``newly_added_ubers`` for the live committed data, memoized: the debut map only shifts
-    on a re-import (a fresh process), so the tracks/plan hot path computes the double-loop
-    once instead of on every roll. Read-only downstream (build_tracks only membership-tests)."""
+def _region_debuts(region: str) -> dict[str, set[str]]:
     return newly_added_ubers()
+
+
+def banner_debuts() -> dict[str, set[str]]:
+    """``newly_added_ubers`` for the live committed data, memoized per region: the debut map
+    only shifts on a re-import (a fresh process), so the tracks/plan hot path computes the
+    double-loop once instead of on every roll. Read-only downstream (build_tracks only
+    membership-tests)."""
+    return _region_debuts(active_region())
 
 
 def _by_rarity(cats: Iterable[Cat], reverse: bool = False) -> list[tuple[str, list[Cat]]]:
@@ -365,6 +406,289 @@ def collection_sections(units: Iterable[Unit]) -> list[tuple[str, list[Unit]]]:
     """Units binned by rarity in game order (Normal first, Legend Rare last), keeping
     the given order within each bin; blank rarities fall under 'Unknown', always last."""
     return _by_rarity(units)
+
+
+def unit_facets(stats_doc: Mapping, combos_doc: Mapping, talents_units: Mapping) -> dict[int, dict]:
+    """Per-unit collection-filter facets: the union over forms of targets ('t'),
+    ability keys plus single/area ('a'), and immunities ('i'); the combo effect types
+    the unit joins ('c'); and talent/Ultra-Talent flags ('n'/'u')."""
+    facets = {}
+    for record in stats_doc["units"]:
+        targets, abilities, immune = set(), set(), set()
+        for form in record["forms"]:
+            targets.update(form["targets"])
+            abilities.update(form["abilities"])
+            abilities.add("area" if form["area"] else "single")
+            immune.update(form["immune"])
+        facets[record["id"]] = {
+            "t": sorted(targets),
+            "a": sorted(abilities),
+            "i": sorted(immune),
+            "c": [],
+            "n": False,
+            "u": False,
+        }
+
+    for combo in combos_doc["combos"]:
+        for unit_id, _form in combo["units"]:
+            facet = facets.get(unit_id)
+            if facet is not None and combo["effect"] not in facet["c"]:
+                facet["c"].append(combo["effect"])
+
+    # JSON round-trips dict keys to strings; the committed talents document has them.
+    for unit_id, slots in talents_units.items():
+        facet = facets.get(int(unit_id))
+        if facet is not None:
+            facet["n"] = True
+            facet["u"] = any(slot["ultra"] for slot in slots)
+
+    return facets
+
+
+@cache
+def _region_facets(region: str) -> dict[int, dict]:
+    return unit_facets(load_stats(), load_combos(), load_talents()["units"])
+
+
+def collection_facets() -> dict[int, dict]:
+    """unit_facets over the committed documents, memoized per region: they only change
+    on a re-fetch (a fresh process), and the template serializes the result read-only."""
+    return _region_facets(active_region())
+
+
+# Display labels for the game's combo-effect filter groups, in NyancomboFilter order.
+_COMBO_GROUP_LABELS = ("Units", "Abilities", "Cannon & Base", "Money & Workers", "Rewards")
+
+
+def combo_filter_groups(doc: Mapping | None = None) -> list[tuple[str, list[tuple[int, str]]]]:
+    """The combo-effect picker's groups: the game's own filter groupings with display
+    labels, effects the game leaves unlisted appended under 'Other'."""
+    doc = load_combos() if doc is None else doc
+    effects = doc["effects"]
+    groups, listed = [], set()
+    for index, ids in enumerate(doc["categories"]):
+        label = _COMBO_GROUP_LABELS[index] if index < len(_COMBO_GROUP_LABELS) else "Other"
+        groups.append((label, [(i, effects[i]) for i in ids if i < len(effects)]))
+        listed.update(ids)
+
+    unlisted = [(i, name) for i, name in enumerate(effects) if i not in listed and name]
+    if unlisted:
+        groups.append(("Other", unlisted))
+
+    return groups
+
+
+# ---- Materials page: evolution-material tracker + talent NP calculator ----
+
+_BR = re.compile(r"<br\s*/?>", re.I)
+_TAG_MARKUP = re.compile(r"<[^>]+>")
+_TALENT_QUOTED = re.compile(r"[\"“]([^\"”]+)[\"”]")
+
+
+def talent_label(text: str) -> str:
+    """A short display name for a talent from its description text: the quoted
+    ability name when the text grants one, else its first line without markup."""
+    head = _BR.split(text, 1)[0]
+    match = _TALENT_QUOTED.search(head)
+    label = match.group(1) if match else _TAG_MARKUP.sub("", head)
+    return label.strip().rstrip(".")
+
+
+def talent_np(slot: Mapping, curves: Mapping) -> int:
+    """The NP cost to fully level one talent slot from its cost curve."""
+    return sum(curves.get(str(slot["curve"]), [])[: slot["max"]])
+
+
+def plannable_form(cost: Mapping, key: str) -> dict | None:
+    """The tf/uf cost block when that evolution exists and needs XP or items."""
+    form = cost.get(key)
+    return form if form and (form["xp"] or form["items"]) else None
+
+
+def _named_items(pairs: Iterable[tuple[int, int]]) -> list[tuple[int, str]]:
+    """(count, display name) per (item id, count) pair, via the committed item names."""
+    names = load_items()["items"]
+    return [(count, names.get(str(item_id), f"Item {item_id}")) for item_id, count in pairs]
+
+
+def evolve_panel() -> dict:
+    """The evolution tracker: per-plan form checkboxes with their costs, plus the
+    material and XP totals over everything checked."""
+    doc = load_evolve()["units"]
+    rows, totals, xp = [], Counter(), 0
+    for plan in EvolvePlan.objects.select_related("unit").order_by("unit__unit_id"):
+        cost = doc.get(str(plan.unit.unit_id), {})
+        forms = []
+        for checked, key, label in ((plan.tf, "tf", "True Form"), (plan.uf, "uf", "Ultra Form")):
+            form = plannable_form(cost, key)
+            if form is None:
+                continue
+            forms.append(
+                {
+                    "key": key,
+                    "label": label,
+                    "checked": checked,
+                    "xp": f"{form['xp']:,}" if form["xp"] else "",
+                    "items": _named_items(form["items"]),
+                }
+            )
+            if checked:
+                xp += form["xp"]
+                for item_id, count in form["items"]:
+                    totals[item_id] += count
+        if forms:
+            rows.append({"unit": plan.unit, "forms": forms})
+
+    return {
+        "rows": rows,
+        "totals": _named_items(sorted(totals.items())),
+        "xp": f"{xp:,}" if xp else "",
+    }
+
+
+def talent_panel() -> dict:
+    """The talent calculator: every planned unit's slots with NP costs, the checked
+    ones subtotalled per unit and totalled overall."""
+    doc = load_talents()
+    curves, texts, units_doc = doc["curves"], doc["texts"], doc["units"]
+    checked_slots: dict[Unit, set[int]] = {}
+    for plan in TalentPlan.objects.select_related("unit").order_by("unit__unit_id", "slot"):
+        checked_slots.setdefault(plan.unit, set()).add(plan.slot)
+
+    rows, total = [], 0
+    for unit, checked in checked_slots.items():
+        slots, subtotal = [], 0
+        for index, slot in enumerate(units_doc.get(str(unit.unit_id), [])):
+            np = talent_np(slot, curves)
+            text = texts.get(str(slot["text"]), "")
+            slots.append(
+                {
+                    "index": index,
+                    "label": talent_label(text),
+                    "title": " ".join(_TAG_MARKUP.sub(" ", text).split()),
+                    "max": slot["max"],
+                    "np": np,
+                    "ultra": slot["ultra"],
+                    "checked": index in checked,
+                }
+            )
+            if index in checked:
+                subtotal += np
+        rows.append({"unit": unit, "slots": slots, "np": subtotal})
+        total += subtotal
+
+    return {"rows": rows, "np": total}
+
+
+def _picker_options(unit_ids: Iterable[int], planned: Iterable[int]) -> list[tuple[int, str]]:
+    """(unit id, name) choices for a materials picker: catalogued, not yet planned."""
+    remaining = set(unit_ids) - set(planned)
+    return list(
+        Unit.objects.named()
+        .filter(unit_id__in=remaining)
+        .order_by("name")
+        .values_list("unit_id", "name")
+    )
+
+
+def evolve_options() -> list[tuple[int, str]]:
+    """Picker choices for the evolution tracker."""
+    ids = (int(uid) for uid in load_evolve()["units"])
+    return _picker_options(ids, EvolvePlan.objects.values_list("unit__unit_id", flat=True))
+
+
+def talent_options() -> list[tuple[int, str]]:
+    """Picker choices for the talent calculator."""
+    ids = (int(uid) for uid in load_talents()["units"])
+    return _picker_options(ids, TalentPlan.objects.values_list("unit__unit_id", flat=True))
+
+
+CANNON_PARTS = (("cannon", "Cannon"), ("base", "Foundation"), ("deco", "Style"))
+
+_ENGINEER_ITEM = 92
+
+
+def part_cost(part: Mapping, now: int, goal: int) -> list[list[int]]:
+    """The recipe rows to develop a part from level now to goal; starting from
+    level 0 includes the one-time construction stages."""
+    rows = part["levels"][now:goal]
+    return part["construction"] + rows if now == 0 and rows else rows
+
+
+def _spend_rows(rows: Iterable[Iterable[int]], item_ids: Iterable[int]) -> tuple[Counter, int]:
+    """(material and engineer counts, build hours) over the given recipe rows."""
+    spent: Counter = Counter()
+    hours = 0
+    for time, engineers, *counts in rows:
+        hours += time
+        spent[_ENGINEER_ITEM] += engineers
+        for item_id, item_count in zip(item_ids, counts, strict=True):
+            spent[item_id] += item_count
+
+    return +spent, hours
+
+
+def cannon_panel() -> dict:
+    """The cannon developer: per-plan part level ranges with their costs, plus the
+    material, engineer, and build-time totals over every range."""
+    doc = load_cannons()
+    cannons = {cannon["id"]: cannon for cannon in doc["cannons"]}
+    material_ids = {
+        "cannon": doc["materials"],
+        "base": doc["zmaterials"],
+        "deco": doc["zmaterials"],
+    }
+    rows, totals, hours = [], Counter(), 0
+    for plan in CannonPlan.objects.order_by("cannon_id"):
+        cannon = cannons.get(plan.cannon_id)
+        if cannon is None:
+            continue
+        parts = []
+        for key, label in CANNON_PARTS:
+            part = cannon["parts"].get(key)
+            if part is None:
+                continue
+            now, goal = getattr(plan, f"{key}_now"), getattr(plan, f"{key}_goal")
+            spent, time = _spend_rows(part_cost(part, now, goal), material_ids[key])
+            totals += spent
+            hours += time
+            parts.append(
+                {
+                    "key": key,
+                    "label": label,
+                    "now": now,
+                    "goal": goal,
+                    "levels": range(len(part["levels"]) + 1),
+                    "items": _named_items(sorted(spent.items())),
+                    "time": f"{time}h" if time else "",
+                }
+            )
+        rows.append({"id": plan.cannon_id, "name": cannon["name"], "parts": parts})
+
+    return {
+        "rows": rows,
+        "totals": _named_items(sorted(totals.items())),
+        "time": f"{hours:,}h" if hours else "",
+    }
+
+
+def cannon_options() -> list[tuple[int, str]]:
+    """Picker choices for the cannon developer."""
+    planned = set(CannonPlan.objects.values_list("cannon_id", flat=True))
+    return [(c["id"], c["name"]) for c in load_cannons()["cannons"] if c["id"] not in planned]
+
+
+def dictionary_sections(
+    units: Iterable[Unit], order: Iterable[int]
+) -> list[tuple[str, list[Unit]]]:
+    """Units binned by rarity in the in-game Cat Guide arrangement: each bin follows
+    the guide's order, units the guide doesn't list trailing in id order."""
+    position = {unit_id: index for index, unit_id in enumerate(order)}
+    unlisted = len(position)
+    return [
+        (rarity, sorted(bin, key=lambda unit: (position.get(unit.unit_id, unlisted), unit.unit_id)))
+        for rarity, bin in _by_rarity(units)
+    ]
 
 
 # A unit carried by more series than this is part of the shared rare/super pool that
