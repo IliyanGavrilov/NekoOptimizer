@@ -6,6 +6,7 @@ from dataclasses import dataclass, field
 from datetime import date, timedelta
 from functools import cache
 from itertools import combinations
+from typing import NamedTuple
 from urllib.parse import quote
 
 from neko.catalogue import match_names, name_index
@@ -756,8 +757,28 @@ SECTION_NOTES = {
 }
 
 
-def _series_pools(events, pools, series):
-    """Each series' latest scheduled run and that run's pool: ({sid: event}, {sid: ids})."""
+@cache
+def _committed_series_pools(region: str) -> tuple[dict, dict]:
+    return _walk_series_pools(load_events(), load_pools(), load_series())
+
+
+def _series_pools(events=None, pools=None, series=None):
+    """Each series' latest scheduled run and that run's pool: ({sid: event}, {sid: ids}).
+
+    Left to the committed data it's memoized per region: this sweep over every scheduled
+    event backs both the picker's banner titles and the collection's by-set view, and it
+    only shifts on a re-import (a fresh process). Read-only downstream."""
+    if events is None and pools is None and series is None:
+        return _committed_series_pools(active_region())
+
+    return _walk_series_pools(
+        events if events is not None else load_events(),
+        pools if pools is not None else load_pools(),
+        series if series is not None else load_series(),
+    )
+
+
+def _walk_series_pools(events, pools, series):
     latest: dict[int, GachaEventRow] = {}
     for event in events:
         sid = series.get(event.pool_id)
@@ -778,11 +799,8 @@ def series_names(units, events=None, pools=None, series=None, tickets=None) -> d
     have them all. Recurring fests get their FEST_SERIES name, ticket gachas
     (Platinum/Legend Capsules) get their ticket's name; series the game data doesn't name
     (collabs) aren't here, so callers fall back to the run's marketing text."""
-    events = events if events is not None else load_events()
-    pools = pools if pools is not None else load_pools()
-    series = series if series is not None else load_series()
-    tickets = tickets if tickets is not None else load_tickets()
     latest, members = _series_pools(events, pools, series)
+    tickets = tickets if tickets is not None else load_tickets()
 
     by_set: dict[str, set[int]] = {}
     for unit in units:
@@ -862,9 +880,6 @@ def set_sections(
     Order: regulars and add-ons first, then named sets and fests by dictionary order
     (lowest unit id), then series groups, newest run first.
     """
-    events = events if events is not None else load_events()
-    pools = pools if pools is not None else load_pools()
-    series = series if series is not None else load_series()
     latest, members = _series_pools(events, pools, series)
 
     # A series speaks for a set when most of its pool's set-named members agree; a pool
@@ -983,8 +998,47 @@ def _effective_runs(events) -> list[tuple[GachaEventRow, date, date]]:
     return sorted(capped, key=lambda run: run[1])
 
 
+class Run(NamedTuple):
+    """A picker row's date span, inclusive. The ISO pair is what the row's
+    data-start/data-end carry (the client compares them lexically); they're worked out
+    here because a locale-aware date filter per attribute, on every one of ~2000 rows,
+    was a quarter of the Past fragment's render."""
+
+    start: date
+    end: date
+
+    @property
+    def iso_start(self) -> str:
+        return self.start.isoformat()
+
+    @property
+    def iso_end(self) -> str:
+        return self.end.isoformat()
+
+
+def cat_banner_names() -> dict[int, list[str]]:
+    """{cat pk: its banners' names}, read straight off the membership table.
+
+    picker_groups only ever needs the names, and hydrating the m2m the ordinary way turns
+    every one of the ~20k pairings into a Banner instance (dates parsed and all), which cost
+    more than the whole rest of the picker put together."""
+    rows = Cat.banners.through.objects.filter(
+        cat__region=active_region(), banner__region=active_region()
+    ).values_list("cat_id", "banner__name")
+
+    names: dict[int, list[str]] = {}
+    for cat_id, name in rows:
+        names.setdefault(cat_id, []).append(name)
+
+    return names
+
+
 def picker_groups(
-    cats: Iterable[Cat], today: date | None = None, events=None, titles: Mapping[int, str] = ()
+    cats: Iterable[Cat],
+    today: date | None = None,
+    events=None,
+    titles: Mapping[int, str] = (),
+    banner_names: Mapping[int, list[str]] | None = None,
 ) -> list:
     """The target picker's banner sections, one row per SCHEDULED RUN, like godfat: every
     rerun of every gacha, past and future. A recurring name (Platinum/Legend Capsules,
@@ -994,7 +1048,8 @@ def picker_groups(
     light (a brand-new banner shows up without cats until it's imported).
 
     ``titles`` maps a run's pool id to its set's display name (banner_titles); rows
-    without one fall back to the run's marketing text. Returns
+    without one fall back to the run's marketing text. ``banner_names`` (cat_banner_names)
+    supplies each cat's banner names; left out, they're looked up in one go. Returns
     ``[(label, [(name, title, (start, end), rarities)])]``."""
     today = today or date.today()
 
@@ -1002,11 +1057,14 @@ def picker_groups(
         events = load_events()
 
     titles = titles or {}
+    cats = list(cats)
+    if banner_names is None:
+        banner_names = cat_banner_names() if cats else {}
 
     by_name: dict[str, list[Cat]] = {}
     other: list[Cat] = []
     for cat in cats:
-        names = [banner.name for banner in cat.banners.all()]
+        names = banner_names.get(cat.pk, ())
         for name in names:
             by_name.setdefault(name, []).append(cat)
 
@@ -1018,7 +1076,7 @@ def picker_groups(
         return (name, title or name, dates, cats_here)
 
     def run_row(event, start, end, with_cats=True):
-        return row(event.name, (start, end), titles.get(event.pool_id, ""), with_cats)
+        return row(event.name, Run(start, end), titles.get(event.pool_id, ""), with_cats)
 
     runs = _effective_runs(events)
     now = [run_row(e, start, end) for e, start, end in runs if start <= today <= end]
@@ -1037,7 +1095,7 @@ def picker_groups(
     scheduled = {event.name for event, _start, _end in runs}
     banners = {b.name: b for b in Banner.objects.filter(name__in=by_name)}
     past += [
-        row(name, (banner.start, banner.end))
+        row(name, Run(banner.start, banner.end))
         for name, banner in banners.items()
         if name not in scheduled and banner.end and banner.end < today
     ]
@@ -1314,6 +1372,8 @@ def build_tracks(
             # clean cell too, so a target glows wherever it turns up.
             obtained = marks.targets.get(group["rep"], {}).get(index)
             cell_marks = _collection_marks(tp.cat, rarity, owned, wanted, group["debuts"])
+            alt = _dupe_branch(branch, obtained, target_names) if branch is not None else None
+            target = obtained == tp.cat or tp.cat in target_names
             entry = {
                 "tag": group["tag"],
                 "idx": index,
@@ -1323,12 +1383,13 @@ def build_tracks(
                 "rarity": rarity,
                 "rarity_label": _SHORT_RARITY.get(rarity, rarity),
                 "switch": switched,
-                "alt": (
-                    _dupe_branch(branch, obtained, target_names) if branch is not None else None
-                ),
+                "alt": alt,
                 "on_path": on_path,
                 "step": marks.steps.get(group["rep"], {}).get(index),
-                "target": obtained == tp.cat or tp.cat in target_names,
+                "target": target,
+                # The cell reads as a target when either branch is one. Worked out here so
+                # the template never has to probe a branch that isn't there.
+                "lit": target or bool(alt and alt["target"]),
                 "shared": not on_path and index in marks.shared.get(group["rep"], ()),
                 "next": index in marks.nexts.get(group["rep"], ()),
                 # The line's own dice: the RNG state just after this clean pull (the dupe
@@ -1371,6 +1432,7 @@ def build_tracks(
             # picked the "if dupe" line, pinning the pill there and off the clean one.
             gobtained = marks.gtargets.get(group["rep"], {}).get(index)
             gpicked_alt = index in marks.galt_targets.get(group["rep"], ())
+            target = (gobtained == tp.cat and not gpicked_alt) or tp.cat in target_names
             entry = {
                 "tag": group["tag"],
                 "idx": index,
@@ -1385,7 +1447,9 @@ def build_tracks(
                 "seed": tp.seed,
                 "on_path": on_path,
                 "step": marks.gsteps.get(group["rep"], {}).get(index),
-                "target": (gobtained == tp.cat and not gpicked_alt) or tp.cat in target_names,
+                "target": target,
+                "lit": target,
+                "alt": None,
                 "shared": not on_path and index in marks.gshared.get(group["rep"], ()),
                 **cell_marks,
             }
@@ -1416,6 +1480,7 @@ def build_tracks(
                     if dupe_marks["future"]:
                         alt["future_label"] = future_uber_label(dupe.cat)
                     entry["alt"] = alt
+                    entry["lit"] = entry["target"] or alt["target"]
 
             cells.append(entry)
 
@@ -1461,6 +1526,9 @@ def build_tracks(
     return {
         "legend": legend,
         "rows": rows,
+        # How many banners stack in a cell: the tag chip only shows when there's more than
+        # one. Counted here, not per cell - the table asks four times a row.
+        "multi": len(legend),
         "has_guaranteed": has_guaranteed,
         "has_shared": bool(marks.shared or marks.gshared),
         "has_currency": any(entry["currency"] for entry in legend),

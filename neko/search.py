@@ -1,11 +1,11 @@
 import heapq
 from bisect import bisect_left
 from collections.abc import Iterable, Mapping, Sequence
-from dataclasses import dataclass, replace
+from dataclasses import dataclass
 from itertools import count
 
 from neko.graph import BannerGraph
-from neko.models import CATFOOD_PER_DRAW, Leg, Path, Pull, Rarity, State
+from neko.models import CATFOOD_PER_DRAW, Leg, Path, Pull, State
 
 INF = float("inf")
 
@@ -27,20 +27,9 @@ def _occurrences(graphs: Iterable[BannerGraph], targets: frozenset[str]) -> dict
     # spots only weaken the lower bound; missing ones would break admissibility.
     spots: dict[str, list[int]] = {target: [] for target in targets}
     for graph in graphs:
-        for position in graph.positions():
-            nominal = graph.resolve(position)
-            if nominal.cat in targets:
-                spots[nominal.cat].append(position)
-
-            reroll = graph.reroll(position)
-            if reroll is not None and reroll.cat in targets:
-                spots[reroll.cat].append(position)
-
-        for duped in (False, True):
-            for position in graph.guaranteed_positions(duped):
-                forced = graph.guaranteed(position, duped)
-                if forced.cat in targets:
-                    spots[forced.cat].append(position)
+        offered = graph.spots()
+        for target, positions in spots.items():
+            positions += offered.get(target, ())
 
     for positions in spots.values():
         positions.sort()
@@ -73,15 +62,9 @@ def _multi_landing(graph: BannerGraph, position: int, rolls: int, last_cat: str 
     """Where a guaranteed multi started at ``position`` continues: walk its ``rolls - 1``
     real rolls along the chain, then one half-step past the swapped final roll (track
     flips with the parity). None when the chain runs off the rolled window."""
-    for _ in range(rolls - 1):
-        outcome = graph.resolve(position, last_cat)
-        if outcome is None:
-            return None
+    walk = graph.chain(position, rolls - 1, last_cat)
 
-        last_cat = outcome.cat
-        position = outcome.next_position
-
-    return position + 1
+    return None if walk is None else walk[1] + 1
 
 
 def _canon_last(graphs: Iterable[BannerGraph], position: int, last_cat: str) -> str:
@@ -91,8 +74,7 @@ def _canon_last(graphs: Iterable[BannerGraph], position: int, last_cat: str) -> 
         return ""
 
     for graph in graphs:
-        nominal = graph.resolve(position)
-        if nominal is not None and nominal.rarity is Rarity.RARE and nominal.cat == last_cat:
+        if graph.rares.get(position) == last_cat:
             return last_cat
 
     return ""
@@ -100,69 +82,105 @@ def _canon_last(graphs: Iterable[BannerGraph], position: int, last_cat: str) -> 
 
 def _canon(state: State, graphs: Iterable[BannerGraph]) -> State:
     last = _canon_last(graphs, state.position, state.last_cat)
+    if last == state.last_cat:
+        return state
 
-    return state if last == state.last_cat else replace(state, last_cat=last)
+    return State(
+        state.position,
+        state.tickets_left,
+        state.catfood_draws,
+        state.found,
+        state.last_banner,
+        state.platinum_left,
+        state.legend_left,
+        last,
+    )
 
 
 def _collectable(
     graphs: list[BannerGraph],
     targets: frozenset[str],
-    position: int,
+    start: State,
     multis: Mapping[str, Sequence[Multi]] | None = None,
-    last_cat: str = "",
     occurrences: dict[str, list[int]] | None = None,
+    banner_currency: Mapping[str, str] | None = None,
 ) -> bool:
-    """Forget the budget for a moment - can every target still be collected from
-    ``position``? A BFS over (position, last cat, found) that uses the graphs' real
-    step structure. Rare-dupe rerolls add extra steps, so a spot's parity can make it
-    actually unreachable, and the full search would only find that out after trying
-    every budget split of the whole state space. Guaranteed multis use their real
+    """Forget the catfood for a moment - can every target still be collected from
+    ``start``? A BFS over (position, last cat, capsule tickets, found) that uses the
+    graphs' real step structure. Rare-dupe rerolls add extra steps, so a spot's parity can
+    make it actually unreachable, and the full search would only find that out after
+    trying every budget split of the whole state space. Guaranteed multis use their real
     landing here so their off-parity continue points stay reachable.
 
+    The Platinum/Legend Capsules are the one budget this DOES track: they take their own
+    scarce tickets, offer no multis, and a couple of tickets between them is the normal
+    setting - so a target only those banners carry is usually out of reach, and left
+    unmodelled the full search had to exhaust the whole window to find that out.
+
     Pass ``occurrences`` (each target's spots, the way _occurrences returns them) to
-    reuse the caller's; a target with no spot at or past ``position`` is a plain "no"
+    reuse the caller's; a target with no spot at or past the start is a plain "no"
     without running any BFS."""
     if not targets:
         return True
 
     spots = occurrences if occurrences is not None else _occurrences(graphs, targets)
-    if not _all_occur_ahead(spots, targets, position):
+    if not _all_occur_ahead(spots, targets, start.position):
         return False
 
     rolls_by_banner = {
         banner_id: sorted({m.rolls for m in ms if m.guaranteed})
         for banner_id, ms in (multis or {}).items()
     }
-    start = (position, _canon_last(graphs, position, last_cat))
-    # Per (position, last cat), keep only the biggest found-sets: a path that arrives
-    # with a subset of another path's finds can't do anything the other can't (moves
-    # depend only on position and last cat, and found only grows), so we never have to
-    # walk all 2^targets found-sets. Without this the BFS itself explodes past ~8 targets.
-    seen: dict[tuple[int, str], list[frozenset[str]]] = {start: [frozenset()]}
-    frontier = [(*start, frozenset())]
+    currencies = banner_currency or {}
+    origin = (
+        start.position,
+        _canon_last(graphs, start.position, start.last_cat),
+        start.platinum_left,
+        start.legend_left,
+    )
+    # Per (position, last cat, tickets left), keep only the biggest found-sets: a path
+    # that arrives with a subset of another path's finds can't do anything the other can't
+    # (moves depend only on the key, and found only grows), so we never have to walk all
+    # 2^targets found-sets. Without this the BFS itself explodes past ~8 targets.
+    seen: dict[tuple, list[frozenset[str]]] = {origin: [frozenset()]}
+    frontier = [(*origin, frozenset())]
 
     while frontier:
         upcoming = []
-        for pos, last, found in frontier:
+        for pos, last, platinum, legend, found in frontier:
             for graph in graphs:
-                moves = []
                 outcome = graph.resolve(pos, last)
-                if outcome is not None:
-                    moves.append((outcome.cat, outcome.next_position))
+                if outcome is None:
+                    continue
 
+                moves = []
+                currency = currencies.get(graph.banner_id, "")
+                if currency == "platinum":
+                    if platinum > 0:
+                        moves.append((outcome.cat, outcome.next_position, platinum - 1, legend))
+                elif currency == "legend":
+                    if legend > 0:
+                        moves.append((outcome.cat, outcome.next_position, platinum, legend - 1))
+                else:
+                    moves.append((outcome.cat, outcome.next_position, platinum, legend))
                     forced = graph.guaranteed(pos, duped=outcome.switched)
                     if forced is not None:
                         for rolls in rolls_by_banner.get(graph.banner_id, ()):
                             landing = _multi_landing(graph, pos, rolls, last)
                             if landing is not None:
-                                moves.append((forced.cat, landing))
+                                moves.append((forced.cat, landing, platinum, legend))
 
-                for cat, next_position in moves:
+                for cat, next_position, plat_left, leg_left in moves:
                     got = found | {cat} if cat in targets else found
                     if got >= targets:
                         return True
 
-                    key = (next_position, _canon_last(graphs, next_position, cat))
+                    key = (
+                        next_position,
+                        _canon_last(graphs, next_position, cat),
+                        plat_left,
+                        leg_left,
+                    )
                     kept = seen.setdefault(key, [])
                     if any(got <= other for other in kept):
                         continue
@@ -357,26 +375,20 @@ def _multi_move(state: State, graph: BannerGraph, multi: Multi, targets: frozens
     if multi.guaranteed and forced is None:
         return None
 
-    position = state.position
-    last = state.last_cat
-    found = state.found
-    pulls = []
     normal_rolls = multi.rolls - 1 if multi.guaranteed else multi.rolls
+    walk = graph.chain(state.position, normal_rolls, state.last_cat)
+    if walk is None:
+        return None
 
-    for _ in range(normal_rolls):
-        outcome = graph.resolve(position, last)
-        if outcome is None:
-            return None
-
-        pulls.append(Pull(position, graph.banner_id, outcome.cat, outcome.rarity))
-        if outcome.cat in targets:
-            found = found | {outcome.cat}
-        last = outcome.cat
-        position = outcome.next_position
+    pulls, position, last = walk
+    found = state.found
+    for pull in pulls:
+        if pull.cat in targets:
+            found = found | {pull.cat}
 
     if multi.guaranteed:
-        pulls.append(
-            Pull(state.position, graph.banner_id, forced.cat, forced.rarity, guaranteed=True)
+        pulls += (
+            Pull(state.position, graph.banner_id, forced.cat, forced.rarity, guaranteed=True),
         )
         if forced.cat in targets:
             found = found | {forced.cat}
@@ -395,7 +407,7 @@ def _multi_move(state: State, graph: BannerGraph, multi: Multi, targets: frozens
     )
     kind = f"{multi.rolls}-roll" + (" (guaranteed)" if multi.guaranteed else "")
 
-    return nxt, Leg(graph.banner_id, kind, multi.cost, tuple(pulls))
+    return nxt, Leg(graph.banner_id, kind, multi.cost, pulls)
 
 
 def _switch(state: State, leg: Leg) -> int:
@@ -458,7 +470,7 @@ def astar(
     occurrences = _occurrences(graphs, targets)
     needed = targets - start.found
 
-    if not _collectable(graphs, needed, start.position, multis, start.last_cat, occurrences):
+    if not _collectable(graphs, needed, start, multis, occurrences, banner_currency):
         return None
 
     floor = _multi_floor(multis)
