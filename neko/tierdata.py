@@ -83,7 +83,7 @@ _ALIASES = {
     "shadow the hedgehog": 806,  # Shadow
 }
 
-_NOISE = re.compile(r"<script[\s\S]*?</script>|<style[\s\S]*?</style>")
+_NOISE = re.compile(r"<script[\s\S]*?</script>|<style[\s\S]*?</style>", re.IGNORECASE)
 _BLOCK = re.compile(r"</?(?:p|div|br|li|tr|td|th|h[1-6]|section|article)\b[^>]*>", re.IGNORECASE)
 _TAGS = re.compile(r"<[^>]+>")
 # The cumulative list writes "SS: a, b"; the per-set pages write "SS - a, b".
