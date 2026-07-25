@@ -27,8 +27,9 @@ from planner.forms import (
     PlannerForm,
 )
 from planner.links import TOOL_DIRECTORY, unit_links
-from planner.models import CannonPlan, Cat, EvolvePlan, Region, Seed, TalentPlan, Unit
+from planner.models import CannonPlan, Cat, Region, Seed, TalentPlan, Unit, UnitPlan
 from planner.services import (
+    CANNON_ADDONS,
     NORMAL_DEFAULT_KEYS,
     NORMAL_TARGET_PRESETS,
     RARITY_ORDER,
@@ -39,17 +40,14 @@ from planner.services import (
     build_normal_plan,
     build_normal_tracks,
     build_tracks,
-    cannon_options,
-    cannon_panel,
     cat_banner_names,
+    cat_options,
     collection_facets,
     collection_sections,
     combo_filter_groups,
     dictionary_sections,
     display_titles,
     equivalent_banners,
-    evolve_options,
-    evolve_panel,
     export_collection,
     fetch_banners,
     fetch_for_banners,
@@ -61,13 +59,12 @@ from planner.services import (
     normal_seek_pools,
     picker_groups,
     plannable_form,
+    resources_board,
     seek_banner,
     seek_pool_groups,
     seek_run_choices,
     set_sections,
     subset_solutions,
-    talent_options,
-    talent_panel,
     tier_badges,
     tier_list_doc,
     tier_list_index,
@@ -832,23 +829,25 @@ def collection_bulk(request):
     return JsonResponse({"value": value})
 
 
-def materials(request):
-    """The materials page: evolution tracker, talent NP calculator, and cannon
-    developer, all persisted like the collection (one global plan)."""
+def resources(request):
+    """The resources page: one board holding the cats you're grinding for, the Cat Base
+    developments you're levelling, and the overview totalling both. The two pickers are
+    rendered client-side from these static catalogues, so the board can be swapped whole
+    on every change without re-shipping them."""
     context = {
-        "evolve": evolve_panel(),
-        "evolve_options": evolve_options(),
-        "talents": talent_panel(),
-        "talent_options": talent_options(),
-        "cannons": cannon_panel(),
-        "cannon_options": cannon_options(),
+        "board": resources_board(),
+        "cat_options": cat_options(),
     }
 
-    return render(request, "planner/materials.html", context)
+    return render(request, "planner/resources.html", context)
+
+
+def _board(request):
+    return render(request, "planner/_res_board.html", {"board": resources_board()})
 
 
 def _plan_unit(request):
-    """The catalogued unit a materials POST names, or None when malformed/unknown."""
+    """The catalogued unit a resources POST names, or None when malformed/unknown."""
     try:
         unit_id = int(request.POST.get("unit_id", ""))
     except ValueError:
@@ -857,126 +856,99 @@ def _plan_unit(request):
     return Unit.objects.filter(unit_id=unit_id).first()
 
 
-def _evolve_panel_response(request):
-    return render(
-        request,
-        "planner/_evolve_panel.html",
-        {"panel": evolve_panel(), "options": evolve_options()},
-    )
+def _set_talents(unit, slots, on):
+    """Tick or clear every one of a unit's talent slots at once."""
+    TalentPlan.objects.filter(unit=unit).delete()
+    if on:
+        TalentPlan.objects.bulk_create(TalentPlan(unit=unit, slot=index) for index in slots)
 
 
 @require_POST
-def evolve_toggle(request):
-    """Add, flip, or remove an evolution plan; responds with the re-rendered panel.
-    A bare unit_id adds with the True Form checked (Ultra when there's no TF cost)."""
+def resources_cat(request):
+    """Put a cat on the list, tick one of its evolutions or talents, max it out, or drop
+    it; responds with the whole re-rendered board.
+
+    A bare unit_id just adds the cat - nothing is ticked for you, since what you want off
+    a cat is the whole question the page asks."""
     unit = _plan_unit(request)
     if unit is None:
         return HttpResponseBadRequest("unknown unit")
 
-    form = request.POST.get("form")
     if request.POST.get("remove") == "1":
-        EvolvePlan.objects.filter(unit=unit).delete()
+        UnitPlan.objects.filter(unit=unit).delete()
+        TalentPlan.objects.filter(unit=unit).delete()
+        return _board(request)
+
+    plan, _ = UnitPlan.objects.get_or_create(unit=unit)
+    slots = load_talents()["units"].get(str(unit.unit_id), [])
+    cost = load_evolve()["units"].get(str(unit.unit_id), {})
+    form, raw_slot = request.POST.get("form"), request.POST.get("slot")
+    on = request.POST.get("on") == "1"
+    if request.POST.get("all") is not None:
+        plan.tf = on and plannable_form(cost, "tf") is not None
+        plan.uf = on and plannable_form(cost, "uf") is not None
+        plan.save()
+        _set_talents(unit, range(len(slots)), on)
     elif form is not None:
         if form not in {"tf", "uf"}:
             return HttpResponseBadRequest("form must be 'tf' or 'uf'")
-        plan, _ = EvolvePlan.objects.get_or_create(unit=unit)
-        setattr(plan, form, request.POST.get("on") == "1")
-        if plan.tf or plan.uf:
-            plan.save()
-        else:
-            plan.delete()
-    else:
-        cost = load_evolve()["units"].get(str(unit.unit_id), {})
-        tf = plannable_form(cost, "tf") is not None
-        uf = not tf and plannable_form(cost, "uf") is not None
-        if tf or uf:
-            EvolvePlan.objects.update_or_create(unit=unit, defaults={"tf": tf, "uf": uf})
-
-    return _evolve_panel_response(request)
-
-
-def _talent_panel_response(request):
-    return render(
-        request,
-        "planner/_talent_panel.html",
-        {"panel": talent_panel(), "options": talent_options()},
-    )
-
-
-@require_POST
-def talent_toggle(request):
-    """Add, flip, or remove talent plans; responds with the re-rendered panel.
-    A bare unit_id adds the unit with every talent checked."""
-    unit = _plan_unit(request)
-    if unit is None:
-        return HttpResponseBadRequest("unknown unit")
-
-    slots = load_talents()["units"].get(str(unit.unit_id), [])
-    raw = request.POST.get("slot")
-    if request.POST.get("remove") == "1":
-        TalentPlan.objects.filter(unit=unit).delete()
-    elif raw is not None:
+        setattr(plan, form, on)
+        plan.save()
+    elif raw_slot is not None:
         try:
-            slot = int(raw)
+            slot = int(raw_slot)
         except ValueError:
             return HttpResponseBadRequest("malformed slot")
         if not 0 <= slot < len(slots):
             return HttpResponseBadRequest("unknown slot")
-        if request.POST.get("on") == "1":
+        if on:
             TalentPlan.objects.get_or_create(unit=unit, slot=slot)
         else:
             TalentPlan.objects.filter(unit=unit, slot=slot).delete()
-    else:
-        plans = [TalentPlan(unit=unit, slot=index) for index in range(len(slots))]
-        TalentPlan.objects.bulk_create(plans, ignore_conflicts=True)
 
-    return _talent_panel_response(request)
-
-
-def _cannon_panel_response(request):
-    return render(
-        request,
-        "planner/_cannon_panel.html",
-        {"panel": cannon_panel(), "options": cannon_options()},
-    )
+    return _board(request)
 
 
 @require_POST
-def cannon_toggle(request):
-    """Add, adjust, or remove a cannon development plan; responds with the
-    re-rendered panel. A bare cannon_id adds with every part planned to max."""
+def resources_base(request):
+    """Track a Cat Base development, switch one of its add-ons on or off, set a part to
+    the level it sits at now, or drop it; responds with the whole re-rendered board.
+
+    A bare cannon_id toggles the development itself - the picker is a row of switches,
+    so the same click that adds one takes it back off."""
     raw_id = request.POST.get("cannon_id", "")
     cannon = next((c for c in load_cannons()["cannons"] if str(c["id"]) == raw_id), None)
     if cannon is None:
         return HttpResponseBadRequest("unknown cannon")
 
-    parts = cannon["parts"]
     part = request.POST.get("part")
-    if request.POST.get("remove") == "1":
-        CannonPlan.objects.filter(cannon_id=cannon["id"]).delete()
-    elif part is not None:
-        bound = request.POST.get("bound")
-        if part not in parts or bound not in {"now", "goal"}:
-            return HttpResponseBadRequest("unknown part")
-        try:
-            level = int(request.POST.get("level", ""))
-        except ValueError:
-            return HttpResponseBadRequest("malformed level")
-        if not 0 <= level <= len(parts[part]["levels"]):
-            return HttpResponseBadRequest("unknown level")
-        plan = CannonPlan.objects.filter(cannon_id=cannon["id"]).first()
-        if plan is None:
-            return HttpResponseBadRequest("unplanned cannon")
-        setattr(plan, f"{part}_{bound}", level)
-        if getattr(plan, f"{part}_now") > getattr(plan, f"{part}_goal"):
-            other = "goal" if bound == "now" else "now"
-            setattr(plan, f"{part}_{other}", level)
-        plan.save()
-    else:
-        goals = {f"{key}_goal": len(block["levels"]) for key, block in parts.items()}
-        CannonPlan.objects.update_or_create(cannon_id=cannon["id"], defaults=goals)
+    if part is None:
+        deleted, _ = CannonPlan.objects.filter(cannon_id=cannon["id"]).delete()
+        if not deleted:
+            CannonPlan.objects.create(cannon_id=cannon["id"])
+        return _board(request)
 
-    return _cannon_panel_response(request)
+    if part not in cannon["parts"]:
+        return HttpResponseBadRequest("unknown part")
+
+    on = request.POST.get("on")
+    if on is not None:
+        if part not in CANNON_ADDONS:
+            return HttpResponseBadRequest("the cannon comes with the development")
+        CannonPlan.objects.update_or_create(
+            cannon_id=cannon["id"], defaults={f"{part}_on": on == "1"}
+        )
+        return _board(request)
+
+    try:
+        level = int(request.POST.get("level", ""))
+    except ValueError:
+        return HttpResponseBadRequest("malformed level")
+    if not 0 <= level <= len(cannon["parts"][part]["levels"]):
+        return HttpResponseBadRequest("unknown level")
+    CannonPlan.objects.update_or_create(cannon_id=cannon["id"], defaults={f"{part}_now": level})
+
+    return _board(request)
 
 
 @require_POST

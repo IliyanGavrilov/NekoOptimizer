@@ -1,0 +1,5 @@
+{% comment %}One material: its icon with the name on hover, and how many you need. The
+name is in the markup too - app.js flips the tile to .no-icon when the source has no
+picture for that item (Engineers), and it reads as text instead.{% endcomment %}
+{% load humanize %}
+<span class="res-item" title="{{ item.name }}"><img class="item-icon" src="{{ item_base }}/{{ item.id }}.png" alt="{{ item.name }}" loading="lazy"><span class="item-name">{{ item.name }}</span><b>{{ item.count|intcomma }}</b></span>

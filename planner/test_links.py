@@ -27,7 +27,7 @@ def test_unit_links_title_the_wiki_page_by_rarity():
 
 
 def test_page_links_come_from_the_resolved_url_name():
-    assert tools(_Request(resolve("/materials/")))["page_links"] == PAGE_LINKS["materials"]
+    assert tools(_Request(resolve("/resources/")))["page_links"] == PAGE_LINKS["resources"]
 
 
 def test_both_tier_list_routes_get_the_same_links():

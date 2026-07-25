@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "django.contrib.humanize",  # intcomma, for the resources page's grind counts
     "planner",
 ]
 
@@ -131,4 +132,11 @@ ICONS_DIR = BASE_DIR / "planner" / "static" / "planner" / "icons" / "u"
 ICON_BASE = os.environ.get(
     "NEKO_ICON_BASE",
     "/static/planner/icons/u" if ICONS_DIR.is_dir() else "https://battlecatsinfo.github.io/img/u",
+)
+
+# The same arrangement for the grind materials the resources page shows ("<item id>.png").
+ITEMS_DIR = BASE_DIR / "planner" / "static" / "planner" / "icons" / "r"
+ITEM_BASE = os.environ.get(
+    "NEKO_ITEM_BASE",
+    "/static/planner/icons/r" if ITEMS_DIR.is_dir() else "https://battlecatsinfo.github.io/img/r",
 )

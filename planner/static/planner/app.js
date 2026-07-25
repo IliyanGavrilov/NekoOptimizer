@@ -3,6 +3,76 @@
 // fetch_icons has pulled them in.
 const ICON_BASE = document.body.dataset.iconBase;
 
+// ---- Cat display: names / icons / both, and which form ----------------------
+// Shared by every page that lists cats (the two Rolls tables, Collection, Resources)
+// so one pick governs the whole site. The mode is a class on the page's container;
+// icons are injected only once a mode that shows them is picked - text mode stays
+// image-free - into any [data-uid] element tagged .icon-host. The form picker chooses
+// WHICH form shows, icon AND name (godfat's name=N): a unit without the picked form
+// steps down to the last one it has (404s are remembered, so a re-pick never
+// re-probes), and a host with no icon at all keeps its name.
+const DISPLAY_KEY = "neko:rollDisplay";
+const FORM_KEY = "neko:rollForm";
+const missingIcons = new Set(); // "uid/form" pairs that 404'd
+
+function restorePick(el, key) {
+  const saved = localStorage.getItem(key);
+  if (saved && [...el.options].some((o) => o.value === saved)) el.value = saved;
+}
+
+function setIconForm(host, img, form) {
+  const uid = host.dataset.uid;
+  while (form > 0 && missingIcons.has(`${uid}/${form}`)) form -= 1;
+  if (missingIcons.has(`${uid}/${form}`)) {
+    host.classList.add("no-icon");
+    return;
+  }
+  if (img.dataset.form === String(form)) return;
+  img.dataset.form = form;
+  host.classList.remove("no-icon");
+  img.src = `${ICON_BASE}/${uid}/${form}.png`;
+}
+
+// loading="lazy" keeps off-screen (and filtered-out) hosts from fetching, and
+// identical cats share one cached URL.
+function injectIcons(root, form) {
+  root.querySelectorAll(".icon-host[data-uid]").forEach((host) => {
+    let img = host.querySelector(".cat-icon");
+    if (!img) {
+      img = document.createElement("img");
+      img.className = "cat-icon";
+      img.loading = "lazy";
+      img.alt = "";
+      img.addEventListener("error", () => {
+        missingIcons.add(`${host.dataset.uid}/${img.dataset.form}`);
+        setIconForm(host, img, Number(img.dataset.form)); // step down a form, or give up
+      });
+      host.prepend(img);
+    }
+    setIconForm(host, img, form);
+  });
+}
+
+// The mode class goes on root (it's what the CSS keys off); icons are injected into
+// iconRoot, which Collection narrows to the view on screen - all three of its views
+// together hold ~7k chips, and the hidden two would build img nodes nobody sees.
+function syncCatDisplay(root, mode, form, iconRoot = root) {
+  root.classList.toggle("rolls-icons", mode === "icons");
+  root.classList.toggle("rolls-both", mode === "both");
+  if (mode !== "text") injectIcons(iconRoot, form);
+}
+
+// Rename every host that ships its form names inline (data-forms). The rare Rolls
+// table is the exception - thousands of cells over a few hundred units, so it fetches
+// the names once instead and renames from that map.
+function renameForms(root, form) {
+  root.querySelectorAll("[data-forms] > .catname").forEach((span) => {
+    const host = span.parentElement;
+    const forms = host.dataset.forms ? host.dataset.forms.split("|") : [];
+    span.textContent = forms.length ? forms[Math.min(form, forms.length - 1)] : host.dataset.name;
+  });
+}
+
 // ---- Follow-along: walk a plan's steps, lighting each on the track beside it -------
 // Shared by the planner solutions and the Normal Capsules plan - both render a
 // .plan-follow holding a .plan-steps card list and a .plan-track, with each step card
@@ -550,58 +620,11 @@ if (picker) {
   });
 
   // ---- Rolls display mode: names / form icons / both -------------------
-  // The icons are fetched per-cell (like the cat popup), so we only inject them once a
-  // mode that shows them is picked - text mode stays image-free.
-  // Each cell carries its catalogue id (data-uid); loading="lazy" keeps off-screen rows
-  // from fetching, and identical cats share one cached URL. The form picker chooses
-  // WHICH form shows, icon AND name (godfat's name=N): a unit without the picked form
-  // steps down to the last one it has (404s are remembered, so a re-pick never
-  // re-probes), and a cell with no icon at all (an uncatalogued unit) keeps its name.
-  const missingIcons = new Set(); // "uid/form" pairs that 404'd
-  const bestForm = (uid, form) => {
-    while (form > 0 && missingIcons.has(`${uid}/${form}`)) form -= 1;
-    return form;
-  };
-  const setIconForm = (btn, img) => {
-    const uid = btn.dataset.uid;
-    const form = bestForm(uid, Number(rollFormEl.value));
-    if (missingIcons.has(`${uid}/${form}`)) {
-      btn.classList.add("no-icon");
-      return;
-    }
-    if (img.dataset.form === String(form)) return;
-    img.dataset.form = form;
-    btn.classList.remove("no-icon");
-    img.src = `${ICON_BASE}/${uid}/${form}.png`;
-  };
-  const injectIcons = (root) => {
-    root.querySelectorAll(".entry > .catlink[data-uid]").forEach((btn) => {
-      let img = btn.querySelector(".cat-icon");
-      if (!img) {
-        img = document.createElement("img");
-        img.className = "cat-icon";
-        img.loading = "lazy";
-        img.alt = "";
-        img.addEventListener("error", () => {
-          missingIcons.add(`${btn.dataset.uid}/${img.dataset.form}`);
-          setIconForm(btn, img); // step down a form, or give up to the name
-        });
-        btn.prepend(img);
-      }
-      setIconForm(btn, img);
-    });
-  };
   // Unlike the other Rolls controls (which reset each visit by request), the display
-  // mode and icon form are persisted preferences - restore the last picks before the
-  // first render.
-  const restorePick = (el, key) => {
-    const saved = localStorage.getItem(key);
-    if (saved && [...el.options].some((o) => o.value === saved)) el.value = saved;
-  };
-  const ROLL_DISPLAY_KEY = "neko:rollDisplay";
-  const ROLL_FORM_KEY = "neko:rollForm";
-  restorePick(rollDisplayEl, ROLL_DISPLAY_KEY);
-  restorePick(rollFormEl, ROLL_FORM_KEY);
+  // mode and icon form are persisted preferences shared with the rest of the site -
+  // restore the last picks before the first render.
+  restorePick(rollDisplayEl, DISPLAY_KEY);
+  restorePick(rollFormEl, FORM_KEY);
   // Renaming needs each unit's form names: they come down once, lazily, the first
   // time a non-base form is picked. Cells re-rendered later just reuse the map.
   let formNames = null; // {unit_id: [form names]}, null until fetched
@@ -620,7 +643,7 @@ if (picker) {
   const applyFormNames = (root) => {
     const form = Number(rollFormEl.value);
     if (form > 0 && formNames === null) loadFormNames();
-    root.querySelectorAll(".entry > .catlink[data-uid] > .catname").forEach((span) => {
+    root.querySelectorAll(".icon-host[data-uid] > .catname").forEach((span) => {
       const btn = span.parentElement;
       const forms = form > 0 && formNames ? formNames[btn.dataset.uid] : null;
       span.textContent =
@@ -628,20 +651,17 @@ if (picker) {
     });
   };
   const syncRollDisplay = () => {
-    const mode = rollDisplayEl.value;
-    resultsRegion.classList.toggle("rolls-icons", mode === "icons");
-    resultsRegion.classList.toggle("rolls-both", mode === "both");
-    if (mode !== "text") injectIcons(resultsRegion);
+    syncCatDisplay(resultsRegion, rollDisplayEl.value, Number(rollFormEl.value));
     applyFormNames(resultsRegion);
   };
   syncRollDisplay();
   rollDisplayEl.addEventListener("change", () => {
-    localStorage.setItem(ROLL_DISPLAY_KEY, rollDisplayEl.value);
+    localStorage.setItem(DISPLAY_KEY, rollDisplayEl.value);
     syncRollDisplay();
     syncUrlIfLinked();
   });
   rollFormEl.addEventListener("change", () => {
-    localStorage.setItem(ROLL_FORM_KEY, rollFormEl.value);
+    localStorage.setItem(FORM_KEY, rollFormEl.value);
     syncRollDisplay();
     syncUrlIfLinked();
   });
@@ -1149,6 +1169,7 @@ if (collectionBrowser) {
       v.hidden = v.dataset.view !== name;
     });
     applyFilters();
+    applyDisplay(); // the view that just came up needs its icons injected too
   }
   document.getElementById("collectionViews").addEventListener("click", (e) => {
     const btn = e.target.closest(".view-btn");
@@ -1408,23 +1429,30 @@ if (collectionBrowser) {
     location.reload();
   });
 
-  // Form picker: every chip renames to the picked form. It shares the Rolls table's
-  // persisted pick, so the whole site shows cats the same way.
+  // Display + form pickers: every chip renames to the picked form and carries its icon
+  // in the icon modes. Both share the Rolls table's persisted picks, so the whole site
+  // shows cats the same way. Renaming goes through the chip index rather than
+  // renameForms - the three views hold ~7k chips between them.
+  const displaySel = document.getElementById("collectionDisplay");
   const formSel = document.getElementById("collectionForm");
-  const saved = localStorage.getItem("neko:rollForm");
-  if (saved && [...formSel.options].some((o) => o.value === saved)) formSel.value = saved;
-  const applyForm = () => {
+  restorePick(displaySel, DISPLAY_KEY);
+  restorePick(formSel, FORM_KEY);
+  const applyDisplay = () => {
     const form = Number(formSel.value);
     for (const chip of allChips) {
       chip.catname.textContent = chip.forms.length
         ? chip.forms[Math.min(form, chip.forms.length - 1)]
         : chip.name;
     }
+    syncCatDisplay(collectionBrowser, displaySel.value, form, views.find((v) => !v.hidden));
   };
-  applyForm();
+  displaySel.addEventListener("change", () => {
+    localStorage.setItem(DISPLAY_KEY, displaySel.value);
+    applyDisplay();
+  });
   formSel.addEventListener("change", () => {
-    localStorage.setItem("neko:rollForm", formSel.value);
-    applyForm();
+    localStorage.setItem(FORM_KEY, formSel.value);
+    applyDisplay();
   });
 
   updateCounts();
@@ -1438,8 +1466,7 @@ if (collectionBrowser) {
 const tierTable = document.querySelector(".tier-table");
 if (tierTable) {
   const formSel = document.getElementById("tierForm");
-  const saved = localStorage.getItem("neko:rollForm");
-  if (saved && [...formSel.options].some((o) => o.value === saved)) formSel.value = saved;
+  restorePick(formSel, FORM_KEY);
   tierTable.querySelectorAll(".tier-unit[data-uid] img").forEach((img) => {
     img.addEventListener("error", () => {
       const base = `${ICON_BASE}/${img.closest(".tier-unit").dataset.uid}/0.png`;
@@ -1459,7 +1486,7 @@ if (tierTable) {
   };
   applyForm();
   formSel.addEventListener("change", () => {
-    localStorage.setItem("neko:rollForm", formSel.value);
+    localStorage.setItem(FORM_KEY, formSel.value);
     applyForm();
   });
 
@@ -1712,42 +1739,148 @@ if (catPopup) {
   });
 }
 
-// ---- Materials: evolution tracker + talent calculator ----
-// Each panel is server-rendered; every change POSTs and swaps in the fresh panel
-// (picker included), so costs and totals never drift from the stored plan.
-const materialsPage = document.getElementById("materialsPage");
-if (materialsPage) {
+// ---- Resources: the grind board ----------------------------------------
+// One board holds the cat cards, the base cards and the overview that totals them, so
+// every change POSTs and swaps the whole thing in - nothing can drift out of step. The
+// cat picker is filled from a catalogue the page ships once (~500 cats), never from the
+// swapped fragment: only the handful of matches you're looking at reach the DOM. The
+// eight base developments are a row of switches instead, rendered with the board.
+const resBoard = document.getElementById("resBoard");
+if (resBoard) {
   const token = document.getElementById("csrfToken").value;
-  const bindPanel = (panelId, url, idKey = "unit_id") => {
-    const panel = document.getElementById(panelId);
-    const post = async (data) => {
-      const resp = await fetch(url, {
-        method: "POST",
-        headers: { "X-CSRFToken": token },
-        body: new URLSearchParams(data),
-      });
-      if (resp.ok) panel.innerHTML = await resp.text();
-    };
-    panel.addEventListener("change", (e) => {
-      const pick = e.target.closest(".materials-pick");
-      if (pick && pick.value) {
-        post({ [idKey]: pick.value });
-        return;
-      }
-      const level = e.target.closest("select[data-part]");
-      if (level) {
-        post({ [idKey]: level.dataset.unit, part: level.dataset.part, bound: level.dataset.bound, level: level.value });
-        return;
-      }
-      const box = e.target.closest("input[type=checkbox]");
-      if (box) post({ [idKey]: box.dataset.unit, [box.dataset.kind]: box.dataset.value, on: box.checked ? "1" : "0" });
-    });
-    panel.addEventListener("click", (e) => {
-      const remove = e.target.closest(".materials-remove");
-      if (remove) post({ [idKey]: remove.dataset.unit, remove: "1" });
-    });
+  const displaySel = document.getElementById("resDisplay");
+  const formSel = document.getElementById("resForm");
+  // Match on the unit's name and every form name, like the planner's target search.
+  const cats = JSON.parse(document.getElementById("resCatOptions").textContent);
+  for (const option of cats) {
+    option.search = [option.name, ...option.forms].join(" ").toLowerCase();
+  }
+
+  restorePick(displaySel, DISPLAY_KEY);
+  restorePick(formSel, FORM_KEY);
+  const applyDisplay = () => {
+    const form = Number(formSel.value);
+    renameForms(resBoard, form);
+    syncCatDisplay(resBoard, displaySel.value, form);
   };
-  bindPanel("evolvePanel", materialsPage.dataset.evolveUrl);
-  bindPanel("talentPanel", materialsPage.dataset.talentUrl);
-  bindPanel("cannonPanel", materialsPage.dataset.cannonUrl, "cannon_id");
+  displaySel.addEventListener("change", () => {
+    localStorage.setItem(DISPLAY_KEY, displaySel.value);
+    applyDisplay();
+  });
+  formSel.addEventListener("change", () => {
+    localStorage.setItem(FORM_KEY, formSel.value);
+    applyDisplay();
+  });
+
+  // A material the source publishes no picture for (Engineers) falls back to its name.
+  // `error` doesn't bubble, so this listens on the way down.
+  resBoard.addEventListener(
+    "error",
+    (e) => {
+      const img = e.target.closest(".item-icon");
+      if (img) img.closest(".res-item").classList.add("no-icon");
+    },
+    true,
+  );
+
+  // A bare query can match hundreds of cats, and the point is a menu you can scan.
+  const MAX_MATCHES = 24;
+  const picker = () => resBoard.querySelector(".res-picker");
+  const showMatches = () => {
+    const box = picker();
+    const query = box.querySelector(".res-search").value.trim().toLowerCase();
+    const list = box.querySelector(".res-matches");
+    const planned = new Set(box.dataset.planned.split(",").filter(Boolean));
+    const form = Number(formSel.value);
+    const hits = query
+      ? cats.filter((option) => option.search.includes(query)).slice(0, MAX_MATCHES)
+      : [];
+    list.replaceChildren(
+      ...hits.map((option) => {
+        const chip = document.createElement("button");
+        chip.type = "button";
+        chip.className = "chip res-match";
+        chip.dataset.id = option.id;
+        chip.textContent = option.forms[Math.min(form, option.forms.length - 1)] || option.name;
+        if (planned.has(String(option.id))) {
+          chip.classList.add("on");
+          chip.title = "Already on your list";
+        }
+        return chip;
+      }),
+    );
+    list.hidden = !hits.length;
+    box.querySelector(".res-hint").hidden = !!query && !!hits.length;
+  };
+
+  // The board re-renders on every change, so the picker you were typing in is replaced
+  // under you - carry the query across and re-run it, and keep the focus where it was,
+  // so adding several cats in a row is one search and a few clicks.
+  const post = async (url, data) => {
+    const query = picker().querySelector(".res-search").value;
+    const searching = !!document.activeElement.closest(".res-picker");
+    const resp = await fetch(url, {
+      method: "POST",
+      headers: { "X-CSRFToken": token },
+      body: new URLSearchParams(data),
+    });
+    if (!resp.ok) return;
+    resBoard.innerHTML = await resp.text();
+    applyDisplay();
+    const search = picker().querySelector(".res-search");
+    search.value = query;
+    showMatches();
+    if (searching) search.focus();
+  };
+
+  resBoard.addEventListener("input", (e) => {
+    if (e.target.closest(".res-search")) showMatches();
+  });
+
+  resBoard.addEventListener("change", (e) => {
+    // Base controls carry data-part: a level picker, or an add-on's on/off switch.
+    const part = e.target.closest("[data-part]");
+    if (part) {
+      post(resBoard.dataset.baseUrl, {
+        cannon_id: part.dataset.unit,
+        part: part.dataset.part,
+        ...(part.dataset.addon ? { on: part.checked ? "1" : "0" } : { level: part.value }),
+      });
+      return;
+    }
+    const box = e.target.closest("input[type=checkbox]");
+    if (box) {
+      post(resBoard.dataset.catUrl, {
+        unit_id: box.dataset.unit,
+        [box.dataset.kind]: box.dataset.value,
+        on: box.checked ? "1" : "0",
+      });
+    }
+  });
+
+  resBoard.addEventListener("click", (e) => {
+    const match = e.target.closest(".res-match");
+    if (match) return post(resBoard.dataset.catUrl, { unit_id: match.dataset.id });
+    // The development switches toggle: the same click adds one and takes it back off.
+    const dev = e.target.closest(".res-switch");
+    if (dev) return post(resBoard.dataset.baseUrl, { cannon_id: dev.dataset.base });
+    const all = e.target.closest(".res-all");
+    if (all) {
+      return post(resBoard.dataset.catUrl, {
+        unit_id: all.dataset.unit,
+        all: "1",
+        on: all.dataset.on,
+      });
+    }
+    const remove = e.target.closest(".res-remove");
+    if (!remove) return;
+    const isCatCard = remove.closest(".res-card").dataset.kind === "cat";
+    post(isCatCard ? resBoard.dataset.catUrl : resBoard.dataset.baseUrl, {
+      [isCatCard ? "unit_id" : "cannon_id"]: remove.dataset.unit,
+      remove: "1",
+    });
+  });
+
+  applyDisplay();
+  showMatches();
 }

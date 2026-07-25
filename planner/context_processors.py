@@ -10,8 +10,8 @@ def region(request) -> dict:
 
 
 def icons(request) -> dict:
-    """Where cat icons are served from, for the templates and app.js alike."""
-    return {"icon_base": settings.ICON_BASE}
+    """Where cat and material icons are served from, for the templates and app.js alike."""
+    return {"icon_base": settings.ICON_BASE, "item_base": settings.ITEM_BASE}
 
 
 def tools(request) -> dict:
