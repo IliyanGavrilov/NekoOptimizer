@@ -611,19 +611,23 @@ def part_cost(part: Mapping, now: int) -> list[list[int]]:
     return part["construction"] + rows if now == 0 and rows else rows
 
 
-def _spend_rows(rows: Iterable[Iterable[int]], item_ids: Iterable[int]) -> tuple[Counter, int, int]:
-    """(material counts, build hours, engineers needed) over the given recipe rows.
-    Engineers aren't spent like a material - a level needs that many free at once and
-    gets them back - so the figure that matters is the most any one level asks for."""
+def _spend_rows(
+    rows: Iterable[Iterable[int]], item_ids: Iterable[int]
+) -> tuple[Counter, int, int, int]:
+    """(material counts, build hours, engineers at once, engineers over all levels) over
+    the given recipe rows. Engineers aren't spent like a material - a level needs that
+    many free at the same time and gets them back - so both figures are worth knowing:
+    the peak is the crew you have to own, the sum is how much engineer work is left."""
     spent: Counter = Counter()
-    hours = engineers = 0
+    hours = peak = crew = 0
     for time, needed, *counts in rows:
         hours += time
-        engineers = max(engineers, needed)
+        peak = max(peak, needed)
+        crew += needed
         for item_id, item_count in zip(item_ids, counts, strict=True):
             spent[item_id] += item_count
 
-    return +spent, hours, engineers
+    return +spent, hours, peak, crew
 
 
 def _cat_card(plan: UnitPlan, evolve: Mapping, talents: Mapping, wanted: set[int]) -> dict:
@@ -692,7 +696,7 @@ def _base_card(cannon: Mapping, plan: CannonPlan, material_ids: Mapping) -> dict
     add-ons are switched on, each at the level it sits at now, with what the levels
     still ahead of it cost. A switched-off add-on is listed but costs nothing."""
     spend: Counter = Counter()
-    parts, hours, engineers = [], 0, 0
+    parts, hours, peak, crew = [], 0, 0, 0
     for key, label in CANNON_PARTS:
         part = cannon["parts"].get(key)
         if part is None:
@@ -701,12 +705,13 @@ def _base_card(cannon: Mapping, plan: CannonPlan, material_ids: Mapping) -> dict
         on = getattr(plan, f"{key}_on") if addon else True
         now = getattr(plan, f"{key}_now")
         top = len(part["levels"])
-        cost, time, crew = (
-            _spend_rows(part_cost(part, now), material_ids[key]) if on else (Counter(), 0, 0)
+        cost, time, at_once, over_all = (
+            _spend_rows(part_cost(part, now), material_ids[key]) if on else (Counter(), 0, 0, 0)
         )
         spend += cost
         hours += time
-        engineers = max(engineers, crew)
+        peak = max(peak, at_once)
+        crew += over_all
         parts.append(
             {
                 "key": key,
@@ -719,7 +724,8 @@ def _base_card(cannon: Mapping, plan: CannonPlan, material_ids: Mapping) -> dict
                 "levels": range(top + 1),
                 "cost": _named_items(cost),
                 "time": time,
-                "engineers": crew,
+                "engineers": at_once,
+                "engineers_total": over_all,
             }
         )
 
@@ -729,7 +735,8 @@ def _base_card(cannon: Mapping, plan: CannonPlan, material_ids: Mapping) -> dict
         "parts": parts,
         "spend": spend,
         "hours": hours,
-        "engineers": engineers,
+        "engineers": peak,
+        "engineers_total": crew,
         "cost": _named_items(spend),
         "left": sum(part["left"] for part in parts if part["on"]),
     }
@@ -766,7 +773,7 @@ def resources_board() -> dict:
     }
     plans = {plan.cannon_id: plan for plan in CannonPlan.objects.all()}
     build_totals: Counter = Counter()
-    base, hours, engineers = [], 0, 0
+    base, hours, peak, crew = [], 0, 0, 0
     for cannon in doc["cannons"]:
         plan = plans.get(cannon["id"])
         if plan is None:
@@ -774,7 +781,8 @@ def resources_board() -> dict:
         card = _base_card(cannon, plan, material_ids)
         build_totals += card["spend"]
         hours += card["hours"]
-        engineers = max(engineers, card["engineers"])
+        peak = max(peak, card["engineers"])
+        crew += card["engineers_total"]
         base.append(card)
 
     gridded = {item_id for _, ids in EVOLVE_FAMILIES for item_id in ids if item_id}
@@ -797,7 +805,8 @@ def resources_board() -> dict:
         "xp": xp,
         "np": np,
         "hours": hours,
-        "engineers": engineers,
+        "engineers": peak,
+        "engineers_total": crew,
     }
 
 
