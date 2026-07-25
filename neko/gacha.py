@@ -1,6 +1,7 @@
 import json
 from collections.abc import Iterable
 from dataclasses import dataclass
+from functools import cache
 from pathlib import Path
 
 from neko.gachadata import GachaEventRow
@@ -20,17 +21,23 @@ class GachaRule:
     step_up: bool = False
 
 
-def load_rules(path: Path = _CONFIG_PATH) -> list[GachaRule]:
+@cache
+def _read_rules(path: Path) -> tuple[GachaRule, ...]:
+    """The committed multi-roll config, memoized - every roll re-read it otherwise."""
     data = json.loads(path.read_text(encoding="utf-8"))
 
-    return [
+    return tuple(
         GachaRule(
             tuple(kw.lower() for kw in rule["keywords"]),
             tuple(Multi(m["rolls"], m["cost"], m.get("guaranteed", True)) for m in rule["multis"]),
             rule.get("step_up", False),
         )
         for rule in data["rules"]
-    ]
+    )
+
+
+def load_rules(path: Path = _CONFIG_PATH) -> list[GachaRule]:
+    return list(_read_rules(path))
 
 
 def match_rule(

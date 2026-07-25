@@ -3,7 +3,7 @@
 
 from dataclasses import dataclass
 
-from neko.models import Banner, BannerRolls, Rarity, TrackPull
+from neko.models import GACHA_RARITIES, Banner, BannerRolls, Rarity, TrackPull
 from neko.rng import xorshift
 
 _BASE = 10000  # godfat's GachaPool::Base: rarity scores and rates are parts-per-10000.
@@ -13,17 +13,23 @@ _TRACKS = ("A", "B")  # index 0 / 1, godfat's cat.track
 _LANDING_BUFFER = 4
 
 
+def _bands(banner: Banner) -> tuple[int, int, int]:
+    """The banner's cumulative rarity band edges, in parts-per-10000."""
+    rare = banner.rates.get(Rarity.RARE, 0)
+    supa = rare + banner.rates.get(Rarity.SUPER_RARE, 0)
+
+    return rare, supa, supa + banner.rates.get(Rarity.UBER_SUPER_RARE, 0)
+
+
 def pick_rarity(score: int, banner: Banner) -> Rarity:
     """The rarity band ``score`` (in [0, 10000)) falls in; past Uber is Legend (catch-all)."""
-    rare = banner.rates.get(Rarity.RARE, 0)
-    supa = banner.rates.get(Rarity.SUPER_RARE, 0)
-    uber = banner.rates.get(Rarity.UBER_SUPER_RARE, 0)
+    rare, supa, uber = _bands(banner)
 
     if score < rare:
         return Rarity.RARE
-    if score < rare + supa:
+    if score < supa:
         return Rarity.SUPER_RARE
-    if score < rare + supa + uber:
+    if score < uber:
         return Rarity.UBER_SUPER_RARE
 
     return Rarity.LEGEND_RARE
@@ -110,14 +116,27 @@ def _build_grid(seed: int, banner: Banner, rows: int, last_cat: str = "") -> lis
         state = xorshift(state)
         values.append(state)
 
+    # The band edges and pools are fixed for the banner; looked up per cell they were a
+    # third of the grid build, and a 999-row table rolls ~2000 cells per banner.
+    rare_edge, supa_edge, uber_edge = _bands(banner)
+    pools = {rarity: banner.pool(rarity) for rarity in GACHA_RARITIES}
+
     grid: list[list[_Cat]] = []
     for seq in range(rows):
         row: list[_Cat] = []
         for track in (0, 1):
             index = 2 * seq + track
             rarity_seed, slot_seed = values[index], values[index + 1]
-            rarity = pick_rarity(rarity_seed % _BASE, banner)
-            name = _pick(banner.pool(rarity), slot_seed)
+            score = rarity_seed % _BASE
+            if score < rare_edge:
+                rarity = Rarity.RARE
+            elif score < supa_edge:
+                rarity = Rarity.SUPER_RARE
+            elif score < uber_edge:
+                rarity = Rarity.UBER_SUPER_RARE
+            else:
+                rarity = Rarity.LEGEND_RARE
+            name = _pick(pools[rarity], slot_seed)
             row.append(_Cat(seq, track, rarity, rarity_seed, slot_seed, name))
         grid.append(row)
 

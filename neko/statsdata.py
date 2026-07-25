@@ -8,6 +8,7 @@ import json
 import tarfile
 from collections.abc import Iterable, Mapping
 from datetime import date
+from functools import cache
 from pathlib import Path
 
 from neko.bcdata import METADATA_URL, _get, _member, latest_version, load_records, release_url
@@ -301,9 +302,16 @@ def build_stats(
     }
 
 
+@cache
+def _read_stats(path: Path) -> dict:
+    """The committed stats document. Memoized like the other data files: half a megabyte
+    of JSON, reparsed on every cat popup otherwise."""
+    return json.loads(path.read_text(encoding="utf-8"))
+
+
 def load_stats(region: str | None = None) -> dict:
     """One region's committed stats document."""
-    return json.loads(stats_path(region).read_text(encoding="utf-8"))
+    return _read_stats(stats_path(region))
 
 
 def refresh(tarball: bytes | None = None, region: str = DEFAULT_REGION) -> int:

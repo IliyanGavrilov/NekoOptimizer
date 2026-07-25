@@ -3,7 +3,7 @@ from dataclasses import asdict
 
 from django.http import Http404, HttpResponse, HttpResponseBadRequest, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
-from django.template.loader import render_to_string
+from django.template.loader import get_template, render_to_string
 from django.urls import reverse
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.http import require_POST
@@ -41,6 +41,7 @@ from planner.services import (
     build_tracks,
     cannon_options,
     cannon_panel,
+    cat_banner_names,
     collection_facets,
     collection_sections,
     combo_filter_groups,
@@ -78,12 +79,19 @@ from planner.services import (
 
 def _picker_cats():
     """Cats for the target picker, each carrying its tier badge (if the tier list ranks
-    it). select_related("unit"): the owned/wanted chip marks read cat.unit, one query
-    per chip otherwise."""
-    cats = list(Cat.objects.select_related("unit").prefetch_related("banners"))
+    it) and its rendered chip. select_related("unit"): the owned/wanted chip marks read
+    cat.unit, one query per chip otherwise. Banner membership comes separately, via
+    cat_banner_names.
+
+    The chip is rendered here, once per cat, because the picker repeats it on every banner
+    row that carries the cat - ~20k chips over ~500 cats, and rendering per appearance was
+    most of the Past fragment's cost."""
+    cats = list(Cat.objects.select_related("unit"))
     badges = tier_badges()
+    chip = get_template("planner/_picker_chip.html")
     for cat in cats:
         cat.tier_badge = badges.get(cat.unit.unit_id) if cat.unit else None
+        cat.chip = chip.render({"cat": cat})
 
     return cats
 
@@ -99,7 +107,7 @@ def planner(request):
     target_flat = sorted(cats, key=lambda cat: (-rank.get(cat.rarity, -1), cat.name))
 
     groups, past_count = [], 0
-    for label, rows in picker_groups(cats, titles=banner_titles()):
+    for label, rows in picker_groups(cats, titles=banner_titles(), banner_names=cat_banner_names()):
         if label == "Past":
             past_count = len(rows)
             groups.append((label, None))  # rendered as a lazy shell in its place
@@ -118,7 +126,9 @@ def planner(request):
 
 def picker_past(request):
     """The Past picker rows, fetched when the group is first opened."""
-    groups = dict(picker_groups(_picker_cats(), titles=banner_titles()))
+    groups = dict(
+        picker_groups(_picker_cats(), titles=banner_titles(), banner_names=cat_banner_names())
+    )
 
     return render(request, "planner/_picker_rows.html", {"sections": groups.get("Past", [])})
 
@@ -714,8 +724,12 @@ def collection(request):
     repeat their cats) - the marks are per unit, so every copy stays in step."""
     units = list(Unit.objects.named())
     badges = tier_badges()
+    # Each unit's chip is rendered once and reused: the page lays the whole catalogue out
+    # three times over (dictionary, rarity, sets), and fests repeat their cats on top.
+    chip = get_template("planner/_collection_chip.html")
     for unit in units:
         unit.tier_badge = badges.get(unit.unit_id)
+        unit.chip = chip.render({"unit": unit})
     guide = load_guide()["regions"].get(active_region(), [])
     context = {
         # All views share the section partial, so a rarity bin becomes a one-row section.

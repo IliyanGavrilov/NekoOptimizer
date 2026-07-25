@@ -1,0 +1,3 @@
+{% comment %}One target-picker cat chip. Rendered once per cat (see views._picker_cats)
+and reused on every banner row that carries it.{% endcomment %}<button type="button" class="chip{% if cat.owned %} owned{% endif %}{% if cat.wanted %} wanted{% endif %}" data-pk="{{ cat.pk }}"
+        data-name="{{ cat.name }}" data-rarity="{{ cat.rarity }}">{{ cat.name }}{% include "planner/_tier_badge.html" with badge=cat.tier_badge %}</button>
