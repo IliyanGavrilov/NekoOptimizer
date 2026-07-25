@@ -19,6 +19,18 @@ if (normalForm) {
   const machineEls = [...normalForm.querySelectorAll(".machine-toggle input[value]")];
   const hint = document.getElementById("normalHint");
   const tracksHost = document.getElementById("normalTracks");
+  // The Rolls display controls, the rare planner's verbatim and on its saved picks:
+  // names / icons / both and which form, applied to the cat items the pools drop.
+  const rollsRegion = document.getElementById("normalRolls");
+  const displayEl = document.getElementById("normalDisplay");
+  const rollFormEl = document.getElementById("normalRollForm");
+  restorePick(displayEl, DISPLAY_KEY);
+  restorePick(rollFormEl, FORM_KEY);
+  const applyDisplay = () => {
+    const form = Number(rollFormEl.value);
+    renameForms(rollsRegion, form);
+    syncCatDisplay(rollsRegion, displayEl.value, form);
+  };
 
   const normalKey = () => (superfeline.checked ? "np" : "n");
 
@@ -110,6 +122,7 @@ if (normalForm) {
       resp && resp.ok
         ? await resp.text()
         : `<p class="field-error">Couldn't load the tracks - is the server still running?</p>`;
+    applyDisplay();
   };
 
   // ---- Live reload: the seed field (typed or scrubbed), machines, roll count --
@@ -135,6 +148,14 @@ if (normalForm) {
     scheduleTracks();
   });
   countEl.addEventListener("input", scheduleTracks);
+  displayEl.addEventListener("change", () => {
+    localStorage.setItem(DISPLAY_KEY, displayEl.value);
+    applyDisplay();
+  });
+  rollFormEl.addEventListener("change", () => {
+    localStorage.setItem(FORM_KEY, rollFormEl.value);
+    applyDisplay();
+  });
   for (const el of machineEls) el.addEventListener("change", fetchTracks);
   normalToggle.addEventListener("change", fetchTracks);
   superfeline.addEventListener("change", () => {
@@ -220,6 +241,7 @@ if (normalForm) {
       return;
     }
     tracksHost.innerHTML = await resp.text();
+    applyDisplay();
     wireFollowAlong(tracksHost); // step list + track walk together (defined in app.js)
     tracksHost.scrollIntoView({ behavior: "smooth", block: "start" });
   });

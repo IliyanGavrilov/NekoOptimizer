@@ -40,6 +40,6 @@ def test_the_collection_page_renders_for_another_region(client):
     assert client.get("/collection/").status_code == 200
 
 
-def test_the_materials_page_renders_for_another_region(client):
+def test_the_resources_page_renders_for_another_region(client):
     Region.store("kr")
-    assert client.get("/materials/").status_code == 200
+    assert client.get("/resources/").status_code == 200

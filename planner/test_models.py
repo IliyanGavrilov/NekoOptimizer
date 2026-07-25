@@ -3,7 +3,7 @@ from itertools import count
 import pytest
 
 from neko import region
-from planner.models import Cat, EvolvePlan, Seed, Unit
+from planner.models import Cat, Seed, Unit, UnitPlan
 
 _ids = count(1)
 
@@ -67,6 +67,6 @@ def test_the_same_unit_id_lives_in_every_region():
 @pytest.mark.django_db
 def test_plans_are_scoped_through_the_unit_they_hang_off():
     with region.using("jp"):
-        EvolvePlan.objects.create(unit=Unit.objects.create(unit_id=1, name="ネコ"), tf=True)
+        UnitPlan.objects.create(unit=Unit.objects.create(unit_id=1, name="ネコ"), tf=True)
 
-    assert list(EvolvePlan.objects.all()) == []
+    assert list(UnitPlan.objects.all()) == []

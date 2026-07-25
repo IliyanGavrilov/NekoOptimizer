@@ -130,7 +130,7 @@ PAGE_LINKS = {
     "planner": (GODFAT, INFO_GACHA, UPCOMING),
     "normal_capsules": (AMPURI, GODFAT),
     "collection": (GAMATOTO, CALC, INFO_GUIDE),
-    "materials": (INFO_OTOTO, INFO_MATERIALS, INFO_TREASURES),
+    "resources": (INFO_OTOTO, INFO_MATERIALS, INFO_TREASURES),
     "tier_list": _TIER_LINKS,
     "tier_list_page": _TIER_LINKS,
     "seed_finder": (GODFAT, AMPURI, TRACKER_UTIL),

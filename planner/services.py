@@ -18,7 +18,15 @@ from neko.gachadata import (
     load_series,
     load_tickets,
 )
-from neko.gamedata import load_cannons, load_combos, load_evolve, load_items, load_talents
+from neko.gamedata import (
+    CANNON_MATERIALS,
+    CANNON_Z_MATERIALS,
+    load_cannons,
+    load_combos,
+    load_evolve,
+    load_items,
+    load_talents,
+)
 from neko.graph import BannerGraph, build_graphs, stream_index
 from neko.models import (
     CATFOOD_PER_DRAW,
@@ -60,7 +68,7 @@ from neko.statsdata import load_stats
 from neko.subsets import SubsetPlan, solve_subsets
 from neko.tierdata import TIER_ORDER, load_tiers
 from planner.forms import MAX_TRACK_LENGTH
-from planner.models import Banner, CannonPlan, Cat, EvolvePlan, TalentPlan, Unit
+from planner.models import Banner, CannonPlan, Cat, TalentPlan, Unit, UnitPlan
 
 RARITY_ORDER = ["Normal", "Special", "Rare", "Super Rare", "Uber Super Rare", "Legend Rare"]
 
@@ -479,7 +487,7 @@ def combo_filter_groups(doc: Mapping | None = None) -> list[tuple[str, list[tupl
     return groups
 
 
-# ---- Materials page: evolution-material tracker + talent NP calculator ----
+# ---- Resources page: evolution tracker, talent NP calculator, Cat Base developer ----
 
 _BR = re.compile(r"<br\s*/?>", re.I)
 _TAG_MARKUP = re.compile(r"<[^>]+>")
@@ -506,177 +514,306 @@ def plannable_form(cost: Mapping, key: str) -> dict | None:
     return form if form and (form["xp"] or form["items"]) else None
 
 
-def _named_items(pairs: Iterable[tuple[int, int]]) -> list[tuple[int, str]]:
-    """(count, display name) per (item id, count) pair, via the committed item names."""
+# The evolution materials come in families the game doles out in step: every family has
+# a seed and a catfruit, the five colours have a Behemoth Stone and Gem on top, and the
+# odd ones out just leave that cell empty - Epic never got a Gem, and Elder, Aku and Gold
+# stop at the fruit.
+EVOLVE_KINDS = ("Seed", "Catfruit", "B. Stone", "B. Gem")
+EVOLVE_FAMILIES = (
+    ("Purple", (30, 35, 167, 179)),
+    ("Red", (31, 36, 168, 180)),
+    ("Blue", (32, 37, 169, 181)),
+    ("Green", (33, 38, 170, 182)),
+    ("Yellow", (34, 39, 171, 183)),
+    ("Epic", (43, 40, 184, None)),
+    ("Elder", (41, 42, None, None)),
+    ("Aku", (160, 161, None, None)),
+    ("Gold", (164, 44, None, None)),
+)
+
+# The base materials pair up the same way: a regular grade for the cannons, a Z grade for
+# the foundations and styles. Both sit in castle-recipe column order, so they zip.
+BUILD_KINDS = ("Material", "Z Material")
+
+# Display rank per item id. The grids above read down their columns, so a cost list
+# sorted by this groups every seed, then every catfruit, and so on - and a card's list
+# comes out in the same order as the overview's rows.
+_MATERIAL_ORDER = {
+    item_id: kind * 100 + family
+    for family, (_, ids) in enumerate(EVOLVE_FAMILIES)
+    for kind, item_id in enumerate(ids)
+    if item_id
+} | {
+    item_id: 1000 + grade * 100 + index
+    for grade, ids in enumerate((CANNON_MATERIALS, CANNON_Z_MATERIALS))
+    for index, item_id in enumerate(ids)
+}
+
+
+def _named_items(counts: Mapping[int, int]) -> list[dict]:
+    """One display row per material, in grid order: the id its icon hangs off, how many
+    are needed, and the item's name (the icon's hover label and its text fallback)."""
     names = load_items()["items"]
-    return [(count, names.get(str(item_id), f"Item {item_id}")) for item_id, count in pairs]
+    ordered = sorted(counts.items(), key=lambda pair: (_MATERIAL_ORDER.get(pair[0], 9999), pair[0]))
+
+    return [
+        {"id": item_id, "count": count, "name": names.get(str(item_id), f"Item {item_id}")}
+        for item_id, count in ordered
+    ]
 
 
-def evolve_panel() -> dict:
-    """The evolution tracker: per-plan form checkboxes with their costs, plus the
-    material and XP totals over everything checked."""
-    doc = load_evolve()["units"]
-    rows, totals, xp = [], Counter(), 0
-    for plan in EvolvePlan.objects.select_related("unit").order_by("unit__unit_id"):
-        cost = doc.get(str(plan.unit.unit_id), {})
-        forms = []
-        for checked, key, label in ((plan.tf, "tf", "True Form"), (plan.uf, "uf", "Ultra Form")):
-            form = plannable_form(cost, key)
-            if form is None:
-                continue
-            forms.append(
-                {
-                    "key": key,
-                    "label": label,
-                    "checked": checked,
-                    "xp": f"{form['xp']:,}" if form["xp"] else "",
-                    "items": _named_items(form["items"]),
-                }
-            )
-            if checked:
-                xp += form["xp"]
-                for item_id, count in form["items"]:
-                    totals[item_id] += count
-        if forms:
-            rows.append({"unit": plan.unit, "forms": forms})
+def _grid(families: Iterable[tuple[str, Iterable[int]]], kinds: Iterable[str], counts: Mapping):
+    """One overview table: a row per material family, a cell per kind. A cell is None
+    where the game has no such item, and a family with nothing on the list is left out
+    entirely - so the table shows the shape of the grind without the empty half."""
+    names = load_items()["items"]
+    rows = []
+    for label, ids in families:
+        if not any(counts.get(item_id) for item_id in ids if item_id):
+            continue
+        rows.append(
+            {
+                "label": label,
+                "cells": [
+                    item_id
+                    and {
+                        "id": item_id,
+                        "count": counts.get(item_id, 0),
+                        "name": names.get(str(item_id), f"Item {item_id}"),
+                    }
+                    for item_id in ids
+                ],
+            }
+        )
 
-    return {
-        "rows": rows,
-        "totals": _named_items(sorted(totals.items())),
-        "xp": f"{xp:,}" if xp else "",
-    }
+    return {"kinds": list(kinds), "rows": rows} if rows else None
 
 
-def talent_panel() -> dict:
-    """The talent calculator: every planned unit's slots with NP costs, the checked
-    ones subtotalled per unit and totalled overall."""
-    doc = load_talents()
-    curves, texts, units_doc = doc["curves"], doc["texts"], doc["units"]
-    checked_slots: dict[Unit, set[int]] = {}
-    for plan in TalentPlan.objects.select_related("unit").order_by("unit__unit_id", "slot"):
-        checked_slots.setdefault(plan.unit, set()).add(plan.slot)
+def _build_families() -> list[tuple[str, tuple[int, int]]]:
+    """(row label, (regular id, Z id)) per base material, named after the regular grade."""
+    names = load_items()["items"]
 
-    rows, total = [], 0
-    for unit, checked in checked_slots.items():
-        slots, subtotal = [], 0
-        for index, slot in enumerate(units_doc.get(str(unit.unit_id), [])):
-            np = talent_np(slot, curves)
-            text = texts.get(str(slot["text"]), "")
-            slots.append(
-                {
-                    "index": index,
-                    "label": talent_label(text),
-                    "title": " ".join(_TAG_MARKUP.sub(" ", text).split()),
-                    "max": slot["max"],
-                    "np": np,
-                    "ultra": slot["ultra"],
-                    "checked": index in checked,
-                }
-            )
-            if index in checked:
-                subtotal += np
-        rows.append({"unit": unit, "slots": slots, "np": subtotal})
-        total += subtotal
-
-    return {"rows": rows, "np": total}
+    return [
+        (names.get(str(regular), f"Item {regular}"), (regular, z))
+        for regular, z in zip(CANNON_MATERIALS, CANNON_Z_MATERIALS, strict=True)
+    ]
 
 
-def _picker_options(unit_ids: Iterable[int], planned: Iterable[int]) -> list[tuple[int, str]]:
-    """(unit id, name) choices for a materials picker: catalogued, not yet planned."""
-    remaining = set(unit_ids) - set(planned)
-    return list(
-        Unit.objects.named()
-        .filter(unit_id__in=remaining)
-        .order_by("name")
-        .values_list("unit_id", "name")
-    )
-
-
-def evolve_options() -> list[tuple[int, str]]:
-    """Picker choices for the evolution tracker."""
-    ids = (int(uid) for uid in load_evolve()["units"])
-    return _picker_options(ids, EvolvePlan.objects.values_list("unit__unit_id", flat=True))
-
-
-def talent_options() -> list[tuple[int, str]]:
-    """Picker choices for the talent calculator."""
-    ids = (int(uid) for uid in load_talents()["units"])
-    return _picker_options(ids, TalentPlan.objects.values_list("unit__unit_id", flat=True))
-
-
+# The cannon comes with the development; the other two are opt-in add-ons.
 CANNON_PARTS = (("cannon", "Cannon"), ("base", "Foundation"), ("deco", "Style"))
+CANNON_ADDONS = ("base", "deco")
 
-_ENGINEER_ITEM = 92
 
-
-def part_cost(part: Mapping, now: int, goal: int) -> list[list[int]]:
-    """The recipe rows to develop a part from level now to goal; starting from
+def part_cost(part: Mapping, now: int) -> list[list[int]]:
+    """The recipe rows left to take a part from level now to its max; starting from
     level 0 includes the one-time construction stages."""
-    rows = part["levels"][now:goal]
+    rows = part["levels"][now:]
     return part["construction"] + rows if now == 0 and rows else rows
 
 
-def _spend_rows(rows: Iterable[Iterable[int]], item_ids: Iterable[int]) -> tuple[Counter, int]:
-    """(material and engineer counts, build hours) over the given recipe rows."""
+def _spend_rows(rows: Iterable[Iterable[int]], item_ids: Iterable[int]) -> tuple[Counter, int, int]:
+    """(material counts, build hours, engineers needed) over the given recipe rows.
+    Engineers aren't spent like a material - a level needs that many free at once and
+    gets them back - so the figure that matters is the most any one level asks for."""
     spent: Counter = Counter()
-    hours = 0
-    for time, engineers, *counts in rows:
+    hours = engineers = 0
+    for time, needed, *counts in rows:
         hours += time
-        spent[_ENGINEER_ITEM] += engineers
+        engineers = max(engineers, needed)
         for item_id, item_count in zip(item_ids, counts, strict=True):
             spent[item_id] += item_count
 
-    return +spent, hours
+    return +spent, hours, engineers
 
 
-def cannon_panel() -> dict:
-    """The cannon developer: per-plan part level ranges with their costs, plus the
-    material, engineer, and build-time totals over every range."""
+def _cat_card(plan: UnitPlan, evolve: Mapping, talents: Mapping, wanted: set[int]) -> dict:
+    """One cat on the list: every evolution and talent it can be grinding for, which of
+    them are ticked, and what those ticks cost. ``spend`` is the card's item bill, which
+    the board folds into the overview."""
+    key = str(plan.unit.unit_id)
+    cost = evolve.get(key, {})
+    spend: Counter = Counter()
+    forms, xp = [], 0
+    for checked, form_key, label in ((plan.tf, "tf", "True Form"), (plan.uf, "uf", "Ultra Form")):
+        form = plannable_form(cost, form_key)
+        if form is None:
+            continue
+        forms.append(
+            {
+                "key": form_key,
+                "label": label,
+                "checked": checked,
+                "xp": form["xp"],
+                "cost": _named_items(dict(form["items"])),
+            }
+        )
+        if checked:
+            xp += form["xp"]
+            for item_id, count in form["items"]:
+                spend[item_id] += count
+
+    slots, np = [], 0
+    for index, slot in enumerate(talents["units"].get(key, [])):
+        text = talents["texts"].get(str(slot["text"]), "")
+        price = talent_np(slot, talents["curves"])
+        checked = index in wanted
+        slots.append(
+            {
+                "index": index,
+                "label": talent_label(text),
+                "title": " ".join(_TAG_MARKUP.sub(" ", text).split()),
+                "max": slot["max"],
+                "np": price,
+                "ultra": slot["ultra"],
+                "checked": checked,
+            }
+        )
+        if checked:
+            np += price
+
+    picked = sum(pick["checked"] for pick in forms + slots)
+
+    return {
+        "unit": plan.unit,
+        "forms": forms,
+        "slots": slots,
+        "cost": _named_items(spend),
+        "spend": spend,
+        "xp": xp,
+        "np": np,
+        "picked": picked,
+        "offered": len(forms) + len(slots),
+        "maxed": picked == len(forms) + len(slots),
+    }
+
+
+def _base_card(cannon: Mapping, plan: CannonPlan, material_ids: Mapping) -> dict:
+    """One Cat Base development: the cannon plus whichever of its Foundation and Style
+    add-ons are switched on, each at the level it sits at now, with what the levels
+    still ahead of it cost. A switched-off add-on is listed but costs nothing."""
+    spend: Counter = Counter()
+    parts, hours, engineers = [], 0, 0
+    for key, label in CANNON_PARTS:
+        part = cannon["parts"].get(key)
+        if part is None:
+            continue
+        addon = key in CANNON_ADDONS
+        on = getattr(plan, f"{key}_on") if addon else True
+        now = getattr(plan, f"{key}_now")
+        top = len(part["levels"])
+        cost, time, crew = (
+            _spend_rows(part_cost(part, now), material_ids[key]) if on else (Counter(), 0, 0)
+        )
+        spend += cost
+        hours += time
+        engineers = max(engineers, crew)
+        parts.append(
+            {
+                "key": key,
+                "label": label,
+                "addon": addon,
+                "on": on,
+                "now": now,
+                "max": top,
+                "left": top - now,
+                "levels": range(top + 1),
+                "cost": _named_items(cost),
+                "time": time,
+                "engineers": crew,
+            }
+        )
+
+    return {
+        "id": cannon["id"],
+        "name": cannon["name"],
+        "parts": parts,
+        "spend": spend,
+        "hours": hours,
+        "engineers": engineers,
+        "cost": _named_items(spend),
+        "left": sum(part["left"] for part in parts if part["on"]),
+    }
+
+
+def resources_board() -> dict:
+    """Everything the Resources page shows: a card per cat on the list, a card per Cat
+    Base development being levelled, and the overview totalling the two. It renders whole
+    on every change, so nothing can drift.
+
+    The two grinds stay apart in the overview - catfruit comes off stages, base materials
+    off the Ototo, and nothing you farm serves both - so each gets its own table and its
+    own counters (XP and NP for the cats, build time and engineers for the base)."""
+    evolve = load_evolve()["units"]
+    talents = load_talents()
+    wanted: dict[int, set[int]] = {}
+    for unit_id, slot in TalentPlan.objects.values_list("unit_id", "slot"):
+        wanted.setdefault(unit_id, set()).add(slot)
+
+    evolve_totals: Counter = Counter()
+    cats, xp, np = [], 0, 0
+    for plan in UnitPlan.objects.select_related("unit").order_by("unit__name"):
+        card = _cat_card(plan, evolve, talents, wanted.get(plan.unit_id, set()))
+        evolve_totals += card["spend"]
+        xp += card["xp"]
+        np += card["np"]
+        cats.append(card)
+
     doc = load_cannons()
-    cannons = {cannon["id"]: cannon for cannon in doc["cannons"]}
     material_ids = {
         "cannon": doc["materials"],
         "base": doc["zmaterials"],
         "deco": doc["zmaterials"],
     }
-    rows, totals, hours = [], Counter(), 0
-    for plan in CannonPlan.objects.order_by("cannon_id"):
-        cannon = cannons.get(plan.cannon_id)
-        if cannon is None:
+    plans = {plan.cannon_id: plan for plan in CannonPlan.objects.all()}
+    build_totals: Counter = Counter()
+    base, hours, engineers = [], 0, 0
+    for cannon in doc["cannons"]:
+        plan = plans.get(cannon["id"])
+        if plan is None:
             continue
-        parts = []
-        for key, label in CANNON_PARTS:
-            part = cannon["parts"].get(key)
-            if part is None:
-                continue
-            now, goal = getattr(plan, f"{key}_now"), getattr(plan, f"{key}_goal")
-            spent, time = _spend_rows(part_cost(part, now, goal), material_ids[key])
-            totals += spent
-            hours += time
-            parts.append(
-                {
-                    "key": key,
-                    "label": label,
-                    "now": now,
-                    "goal": goal,
-                    "levels": range(len(part["levels"]) + 1),
-                    "items": _named_items(sorted(spent.items())),
-                    "time": f"{time}h" if time else "",
-                }
-            )
-        rows.append({"id": plan.cannon_id, "name": cannon["name"], "parts": parts})
+        card = _base_card(cannon, plan, material_ids)
+        build_totals += card["spend"]
+        hours += card["hours"]
+        engineers = max(engineers, card["engineers"])
+        base.append(card)
+
+    gridded = {item_id for _, ids in EVOLVE_FAMILIES for item_id in ids if item_id}
 
     return {
-        "rows": rows,
-        "totals": _named_items(sorted(totals.items())),
-        "time": f"{hours:,}h" if hours else "",
+        "cats": cats,
+        "base": base,
+        # Eight developments is a row of toggles, not a catalogue to search - unlike the
+        # cats, whose picker is client-rendered off a shipped-once list.
+        "base_picks": [
+            {"id": cannon["id"], "name": cannon["name"], "on": cannon["id"] in plans}
+            for cannon in doc["cannons"]
+        ],
+        "planned_cats": ",".join(str(card["unit"].unit_id) for card in cats),
+        "evolve_grid": _grid(EVOLVE_FAMILIES, EVOLVE_KINDS, evolve_totals),
+        # A material the families above don't place (a new fruit in a fresh tarball)
+        # still has to show up somewhere, so it trails the grid as a plain row.
+        "evolve_extra": _named_items({k: v for k, v in evolve_totals.items() if k not in gridded}),
+        "build_grid": _grid(_build_families(), BUILD_KINDS, build_totals),
+        "xp": xp,
+        "np": np,
+        "hours": hours,
+        "engineers": engineers,
     }
 
 
-def cannon_options() -> list[tuple[int, str]]:
-    """Picker choices for the cannon developer."""
-    planned = set(CannonPlan.objects.values_list("cannon_id", flat=True))
-    return [(c["id"], c["name"]) for c in load_cannons()["cannons"] if c["id"] not in planned]
+def cat_options() -> list[dict]:
+    """The cat picker's catalogue: every named unit with something to grind for, with
+    its form names so the search matches on any of them."""
+    ids = {int(uid) for uid in load_evolve()["units"]}
+    ids |= {int(uid) for uid in load_talents()["units"]}
+
+    return [
+        {"id": unit_id, "name": name, "forms": forms}
+        for unit_id, name, forms in Unit.objects.named()
+        .filter(unit_id__in=ids)
+        .order_by("name")
+        .values_list("unit_id", "name", "forms")
+    ]
 
 
 def dictionary_sections(
@@ -2527,7 +2664,12 @@ def build_normal_tracks(
         return {"legend": [], "rows": []}
 
     marks = marks or {}
-    units = set(Unit.objects.values_list("name", flat=True))
+    # Cat items get their catalogue id and form names, so the page's form/icon picker
+    # reaches them exactly like the rare tracks' cells.
+    units = {
+        name: (uid, forms)
+        for name, uid, forms in Unit.objects.values_list("name", "unit_id", "forms")
+    }
     columns = []
     for tag, banner in enumerate(banners, start=1):
         rolls = roll_normal(seed, banner, count, last_item=last_item)
@@ -2550,14 +2692,18 @@ def build_normal_tracks(
             reroll = column["rerolls"].get((position, track))
             if reroll is not None:
                 to_pos, to_track = landing(position, track, reroll.steps)
+                unit = units.get(reroll.item)
                 alt = {
                     "item": reroll.item,
                     "seed": reroll.seed,
                     "to": f"{to_pos}{to_track}",
-                    "unit": reroll.item in units,
+                    "unit": unit is not None,
+                    "uid": unit and unit[0],
+                    "forms": "|".join(unit[1]) if unit else "",
                     "target": bool(mark and mark["dupe"] and mark["target"]),
                 }
 
+            unit = units.get(pull.item)
             cells.append(
                 {
                     "tag": column["tag"],
@@ -2565,7 +2711,9 @@ def build_normal_tracks(
                     "pool": pull.pool,
                     "upgrade": pull.item in UPGRADES,
                     "dark": pull.item == "Dark Catseye",
-                    "unit": pull.item in units,
+                    "unit": unit is not None,
+                    "uid": unit and unit[0],
+                    "forms": "|".join(unit[1]) if unit else "",
                     "on_path": mark is not None,
                     "step": mark and mark.get("step"),
                     "target": bool(mark and not mark["dupe"] and mark["target"]),
