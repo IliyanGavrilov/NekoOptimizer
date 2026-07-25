@@ -1,9 +1,8 @@
-from django.core.management.base import BaseCommand
-
+from planner.management.base import RegionCommand
 from planner.services import reconcile_provisional_units
 
 
-class Command(BaseCommand):
+class Command(RegionCommand):
     help = "Merge provisional stand-in units into their now-canonical namesakes."
 
     def handle(self, *args, **options):

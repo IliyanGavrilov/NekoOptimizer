@@ -8,6 +8,7 @@ import threading
 import time
 import uuid
 from collections.abc import Callable
+from contextvars import copy_context
 from dataclasses import dataclass, field
 
 from neko.models import Banner, Rarity
@@ -78,7 +79,10 @@ def _start(runner: Runner, last_cat: str) -> str:
         _prune()
         _jobs[job.key] = job
 
-    threading.Thread(target=_work, args=(job, runner), daemon=True).start()
+    # A fresh thread starts on an empty context, which would reset the active region to
+    # the default; carry the request's over so the worker searches the right version.
+    context = copy_context()
+    threading.Thread(target=context.run, args=(_work, job, runner), daemon=True).start()
 
     return job.key
 

@@ -11,12 +11,19 @@ from datetime import date
 from pathlib import Path
 
 from neko.bcdata import METADATA_URL, _get, _member, latest_version, load_records, release_url
+from neko.region import DEFAULT_REGION, data_path
 
 CATSTAT_URL = (
     "https://raw.githubusercontent.com/battlecatsinfo/battlecatsinfo.github.io"
     "/master/data/catstat.tsv"
 )
-STATS_PATH = Path(__file__).parent / "data" / "stats.json"
+STATS_FILE = "stats.json"
+
+
+def stats_path(region: str | None = None) -> Path:
+    """Where one region's committed stat blocks live."""
+    return data_path(STATS_FILE, region)
+
 
 # Stats are quoted the way the wiki and every calculator quote them: level 30, with the
 # Empire of Cats treasures maxed (a flat 2.5x on health and attack).
@@ -55,24 +62,73 @@ _IMMUNITIES = (
 )
 
 _FLAGS = (
-    (23, "Strong"),
-    (29, "Resistant"),
-    (80, "Insanely tough"),
-    (30, "Massive damage"),
-    (81, "Insane damage"),
-    (43, "Metal"),
-    (32, "Attacks only targets"),
-    (52, "Zombie Killer"),
-    (53, "Witch Killer"),
-    (77, "Eva Angel Killer"),
-    (97, "Colossus Slayer"),
-    (105, "Behemoth Slayer"),
-    (111, "Sage Slayer"),
-    (98, "Soul Strike"),
-    (34, "Base Destroyer"),
-    (33, "Extra money"),
-    (47, "Wave Shield"),
-    (109, "Counter-surge"),
+    (23, "Strong", "strong"),
+    (29, "Resistant", "resistant"),
+    (80, "Insanely tough", "insanely_tough"),
+    (30, "Massive damage", "massive_damage"),
+    (81, "Insane damage", "insane_damage"),
+    (43, "Metal", "metal"),
+    (32, "Attacks only targets", "targets_only"),
+    (52, "Zombie Killer", "zombie_killer"),
+    (53, "Witch Killer", "witch_killer"),
+    (77, "Eva Angel Killer", "eva_killer"),
+    (97, "Colossus Slayer", "colossus_slayer"),
+    (105, "Behemoth Slayer", "behemoth_slayer"),
+    (111, "Sage Slayer", "sage_slayer"),
+    (98, "Soul Strike", "soul_strike"),
+    (34, "Base Destroyer", "base_destroyer"),
+    (33, "Extra money", "extra_money"),
+    (47, "Wave Shield", "wave_shield"),
+    (109, "Counter-surge", "counter_surge"),
+)
+
+# Filter-panel metadata: the trait/immunity labels above, plus every ability key a
+# form can carry with its display label. Attack-type keys live in their own row
+# ("single"/"area" are set per form when facets are built; ld/omni are effect keys).
+TARGET_LABELS = tuple(label for _, label in _TARGETS)
+IMMUNITY_LABELS = tuple(label for _, label in _IMMUNITIES)
+ATTACK_LABELS = (
+    ("single", "Single"),
+    ("area", "Area"),
+    ("ld", "Long Distance"),
+    ("omni_strike", "Omni Strike"),
+)
+ABILITY_LABELS = (
+    ("multi_hit", "Multi-hit"),
+    ("strong", "Strong"),
+    ("resistant", "Resistant"),
+    ("insanely_tough", "Insanely Tough"),
+    ("massive_damage", "Massive Damage"),
+    ("insane_damage", "Insane Damage"),
+    ("metal", "Metal"),
+    ("targets_only", "Attacks Only"),
+    ("zombie_killer", "Zombie Killer"),
+    ("witch_killer", "Witch Killer"),
+    ("eva_killer", "Eva Angel Killer"),
+    ("colossus_slayer", "Colossus Slayer"),
+    ("behemoth_slayer", "Behemoth Slayer"),
+    ("sage_slayer", "Sage Slayer"),
+    ("soul_strike", "Soul Strike"),
+    ("base_destroyer", "Base Destroyer"),
+    ("extra_money", "Extra Money"),
+    ("wave_shield", "Wave Shield"),
+    ("counter_surge", "Counter-surge"),
+    ("critical", "Critical"),
+    ("savage_blow", "Savage Blow"),
+    ("knockback", "Knockback"),
+    ("freeze", "Freeze"),
+    ("slow", "Slow"),
+    ("weaken", "Weaken"),
+    ("curse", "Curse"),
+    ("wave", "Wave"),
+    ("mini_wave", "Mini-wave"),
+    ("surge", "Surge"),
+    ("strengthen", "Strengthen"),
+    ("survive", "Survive"),
+    ("barrier_breaker", "Barrier Breaker"),
+    ("shield_pierce", "Shield Piercer"),
+    ("warp", "Warp"),
+    ("dodge", "Dodge"),
 )
 
 
@@ -139,50 +195,51 @@ def _leveled(base: int, pct: int) -> int:
     return base * pct * 5 // 200
 
 
-def _effects(row: list[int]) -> list[str]:
-    """The form's abilities as short readable chips, in a stable notable-first order."""
+def _effects(row: list[int]) -> list[tuple[str, str]]:
+    """The form's abilities as (stable filter key, readable chip) pairs, in a stable
+    notable-first order."""
     hits = [row[3]] + [hit for hit in (row[59], row[60]) if hit]
     out = []
     if len(hits) > 1:
-        out.append(f"{len(hits)} hits ({' + '.join(f'{hit:,}' for hit in hits)})")
-    out.extend(label for index, label in _FLAGS if row[index])
+        out.append(("multi_hit", f"{len(hits)} hits ({' + '.join(f'{hit:,}' for hit in hits)})"))
+    out.extend((key, label) for index, label, key in _FLAGS if row[index])
     if row[31]:
-        out.append(f"Critical hit {row[31]}%")
+        out.append(("critical", f"Critical hit {row[31]}%"))
     if row[82]:
-        out.append(f"Savage blow {row[82]}% (+{row[83]}%)")
+        out.append(("savage_blow", f"Savage blow {row[82]}% (+{row[83]}%)"))
     if row[24]:
-        out.append(f"Knockback {row[24]}%")
+        out.append(("knockback", f"Knockback {row[24]}%"))
     if row[25]:
-        out.append(f"Freeze {row[25]}% for {_secs(row[26])}")
+        out.append(("freeze", f"Freeze {row[25]}% for {_secs(row[26])}"))
     if row[27]:
-        out.append(f"Slow {row[27]}% for {_secs(row[28])}")
+        out.append(("slow", f"Slow {row[27]}% for {_secs(row[28])}"))
     if row[37]:
-        out.append(f"Weaken {row[37]}% to {row[39]}% for {_secs(row[38])}")
+        out.append(("weaken", f"Weaken {row[37]}% to {row[39]}% for {_secs(row[38])}"))
     if row[92]:
-        out.append(f"Curse {row[92]}% for {_secs(row[93])}")
+        out.append(("curse", f"Curse {row[92]}% for {_secs(row[93])}"))
     if row[35]:
-        kind = "Mini-wave" if row[94] else "Wave"
-        out.append(f"{kind} {row[35]}% (Lv {row[36]})")
+        kind, key = ("Mini-wave", "mini_wave") if row[94] else ("Wave", "wave")
+        out.append((key, f"{kind} {row[35]}% (Lv {row[36]})"))
     if row[86]:
         # Surge coordinates are stored at 4x scale.
         lo, hi = sorted((row[87] // 4, (row[87] + row[88]) // 4))
-        out.append(f"Surge {row[86]}% (Lv {row[89]}, {lo}~{hi})")
+        out.append(("surge", f"Surge {row[86]}% (Lv {row[89]}, {lo}~{hi})"))
     if row[40]:
-        out.append(f"Attack +{row[41]}% at {row[40]}% HP")
+        out.append(("strengthen", f"Attack +{row[41]}% at {row[40]}% HP"))
     if row[42]:
-        out.append(f"Survives a lethal strike {row[42]}%")
+        out.append(("survive", f"Survives a lethal strike {row[42]}%"))
     if row[70]:
-        out.append(f"Breaks barriers {row[70]}%")
+        out.append(("barrier_breaker", f"Breaks barriers {row[70]}%"))
     if row[95]:
-        out.append(f"Pierces shields {row[95]}%")
+        out.append(("shield_pierce", f"Pierces shields {row[95]}%"))
     if row[71]:
-        out.append(f"Warp {row[71]}%")
+        out.append(("warp", f"Warp {row[71]}%"))
     if row[84]:
-        out.append(f"Dodge {row[84]}% for {_secs(row[85])}")
+        out.append(("dodge", f"Dodge {row[84]}% for {_secs(row[85])}"))
     if row[44] or row[45]:
         lo, hi = sorted((row[44], row[44] + row[45]))
-        kind = "Omni strike" if row[45] < 0 else "Long distance"
-        out.append(f"{kind} {lo}~{hi}")
+        kind, key = ("Omni strike", "omni_strike") if row[45] < 0 else ("Long distance", "ld")
+        out.append((key, f"{kind} {lo}~{hi}"))
 
     return out
 
@@ -191,6 +248,7 @@ def form_record(row: list[int], curve: Iterable[int], frequency: int | None) -> 
     """One form's display-ready stat block at the quoted level."""
     pct = growth_pct(curve)
     attack = sum(_leveled(hit, pct) for hit in (row[3], row[59], row[60]))
+    effects = _effects(row)
     return {
         "hp": _leveled(row[0], pct),
         "atk": attack,
@@ -203,14 +261,20 @@ def form_record(row: list[int], curve: Iterable[int], frequency: int | None) -> 
         "recharge": round((row[7] * 2 + 2) / 30, 2),
         "area": bool(row[12]),
         "targets": [label for index, label in _TARGETS if row[index]],
-        "effects": _effects(row),
+        "effects": [chip for _, chip in effects],
+        "abilities": [key for key, _ in effects],
         "immune": [label for index, label in _IMMUNITIES if row[index]],
     }
 
 
-def build_stats(tarball: bytes, catstat: str, records: Iterable[Mapping] | None = None) -> dict:
+def build_stats(
+    tarball: bytes,
+    catstat: str,
+    records: Iterable[Mapping] | None = None,
+    region: str = DEFAULT_REGION,
+) -> dict:
     """The stats.json document for every catalogued unit found in the tarball."""
-    records = load_records() if records is None else records
+    records = load_records(region) if records is None else records
     frequencies = parse_frequencies(catstat)
     units = []
     with tarfile.open(fileobj=io.BytesIO(tarball), mode="r:xz") as tar:
@@ -237,19 +301,21 @@ def build_stats(tarball: bytes, catstat: str, records: Iterable[Mapping] | None 
     }
 
 
-def load_stats(path: Path = STATS_PATH) -> dict:
-    """The committed stats document."""
-    return json.loads(path.read_text(encoding="utf-8"))
+def load_stats(region: str | None = None) -> dict:
+    """One region's committed stats document."""
+    return json.loads(stats_path(region).read_text(encoding="utf-8"))
 
 
-def refresh(tarball: bytes | None = None) -> int:
-    """Rebuild stats.json from the live data feeds (or a pre-downloaded tarball);
-    returns the unit count written."""
+def refresh(tarball: bytes | None = None, region: str = DEFAULT_REGION) -> int:
+    """Rebuild one region's stats.json from the live data feeds (or a pre-downloaded
+    tarball); returns the unit count written."""
     if tarball is None:
         metadata = json.loads(_get(METADATA_URL))
-        tarball = _get(release_url(metadata, latest_version(metadata)))
+        tarball = _get(release_url(metadata, latest_version(metadata, region), region))
     catstat = _get(CATSTAT_URL).decode("utf-8", "replace")
-    doc = build_stats(tarball, catstat)
-    STATS_PATH.write_text(json.dumps(doc, ensure_ascii=False), encoding="utf-8")
+    doc = build_stats(tarball, catstat, region=region)
+    path = stats_path(region)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(doc, ensure_ascii=False), encoding="utf-8")
 
     return len(doc["units"])

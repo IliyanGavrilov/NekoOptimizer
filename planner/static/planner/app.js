@@ -1,3 +1,8 @@
+// Every cat icon is "<base>/<unit id>/<form>.png". The base is settings-driven
+// (NEKO_ICON_BASE): battlecatsinfo's CDN by default, our own static copies once
+// fetch_icons has pulled them in.
+const ICON_BASE = document.body.dataset.iconBase;
+
 // ---- Follow-along: walk a plan's steps, lighting each on the track beside it -------
 // Shared by the planner solutions and the Normal Capsules plan - both render a
 // .plan-follow holding a .plan-steps card list and a .plan-track, with each step card
@@ -545,14 +550,13 @@ if (picker) {
   });
 
   // ---- Rolls display mode: names / form icons / both -------------------
-  // The icons are hotlinked per-cell from battlecatsinfo (like the cat popup), so we
-  // only inject them once a mode that shows them is picked - text mode stays image-free.
+  // The icons are fetched per-cell (like the cat popup), so we only inject them once a
+  // mode that shows them is picked - text mode stays image-free.
   // Each cell carries its catalogue id (data-uid); loading="lazy" keeps off-screen rows
   // from fetching, and identical cats share one cached URL. The form picker chooses
   // WHICH form shows, icon AND name (godfat's name=N): a unit without the picked form
   // steps down to the last one it has (404s are remembered, so a re-pick never
   // re-probes), and a cell with no icon at all (an uncatalogued unit) keeps its name.
-  const ICON_BASE = "https://battlecatsinfo.github.io/img/u";
   const missingIcons = new Set(); // "uid/form" pairs that 404'd
   const bestForm = (uid, form) => {
     while (form > 0 && missingIcons.has(`${uid}/${form}`)) form -= 1;
@@ -1130,8 +1134,9 @@ if (collectionBrowser) {
   const sections = [...collectionBrowser.querySelectorAll(".collection-section")];
   const noMatches = collectionBrowser.querySelector(".no-matches");
 
-  // Two renderings of the same units (by rarity / by gacha set); one is shown at a
-  // time and the choice sticks across visits. Marks are synced between them by pk.
+  // Three renderings of the same units (Cat Guide dictionary order / by rarity / by
+  // gacha set); one is shown at a time and the choice sticks across visits. Marks
+  // are synced between them by pk.
   const VIEW_KEY = "nekoCollectionView";
   const viewBtns = [...document.querySelectorAll("#collectionViews .view-btn")];
   const views = [...collectionBrowser.querySelectorAll(".collection-view")];
@@ -1167,13 +1172,42 @@ if (collectionBrowser) {
       : status === "wishlist"
         ? chip.classList.contains("wanted") && !chip.classList.contains("owned")
         : true;
+
+  // Facet panel: per-unit filter data (targets/abilities/immunities/combos/talents)
+  // keyed by unit id, shipped once as JSON. Selected pills become predicates that
+  // combine under "Match all" (AND) or "Match any" (OR); search/rarity/ownership
+  // always apply on top.
+  const facetData = JSON.parse(document.getElementById("catFacets").textContent);
+  const facetPanel = document.getElementById("facetPanel");
+  const facetBtns = [...facetPanel.querySelectorAll(".facet-filter button")];
+  const modeBtns = [...facetPanel.querySelectorAll("#facetMode .view-btn")];
+  const comboSel = document.getElementById("comboFilter");
+  const facetCount = document.getElementById("facetCount");
+  function facetPicks() {
+    const picks = facetBtns
+      .filter((b) => b.getAttribute("aria-pressed") === "true")
+      .map((b) => ({ group: b.closest(".facet-filter").dataset.group, value: b.dataset.value }));
+    if (comboSel.value) picks.push({ group: "c", value: Number(comboSel.value) });
+    return picks;
+  }
+  function facetHit(chip, picks, mode) {
+    if (!picks.length) return true;
+    const f = facetData[chip.dataset.uid];
+    if (!f) return false;
+    const test = (p) =>
+      p.group === "k" ? !!f[p.value] : (f[p.group] || []).includes(p.value);
+    return mode === "and" ? picks.every(test) : picks.some(test);
+  }
   function applyFilters() {
     const query = search.value.trim().toLowerCase();
     const rarity = rarityBtns.find((b) => b.getAttribute("aria-pressed") === "true").dataset.rarity;
     const status = statusBtns.find((b) => b.getAttribute("aria-pressed") === "true").dataset.status;
+    const picks = facetPicks();
+    const mode = modeBtns.find((b) => b.classList.contains("is-active")).dataset.mode;
+    facetCount.textContent = picks.length ? `(${picks.length} active)` : "";
     // Any active filter overrides a section's collapsed state, so matches can't
     // hide inside a folded-up section.
-    collectionBrowser.classList.toggle("filtering", !!(query || rarity || status));
+    collectionBrowser.classList.toggle("filtering", !!(query || rarity || status || picks.length));
     const active = views.find((v) => !v.hidden);
     for (const section of active.querySelectorAll(".collection-section")) {
       // A query matching the section itself (a set or rarity name) keeps it whole.
@@ -1188,7 +1222,8 @@ if (collectionBrowser) {
           const hit =
             !rarityHidesRow &&
             (!query || labelHit || names.toLowerCase().includes(query)) &&
-            statusHit(chip, status);
+            statusHit(chip, status) &&
+            facetHit(chip, picks, mode);
           chip.hidden = !hit;
           shown += hit;
         });
@@ -1208,6 +1243,24 @@ if (collectionBrowser) {
     });
   bindFilter("rarityFilter", rarityBtns);
   bindFilter("statusFilter", statusBtns);
+
+  // Facet pills toggle independently (multi-select); the mode pair is a radio.
+  facetPanel.addEventListener("click", (e) => {
+    const btn = e.target.closest("button");
+    if (!btn) return;
+    if (btn.closest("#facetMode")) {
+      modeBtns.forEach((b) => b.classList.toggle("is-active", b === btn));
+    } else if (btn.id === "facetClear") {
+      facetBtns.forEach((b) => b.setAttribute("aria-pressed", "false"));
+      comboSel.value = "";
+    } else if (btn.closest(".facet-filter")) {
+      btn.setAttribute("aria-pressed", btn.getAttribute("aria-pressed") === "true" ? "false" : "true");
+    } else {
+      return;
+    }
+    applyFilters();
+  });
+  comboSel.addEventListener("change", applyFilters);
 
   // "12 / 325 owned" per section header plus one grand total, both ignoring
   // filters and refreshed on every change. The grand total counts each unit once
@@ -1339,7 +1392,7 @@ if (collectionBrowser) {
 
   updateCounts();
   const savedView = localStorage.getItem(VIEW_KEY);
-  showView(savedView === "sets" ? "sets" : "rarity");
+  showView(["rarity", "sets"].includes(savedView) ? savedView : "dictionary");
 }
 
 // ---- Tier list: the form picker renames each unit and swaps its icon ----
@@ -1347,7 +1400,6 @@ if (collectionBrowser) {
 // have (404) falls back to its base form's.
 const tierTable = document.querySelector(".tier-table");
 if (tierTable) {
-  const ICON_BASE = "https://battlecatsinfo.github.io/img/u";
   const formSel = document.getElementById("tierForm");
   const saved = localStorage.getItem("neko:rollForm");
   if (saved && [...formSel.options].some((o) => o.value === saved)) formSel.value = saved;
@@ -1373,6 +1425,15 @@ if (tierTable) {
     localStorage.setItem("neko:rollForm", formSel.value);
     applyForm();
   });
+
+  // The list picker is plain navigation - each per-set list is its own page.
+  const listSel = document.getElementById("tierList");
+  if (listSel) {
+    listSel.addEventListener("change", () => {
+      const slug = listSel.value;
+      location.href = listSel.dataset.base + (slug ? `${slug}/` : "");
+    });
+  }
 }
 
 // ---- Drag-to-scrub number inputs -------------------------------------
@@ -1469,19 +1530,17 @@ document.querySelectorAll('input[type="number"]').forEach(scrubNumberInput);
 
 // ---- Cat popup: a unit's forms (icons), stats + a link to its wiki page ------
 // Opened from any cat name (track / steps) or the ⓘ opener on collection/picker
-// chips. Form icons are hotlinked per-form from battlecatsinfo's asset repo (via its
-// GitHub Pages CDN); ones that 404 (unreleased units) just hide themselves. Clicking
-// a form icon shows that form's stat block and ability chips (quoted at the level
-// baked into stats.json).
+// chips. Form icons are loaded per-form; ones that 404 (unreleased units) just hide
+// themselves. Clicking a form icon shows that form's stat block and ability chips
+// (quoted at the level baked into stats.json).
 const catPopup = document.getElementById("catPopup");
 if (catPopup) {
-  const ICON_BASE = "https://battlecatsinfo.github.io/img/u";
   const infoUrl = document.body.dataset.unitInfoUrl;
   const nameEl = catPopup.querySelector(".cat-popup-name");
   const rarityEl = catPopup.querySelector(".cat-popup-head .rarity");
   const tierEl = catPopup.querySelector(".cat-popup-tier");
   const formsEl = catPopup.querySelector(".cat-popup-forms");
-  const wikiEl = catPopup.querySelector(".cat-popup-wiki");
+  const linksEl = catPopup.querySelector(".cat-popup-links");
   const statsEl = catPopup.querySelector(".cat-popup-stats");
   const gridEl = catPopup.querySelector(".cat-stats-grid");
   const chipsEl = catPopup.querySelector(".cat-popup-chips");
@@ -1553,7 +1612,7 @@ if (catPopup) {
 
   async function openFor(name) {
     const info = await load(name);
-    if (!info) return; // a cat not in the catalogue yet: no forms/wiki to show
+    if (!info) return; // a cat not in the catalogue yet: no forms or links to show
     nameEl.textContent = info.name;
     rarityEl.textContent = info.rarity;
     rarityEl.dataset.rarity = info.rarity;
@@ -1565,7 +1624,17 @@ if (catPopup) {
         ? `Tier ${info.tier.tier} · ${info.tier.up_note}`
         : `Tier ${info.tier.tier}`;
     }
-    wikiEl.href = info.wiki;
+    linksEl.replaceChildren(
+      ...(info.links || []).map((link) => {
+        const a = document.createElement("a");
+        a.href = link.url;
+        a.target = "_blank";
+        a.rel = "noopener";
+        a.title = link.note;
+        a.textContent = `${link.label} ↗`;
+        return a;
+      }),
+    );
     formsEl.replaceChildren();
     (info.forms || []).forEach((form, i) => {
       const fig = document.createElement("figure");
@@ -1604,4 +1673,44 @@ if (catPopup) {
       e.clientY <= box.bottom;
     if (!inside || e.target.closest("[data-close]")) catPopup.close();
   });
+}
+
+// ---- Materials: evolution tracker + talent calculator ----
+// Each panel is server-rendered; every change POSTs and swaps in the fresh panel
+// (picker included), so costs and totals never drift from the stored plan.
+const materialsPage = document.getElementById("materialsPage");
+if (materialsPage) {
+  const token = document.getElementById("csrfToken").value;
+  const bindPanel = (panelId, url, idKey = "unit_id") => {
+    const panel = document.getElementById(panelId);
+    const post = async (data) => {
+      const resp = await fetch(url, {
+        method: "POST",
+        headers: { "X-CSRFToken": token },
+        body: new URLSearchParams(data),
+      });
+      if (resp.ok) panel.innerHTML = await resp.text();
+    };
+    panel.addEventListener("change", (e) => {
+      const pick = e.target.closest(".materials-pick");
+      if (pick && pick.value) {
+        post({ [idKey]: pick.value });
+        return;
+      }
+      const level = e.target.closest("select[data-part]");
+      if (level) {
+        post({ [idKey]: level.dataset.unit, part: level.dataset.part, bound: level.dataset.bound, level: level.value });
+        return;
+      }
+      const box = e.target.closest("input[type=checkbox]");
+      if (box) post({ [idKey]: box.dataset.unit, [box.dataset.kind]: box.dataset.value, on: box.checked ? "1" : "0" });
+    });
+    panel.addEventListener("click", (e) => {
+      const remove = e.target.closest(".materials-remove");
+      if (remove) post({ [idKey]: remove.dataset.unit, remove: "1" });
+    });
+  };
+  bindPanel("evolvePanel", materialsPage.dataset.evolveUrl);
+  bindPanel("talentPanel", materialsPage.dataset.talentUrl);
+  bindPanel("cannonPanel", materialsPage.dataset.cannonUrl, "cannon_id");
 }

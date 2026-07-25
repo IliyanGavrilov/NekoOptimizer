@@ -1,10 +1,12 @@
 import json
 from datetime import date
 
+from neko import region
 from neko.gachadata import (
     GachaEventRow,
     build_banner,
     event_records,
+    events_path,
     load_events,
     merge_events,
     parse_events,
@@ -83,6 +85,19 @@ def test_build_banner_groups_pool_by_rarity_in_row_order():
     assert banner.rates[Rarity.UBER_SUPER_RARE] == 500
 
 
+def test_event_records_carry_the_row_the_event_sat_on():
+    events = parse_events("[start]\n" + tsv_row(pools=[POOL]))
+    assert [record["order"] for record in event_records(events)] == [1]
+
+
+def test_merge_events_orders_concurrent_runs_by_their_tsv_row():
+    listed_first = {**POOL, "id": 99, "name": "Listed first"}
+    listed_second = {**POOL, "id": 42, "name": "Listed second"}
+    tsv = tsv_row(pools=[listed_first]) + "\n" + tsv_row(pools=[listed_second])
+    merged = merge_events([parse_events(tsv)])
+    assert [event.name for event in merged] == ["Listed first", "Listed second"]
+
+
 def test_merge_events_dedupes_by_event_id():
     a = parse_events(tsv_row(pools=[POOL]))
     b = parse_events(tsv_row(pools=[{**POOL, "name": "Renamed"}]))
@@ -90,8 +105,10 @@ def test_merge_events_dedupes_by_event_id():
     assert len(merged) == 1 and merged[0].name == "Renamed"
 
 
-def test_event_records_roundtrip(tmp_path):
+def test_event_records_roundtrip(tmp_path, monkeypatch):
     (event,) = parse_events(tsv_row(pools=[POOL]))
-    path = tmp_path / "events.json"
+    monkeypatch.setattr(region, "DATA_ROOT", tmp_path)
+    path = events_path("jp")
+    path.parent.mkdir()
     path.write_text(json.dumps(event_records([event])), encoding="utf-8")
-    assert load_events(path) == [event]
+    assert load_events("jp") == [event]

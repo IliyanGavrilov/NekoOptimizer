@@ -13,8 +13,10 @@ from pathlib import Path
 
 from neko.bcdata import METADATA_URL, _get, latest_version, release_url
 from neko.models import GACHA_RARITIES, Banner, Rarity
+from neko.region import DEFAULT_REGION, data_path
 
 # godfat's event schedule lives in its Apache-2.0 gitlab repo, one dated TSV per snapshot.
+# Its per-language data directories are named exactly like our region codes.
 _PROJECT = "9827349"  # gitlab project id for godfat/battle-cats-rolls
 _EVENTS_TREE = (
     f"https://gitlab.com/api/v4/projects/{_PROJECT}/repository/tree"
@@ -22,9 +24,25 @@ _EVENTS_TREE = (
 )
 _EVENTS_RAW = "https://gitlab.com/godfat/battle-cats-rolls/-/raw/master/data/{lang}/events/{name}"
 
-EVENTS_PATH = Path(__file__).parent / "data" / "gacha_events.json"
-POOLS_PATH = Path(__file__).parent / "data" / "gacha_pools.json"
-SERIES_PATH = Path(__file__).parent / "data" / "gacha_series.json"
+EVENTS_FILE = "gacha_events.json"
+POOLS_FILE = "gacha_pools.json"
+SERIES_FILE = "gacha_series.json"
+
+
+def events_path(region: str | None = None) -> Path:
+    """Where one region's committed gacha schedule lives."""
+    return data_path(EVENTS_FILE, region)
+
+
+def pools_path(region: str | None = None) -> Path:
+    """Where one region's committed gacha pools live."""
+    return data_path(POOLS_FILE, region)
+
+
+def series_path(region: str | None = None) -> Path:
+    """Where one region's committed pool-to-series map lives."""
+    return data_path(SERIES_FILE, region)
+
 
 _POOL_OFFSET = 9  # godfat tsv_reader PoolOffset: event fields end, pool blocks follow
 _POOL_FIELDS = 15  # godfat tsv_reader PoolFields: each pool block is 15 columns
@@ -35,7 +53,8 @@ _RARITY_ORDER = GACHA_RARITIES
 
 @dataclass(frozen=True, slots=True)
 class GachaEventRow:
-    """One scheduled gacha: its godfat event id, name, run dates, pool id, and rates."""
+    """One scheduled gacha: its godfat event id, name, run dates, pool id, rates, and the
+    row it sat on in the snapshot's gatya.tsv (the game's own listing order)."""
 
     event_id: str
     name: str
@@ -48,6 +67,7 @@ class GachaEventRow:
     legend: int
     guaranteed: bool
     step_up: bool
+    order: int = 0
 
 
 def _parse_date(text: str) -> date | None:
@@ -112,7 +132,7 @@ def parse_series(option_text: str) -> dict[int, list[int]]:
 def parse_events(tsv_text: str) -> list[GachaEventRow]:
     """Parse one godfat event TSV into its rare-gacha rows (ported from tsv_reader.rb)."""
     events: list[GachaEventRow] = []
-    for line in tsv_text.splitlines():
+    for index, line in enumerate(tsv_text.splitlines()):
         if line.startswith("[") or not line.strip():  # [start]/[end] markers
             continue
 
@@ -166,6 +186,7 @@ def parse_events(tsv_text: str) -> list[GachaEventRow]:
                 legend,
                 guaranteed,
                 step_up,
+                index,
             )
         )
 
@@ -174,13 +195,14 @@ def parse_events(tsv_text: str) -> list[GachaEventRow]:
 
 def merge_events(event_lists: list[list[GachaEventRow]]) -> list[GachaEventRow]:
     """Combine the dated TSV snapshots into one list, keeping one row per event id
-    (godfat's EventsReader)."""
+    (godfat's EventsReader). Concurrent runs keep their gatya.tsv row order, which is the
+    order the game itself lists the banners in."""
     merged: dict[str, GachaEventRow] = {}
     for events in event_lists:
         for event in events:
             merged[event.event_id] = event
 
-    return sorted(merged.values(), key=lambda e: (e.start, e.pool_id))
+    return sorted(merged.values(), key=lambda e: (e.start, e.order, e.pool_id))
 
 
 def build_banner(
@@ -226,25 +248,25 @@ def _event_files(lang: str) -> list[str]:
         page += 1
 
 
-def download_events(lang: str = "en") -> list[GachaEventRow]:
+def download_events(region: str = DEFAULT_REGION) -> list[GachaEventRow]:
     """Fetch and merge every event TSV into the full schedule (network)."""
     lists = [
-        parse_events(_get(_EVENTS_RAW.format(lang=lang, name=name)).decode("utf-8", "replace"))
-        for name in _event_files(lang)
+        parse_events(_get(_EVENTS_RAW.format(lang=region, name=name)).decode("utf-8", "replace"))
+        for name in _event_files(region)
     ]
 
     return merge_events(lists)
 
 
 def download_gatya(
-    country: str = "en", tarball: bytes | None = None
+    region: str = DEFAULT_REGION, tarball: bytes | None = None
 ) -> tuple[dict[int, list[int]], dict[int, list[int]]]:
     """Fetch the newest BCData tarball; parse GatyaDataSetR1 into pools and the option
     file into the pool->series map (network). Pass pre-downloaded bytes via *tarball* to
     skip the network fetch (workaround for the expired BCData TLS cert)."""
     if tarball is None:
         metadata = json.loads(_get(METADATA_URL))
-        tarball = _get(release_url(metadata, latest_version(metadata, country), country))
+        tarball = _get(release_url(metadata, latest_version(metadata, region), region))
 
     with tarfile.open(fileobj=io.BytesIO(tarball), mode="r:xz") as tar:
         r1 = tar.extractfile("./DataLocal/GatyaDataSetR1.csv").read().decode("utf-8", "replace")
@@ -268,6 +290,7 @@ def event_records(events: Iterable[GachaEventRow]) -> list[dict]:
             "legend": e.legend,
             "guaranteed": e.guaranteed,
             "step_up": e.step_up,
+            "order": e.order,
         }
         for e in events
     ]
@@ -288,9 +311,11 @@ def series_records(series: Mapping[int, list[int]], event_rows: Iterable[GachaEv
 
 
 @cache
-def load_events(path: Path = EVENTS_PATH) -> list[GachaEventRow]:
+def _read_events(path: Path) -> list[GachaEventRow]:
     """Read the committed event schedule back into typed rows. Memoized: the file only
-    changes on a re-import (a fresh process), and the rows are frozen and read-only."""
+    changes on a re-import (a fresh process), and the rows are frozen and read-only.
+    Schedules written before the row order was captured fall back to 0, which leaves the
+    old start/pool_id ordering intact until they're refetched."""
     return [
         GachaEventRow(
             r["event_id"],
@@ -304,37 +329,56 @@ def load_events(path: Path = EVENTS_PATH) -> list[GachaEventRow]:
             r["legend"],
             r["guaranteed"],
             r["step_up"],
+            r.get("order", 0),
         )
         for r in json.loads(path.read_text(encoding="utf-8"))
     ]
 
 
 @cache
-def load_pools(path: Path = POOLS_PATH) -> dict[int, list[int]]:
+def _read_pools(path: Path) -> dict[int, list[int]]:
     """Read the committed pools back as {pool_id: [ids]}. Memoized alongside load_events -
     same committed-until-reimport lifetime, consumed read-only (the roller types it Mapping)."""
     return {int(k): v for k, v in json.loads(path.read_text(encoding="utf-8")).items()}
 
 
-def load_series(path: Path = SERIES_PATH) -> dict[int, int]:
+@cache
+def _read_series(path: Path) -> dict[str, list[int]]:
+    """The committed pool -> [series id, ticket item] map, memoized like the others."""
+    return json.loads(path.read_text(encoding="utf-8"))
+
+
+def load_events(region: str | None = None) -> list[GachaEventRow]:
+    """One region's committed event schedule."""
+    return _read_events(events_path(region))
+
+
+def load_pools(region: str | None = None) -> dict[int, list[int]]:
+    """One region's committed pools, as {pool_id: [ids]}."""
+    return _read_pools(pools_path(region))
+
+
+def load_series(region: str | None = None) -> dict[int, int]:
     """Read the committed series map back as {pool_id: series_id}."""
-    return {int(k): v[0] for k, v in json.loads(path.read_text(encoding="utf-8")).items()}
+    return {int(k): v[0] for k, v in _read_series(series_path(region)).items()}
 
 
-def load_tickets(path: Path = SERIES_PATH) -> dict[int, int]:
+def load_tickets(region: str | None = None) -> dict[int, int]:
     """Read the committed series map back as {pool_id: ticket item id}."""
-    return {int(k): v[1] for k, v in json.loads(path.read_text(encoding="utf-8")).items()}
+    return {int(k): v[1] for k, v in _read_series(series_path(region)).items()}
 
 
-def refresh(lang: str = "en", tarball: bytes | None = None) -> tuple[int, int]:
-    """Fetch the live schedule + pools + series and rewrite the committed data files
-    (network). Pass pre-downloaded BCData bytes via *tarball* to skip that TLS fetch."""
-    events = download_events(lang)
-    pools, series = download_gatya(lang, tarball=tarball)
+def refresh(region: str = DEFAULT_REGION, tarball: bytes | None = None) -> tuple[int, int]:
+    """Fetch the live schedule + pools + series and rewrite one region's committed data
+    files (network). Pass pre-downloaded BCData bytes via *tarball* to skip that TLS fetch."""
+    events = download_events(region)
+    pools, series = download_gatya(region, tarball=tarball)
     kept = pool_records(pools, events)
 
-    EVENTS_PATH.write_text(json.dumps(event_records(events), ensure_ascii=False), encoding="utf-8")
-    POOLS_PATH.write_text(json.dumps(kept), encoding="utf-8")
-    SERIES_PATH.write_text(json.dumps(series_records(series, events)), encoding="utf-8")
+    schedule = events_path(region)
+    schedule.parent.mkdir(parents=True, exist_ok=True)
+    schedule.write_text(json.dumps(event_records(events), ensure_ascii=False), encoding="utf-8")
+    pools_path(region).write_text(json.dumps(kept), encoding="utf-8")
+    series_path(region).write_text(json.dumps(series_records(series, events)), encoding="utf-8")
 
     return len(events), len(kept)

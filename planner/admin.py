@@ -1,8 +1,10 @@
 from django.contrib import admin
 
-from planner.models import Cat, Seed, Unit
+from planner.models import Cat, Region, Seed, Unit
 
 
+# These lists show the region the site is switched to, like every other page: the
+# models' default manager is scoped to it.
 @admin.register(Unit)
 class UnitAdmin(admin.ModelAdmin):
     list_display = ("unit_id", "name", "rarity", "owned", "wanted", "canonical")
@@ -18,3 +20,4 @@ class CatAdmin(admin.ModelAdmin):
 
 
 admin.site.register(Seed)
+admin.site.register(Region)

@@ -1,19 +1,30 @@
 {% extends "planner/base.html" %}
 
-{% block title %}Uber &amp; Legend Tier List &mdash; Neko Optimizer{% endblock %}
+{% block title %}{% if label %}{{ label }}{% else %}Uber &amp; Legend{% endif %} Tier List &mdash; Neko Optimizer{% endblock %}
 
 {% block content %}
-  <h1>Uber &amp; Legend Tier List</h1>
+  <h1>{% if label %}{{ label }}{% else %}Uber &amp; Legend{% endif %} Tier List</h1>
   <p class="muted">
-    The cumulative Uber &amp; Legend Rare ranking from
+    {% if label %}The {{ label }} ranking{% else %}The cumulative Uber &amp; Legend Rare ranking{% endif %} from
     <a href="{{ source }}" target="_blank" rel="noopener">The Battle Cats Tier List</a>,
-    matched to the catalogue (fetched {{ fetched }}). Collab and limited units are left out;
-    it ranks the standard permanent pool. <strong>UF</strong> ranks a unit's Ultra Form,
+    matched to the catalogue (fetched {{ fetched }}).
+    {% if not label %}Collab and limited units are left out; it ranks the standard permanent pool.{% endif %}
+    <strong>UF</strong> ranks a unit's Ultra Form,
     <strong>UT</strong> its Ultra Talents; a dimmed cat ranks higher up through one of those.
     Click a cat for its forms and wiki page.
   </p>
 
   <div class="tier-controls">
+    <label class="ctrl" title="Pick which of the site's tier lists to show"><select id="tierList" data-base="{% url 'tier_list' %}">
+        <option value=""{% if not slug %} selected{% endif %}>Cumulative &mdash; Uber &amp; Legend</option>
+        {% for category, entries in index %}
+          <optgroup label="{{ category }}">
+            {% for entry in entries %}
+              <option value="{{ entry.slug }}"{% if entry.slug == slug %} selected{% endif %}>{{ entry.label }}</option>
+            {% endfor %}
+          </optgroup>
+        {% endfor %}
+      </select></label>
     <label class="ctrl" title="Show each cat as this form - name and icon; a unit without that form shows the last one it has"><select id="tierForm">
         <option value="0">Base</option>
         <option value="1">Evolved</option>
@@ -31,7 +42,7 @@
             <button type="button" class="tier-unit{% if entry.dimmed %} dimmed{% endif %}"
                     {% if entry.unit_id is not None %}data-name="{{ entry.name }}" data-uid="{{ entry.unit_id }}" data-forms="{{ entry.forms }}"{% endif %}>
               {% if entry.unit_id is not None %}
-                <img loading="lazy" src="https://battlecatsinfo.github.io/img/u/{{ entry.unit_id }}/0.png" alt="">
+                <img loading="lazy" src="{{ icon_base }}/{{ entry.unit_id }}/0.png" alt="">
               {% endif %}
               <span class="tier-unit-name">{{ entry.name }}</span>
               {% if entry.boost %}<span class="boost">{{ entry.boost }}</span>{% endif %}
@@ -42,9 +53,11 @@
     {% endfor %}
   </div>
 
-  <p class="muted tier-more">
-    Want the collab and limited units too?
-    <a href="https://drive.google.com/drive/folders/12Iu_dv8AZWfU3ekRoA_km0dbJA9klNdC"
-       target="_blank" rel="noopener">Full Uber &amp; Legend reference, with collabs and limiteds &#8599;</a>
-  </p>
+  {% if not label %}
+    <p class="muted tier-more">
+      Want the collab and limited units too?
+      <a href="https://drive.google.com/drive/folders/12Iu_dv8AZWfU3ekRoA_km0dbJA9klNdC"
+         target="_blank" rel="noopener">Full Uber &amp; Legend reference, with collabs and limiteds &#8599;</a>
+    </p>
+  {% endif %}
 {% endblock %}

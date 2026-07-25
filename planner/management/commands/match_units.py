@@ -1,9 +1,8 @@
-from django.core.management.base import BaseCommand
-
+from planner.management.base import RegionCommand
 from planner.services import unit_match_report
 
 
-class Command(BaseCommand):
+class Command(RegionCommand):
     help = "Report which imported cat names map to a canonical unit, and which don't."
 
     def handle(self, *args, **options):

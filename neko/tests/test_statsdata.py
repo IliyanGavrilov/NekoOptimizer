@@ -144,6 +144,16 @@ def test_strengthen_reports_threshold_and_boost():
     assert record["effects"] == ["Attack +100% at 50% HP"]
 
 
+def test_abilities_carry_stable_keys_parallel_to_effects():
+    record = form_record(_row(c30=1, c25=20, c26=60), CAT_CURVE, 37)
+    assert record["abilities"] == ["massive_damage", "freeze"]
+
+
+def test_omni_strike_and_long_distance_have_distinct_keys():
+    assert form_record(_row(c44=350, c45=-900), CAT_CURVE, 37)["abilities"] == ["omni_strike"]
+    assert form_record(_row(c44=350, c45=250), CAT_CURVE, 37)["abilities"] == ["ld"]
+
+
 def test_frequencies_key_forms_in_row_order():
     tsv = "id\tattack_frequency\n0\t37\n0\t40\n5\t600"
     assert parse_frequencies(tsv) == {(0, 0): 37, (0, 1): 40, (5, 0): 600}
