@@ -425,10 +425,10 @@ def test_tracks_endpoint_gilds_a_picked_target_on_the_browse_track(client, monke
     cat = cat_with_unit("Aphrodite")
     plain = client.post("/tracks/", {"seed": 7}).content.decode()
     # Nothing picked -> no CELL gilds (the legend sample carries a static catlink target span).
-    assert 'class="catlink target" data-name=' not in plain
+    assert 'class="catlink icon-host target" data-name=' not in plain
     html = client.post("/tracks/", {"seed": 7, "targets": [cat.pk]}).content.decode()
     # Picked, so its cell gilds gold on the browse track before any plan is run.
-    assert 'class="catlink target" data-name="Aphrodite"' in html
+    assert 'class="catlink icon-host target" data-name="Aphrodite"' in html
 
 
 @pytest.mark.django_db

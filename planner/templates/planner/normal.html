@@ -57,9 +57,6 @@
         <input type="number" id="normalSeed" min="0" autocomplete="off"
                placeholder="e.g. 1515525936">
       </label>
-      <label class="opt">Rolls to show
-        <input type="number" id="normalCount" min="1" max="999" value="100">
-      </label>
       <span class="normal-machines" role="group" aria-label="Capsule machines">
         <label class="machine-toggle">
           <input type="checkbox" id="machineNormal" checked>
@@ -126,7 +123,29 @@
   <p class="muted hint" id="normalHint" hidden>Enter your normal seed above &mdash; or open
     <strong>Find my normal seed</strong> and let the finder recover it from a few real pulls.</p>
 
-  <div id="normalTracks" aria-live="polite"></div>
+  {% comment %}The same live display controls the rare planner's Rolls table carries, on
+  the same saved picks - the icon/form pair reaches the cat items the normal pools drop.
+  {% endcomment %}
+  <div id="normalRolls" class="results-region">
+    <div class="rolls-head">
+      <h2 class="results-h">Rolls</h2>
+      <div class="rolls-controls">
+        <label class="ctrl">Show <input type="number" id="normalCount" value="100" min="1" max="999" title="How many rolls the table shows (up to 999)"> rolls</label>
+        <label class="ctrl" title="Show each cat as its name, its form icon, or both"><select id="normalDisplay">
+            <option value="text">Names</option>
+            <option value="icons">Icons</option>
+            <option value="both">Both</option>
+          </select></label>
+        <label class="ctrl" title="Show each cat as this form - name and icon; a unit without that form shows the last one it has"><select id="normalRollForm">
+            <option value="0">Base</option>
+            <option value="1">Evolved</option>
+            <option value="2">True</option>
+            <option value="3">Ultra</option>
+          </select></label>
+      </div>
+    </div>
+    <div id="normalTracks" aria-live="polite"></div>
+  </div>
 
   {{ seek_pools|json_script:"normalPools" }}
 {% endblock %}
