@@ -153,6 +153,7 @@ visual design.
 - [thanksfeanor.pythonanywhere.com](https://thanksfeanor.pythonanywhere.com/) - a hosted collection of Battle Cats utilities.
 
 ### Stats, calculators & databases
+- [battlecatsdata.com](https://www.battlecatsdata.com/) - version-current English enemy database with HP, DPS, range, traits, abilities, immunities, filters, and individual enemy pages.
 - [battlecatsstats.com](https://battlecatsstats.com/) - true-damage calculator, talents/abilities, range DPS graphs, unit comparison.
 - [battlecats-calc.com](https://battlecats-calc.com/) - a "Manage Cats" checkbox page feeding a "My Cats" view (like our Collection).
 - [matthewmarks stat calculator](https://production.matthewmarks.com/battle-cats-stat-calculator/) - stat breakdowns and tier list.
