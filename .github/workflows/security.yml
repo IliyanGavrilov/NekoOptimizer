@@ -4,6 +4,7 @@ on:
   push:
     branches: [main]
   pull_request:
+  workflow_dispatch: # the daily data refresh runs it on its pull request
   schedule:
     - cron: "0 6 * * 1" # weekly, to catch CVEs disclosed after a merge
 
