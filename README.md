@@ -6,6 +6,8 @@
 ![Python 3.14+](https://img.shields.io/badge/python-3.14%2B-blue)
 ![Django 6.0](https://img.shields.io/badge/Django-6.0-092E20)
 
+**Live: [neko-optimizer.onrender.com](https://neko-optimizer.onrender.com)** - free to use, no sign-up needed (an account just keeps your collection across devices). The free server sleeps when idle, so the first visit can take ~50 seconds.
+
 A planning tool for *The Battle Cats* gacha. Given a set of target cats and a
 budget of tickets and catfood, it computes **where and when to pull, in which
 order, for the lowest resource cost**.

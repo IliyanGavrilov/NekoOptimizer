@@ -1,6 +1,6 @@
 # The seed finders' in-process jobs: a search sieves the whole 2^32 seed space
 # (~10s of numpy), so it runs on a daemon thread and the page polls for progress.
-# One global registry, like the one global collection - a dev-server restart just
+# One in-memory registry, so the server runs a single process - a restart just
 # forgets unfinished jobs and the page offers to search again. The rare and normal
 # finders share the registry: a job is just a runner plus its polled state.
 
@@ -19,6 +19,9 @@ _KEEP = 8  # jobs kept for late polls; older ones are pruned as new ones start
 
 _jobs: dict[str, SeekJob] = {}
 _lock = threading.Lock()
+# One search at a time: each sieve peaks at ~260 MB, and two at once would take a small
+# host past its memory. A queued job just sits at 0% until the one ahead finishes.
+_running = threading.Semaphore(1)
 
 Runner = Callable[[ProgressFn], SeekResult]
 
@@ -92,7 +95,8 @@ def _work(job: SeekJob, runner: Runner) -> None:
         job.run, job.progress = run, fraction
 
     try:
-        job.result = runner(note)
+        with _running:
+            job.result = runner(note)
     except Exception as error:  # noqa: BLE001 - a dead thread would spin the poll forever
         job.error = str(error)
 

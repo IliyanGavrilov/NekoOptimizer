@@ -1,0 +1,82 @@
+name: Refresh game data
+
+# Once a day: re-fetch every version's catalogue, schedule and tier lists, and when any
+# committed data changed, push it (Render redeploys on the push) and import it into the
+# live database. A day that brings nothing new ends after the fetch, with no commit.
+on:
+  schedule:
+    - cron: "17 5 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: refresh-data
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.14"
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -r requirements-dev.txt
+
+      # One tarball per version feeds all four BCData-backed commands.
+      - name: Fetch catalogues and schedules
+        run: |
+          curl -sSfL https://git.battlecatsmodding.org/fieryhenry/BCData/raw/metadata.json -o "$RUNNER_TEMP/metadata.json"
+          for region in en jp tw kr; do
+            url=$(python -c 'import json, sys; from neko.bcdata import latest_version, release_url; m = json.load(open(sys.argv[1])); r = sys.argv[2]; print(release_url(m, latest_version(m, r), r))' "$RUNNER_TEMP/metadata.json" "$region")
+            curl -sSfL "$url" -o "$RUNNER_TEMP/$region.tar.xz"
+            for command in fetch_units fetch_gamedata fetch_stats fetch_gacha; do
+              python manage.py "$command" --region "$region" --tarball "$RUNNER_TEMP/$region.tar.xz"
+            done
+          done
+
+      # Both scrape community sites that may turn a runner away; the day's data still lands.
+      - name: Fetch the Cat Guide order and tier lists
+        continue-on-error: true
+        run: |
+          python manage.py fetch_guide
+          python manage.py fetch_tiers
+
+      - name: Look for changes
+        id: diff
+        run: echo "changed=$(python .github/scripts/data_changed.py)" >> "$GITHUB_OUTPUT"
+
+      # The golden seed proves the roll engine still matches godfat on the new data.
+      - name: Tests
+        if: steps.diff.outputs.changed != '0'
+        run: pytest -q
+
+      - name: Commit
+        if: steps.diff.outputs.changed != '0'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add neko/data
+          git commit -m "Refresh game data"
+          git pull --rebase
+          git push
+
+      # Render's build applies migrations; this only loads the refreshed rows.
+      - name: Import into the live database
+        if: steps.diff.outputs.changed != '0'
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: |
+          test -n "$DATABASE_URL" || { echo "::error::Add the DATABASE_URL repository secret."; exit 1; }
+          for region in en jp tw kr; do
+            python manage.py import_units --region "$region"
+            python manage.py import_catalogue --region "$region"
+            python manage.py reconcile_units --region "$region"
+          done
