@@ -2,12 +2,16 @@ import json
 from dataclasses import asdict
 from urllib.parse import urlsplit
 
+from django.contrib.auth import login
+from django.contrib.auth.forms import UserCreationForm
+from django.contrib.auth.views import LoginView, RedirectURLMixin
 from django.http import Http404, HttpResponse, HttpResponseBadRequest, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.template.loader import get_template, render_to_string
 from django.urls import Resolver404, resolve, reverse
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.http import require_POST
+from django.views.generic import FormView
 
 from neko.gamedata import load_cannons, load_evolve, load_talents
 from neko.guidedata import load_guide
@@ -28,7 +32,8 @@ from planner.forms import (
     PlannerForm,
 )
 from planner.links import TOOL_DIRECTORY, unit_links
-from planner.models import CannonPlan, Cat, Region, Seed, TalentPlan, Unit, UnitPlan
+from planner.middleware import adopt_guest, owner
+from planner.models import CannonPlan, Cat, Seed, TalentPlan, Unit, UnitPlan
 from planner.services import (
     CANNON_ADDONS,
     NORMAL_DEFAULT_KEYS,
@@ -78,19 +83,21 @@ from planner.services import (
 )
 
 
-def _picker_cats():
-    """Cats for the target picker, each carrying its tier badge (if the tier list ranks
-    it) and its rendered chip. select_related("unit"): the owned/wanted chip marks read
-    cat.unit, one query per chip otherwise. Banner membership comes separately, via
-    cat_banner_names.
+def _picker_cats(profile):
+    """Cats for the target picker, each carrying the player's owned/wanted marks, its tier
+    badge (if the tier list ranks it) and its rendered chip. select_related("unit"): the
+    badge reads cat.unit, one query per chip otherwise. Banner membership comes separately,
+    via cat_banner_names.
 
     The chip is rendered here, once per cat, because the picker repeats it on every banner
     row that carries the cat - ~20k chips over ~500 cats, and rendering per appearance was
     most of the Past fragment's cost."""
     cats = list(Cat.objects.select_related("unit"))
+    owned, wanted = profile.marks()
     badges = tier_badges()
     chip = get_template("planner/_picker_chip.html")
     for cat in cats:
+        cat.owned, cat.wanted = cat.unit_id in owned, cat.unit_id in wanted
         cat.tier_badge = badges.get(cat.unit.unit_id) if cat.unit else None
         cat.chip = chip.render({"cat": cat})
 
@@ -103,7 +110,7 @@ def planner(request):
     The Past picker group is ~2000 per-run rows (nearly all of the page's bytes and
     render time), so it ships as a count only; JS fetches picker_past on first open.
     """
-    cats = _picker_cats()
+    cats = _picker_cats(request.profile)
     rank = {name: i for i, name in enumerate(RARITY_ORDER)}
     target_flat = sorted(cats, key=lambda cat: (-rank.get(cat.rarity, -1), cat.name))
 
@@ -128,7 +135,9 @@ def planner(request):
 def picker_past(request):
     """The Past picker rows, fetched when the group is first opened."""
     groups = dict(
-        picker_groups(_picker_cats(), titles=banner_titles(), banner_names=cat_banner_names())
+        picker_groups(
+            _picker_cats(request.profile), titles=banner_titles(), banner_names=cat_banner_names()
+        )
     )
 
     return render(request, "planner/_picker_rows.html", {"sections": groups.get("Past", [])})
@@ -245,14 +254,14 @@ def _rolls_by_banner(result):
     )
 
 
-def _owned_names():
+def _owned_names(profile):
     """Cat names you already own, to flag Uber/Legend cats missing from your collection."""
-    return set(Unit.objects.filter(owned=True).values_list("name", flat=True))
+    return set(profile.units("owned").values_list("name", flat=True))
 
 
-def _wanted_names():
+def _wanted_names(profile):
     """Cat names on your wishlist, starred in the track and steps."""
-    return set(Unit.objects.wishlist().values_list("name", flat=True))
+    return set(profile.wishlist().values_list("name", flat=True))
 
 
 def _unit_ids():
@@ -277,7 +286,7 @@ def _find_targets(request):
     pks = {name: pk for name, _, pk in picked}
     wishlist: dict[str, str] = {}
     if request.POST.get("use_wishlist"):
-        wishlist = dict(Unit.objects.wishlist().values_list("name", "rarity"))
+        wishlist = dict(request.profile.wishlist().values_list("name", "rarity"))
     return targets, wishlist, pks
 
 
@@ -341,7 +350,8 @@ def tracks(request):
             guaranteed_rerolls=guaranteed_rerolls,
             reroll=trace[3],
         )
-    owned, wanted, titles = _owned_names(), _wanted_names(), display_titles()
+    owned, wanted = _owned_names(request.profile), _wanted_names(request.profile)
+    titles = display_titles()
     # The unified targets panel (godfat's Find, enriched): every cat you're searching for -
     # picks, wishlist and toggled future ubers - with its next position or a ⚠. Attached to
     # the browse track only, so the shared _tracks.html renders no panel on plan tracks.
@@ -403,10 +413,10 @@ def _search_setup(request, form):
     """Everything both plan endpoints need from one posted form: the scoped target set and
     the keyword arguments the solvers take. Returns ``(targets, kwargs)``."""
     seed = form.cleaned_data["seed"]
-    Seed.store(seed)
+    Seed.store(owner(request), seed)
     targets = {cat.name for cat in form.cleaned_data["targets"]}
     if form.cleaned_data["use_wishlist"]:
-        targets |= _wanted_names()
+        targets |= _wanted_names(request.profile)
     # Future-uber targets are qualified placeholders, searchable only once the pool is
     # padded - so the plan must roll WITH that padding, and the target set keeps them even
     # though they're absent from the real (unpadded) pool the scoping below prunes against.
@@ -450,8 +460,8 @@ def _search_setup(request, form):
         multis=result.multis,
         ticket_value=form.cleaned_data["ticket_value"],
         banner_currency=banner_currencies(pulls),
-        owned=_owned_names(),
-        wanted=_wanted_names(),
+        owned=_owned_names(request.profile),
+        wanted=_wanted_names(request.profile),
         titles=display_titles(),
         guaranteed_rerolls=guaranteed_rerolls,
         last_cat=last_cat,
@@ -466,7 +476,7 @@ def _search_setup(request, form):
 @require_POST
 def find_plan(request):
     """Solve every target subset; return the accordion of solutions as an HTML fragment."""
-    form = PlannerForm(request.POST)
+    form = PlannerForm(request.POST, profile=request.profile)
     if not form.is_valid():
         return JsonResponse({"errors": form.errors}, status=400)
 
@@ -501,7 +511,7 @@ def find_plan(request):
 def plan_row(request):
     """One accordion row's body - its steps and highlighted track - solved when the row is
     opened. The same posted form the accordion came from, plus the row's own cats."""
-    form = PlannerForm(request.POST)
+    form = PlannerForm(request.POST, profile=request.profile)
     if not form.is_valid():
         return JsonResponse({"errors": form.errors}, status=400)
 
@@ -772,11 +782,13 @@ def collection(request):
     cats) - the marks are per unit, so every copy stays in step. Units this region's Cat
     Guide doesn't list are left out: the catalogue ships them, the region can't get them."""
     units = list(Unit.objects.named().in_guide())
+    owned, wanted = request.profile.marks()
     badges = tier_badges()
     # Each unit's chip is rendered once and reused: the page lays the whole catalogue out
     # three times over (dictionary, rarity, sets), and fests repeat their cats on top.
     chip = get_template("planner/_collection_chip.html")
     for unit in units:
+        unit.owned, unit.wanted = unit.pk in owned, unit.pk in wanted
         unit.tier_badge = badges.get(unit.unit_id)
         unit.chip = chip.render({"unit": unit})
     guide = load_guide()["regions"].get(active_region(), [])
@@ -830,6 +842,37 @@ def about(request):
     return render(request, "planner/about.html", {"tool_directory": TOOL_DIRECTORY})
 
 
+class Signup(RedirectURLMixin, FormView):
+    """Create an account. The visitor's guest profile - collection, plans, seed - becomes
+    the account's, so signing up never starts them over."""
+
+    form_class = UserCreationForm
+    template_name = "planner/account.html"
+    next_page = "planner"
+    extra_context = {"signup": True}
+
+    def form_valid(self, form):
+        user = form.save()
+        adopt_guest(self.request, user)
+        login(self.request, user)
+
+        return super().form_valid(form)
+
+    def get_context_data(self, **kwargs):
+        return super().get_context_data(next=self.get_redirect_url(), **kwargs)
+
+
+class Login(LoginView):
+    """Log in. An account with no profile yet takes over the visitor's guest one."""
+
+    template_name = "planner/account.html"
+
+    def form_valid(self, form):
+        adopt_guest(self.request, form.get_user())
+
+        return super().form_valid(form)
+
+
 def _posted_from(request) -> str:
     """The page a post was made from, as a URL this site generated for itself.
 
@@ -865,7 +908,9 @@ def set_region(request):
     if code not in CODES:
         return HttpResponseBadRequest("unknown region")
 
-    Region.store(code)
+    profile = owner(request)
+    profile.region = code
+    profile.save(update_fields=["region"])
 
     return redirect(_posted_from(request))
 
@@ -876,15 +921,16 @@ def apply_plan(request):
     cat doesn't un-want it (an owned cat is already excluded from wishlist searches), so the
     star stays for when you browse your collection. Applying means "you rolled it", so the
     plan's seed-after becomes the stored seed."""
-    names = request.POST.getlist("cats")
-    applied = Unit.objects.filter(name__in=names).update(owned=True)
+    profile = owner(request)
+    units = Unit.objects.filter(name__in=request.POST.getlist("cats"))
+    profile.owned.add(*units)
 
     try:
-        Seed.store(int(request.POST["seed_after"]))
+        Seed.store(profile, int(request.POST["seed_after"]))
     except KeyError, ValueError:
         pass
 
-    return JsonResponse({"applied": applied})
+    return JsonResponse({"applied": len(units)})
 
 
 @require_POST
@@ -896,9 +942,14 @@ def collection_bulk(request):
     if field not in {"owned", "wanted"}:
         return HttpResponseBadRequest("field must be 'owned' or 'wanted'")
 
+    profile = owner(request)
     units = Unit.objects.filter(pk__in=request.POST.getlist("pk"))
-    value = units.filter(**{field: False}).exists()
-    units.update(**{field: value})
+    value = units.exclude(**{f"{field}_by": profile}).exists()
+    marked = getattr(profile, field)
+    if value:
+        marked.add(*units)
+    else:
+        marked.remove(*units)
 
     return JsonResponse({"value": value})
 
@@ -909,7 +960,7 @@ def resources(request):
     rendered client-side from these static catalogues, so the board can be swapped whole
     on every change without re-shipping them."""
     context = {
-        "board": resources_board(),
+        "board": resources_board(request.profile),
         "cat_options": cat_options(),
     }
 
@@ -917,7 +968,7 @@ def resources(request):
 
 
 def _board(request):
-    return render(request, "planner/_res_board.html", {"board": resources_board()})
+    return render(request, "planner/_res_board.html", {"board": resources_board(request.profile)})
 
 
 def _plan_unit(request):
@@ -930,11 +981,13 @@ def _plan_unit(request):
     return Unit.objects.filter(unit_id=unit_id).first()
 
 
-def _set_talents(unit, slots, on):
+def _set_talents(profile, unit, slots, on):
     """Tick or clear every one of a unit's talent slots at once."""
-    TalentPlan.objects.filter(unit=unit).delete()
+    profile.talent_plans.filter(unit=unit).delete()
     if on:
-        TalentPlan.objects.bulk_create(TalentPlan(unit=unit, slot=index) for index in slots)
+        TalentPlan.objects.bulk_create(
+            TalentPlan(profile=profile, unit=unit, slot=index) for index in slots
+        )
 
 
 @require_POST
@@ -948,12 +1001,13 @@ def resources_cat(request):
     if unit is None:
         return HttpResponseBadRequest("unknown unit")
 
+    profile = owner(request)
     if request.POST.get("remove") == "1":
-        UnitPlan.objects.filter(unit=unit).delete()
-        TalentPlan.objects.filter(unit=unit).delete()
+        profile.unit_plans.filter(unit=unit).delete()
+        profile.talent_plans.filter(unit=unit).delete()
         return _board(request)
 
-    plan, _ = UnitPlan.objects.get_or_create(unit=unit)
+    plan, _ = UnitPlan.objects.get_or_create(profile=profile, unit=unit)
     slots = load_talents()["units"].get(str(unit.unit_id), [])
     cost = load_evolve()["units"].get(str(unit.unit_id), {})
     form, raw_slot = request.POST.get("form"), request.POST.get("slot")
@@ -962,7 +1016,7 @@ def resources_cat(request):
         plan.tf = on and plannable_form(cost, "tf") is not None
         plan.uf = on and plannable_form(cost, "uf") is not None
         plan.save()
-        _set_talents(unit, range(len(slots)), on)
+        _set_talents(profile, unit, range(len(slots)), on)
     elif form is not None:
         if form not in {"tf", "uf"}:
             return HttpResponseBadRequest("form must be 'tf' or 'uf'")
@@ -976,9 +1030,9 @@ def resources_cat(request):
         if not 0 <= slot < len(slots):
             return HttpResponseBadRequest("unknown slot")
         if on:
-            TalentPlan.objects.get_or_create(unit=unit, slot=slot)
+            TalentPlan.objects.get_or_create(profile=profile, unit=unit, slot=slot)
         else:
-            TalentPlan.objects.filter(unit=unit, slot=slot).delete()
+            profile.talent_plans.filter(unit=unit, slot=slot).delete()
 
     return _board(request)
 
@@ -995,11 +1049,12 @@ def resources_base(request):
     if cannon is None:
         return HttpResponseBadRequest("unknown cannon")
 
+    profile = owner(request)
     part = request.POST.get("part")
     if part is None:
-        deleted, _ = CannonPlan.objects.filter(cannon_id=cannon["id"]).delete()
+        deleted, _ = profile.cannon_plans.filter(cannon_id=cannon["id"]).delete()
         if not deleted:
-            CannonPlan.objects.create(cannon_id=cannon["id"])
+            CannonPlan.objects.create(profile=profile, cannon_id=cannon["id"])
         return _board(request)
 
     if part not in cannon["parts"]:
@@ -1010,7 +1065,7 @@ def resources_base(request):
         if part not in CANNON_ADDONS:
             return HttpResponseBadRequest("the cannon comes with the development")
         CannonPlan.objects.update_or_create(
-            cannon_id=cannon["id"], defaults={f"{part}_on": on == "1"}
+            profile=profile, cannon_id=cannon["id"], defaults={f"{part}_on": on == "1"}
         )
         return _board(request)
 
@@ -1020,7 +1075,9 @@ def resources_base(request):
         return HttpResponseBadRequest("malformed level")
     if not 0 <= level <= len(cannon["parts"][part]["levels"]):
         return HttpResponseBadRequest("unknown level")
-    CannonPlan.objects.update_or_create(cannon_id=cannon["id"], defaults={f"{part}_now": level})
+    CannonPlan.objects.update_or_create(
+        profile=profile, cannon_id=cannon["id"], defaults={f"{part}_now": level}
+    )
 
     return _board(request)
 
@@ -1033,16 +1090,25 @@ def collection_toggle(request):
         return HttpResponseBadRequest("field must be 'owned' or 'wanted'")
 
     unit = get_object_or_404(Unit, pk=request.POST.get("pk"))
-    setattr(unit, field, not getattr(unit, field))
-    unit.save(update_fields=[field])
+    profile = owner(request)
+    marked = getattr(profile, field)
+    if marked.filter(pk=unit.pk).exists():
+        marked.remove(unit)
+    else:
+        marked.add(unit)
 
-    return JsonResponse({"owned": unit.owned, "wanted": unit.wanted})
+    return JsonResponse(
+        {
+            "owned": profile.owned.filter(pk=unit.pk).exists(),
+            "wanted": profile.wanted.filter(pk=unit.pk).exists(),
+        }
+    )
 
 
 def collection_export(request):
     """Download the owned/wishlist marks as a JSON snapshot the player can back up or move
     to another install."""
-    resp = JsonResponse(export_collection(), json_dumps_params={"indent": 2})
+    resp = JsonResponse(export_collection(request.profile), json_dumps_params={"indent": 2})
     resp["Content-Disposition"] = 'attachment; filename="neko-collection.json"'
 
     return resp
@@ -1062,7 +1128,7 @@ def collection_import(request):
         return HttpResponseBadRequest("not a JSON file")
 
     try:
-        result = import_collection(data)
+        result = import_collection(owner(request), data)
     except ValueError, TypeError:
         return HttpResponseBadRequest("not a Neko collection export")
 

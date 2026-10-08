@@ -1,0 +1,33 @@
+{% extends "planner/base.html" %}
+
+{% block title %}{% if signup %}Sign up{% else %}Log in{% endif %} &middot; Neko Optimizer{% endblock %}
+
+{% block content %}
+  {% if signup %}
+  <h1>Sign up</h1>
+  <p class="muted">
+    Your collection, wishlist and plans are already saved in this browser. An account
+    keeps them too, so you can log in from any device &mdash; everything you've marked so
+    far comes along. There's no email, so there's no password reset: pick one you'll
+    remember, and export your collection now and then as a backup.
+  </p>
+  {% else %}
+  <h1>Log in</h1>
+  <p class="muted">Pick up your collection, wishlist and plans on this device.</p>
+  {% endif %}
+  <form method="post" class="account-form">
+    {% csrf_token %}
+    {{ form.non_field_errors }}
+    {% for field in form %}
+    <label>{{ field.label }} {{ field }}</label>
+    {{ field.errors }}
+    {% endfor %}
+    <input type="hidden" name="next" value="{{ next }}">
+    <button type="submit">{% if signup %}Create account{% else %}Log in{% endif %}</button>
+  </form>
+  {% if signup %}
+  <p class="muted">Already have one? <a href="{% url 'login' %}?next={{ next|urlencode }}">Log in</a></p>
+  {% else %}
+  <p class="muted">No account yet? <a href="{% url 'signup' %}?next={{ next|urlencode }}">Sign up</a></p>
+  {% endif %}
+{% endblock %}
