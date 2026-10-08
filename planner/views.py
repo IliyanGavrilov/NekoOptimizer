@@ -1,10 +1,11 @@
 import json
 from dataclasses import asdict
+from urllib.parse import urlsplit
 
 from django.http import Http404, HttpResponse, HttpResponseBadRequest, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.template.loader import get_template, render_to_string
-from django.urls import reverse
+from django.urls import Resolver404, resolve, reverse
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.http import require_POST
 
@@ -829,6 +830,32 @@ def about(request):
     return render(request, "planner/about.html", {"tool_directory": TOOL_DIRECTORY})
 
 
+def _posted_from(request) -> str:
+    """The page a post was made from, as a URL this site generated for itself.
+
+    The Referer header is attacker-controllable, so it never becomes the redirect target:
+    it only picks one of our own routes. Off-site or wrong-scheme referers are rejected,
+    the path is resolved against our own URLconf, and what we hand back is reverse()'s
+    output for the view that matched - so the destination is ours by construction, not by
+    inspection. Only the query string rides along, which cannot change where it points.
+    Anything that doesn't resolve lands on the planner."""
+    back = request.META.get("HTTP_REFERER", "")
+    if not url_has_allowed_host_and_scheme(
+        back, allowed_hosts={request.get_host()}, require_https=request.is_secure()
+    ):
+        return reverse("planner")
+
+    parts = urlsplit(back)
+    try:
+        match = resolve(parts.path)
+    except Resolver404:
+        return reverse("planner")
+
+    here = reverse(match.view_name, args=match.args, kwargs=match.kwargs)
+
+    return f"{here}?{parts.query}" if parts.query else here
+
+
 @require_POST
 def set_region(request):
     """Switch the game version the whole site shows. Each version ships its own
@@ -839,12 +866,8 @@ def set_region(request):
         return HttpResponseBadRequest("unknown region")
 
     Region.store(code)
-    back = request.META.get("HTTP_REFERER", "")
-    allowed = url_has_allowed_host_and_scheme(
-        back, allowed_hosts={request.get_host()}, require_https=request.is_secure()
-    )
 
-    return redirect(back if allowed else reverse("planner"))
+    return redirect(_posted_from(request))
 
 
 @require_POST
