@@ -5,7 +5,7 @@ from planner.models import Profile, Unit
 
 pytestmark = pytest.mark.django_db
 
-PASSWORD = "correct-horse-battery-9"
+PASSWORD = "correct-horse-battery-9"  # nosec B105
 
 
 @pytest.fixture(autouse=True)
