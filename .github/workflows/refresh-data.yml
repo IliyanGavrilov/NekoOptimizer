@@ -1,8 +1,8 @@
 name: Refresh game data
 
 # Once a day: re-fetch every version's catalogue, schedule and tier lists, and when any
-# committed data changed, push it (Render redeploys on the push) and import it into the
-# live database. A day that brings nothing new ends after the fetch, with no commit.
+# committed data changed, merge it through a pull request (Render redeploys on the merge)
+# and import it into the live database. A day that brings nothing new ends after the fetch.
 on:
   schedule:
     - cron: "17 5 * * *"
@@ -10,6 +10,8 @@ on:
 
 permissions:
   contents: write
+  pull-requests: write
+  actions: write # dispatches the checks main requires; a token-made PR triggers none itself
 
 concurrency:
   group: refresh-data
@@ -58,15 +60,41 @@ jobs:
         if: steps.diff.outputs.changed != '0'
         run: pytest -q
 
-      - name: Commit
+      - name: Open the data pull request
         if: steps.diff.outputs.changed != '0'
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git switch -c data-refresh
           git add neko/data
           git commit -m "Refresh game data"
-          git pull --rebase
-          git push
+          git push --force origin data-refresh
+          if [ "$(gh pr view data-refresh --json state -q .state 2>/dev/null)" != "OPEN" ]; then
+            gh pr create --base main --head data-refresh --title "Refresh game data" --body "The daily fetch found new game data. Merged automatically once the checks pass."
+          fi
+          for workflow in ci.yml security.yml codeql.yml; do
+            gh workflow run "$workflow" --ref data-refresh
+          done
+
+      - name: Merge once the checks pass
+        if: steps.diff.outputs.changed != '0'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          sha=$(git rev-parse HEAD)
+          for workflow in ci.yml security.yml codeql.yml; do
+            run=""
+            for attempt in $(seq 30); do
+              run=$(gh run list --workflow "$workflow" --branch data-refresh --event workflow_dispatch --json databaseId,headSha -q "map(select(.headSha == \"$sha\"))[0].databaseId")
+              [ -n "$run" ] && break
+              sleep 10
+            done
+            test -n "$run" || { echo "::error::$workflow never started on the data branch."; exit 1; }
+            gh run watch "$run" --exit-status > /dev/null
+          done
+          gh pr merge data-refresh --squash --delete-branch
 
       # Render's build applies migrations; this only loads the refreshed rows.
       - name: Import into the live database
