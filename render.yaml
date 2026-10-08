@@ -1,0 +1,18 @@
+# One free web service. The database is Neon's free Postgres, kept outside Render (whose
+# free Postgres expires): paste its connection string as DATABASE_URL when asked.
+services:
+  - type: web
+    name: neko-optimizer
+    runtime: python
+    plan: free
+    buildCommand: bash build.sh
+    # One process: the seed finder's jobs live in memory, so every poll must reach the
+    # worker that started the search. The long timeout covers explore-mode searches.
+    startCommand: gunicorn nekosite.wsgi --workers 1 --threads 4 --timeout 300
+    envVars:
+      - key: DJANGO_DEBUG
+        value: "0"
+      - key: DJANGO_SECRET_KEY
+        generateValue: true
+      - key: DATABASE_URL
+        sync: false

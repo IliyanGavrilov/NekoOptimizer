@@ -58,6 +58,8 @@ cover/
 # Django stuff:
 *.log
 local_settings.py
+# collectstatic output (built on deploy)
+staticfiles/
 # The dev database and any hand-made copies of it (db.sqlite3.backup-<timestamp>):
 # the bare name alone does not match those, and they were committed for months.
 db.sqlite3*

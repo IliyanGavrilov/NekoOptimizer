@@ -1,6 +1,9 @@
+from django.contrib.auth.views import LogoutView
 from django.urls import path
 
 from planner.views import (
+    Login,
+    Signup,
     about,
     apply_plan,
     collection,
@@ -61,4 +64,7 @@ urlpatterns = [
     path("collection/bulk/", collection_bulk, name="collection_bulk"),
     path("collection/export/", collection_export, name="collection_export"),
     path("collection/import/", collection_import, name="collection_import"),
+    path("accounts/signup/", Signup.as_view(), name="signup"),
+    path("accounts/login/", Login.as_view(), name="login"),
+    path("accounts/logout/", LogoutView.as_view(), name="logout"),
 ]

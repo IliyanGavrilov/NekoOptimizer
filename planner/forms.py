@@ -3,7 +3,7 @@ import json
 from django import forms
 
 from neko.models import CATFOOD_PER_DRAW, is_future_uber
-from planner.models import Cat, Unit
+from planner.models import Cat
 
 EXPLORE_HORIZON = 1000  # default rolls to look ahead per banner in explore mode
 MAX_TRACK_LENGTH = 999  # godfat's unit-count ceiling for the Rolls table
@@ -100,8 +100,9 @@ class PlannerForm(forms.Form):
 
         return [str(name) for name in data if is_future_uber(str(name))]
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, profile=None, **kwargs):
         super().__init__(*args, **kwargs)
+        self.profile = profile
         self.label_suffix = ""  # no trailing colons; required fields are marked with *
         self.fields["targets"].queryset = Cat.objects.all()
 
@@ -111,7 +112,8 @@ class PlannerForm(forms.Form):
         has_target = cleaned.get("targets") or cleaned.get("future_targets")
         if not has_target and not cleaned.get("use_wishlist"):
             raise forms.ValidationError("Pick at least one target, or tick 'search my wishlist'.")
-        if cleaned.get("use_wishlist") and not has_target and not Unit.objects.wishlist():
+        has_wishlist = self.profile is not None and self.profile.wishlist().exists()
+        if cleaned.get("use_wishlist") and not has_target and not has_wishlist:
             raise forms.ValidationError("Your wishlist is empty - mark some cats as wanted first.")
 
         return cleaned

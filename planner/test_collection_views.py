@@ -4,13 +4,19 @@ from itertools import count
 import pytest
 from django.core.files.uploadedfile import SimpleUploadedFile
 
-from planner.models import Unit
+from neko import region
+from planner.middleware import PROFILE_COOKIE
+from planner.models import Profile, Unit
 
 _ids = count(1)
 
 
-def unit(name, rarity="Uber Super Rare", **flags):
-    return Unit.objects.create(unit_id=next(_ids), name=name, rarity=rarity, **flags)
+def unit(name, rarity="Uber Super Rare", **fields):
+    return Unit.objects.create(unit_id=next(_ids), name=name, rarity=rarity, **fields)
+
+
+def marked(profile, mark):
+    return set(profile.units(mark).values_list("name", flat=True))
 
 
 @pytest.mark.django_db
@@ -43,20 +49,52 @@ def test_collection_shows_a_named_set(client):
 
 
 @pytest.mark.django_db
-def test_toggle_owned_flips_flag(client):
-    u = unit("Bahamut")
-    client.post("/collection/toggle/", {"pk": u.pk, "field": "owned"})
-    u.refresh_from_db()
-    assert u.owned is True
+def test_collection_marks_the_visitors_own_units(client, profile):
+    profile.owned.add(unit("Bahamut"))
+    assert b"own-chip owned" in client.get("/collection/").content
 
 
 @pytest.mark.django_db
-def test_toggle_wanted_twice_returns_to_false(client):
+def test_collection_ignores_another_visitors_marks(client, profile):
+    Profile.objects.create().owned.add(unit("Bahamut"))
+    assert b"own-chip owned" not in client.get("/collection/").content
+
+
+@pytest.mark.django_db
+def test_browsing_creates_no_profile(client):
+    client.get("/collection/")
+    assert not Profile.objects.exists()
+
+
+@pytest.mark.django_db
+def test_a_first_mark_creates_the_visitors_profile(client):
+    u = unit("Bahamut")
+    response = client.post("/collection/toggle/", {"pk": u.pk, "field": "owned"})
+    assert response.cookies[PROFILE_COOKIE].value == Profile.objects.get().key
+
+
+@pytest.mark.django_db
+def test_toggle_owned_flips_flag(client, profile):
+    u = unit("Bahamut")
+    client.post("/collection/toggle/", {"pk": u.pk, "field": "owned"})
+    assert marked(profile, "owned") == {"Bahamut"}
+
+
+@pytest.mark.django_db
+def test_toggle_wanted_twice_returns_to_false(client, profile):
     u = unit("Bahamut")
     client.post("/collection/toggle/", {"pk": u.pk, "field": "wanted"})
     client.post("/collection/toggle/", {"pk": u.pk, "field": "wanted"})
-    u.refresh_from_db()
-    assert u.wanted is False
+    assert marked(profile, "wanted") == set()
+
+
+@pytest.mark.django_db
+def test_toggle_leaves_another_visitors_collection_alone(client, profile):
+    u = unit("Bahamut")
+    other = Profile.objects.create()
+    other.owned.add(u)
+    client.post("/collection/toggle/", {"pk": u.pk, "field": "owned"})
+    assert marked(other, "owned") == {"Bahamut"}
 
 
 @pytest.mark.django_db
@@ -66,27 +104,27 @@ def test_toggle_rejects_unknown_field(client):
 
 
 @pytest.mark.django_db
-def test_bulk_owns_every_unit(client):
+def test_bulk_owns_every_unit(client, profile):
     units = [unit("Bahamut"), unit("Kasli")]
     client.post("/collection/bulk/", {"field": "owned", "pk": [u.pk for u in units]})
-    assert all(u.owned for u in Unit.objects.all())
+    assert marked(profile, "owned") == {"Bahamut", "Kasli"}
 
 
 @pytest.mark.django_db
-def test_bulk_clears_a_fully_owned_section(client):
-    units = [unit("Bahamut", owned=True), unit("Kasli", owned=True)]
+def test_bulk_clears_a_fully_owned_section(client, profile):
+    units = [unit("Bahamut"), unit("Kasli")]
+    profile.owned.add(*units)
     client.post("/collection/bulk/", {"field": "owned", "pk": [u.pk for u in units]})
-    assert not Unit.objects.filter(owned=True).exists()
+    assert marked(profile, "owned") == set()
 
 
 @pytest.mark.django_db
-def test_bulk_wishlist_stars_owned_units_too(client):
-    owned = unit("Bahamut", owned=True)
+def test_bulk_wishlist_stars_owned_units_too(client, profile):
+    owned = unit("Bahamut")
+    profile.owned.add(owned)
     missing = unit("Kasli")
     client.post("/collection/bulk/", {"field": "wanted", "pk": [owned.pk, missing.pk]})
-    owned.refresh_from_db()
-    missing.refresh_from_db()
-    assert (owned.wanted, missing.wanted) == (True, True)
+    assert marked(profile, "wanted") == {"Bahamut", "Kasli"}
 
 
 @pytest.mark.django_db
@@ -95,9 +133,9 @@ def test_bulk_rejects_unknown_field(client):
 
 
 @pytest.mark.django_db
-def test_export_lists_owned_and_wanted(client):
-    unit("Bahamut", owned=True)
-    unit("Kasli", wanted=True)
+def test_export_lists_owned_and_wanted(client, profile):
+    profile.owned.add(unit("Bahamut"))
+    profile.wanted.add(unit("Kasli"))
     unit("Mott")  # neither, absent from the snapshot
     data = client.get("/collection/export/").json()
     assert [e["name"] for e in data["owned"]] == ["Bahamut"]
@@ -105,35 +143,40 @@ def test_export_lists_owned_and_wanted(client):
 
 
 @pytest.mark.django_db
-def test_import_round_trips_an_export(client):
-    unit("Bahamut", owned=True)
-    unit("Kasli", wanted=True)
+def test_import_round_trips_an_export(client, profile):
+    profile.owned.add(unit("Bahamut"))
+    profile.wanted.add(unit("Kasli"))
     snapshot = client.get("/collection/export/").json()
-    Unit.objects.update(owned=False, wanted=False)
+    profile.owned.clear()
+    profile.wanted.clear()
 
     resp = _import(client, snapshot)
 
     assert resp.json() == {"owned": 1, "wanted": 1, "missing": []}
-    assert Unit.objects.get(name="Bahamut").owned is True
-    assert Unit.objects.get(name="Kasli").wanted is True
+    assert (marked(profile, "owned"), marked(profile, "wanted")) == ({"Bahamut"}, {"Kasli"})
 
 
 @pytest.mark.django_db
-def test_import_replaces_existing_marks(client):
-    stale = unit("Bahamut", owned=True)
+def test_import_replaces_existing_marks(client, profile):
+    profile.owned.add(unit("Bahamut"))
     fresh = unit("Kasli")
     _import(client, {"neko_collection": 1, "owned": [{"id": fresh.unit_id, "name": "Kasli"}]})
-    stale.refresh_from_db()
-    fresh.refresh_from_db()
-    assert (stale.owned, fresh.owned) == (False, True)
+    assert marked(profile, "owned") == {"Kasli"}
 
 
 @pytest.mark.django_db
-def test_import_matches_by_name_when_id_misses(client):
-    u = unit("Bahamut")
+def test_import_leaves_the_other_regions_marks_alone(client, profile):
+    profile.owned.add(Unit.all_regions.create(region="jp", unit_id=1, name="ネコ"))
+    _import(client, {"neko_collection": 1, "owned": []})
+    with region.using("jp"):
+        assert marked(profile, "owned") == {"ネコ"}
+
+
+@pytest.mark.django_db
+def test_import_matches_by_name_when_id_misses(client, profile):
+    unit("Bahamut")
     _import(client, {"neko_collection": 1, "owned": [{"id": 999999, "name": "Bahamut"}]})
-    u.refresh_from_db()
-    assert u.owned is True
+    assert marked(profile, "owned") == {"Bahamut"}
 
 
 @pytest.mark.django_db

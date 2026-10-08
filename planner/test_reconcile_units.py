@@ -1,14 +1,14 @@
 import pytest
 from django.core.management import call_command
 
-from planner.models import Cat, Unit
+from planner.models import Cat, Profile, Unit
 from planner.services import PROVISIONAL_BASE, reconcile_provisional_units
 
 
-def provisional(name, **flags):
+def provisional(name):
     last = Unit.objects.filter(unit_id__gte=PROVISIONAL_BASE).order_by("-unit_id").first()
     next_id = (last.unit_id + 1) if last else PROVISIONAL_BASE
-    return Unit.objects.create(unit_id=next_id, name=name, canonical=False, **flags)
+    return Unit.objects.create(unit_id=next_id, name=name, canonical=False)
 
 
 @pytest.mark.django_db
@@ -32,20 +32,23 @@ def test_merge_repoints_cats_to_canonical_unit():
 
 
 @pytest.mark.django_db
-def test_merge_carries_ownership_flags_onto_canonical():
+def test_merge_carries_every_players_marks_onto_canonical():
     Unit.objects.create(unit_id=841, name="Nezuko Kamado")
-    provisional("Nezuko Kamado", owned=True, wanted=True)
+    prov = provisional("Nezuko Kamado")
+    profile = Profile.objects.create()
+    profile.owned.add(prov)
+    profile.wanted.add(prov)
     reconcile_provisional_units()
-    canonical = Unit.objects.get(name="Nezuko Kamado")
-    assert (canonical.owned, canonical.wanted) == (True, True)
+    assert (profile.owned.get().unit_id, profile.wanted.get().unit_id) == (841, 841)
 
 
 @pytest.mark.django_db
-def test_merge_does_not_clear_canonical_flags_when_provisional_is_bare():
-    Unit.objects.create(unit_id=841, name="Nezuko Kamado", owned=True)
-    provisional("Nezuko Kamado", owned=False)
+def test_merge_does_not_clear_canonical_marks_when_provisional_is_bare():
+    profile = Profile.objects.create()
+    profile.owned.add(Unit.objects.create(unit_id=841, name="Nezuko Kamado"))
+    provisional("Nezuko Kamado")
     reconcile_provisional_units()
-    assert Unit.objects.get(name="Nezuko Kamado").owned is True
+    assert profile.owned.filter(unit_id=841).exists()
 
 
 @pytest.mark.django_db

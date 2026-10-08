@@ -70,7 +70,7 @@ from neko.statsdata import load_stats
 from neko.subsets import SubsetPlan, solve_subsets
 from neko.tierdata import TIER_ORDER, load_tiers
 from planner.forms import MAX_TRACK_LENGTH
-from planner.models import Banner, CannonPlan, Cat, TalentPlan, Unit, UnitPlan
+from planner.models import Banner, CannonPlan, Cat, Profile, TalentPlan, Unit, UnitPlan
 
 RARITY_ORDER = ["Normal", "Special", "Rare", "Super Rare", "Uber Super Rare", "Legend Rare"]
 
@@ -767,8 +767,8 @@ def _base_card(cannon: Mapping, plan: CannonPlan, material_ids: Mapping) -> dict
     }
 
 
-def resources_board() -> dict:
-    """Everything the Resources page shows: a card per cat on the list, a card per Cat
+def resources_board(profile: Profile) -> dict:
+    """Everything the player's Resources page shows: a card per cat on the list, a card per Cat
     Base development being levelled, and the overview totalling the two. It renders whole
     on every change, so nothing can drift.
 
@@ -777,13 +777,14 @@ def resources_board() -> dict:
     own counters (XP and NP for the cats, build time and engineers for the base)."""
     evolve = load_evolve()["units"]
     talents = load_talents()
+    mine = {"profile_id": profile.pk}  # a first visit's unsaved profile matches nothing
     wanted: dict[int, set[int]] = {}
-    for unit_id, slot in TalentPlan.objects.values_list("unit_id", "slot"):
+    for unit_id, slot in TalentPlan.objects.filter(**mine).values_list("unit_id", "slot"):
         wanted.setdefault(unit_id, set()).add(slot)
 
     evolve_totals: Counter = Counter()
     cats, xp, np = [], 0, 0
-    for plan in UnitPlan.objects.select_related("unit").order_by("unit__name"):
+    for plan in UnitPlan.objects.filter(**mine).select_related("unit").order_by("unit__name"):
         card = _cat_card(plan, evolve, talents, wanted.get(plan.unit_id, set()))
         evolve_totals += card["spend"]
         xp += card["xp"]
@@ -796,7 +797,7 @@ def resources_board() -> dict:
         "base": doc["zmaterials"],
         "deco": doc["zmaterials"],
     }
-    plans = {plan.cannon_id: plan for plan in CannonPlan.objects.all()}
+    plans = {plan.cannon_id: plan for plan in CannonPlan.objects.filter(**mine)}
     build_totals: Counter = Counter()
     base, hours, peak, crew = [], 0, 0, 0
     for cannon in doc["cannons"]:
@@ -2616,14 +2617,14 @@ def import_units(records: Iterable[Mapping]) -> int:
 COLLECTION_FORMAT = 1
 
 
-def export_collection() -> dict:
+def export_collection(profile: Profile) -> dict:
     """The player's owned and wishlisted units as a portable snapshot. Each entry keeps the
     unit_id (the canonical PONOS id, identical across installs) and its name for readability
     and as a fallback key. The raw owned/wanted flags are exported as-is - a wishlist star
     can sit on an owned unit - so importing the snapshot reproduces the marks exactly."""
 
-    def entries(flag):
-        rows = Unit.objects.filter(**{flag: True}).values("unit_id", "name")
+    def entries(mark):
+        rows = profile.units(mark).values("unit_id", "name")
         return [{"id": r["unit_id"], "name": r["name"]} for r in rows]
 
     return {
@@ -2655,18 +2656,20 @@ def _resolve_units(entries: Iterable[Mapping]) -> tuple[set[int], list]:
     return pks, missing
 
 
-def import_collection(data: Mapping) -> dict:
-    """Restore owned/wishlist flags from an export snapshot. Authoritative: a unit ends up
-    owned/wanted iff the snapshot lists it, so importing replaces the current marks rather
-    than adding to them. Returns the matched owned/wishlist counts and any unmatched entries."""
+def import_collection(profile: Profile, data: Mapping) -> dict:
+    """Restore the player's owned/wishlist marks from an export snapshot. Authoritative: a
+    unit ends up owned/wanted iff the snapshot lists it, so importing replaces the active
+    region's marks rather than adding to them (the other regions' stay untouched). Returns
+    the matched owned/wishlist counts and any unmatched entries."""
     if not isinstance(data, Mapping) or "neko_collection" not in data:
         raise ValueError("not a Neko collection export")
 
     owned_pks, owned_missing = _resolve_units(data.get("owned") or [])
     wanted_pks, wanted_missing = _resolve_units(data.get("wanted") or [])
-    for flag, keep in (("owned", owned_pks), ("wanted", wanted_pks)):
-        Unit.objects.filter(pk__in=keep).exclude(**{flag: True}).update(**{flag: True})
-        Unit.objects.filter(**{flag: True}).exclude(pk__in=keep).update(**{flag: False})
+    for mark, keep in (("owned", owned_pks), ("wanted", wanted_pks)):
+        marked = getattr(profile, mark)
+        marked.remove(*marked.exclude(pk__in=keep))
+        marked.add(*keep)
 
     return {
         "owned": len(owned_pks),
@@ -2677,7 +2680,8 @@ def import_collection(data: Mapping) -> dict:
 
 def reconcile_provisional_units() -> tuple[int, list[str]]:
     """Merge each provisional unit into its now-canonical version by the same name: move
-    its cats and owned/wishlist flags onto the canonical unit, then delete the stand-in.
+    its cats and every player's owned/wishlist marks onto the canonical unit, then delete
+    the stand-in.
     Returns how many were merged and the names of any provisionals that still have no
     canonical match (left in place)."""
     merged = 0
@@ -2690,16 +2694,8 @@ def reconcile_provisional_units() -> tuple[int, list[str]]:
             continue
 
         Cat.objects.filter(unit=prov).update(unit=canonical)
-        carried = [
-            flag
-            for flag in ("owned", "wanted")
-            if getattr(prov, flag) and not getattr(canonical, flag)
-        ]
-        if carried:
-            for flag in carried:
-                setattr(canonical, flag, True)
-
-            canonical.save(update_fields=carried)
+        canonical.owned_by.add(*prov.owned_by.all())
+        canonical.wanted_by.add(*prov.wanted_by.all())
 
         prov.delete()
         merged += 1
@@ -2712,7 +2708,7 @@ PROVISIONAL_BASE = 1_000_000  # synthetic ids for cats not yet in the catalogue
 
 def unit_for_cat(name: str, rarity: str = "") -> Unit:
     """The catalogue unit for a cat name, creating a provisional stand-in if it isn't in the
-    catalogue yet - so every cat has a stable home for its owned/wishlist flags."""
+    catalogue yet - so every cat has a stable home for its owned/wishlist marks."""
     unit = Unit.objects.filter(name=name).first()
     if unit is None:
         last = Unit.objects.filter(unit_id__gte=PROVISIONAL_BASE).order_by("-unit_id").first()

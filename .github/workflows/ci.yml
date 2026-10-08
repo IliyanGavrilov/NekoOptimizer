@@ -35,5 +35,11 @@ jobs:
       - name: Django checks
         run: python manage.py check
 
+      - name: Deploy checks
+        run: python manage.py check --deploy --fail-level WARNING
+        env:
+          DJANGO_DEBUG: "0"
+          DJANGO_SECRET_KEY: ci-only-not-a-real-secret-but-long-enough-for-the-deploy-check-0123456789
+
       - name: Tests
         run: pytest -q
