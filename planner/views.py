@@ -1,10 +1,11 @@
 import json
 from dataclasses import asdict
+from urllib.parse import urlsplit
 
 from django.http import Http404, HttpResponse, HttpResponseBadRequest, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.template.loader import get_template, render_to_string
-from django.urls import reverse
+from django.urls import Resolver404, resolve, reverse
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.http import require_POST
 
@@ -27,29 +28,29 @@ from planner.forms import (
     PlannerForm,
 )
 from planner.links import TOOL_DIRECTORY, unit_links
-from planner.models import CannonPlan, Cat, EvolvePlan, Region, Seed, TalentPlan, Unit
+from planner.models import CannonPlan, Cat, Region, Seed, TalentPlan, Unit, UnitPlan
 from planner.services import (
+    CANNON_ADDONS,
     NORMAL_DEFAULT_KEYS,
     NORMAL_TARGET_PRESETS,
+    PLAN_FILTER_ROWS,
     RARITY_ORDER,
     SECTION_NOTES,
+    SUBSET_TARGET_LIMIT,
     banner_currencies,
     banner_debuts,
     banner_titles,
     build_normal_plan,
     build_normal_tracks,
     build_tracks,
-    cannon_options,
-    cannon_panel,
     cat_banner_names,
+    cat_options,
     collection_facets,
     collection_sections,
     combo_filter_groups,
     dictionary_sections,
     display_titles,
     equivalent_banners,
-    evolve_options,
-    evolve_panel,
     export_collection,
     fetch_banners,
     fetch_for_banners,
@@ -61,13 +62,13 @@ from planner.services import (
     normal_seek_pools,
     picker_groups,
     plannable_form,
+    resources_board,
     seek_banner,
     seek_pool_groups,
     seek_run_choices,
     set_sections,
+    subset_plan,
     subset_solutions,
-    talent_options,
-    talent_panel,
     tier_badges,
     tier_list_doc,
     tier_list_index,
@@ -389,19 +390,18 @@ def tracks(request):
         if item["future"] and item["banner"]:
             item["banner"] = titles.get(item["banner"], item["banner"])
     track["found_cats"] = found_cats
+    # The same count a plan row carries, for the cats you're hunting: how many turn up in
+    # these rolls out of everything you're searching for.
+    track["found_hits"] = sum(1 for item in found_cats if item["found"])
     # The selected banners' titles, for the ⚠ row's "won't drop on: …" tooltip.
     track["selected_titles"] = ", ".join(sorted({titles.get(n, n) for n in result.banners}))
 
     return render(request, "planner/_tracks.html", {"track": track})
 
 
-@require_POST
-def find_plan(request):
-    """Solve every target subset; return the accordion of solutions as an HTML fragment."""
-    form = PlannerForm(request.POST)
-    if not form.is_valid():
-        return JsonResponse({"errors": form.errors}, status=400)
-
+def _search_setup(request, form):
+    """Everything both plan endpoints need from one posted form: the scoped target set and
+    the keyword arguments the solvers take. Returns ``(targets, kwargs)``."""
     seed = form.cleaned_data["seed"]
     Seed.store(seed)
     targets = {cat.name for cat in form.cleaned_data["targets"]}
@@ -426,13 +426,7 @@ def find_plan(request):
     if result.pools:
         targets &= frozenset().union(*result.pools.values())
     targets |= future_targets
-    equivalents = equivalent_banners(result.banners)
     pulls, guaranteed_pulls, rerolls, guaranteed_rerolls = _rolls_by_banner(result)
-    banner_currency = banner_currencies(pulls)
-    # Platinum/Legend Capsules always run on their own scarce ticket pools, so their counts
-    # come straight from the form even in explore mode (which only frees the rare/catfood budget).
-    platinum = form.cleaned_data["platinum_cap"]
-    legend = form.cleaned_data["legend_cap"]
 
     if explore:
         # Ignore the budget but still fund single pulls with tickets (their real
@@ -442,21 +436,20 @@ def find_plan(request):
     else:
         tickets, catfood = form.cleaned_data["tickets"], form.cleaned_data["catfood"]
 
-    # One accordion row per target subset: each reachable one carries its own
-    # highlighted track + steps; the rest are listed as "Not found".
-    solutions = subset_solutions(
-        pulls,
-        rerolls,
-        equivalents,
-        targets,
+    kwargs = dict(
+        pulls=pulls,
+        rerolls=rerolls,
+        equivalents=equivalent_banners(result.banners),
         tickets=tickets,
         catfood=catfood,
-        platinum=platinum,
-        legend=legend,
+        # Platinum/Legend Capsules always run on their own scarce ticket pools, so their counts
+        # come straight from the form even in explore mode (which frees only rare/catfood).
+        platinum=form.cleaned_data["platinum_cap"],
+        legend=form.cleaned_data["legend_cap"],
         guaranteed_pulls=guaranteed_pulls,
         multis=result.multis,
         ticket_value=form.cleaned_data["ticket_value"],
-        banner_currency=banner_currency,
+        banner_currency=banner_currencies(pulls),
         owned=_owned_names(),
         wanted=_wanted_names(),
         titles=display_titles(),
@@ -467,19 +460,74 @@ def find_plan(request):
         tiers=tier_badges(),
     )
 
+    return targets, kwargs
+
+
+@require_POST
+def find_plan(request):
+    """Solve every target subset; return the accordion of solutions as an HTML fragment."""
+    form = PlannerForm(request.POST)
+    if not form.is_valid():
+        return JsonResponse({"errors": form.errors}, status=400)
+
+    targets, kwargs = _search_setup(request, form)
+    # One accordion row per target subset, but only the best one arrives with its track:
+    # the breakdown is 2^n rows, and a 100-row table apiece is hundreds of megabytes. The
+    # rest fetch theirs from plan_row when opened.
+    pulls = kwargs.pop("pulls")
+    rerolls = kwargs.pop("rerolls")
+    equivalents = kwargs.pop("equivalents")
+    solutions = subset_solutions(pulls, rerolls, equivalents, targets, detail=1, **kwargs)
+
     return JsonResponse(
         {
             "solutions_html": render_to_string(
-                "planner/_solutions.html", {"solutions": solutions}, request
+                "planner/_solutions.html",
+                {
+                    "solutions": solutions,
+                    "target_total": len(targets),
+                    "subset_limit": SUBSET_TARGET_LIMIT,
+                    # The filter is dead weight over a handful of rows, so it ships only
+                    # when the breakdown is big enough to need narrowing down.
+                    "filter_cats": sorted(targets) if len(solutions) > PLAN_FILTER_ROWS else [],
+                },
+                request,
             ),
         }
     )
 
 
+@require_POST
+def plan_row(request):
+    """One accordion row's body - its steps and highlighted track - solved when the row is
+    opened. The same posted form the accordion came from, plus the row's own cats."""
+    form = PlannerForm(request.POST)
+    if not form.is_valid():
+        return JsonResponse({"errors": form.errors}, status=400)
+
+    subset = {name for name in request.POST.getlist("subset") if name}
+    if not subset:
+        return HttpResponseBadRequest("subset must name at least one cat")
+
+    _, kwargs = _search_setup(request, form)
+    pulls = kwargs.pop("pulls")
+    rerolls = kwargs.pop("rerolls")
+    equivalents = kwargs.pop("equivalents")
+    solution = subset_plan(pulls, rerolls, equivalents, subset, **kwargs)
+    if solution is None:
+        return HttpResponse("")
+
+    return render(request, "planner/_solution_body.html", {"s": solution})
+
+
 def unit_info(request):
-    """A unit's forms, rarity and reference links, for the cat popup (looked up by
-    base-form name - the label every cat chip and track cell carries)."""
-    unit = Unit.objects.filter(name=request.GET.get("name", "")).first()
+    """A unit's forms, rarity and reference links, for the cat popup. Keyed by catalogue
+    id where the caller knows it: names repeat across rarities (the Special and the Rare
+    Cat Bros), so a name alone would always open the lower-id one. Roll cells carry only
+    the base-form name, so that stays the fallback."""
+    unit_id = request.GET.get("uid", "")
+    lookup = {"unit_id": unit_id} if unit_id.isdigit() else {"name": request.GET.get("name", "")}
+    unit = Unit.objects.filter(**lookup).first()
     if unit is None:
         return JsonResponse({"found": False})
 
@@ -719,10 +767,11 @@ def normal_seek_start(request):
 
 
 def collection(request):
-    """The whole cat dictionary in one page with the player's owned/wishlist marks,
-    browsable by rarity or by gacha set. A unit can sit in several set sections (fests
-    repeat their cats) - the marks are per unit, so every copy stays in step."""
-    units = list(Unit.objects.named())
+    """The cat dictionary in one page with the player's owned/wishlist marks, browsable
+    by rarity or by gacha set. A unit can sit in several set sections (fests repeat their
+    cats) - the marks are per unit, so every copy stays in step. Units this region's Cat
+    Guide doesn't list are left out: the catalogue ships them, the region can't get them."""
+    units = list(Unit.objects.named().in_guide())
     badges = tier_badges()
     # Each unit's chip is rendered once and reused: the page lays the whole catalogue out
     # three times over (dictionary, rarity, sets), and fests repeat their cats on top.
@@ -781,6 +830,32 @@ def about(request):
     return render(request, "planner/about.html", {"tool_directory": TOOL_DIRECTORY})
 
 
+def _posted_from(request) -> str:
+    """The page a post was made from, as a URL this site generated for itself.
+
+    The Referer header is attacker-controllable, so it never becomes the redirect target:
+    it only picks one of our own routes. Off-site or wrong-scheme referers are rejected,
+    the path is resolved against our own URLconf, and what we hand back is reverse()'s
+    output for the view that matched - so the destination is ours by construction, not by
+    inspection. Only the query string rides along, which cannot change where it points.
+    Anything that doesn't resolve lands on the planner."""
+    back = request.META.get("HTTP_REFERER", "")
+    if not url_has_allowed_host_and_scheme(
+        back, allowed_hosts={request.get_host()}, require_https=request.is_secure()
+    ):
+        return reverse("planner")
+
+    parts = urlsplit(back)
+    try:
+        match = resolve(parts.path)
+    except Resolver404:
+        return reverse("planner")
+
+    here = reverse(match.view_name, args=match.args, kwargs=match.kwargs)
+
+    return f"{here}?{parts.query}" if parts.query else here
+
+
 @require_POST
 def set_region(request):
     """Switch the game version the whole site shows. Each version ships its own
@@ -791,12 +866,8 @@ def set_region(request):
         return HttpResponseBadRequest("unknown region")
 
     Region.store(code)
-    back = request.META.get("HTTP_REFERER", "")
-    allowed = url_has_allowed_host_and_scheme(
-        back, allowed_hosts={request.get_host()}, require_https=request.is_secure()
-    )
 
-    return redirect(back if allowed else reverse("planner"))
+    return redirect(_posted_from(request))
 
 
 @require_POST
@@ -832,23 +903,25 @@ def collection_bulk(request):
     return JsonResponse({"value": value})
 
 
-def materials(request):
-    """The materials page: evolution tracker, talent NP calculator, and cannon
-    developer, all persisted like the collection (one global plan)."""
+def resources(request):
+    """The resources page: one board holding the cats you're grinding for, the Cat Base
+    developments you're levelling, and the overview totalling both. The two pickers are
+    rendered client-side from these static catalogues, so the board can be swapped whole
+    on every change without re-shipping them."""
     context = {
-        "evolve": evolve_panel(),
-        "evolve_options": evolve_options(),
-        "talents": talent_panel(),
-        "talent_options": talent_options(),
-        "cannons": cannon_panel(),
-        "cannon_options": cannon_options(),
+        "board": resources_board(),
+        "cat_options": cat_options(),
     }
 
-    return render(request, "planner/materials.html", context)
+    return render(request, "planner/resources.html", context)
+
+
+def _board(request):
+    return render(request, "planner/_res_board.html", {"board": resources_board()})
 
 
 def _plan_unit(request):
-    """The catalogued unit a materials POST names, or None when malformed/unknown."""
+    """The catalogued unit a resources POST names, or None when malformed/unknown."""
     try:
         unit_id = int(request.POST.get("unit_id", ""))
     except ValueError:
@@ -857,126 +930,99 @@ def _plan_unit(request):
     return Unit.objects.filter(unit_id=unit_id).first()
 
 
-def _evolve_panel_response(request):
-    return render(
-        request,
-        "planner/_evolve_panel.html",
-        {"panel": evolve_panel(), "options": evolve_options()},
-    )
+def _set_talents(unit, slots, on):
+    """Tick or clear every one of a unit's talent slots at once."""
+    TalentPlan.objects.filter(unit=unit).delete()
+    if on:
+        TalentPlan.objects.bulk_create(TalentPlan(unit=unit, slot=index) for index in slots)
 
 
 @require_POST
-def evolve_toggle(request):
-    """Add, flip, or remove an evolution plan; responds with the re-rendered panel.
-    A bare unit_id adds with the True Form checked (Ultra when there's no TF cost)."""
+def resources_cat(request):
+    """Put a cat on the list, tick one of its evolutions or talents, max it out, or drop
+    it; responds with the whole re-rendered board.
+
+    A bare unit_id just adds the cat - nothing is ticked for you, since what you want off
+    a cat is the whole question the page asks."""
     unit = _plan_unit(request)
     if unit is None:
         return HttpResponseBadRequest("unknown unit")
 
-    form = request.POST.get("form")
     if request.POST.get("remove") == "1":
-        EvolvePlan.objects.filter(unit=unit).delete()
+        UnitPlan.objects.filter(unit=unit).delete()
+        TalentPlan.objects.filter(unit=unit).delete()
+        return _board(request)
+
+    plan, _ = UnitPlan.objects.get_or_create(unit=unit)
+    slots = load_talents()["units"].get(str(unit.unit_id), [])
+    cost = load_evolve()["units"].get(str(unit.unit_id), {})
+    form, raw_slot = request.POST.get("form"), request.POST.get("slot")
+    on = request.POST.get("on") == "1"
+    if request.POST.get("all") is not None:
+        plan.tf = on and plannable_form(cost, "tf") is not None
+        plan.uf = on and plannable_form(cost, "uf") is not None
+        plan.save()
+        _set_talents(unit, range(len(slots)), on)
     elif form is not None:
         if form not in {"tf", "uf"}:
             return HttpResponseBadRequest("form must be 'tf' or 'uf'")
-        plan, _ = EvolvePlan.objects.get_or_create(unit=unit)
-        setattr(plan, form, request.POST.get("on") == "1")
-        if plan.tf or plan.uf:
-            plan.save()
-        else:
-            plan.delete()
-    else:
-        cost = load_evolve()["units"].get(str(unit.unit_id), {})
-        tf = plannable_form(cost, "tf") is not None
-        uf = not tf and plannable_form(cost, "uf") is not None
-        if tf or uf:
-            EvolvePlan.objects.update_or_create(unit=unit, defaults={"tf": tf, "uf": uf})
-
-    return _evolve_panel_response(request)
-
-
-def _talent_panel_response(request):
-    return render(
-        request,
-        "planner/_talent_panel.html",
-        {"panel": talent_panel(), "options": talent_options()},
-    )
-
-
-@require_POST
-def talent_toggle(request):
-    """Add, flip, or remove talent plans; responds with the re-rendered panel.
-    A bare unit_id adds the unit with every talent checked."""
-    unit = _plan_unit(request)
-    if unit is None:
-        return HttpResponseBadRequest("unknown unit")
-
-    slots = load_talents()["units"].get(str(unit.unit_id), [])
-    raw = request.POST.get("slot")
-    if request.POST.get("remove") == "1":
-        TalentPlan.objects.filter(unit=unit).delete()
-    elif raw is not None:
+        setattr(plan, form, on)
+        plan.save()
+    elif raw_slot is not None:
         try:
-            slot = int(raw)
+            slot = int(raw_slot)
         except ValueError:
             return HttpResponseBadRequest("malformed slot")
         if not 0 <= slot < len(slots):
             return HttpResponseBadRequest("unknown slot")
-        if request.POST.get("on") == "1":
+        if on:
             TalentPlan.objects.get_or_create(unit=unit, slot=slot)
         else:
             TalentPlan.objects.filter(unit=unit, slot=slot).delete()
-    else:
-        plans = [TalentPlan(unit=unit, slot=index) for index in range(len(slots))]
-        TalentPlan.objects.bulk_create(plans, ignore_conflicts=True)
 
-    return _talent_panel_response(request)
-
-
-def _cannon_panel_response(request):
-    return render(
-        request,
-        "planner/_cannon_panel.html",
-        {"panel": cannon_panel(), "options": cannon_options()},
-    )
+    return _board(request)
 
 
 @require_POST
-def cannon_toggle(request):
-    """Add, adjust, or remove a cannon development plan; responds with the
-    re-rendered panel. A bare cannon_id adds with every part planned to max."""
+def resources_base(request):
+    """Track a Cat Base development, switch one of its add-ons on or off, set a part to
+    the level it sits at now, or drop it; responds with the whole re-rendered board.
+
+    A bare cannon_id toggles the development itself - the picker is a row of switches,
+    so the same click that adds one takes it back off."""
     raw_id = request.POST.get("cannon_id", "")
     cannon = next((c for c in load_cannons()["cannons"] if str(c["id"]) == raw_id), None)
     if cannon is None:
         return HttpResponseBadRequest("unknown cannon")
 
-    parts = cannon["parts"]
     part = request.POST.get("part")
-    if request.POST.get("remove") == "1":
-        CannonPlan.objects.filter(cannon_id=cannon["id"]).delete()
-    elif part is not None:
-        bound = request.POST.get("bound")
-        if part not in parts or bound not in {"now", "goal"}:
-            return HttpResponseBadRequest("unknown part")
-        try:
-            level = int(request.POST.get("level", ""))
-        except ValueError:
-            return HttpResponseBadRequest("malformed level")
-        if not 0 <= level <= len(parts[part]["levels"]):
-            return HttpResponseBadRequest("unknown level")
-        plan = CannonPlan.objects.filter(cannon_id=cannon["id"]).first()
-        if plan is None:
-            return HttpResponseBadRequest("unplanned cannon")
-        setattr(plan, f"{part}_{bound}", level)
-        if getattr(plan, f"{part}_now") > getattr(plan, f"{part}_goal"):
-            other = "goal" if bound == "now" else "now"
-            setattr(plan, f"{part}_{other}", level)
-        plan.save()
-    else:
-        goals = {f"{key}_goal": len(block["levels"]) for key, block in parts.items()}
-        CannonPlan.objects.update_or_create(cannon_id=cannon["id"], defaults=goals)
+    if part is None:
+        deleted, _ = CannonPlan.objects.filter(cannon_id=cannon["id"]).delete()
+        if not deleted:
+            CannonPlan.objects.create(cannon_id=cannon["id"])
+        return _board(request)
 
-    return _cannon_panel_response(request)
+    if part not in cannon["parts"]:
+        return HttpResponseBadRequest("unknown part")
+
+    on = request.POST.get("on")
+    if on is not None:
+        if part not in CANNON_ADDONS:
+            return HttpResponseBadRequest("the cannon comes with the development")
+        CannonPlan.objects.update_or_create(
+            cannon_id=cannon["id"], defaults={f"{part}_on": on == "1"}
+        )
+        return _board(request)
+
+    try:
+        level = int(request.POST.get("level", ""))
+    except ValueError:
+        return HttpResponseBadRequest("malformed level")
+    if not 0 <= level <= len(cannon["parts"][part]["levels"]):
+        return HttpResponseBadRequest("unknown level")
+    CannonPlan.objects.update_or_create(cannon_id=cannon["id"], defaults={f"{part}_now": level})
+
+    return _board(request)
 
 
 @require_POST

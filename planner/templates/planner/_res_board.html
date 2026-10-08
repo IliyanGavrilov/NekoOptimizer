@@ -1,0 +1,156 @@
+{% comment %}The whole resources board - overview, cat cards, base cards - re-rendered on
+every change. The cat picker is an empty shell here: app.js fills it from the catalogue
+the page ships once, so this fragment stays small enough to swap wholesale.
+{% endcomment %}
+{% load humanize %}
+{% comment %}The overview keeps the two grinds apart: catfruit comes off stages, base
+materials off the Ototo, and each lays out as a family x kind table - every row a family
+whose members level in step (seed, fruit, stone, gem), so the shape of what's left reads
+at a glance. XP/NP and build time/engineers are counters rather than things you farm, so
+they sit under their own grind's table.{% endcomment %}
+<section class="res-overview">
+  <h2>Still to grind</h2>
+  {% if board.evolve_grid or board.xp or board.np %}
+    <div class="res-block">
+      <h3>Evolutions</h3>
+      {% include "planner/_res_grid.html" with grid=board.evolve_grid extra=board.evolve_extra %}
+      {% if board.xp or board.np %}
+        <ul class="res-counters">
+          {% if board.xp %}<li><span class="res-counter-n">{{ board.xp|intcomma }}</span> XP</li>{% endif %}
+          {% if board.np %}<li><span class="res-counter-n">{{ board.np|intcomma }}</span> NP</li>{% endif %}
+        </ul>
+      {% endif %}
+    </div>
+  {% endif %}
+  {% if board.build_grid or board.hours %}
+    <div class="res-block">
+      <h3>Cat Base</h3>
+      {% include "planner/_res_grid.html" with grid=board.build_grid extra="" %}
+      {% if board.hours or board.engineers %}
+        <ul class="res-counters">
+          {% if board.hours %}<li><span class="res-counter-n">{{ board.hours|intcomma }}h</span> build time</li>{% endif %}
+          {% if board.engineers %}
+            <li><span class="res-counter-n">{{ board.engineers }}</span> engineers at once
+              <span class="res-sub">&mdash; {{ board.engineers_total|intcomma }} over all the levels</span></li>
+          {% endif %}
+        </ul>
+      {% endif %}
+    </div>
+  {% endif %}
+  {% if not board.cats and not board.base %}
+    <p class="muted">Nothing on the list yet &mdash; add a cat or a base upgrade below and the
+      totals build up here.</p>
+  {% endif %}
+</section>
+
+<div class="res-lists">
+  <section class="res-section">
+    <h2>Your cats <span class="count-pill">{{ board.cats|length }}</span></h2>
+    <div class="res-picker" data-kind="cat" data-planned="{{ board.planned_cats }}">
+      <input type="search" class="res-search" placeholder="Add a cat&hellip;" aria-label="Add a cat"
+             autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+      <div class="res-matches chips" hidden></div>
+      <p class="muted res-hint">Search by any form&rsquo;s name.</p>
+    </div>
+    {% for cat in board.cats %}
+      <article class="res-card" data-kind="cat">
+        <header class="res-card-head">
+          <button type="button" class="catlink icon-host res-name" data-uid="{{ cat.unit.unit_id }}"
+                  data-name="{{ cat.unit.name }}" data-forms="{{ cat.unit.forms|join:'|' }}"><span class="catname">{{ cat.unit.name }}</span></button>
+          <span class="res-card-cost">
+            {% for item in cat.cost %}{% include "planner/_res_item.html" %}{% endfor %}
+            {% if cat.xp %}<span class="res-counter">{{ cat.xp|intcomma }} XP</span>{% endif %}
+            {% if cat.np %}<span class="res-counter">{{ cat.np|intcomma }} NP</span>{% endif %}
+            {% if not cat.picked %}<span class="muted res-none">nothing picked yet</span>{% endif %}
+          </span>
+          <button type="button" class="res-all" data-unit="{{ cat.unit.unit_id }}" data-on="{% if cat.maxed %}0{% else %}1{% endif %}"
+                  title="{% if cat.maxed %}Untick everything on this cat{% else %}Tick every evolution and talent this cat has{% endif %}">{% if cat.maxed %}Clear{% else %}Max out{% endif %}</button>
+          <button type="button" class="res-remove" data-unit="{{ cat.unit.unit_id }}" title="Take {{ cat.unit.name }} off the list" aria-label="Remove {{ cat.unit.name }}">&times;</button>
+        </header>
+        {% for form in cat.forms %}
+          <label class="res-pick{% if form.checked %} on{% endif %}">
+            <input type="checkbox" data-unit="{{ cat.unit.unit_id }}" data-kind="form" data-value="{{ form.key }}"{% if form.checked %} checked{% endif %}>
+            <span class="res-pick-label">{{ form.label }}</span>
+            <span class="res-pick-cost">
+              {% for item in form.cost %}{% include "planner/_res_item.html" %}{% endfor %}
+              {% if form.xp %}<span class="res-counter">{{ form.xp|intcomma }} XP</span>{% endif %}
+            </span>
+          </label>
+        {% endfor %}
+        {% if cat.slots %}
+          <div class="res-talents" role="group" aria-label="{{ cat.unit.name }} talents">
+            {% for slot in cat.slots %}
+              <label class="res-talent{% if slot.checked %} on{% endif %}{% if slot.ultra %} ultra{% endif %}" title="{{ slot.title }}">
+                <input type="checkbox" data-unit="{{ cat.unit.unit_id }}" data-kind="slot" data-value="{{ slot.index }}"{% if slot.checked %} checked{% endif %}>
+                <span class="res-talent-name">{{ slot.label }}</span>
+                <span class="res-talent-np">Lv {{ slot.max }} &middot; {{ slot.np }} NP</span>
+              </label>
+            {% endfor %}
+          </div>
+        {% endif %}
+      </article>
+    {% empty %}
+      <p class="muted res-empty">No cats yet. Search above and the cat&rsquo;s evolutions and
+        talents show up here to tick off.</p>
+    {% endfor %}
+  </section>
+
+  <section class="res-section">
+    <h2>Cat Base <span class="count-pill">{{ board.base|length }}</span></h2>
+    <p class="muted res-note">Pick the developments you&rsquo;re working on. Each brings its
+      <strong>Cannon</strong> &mdash; Materials, up to Lv&nbsp;30 &mdash; and you can switch its
+      matching <strong>Foundation</strong> and <strong>Style</strong> on as add-ons, which spend
+      Z Materials up to Lv&nbsp;20. Enhance Base is the plain cannon: levelling it is what raises
+      your base&rsquo;s HP.</p>
+    <div class="res-switches" role="group" aria-label="Cat Base developments">
+      {% for pick in board.base_picks %}
+        <button type="button" class="res-switch" data-base="{{ pick.id }}"
+                aria-pressed="{% if pick.on %}true{% else %}false{% endif %}">{{ pick.name }}</button>
+      {% endfor %}
+    </div>
+    {% for dev in board.base %}
+      <article class="res-card" data-kind="base">
+        <header class="res-card-head">
+          <span class="res-name">{{ dev.name }}</span>
+          <span class="res-card-cost">
+            {% for item in dev.cost %}{% include "planner/_res_item.html" %}{% endfor %}
+            {% if dev.hours %}<span class="res-counter">{{ dev.hours|intcomma }}h build</span>{% endif %}
+            {% if dev.engineers %}<span class="res-counter" title="The most any one level needs at the same time, and the total over all of them">{{ dev.engineers }} engineers at once &middot; {{ dev.engineers_total|intcomma }} total</span>{% endif %}
+            {% if not dev.left %}<span class="muted res-none">maxed</span>{% endif %}
+          </span>
+          <button type="button" class="res-remove" data-unit="{{ dev.id }}" title="Stop tracking {{ dev.name }}" aria-label="Remove {{ dev.name }}">&times;</button>
+        </header>
+        {% for part in dev.parts %}
+          <div class="res-pick{% if part.on %} on{% else %} off{% endif %}">
+            {% if part.addon %}
+              <label class="res-pick-label res-addon">
+                <input type="checkbox" data-unit="{{ dev.id }}" data-part="{{ part.key }}" data-addon="1"{% if part.on %} checked{% endif %}>
+                {{ part.label }}
+              </label>
+            {% else %}
+              <span class="res-pick-label">{{ part.label }}</span>
+            {% endif %}
+            {% if part.on %}
+              <span class="res-pick-level">
+                <select data-unit="{{ dev.id }}" data-part="{{ part.key }}" aria-label="{{ dev.name }} {{ part.label }} current level">
+                  {% for lv in part.levels %}<option value="{{ lv }}"{% if lv == part.now %} selected{% endif %}>Lv {{ lv }}</option>{% endfor %}
+                </select>
+                <span class="res-left">{% if part.left %}{{ part.left }} to Lv {{ part.max }}{% else %}maxed{% endif %}</span>
+              </span>
+              <span class="res-pick-cost">
+                {% for item in part.cost %}{% include "planner/_res_item.html" %}{% endfor %}
+                {% if part.time %}<span class="res-counter">{{ part.time|intcomma }}h build</span>{% endif %}
+                {% if part.engineers %}<span class="res-counter" title="The most any one level needs at the same time, and the total over all of them">{{ part.engineers }} engineers at once &middot; {{ part.engineers_total|intcomma }} total</span>{% endif %}
+              </span>
+            {% else %}
+              <span class="res-pick-cost muted">add-on &mdash; switch on to track it</span>
+            {% endif %}
+          </div>
+        {% endfor %}
+      </article>
+    {% empty %}
+      <p class="muted res-empty">Nothing tracked. Switch a development on above, set each part
+        to the level you&rsquo;re on, and it tells you what&rsquo;s left to max it.</p>
+    {% endfor %}
+  </section>
+</div>

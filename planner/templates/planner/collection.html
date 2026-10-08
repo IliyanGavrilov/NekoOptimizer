@@ -14,7 +14,12 @@
       <button type="button" class="view-btn" data-view="sets" aria-selected="false">By gacha set</button>
     </div>
     <input type="search" id="collectionSearch" placeholder="Search cats &amp; sets&hellip;">
-    <label class="ctrl" title="Show each cat by this form's name; a unit without that form shows the last one it has"><select id="collectionForm">
+    <label class="ctrl" title="Show each cat as its name, its form icon, or both"><select id="collectionDisplay">
+        <option value="text">Names</option>
+        <option value="icons">Icons</option>
+        <option value="both">Both</option>
+      </select></label>
+    <label class="ctrl" title="Show each cat as this form - name and icon; a unit without that form shows the last one it has"><select id="collectionForm">
         <option value="0">Base</option>
         <option value="1">Evolved</option>
         <option value="2">True</option>

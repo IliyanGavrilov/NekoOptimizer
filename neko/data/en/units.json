@@ -181,8 +181,8 @@
     "rarity": "Special",
     "forms": [
       "Moneko",
-      "Miss MONEKO",
-      "Superstar MONEKO"
+      "Miss Moneko",
+      "Superstar Moneko"
     ],
     "set": ""
   },
@@ -203,7 +203,7 @@
     "rarity": "Special",
     "forms": [
       "Ninja Cat",
-      "Ninja Frog Cat",
+      "Frog Ninja Cat",
       "Flying Ninja Cat"
     ],
     "set": ""
@@ -813,9 +813,9 @@
     "rarity": "Uber Super Rare",
     "forms": [
       "Windy",
-      "Windy, type \u03b1",
-      "Divine Windy \u03b1",
-      "Ultimate Windy \u03b1"
+      "Windy, type α",
+      "Divine Windy α",
+      "Ultimate Windy α"
     ],
     "set": "Cyber Academy Galaxy Gals"
   },
@@ -825,9 +825,9 @@
     "rarity": "Uber Super Rare",
     "forms": [
       "Thundia",
-      "Thundia, type \u03b2",
-      "Divine Thundia \u03b2",
-      "Ultimate Thundia \u03b2"
+      "Thundia, type β",
+      "Divine Thundia β",
+      "Ultimate Thundia β"
     ],
     "set": "Cyber Academy Galaxy Gals"
   },
@@ -1100,8 +1100,8 @@
     "rarity": "Uber Super Rare",
     "forms": [
       "Kuu",
-      "Kuu, type \u03b3",
-      "Divine Kuu \u03b3"
+      "Kuu, type γ",
+      "Divine Kuu γ"
     ],
     "set": "Cyber Academy Galaxy Gals"
   },
@@ -1111,8 +1111,8 @@
     "rarity": "Uber Super Rare",
     "forms": [
       "Kai",
-      "Kai, type \u03bc",
-      "Divine Kai \u03bc"
+      "Kai, type μ",
+      "Divine Kai μ"
     ],
     "set": "Cyber Academy Galaxy Gals"
   },
@@ -1122,8 +1122,8 @@
     "rarity": "Uber Super Rare",
     "forms": [
       "Coppermine",
-      "Coppermine, type \u03ba",
-      "Divine Coppermine \u03ba"
+      "Coppermine, type κ",
+      "Divine Coppermine κ"
     ],
     "set": "Cyber Academy Galaxy Gals"
   },
@@ -1620,8 +1620,8 @@
     "rarity": "Uber Super Rare",
     "forms": [
       "Kalisa",
-      "Kalisa, type \u03c7",
-      "Divine Kalisa \u03c7"
+      "Kalisa, type χ",
+      "Divine Kalisa χ"
     ],
     "set": "Cyber Academy Galaxy Gals"
   },
@@ -1758,12 +1758,12 @@
   },
   {
     "id": 179,
-    "name": "Takuya \uff06 Yuki",
+    "name": "Takuya ＆ Yuki",
     "rarity": "Rare",
     "forms": [
-      "Takuya \uff06 Yuki",
-      "Takuya, Yuki \uff06 Cat",
-      "Takuya\uff06 Lovely Yuki"
+      "Takuya ＆ Yuki",
+      "Takuya, Yuki ＆ Cat",
+      "Takuya＆ Lovely Yuki"
     ],
     "set": ""
   },
@@ -1773,7 +1773,7 @@
     "rarity": "Uber Super Rare",
     "forms": [
       "Mystery Girl Yuki",
-      "Mystery Yuki \uff06 Cat",
+      "Mystery Yuki ＆ Cat",
       "Mystery Catgirl Yuki"
     ],
     "set": ""
@@ -1912,7 +1912,8 @@
     "forms": [
       "Catman",
       "Dark Catman",
-      "Ultimate Catman"
+      "Ultimate Catman",
+      "Catman Forever"
     ],
     "set": "Justice Strikes Back: Dark Heroes"
   },
@@ -2210,7 +2211,7 @@
     "rarity": "Uber Super Rare",
     "forms": [
       "Hallowindy",
-      "Hallowindy, type \u03b1"
+      "Hallowindy, type α"
     ],
     "set": "Halloween Carnival"
   },
@@ -2220,7 +2221,7 @@
     "rarity": "Uber Super Rare",
     "forms": [
       "Spooky Thundia",
-      "Spooky Thundia, type \u03b2"
+      "Spooky Thundia, type β"
     ],
     "set": "Halloween Carnival"
   },
@@ -2274,8 +2275,8 @@
     "rarity": "Uber Super Rare",
     "forms": [
       "Frosty Kai",
-      "Frosty Kai, type \u03bc",
-      "Frostspirit Kai, type \u03bc"
+      "Frosty Kai, type μ",
+      "Frostspirit Kai, type μ"
     ],
     "set": "Xmas Gals"
   },
@@ -2285,7 +2286,7 @@
     "rarity": "Uber Super Rare",
     "forms": [
       "Santa Kuu",
-      "Santa Kuu, type \u03b3"
+      "Santa Kuu, type γ"
     ],
     "set": "Xmas Gals"
   },
@@ -2295,7 +2296,7 @@
     "rarity": "Uber Super Rare",
     "forms": [
       "Holy Coppermine",
-      "Holy Coppermine, type \u03ba"
+      "Holy Coppermine, type κ"
     ],
     "set": "Xmas Gals"
   },
@@ -2490,7 +2491,7 @@
     "rarity": "Uber Super Rare",
     "forms": [
       "Tropical Kalisa",
-      "Tropical Kalisa, type \u03c7"
+      "Tropical Kalisa, type χ"
     ],
     "set": "Gals of Summer"
   },
@@ -3142,7 +3143,7 @@
     "rarity": "Uber Super Rare",
     "forms": [
       "Lost World Yuki",
-      "Lost World Yuki \uff06 Cat",
+      "Lost World Yuki ＆ Cat",
       "Lost World Catgirl Yuki"
     ],
     "set": ""
@@ -3205,8 +3206,8 @@
     "rarity": "Uber Super Rare",
     "forms": [
       "Twinstars",
-      "Twinstars, type \u03a6",
-      "Divine Twinstars \u03a6"
+      "Twinstars, type Φ",
+      "Divine Twinstars Φ"
     ],
     "set": "Cyber Academy Galaxy Gals"
   },
@@ -3227,7 +3228,7 @@
     "rarity": "Uber Super Rare",
     "forms": [
       "Seashore Kai",
-      "Seashore Kai, type \u03bc"
+      "Seashore Kai, type μ"
     ],
     "set": "Gals of Summer"
   },
@@ -3596,7 +3597,7 @@
     "forms": [
       "Aoi Hayakawa",
       "Aoi Hayakawa CC",
-      "Baseball Mask \u03b1"
+      "Baseball Mask α"
     ],
     "set": ""
   },
@@ -3607,7 +3608,7 @@
     "forms": [
       "Mizuki Tachibana",
       "Mizuki Tachibana CC",
-      "Baseball Mask \u03b2"
+      "Baseball Mask β"
     ],
     "set": ""
   },
@@ -3618,7 +3619,7 @@
     "forms": [
       "Hijiri Rokudo",
       "Hijiri Rokudo CC",
-      "Baseball Mask \u03b3"
+      "Baseball Mask γ"
     ],
     "set": ""
   },
@@ -3651,7 +3652,7 @@
     "forms": [
       "Miyabi Oyama",
       "Miyabi Oyama CC",
-      "Baseball Mask \u03b4"
+      "Baseball Mask δ"
     ],
     "set": ""
   },
@@ -3872,7 +3873,8 @@
     "forms": [
       "Mighty Thermae D-Lux",
       "Subterra Guardians",
-      "Subterra Sentinels"
+      "Subterra Sentinels",
+      "Subterra Saviors"
     ],
     "set": "Iron Legion"
   },
@@ -4029,7 +4031,7 @@
     "rarity": "Uber Super Rare",
     "forms": [
       "Waverider Kuu",
-      "Waverider Kuu, type \u03b3"
+      "Waverider Kuu, type γ"
     ],
     "set": "Gals of Summer"
   },
@@ -4148,8 +4150,8 @@
     "rarity": "Legend Rare",
     "forms": [
       "Jeanne",
-      "Jeanne, type \u03c8",
-      "Divine Jeanne \u03c8"
+      "Jeanne, type ψ",
+      "Divine Jeanne ψ"
     ],
     "set": ""
   },
@@ -4191,7 +4193,8 @@
     "rarity": "Legend Rare",
     "forms": [
       "Wonder MOMOCO",
-      "Cutie MOMOCO"
+      "Cutie MOMOCO",
+      "Starlight MOMOCO"
     ],
     "set": ""
   },
@@ -4439,18 +4442,18 @@
     "rarity": "Uber Super Rare",
     "forms": [
       "Benevolent Souma",
-      "Souma \uff06 Cat",
+      "Souma ＆ Cat",
       "Cat-Eared Souma"
     ],
     "set": ""
   },
   {
     "id": 483,
-    "name": "Kano \uff06 Souma",
+    "name": "Kano ＆ Souma",
     "rarity": "Rare",
     "forms": [
-      "Kano \uff06 Souma",
-      "Kano \uff06 Souma \uff06 Cat"
+      "Kano ＆ Souma",
+      "Kano ＆ Souma ＆ Cat"
     ],
     "set": ""
   },
@@ -4551,7 +4554,7 @@
     "rarity": "Uber Super Rare",
     "forms": [
       "Seabreeze Coppermine",
-      "Seabreeze Coppermine, type \u03ba"
+      "Seabreeze Coppermine, type κ"
     ],
     "set": "Gals of Summer"
   },
@@ -4634,10 +4637,20 @@
     "rarity": "Uber Super Rare",
     "forms": [
       "Myrcia",
-      "Myrcia, type \u03be",
-      "Divine Myrcia \u03be"
+      "Myrcia, type ξ",
+      "Divine Myrcia ξ"
     ],
     "set": "Cyber Academy Galaxy Gals"
+  },
+  {
+    "id": 504,
+    "name": "Burgle Boss Cat (Retired)",
+    "rarity": "Special",
+    "forms": [
+      "Burgle Boss Cat (Retired)",
+      "Burgle Boss Cat (Prime)"
+    ],
+    "set": ""
   },
   {
     "id": 505,
@@ -4667,7 +4680,8 @@
     "rarity": "Rare",
     "forms": [
       "Mightycat",
-      "Supercat"
+      "Supercat",
+      "Ironcat"
     ],
     "set": ""
   },
@@ -4854,7 +4868,7 @@
     "rarity": "Uber Super Rare",
     "forms": [
       "Snow Angel Twinstars",
-      "Snow Angel Twinstars, type \u03a6"
+      "Snow Angel Twinstars, type Φ"
     ],
     "set": "Xmas Gals"
   },
@@ -5455,7 +5469,7 @@
     "rarity": "Uber Super Rare",
     "forms": [
       "First-Love Myrcia",
-      "First-Love Myrcia \u03be"
+      "First-Love Myrcia, type ξ"
     ],
     "set": "Valentine Gals"
   },
@@ -5764,8 +5778,8 @@
     "rarity": "Uber Super Rare",
     "forms": [
       "Lilin",
-      "Lilin, type \u03c0",
-      "Divine Lilin \u03c0"
+      "Lilin, type π",
+      "Divine Lilin π"
     ],
     "set": "Cyber Academy Galaxy Gals"
   },
@@ -5989,8 +6003,8 @@
     "rarity": "Uber Super Rare",
     "forms": [
       "Terun",
-      "Terun, type \u03b6",
-      "Divine Terun \u03b6"
+      "Terun, type ζ",
+      "Divine Terun ζ"
     ],
     "set": "Cyber Academy Galaxy Gals"
   },
@@ -6192,7 +6206,7 @@
     "rarity": "Uber Super Rare",
     "forms": [
       "Night Beach Lilin",
-      "Night Beach Lilin\u03c0"
+      "Night Beach Lilin, type π"
     ],
     "set": "Gals of Summer"
   },
@@ -6262,10 +6276,10 @@
   },
   {
     "id": 673,
-    "name": "\u30cd\u30b3\u30c1\u30fc\u30bf\u30fc",
+    "name": "ネコチーター",
     "rarity": "Uber Super Rare",
     "forms": [
-      "\u30cd\u30b3\u30c1\u30fc\u30bf\u30fc"
+      "ネコチーター"
     ],
     "set": ""
   },
@@ -6412,7 +6426,7 @@
     "rarity": "Uber Super Rare",
     "forms": [
       "Reindeer Terun",
-      "Reindeer Terun\u03b6"
+      "Reindeer Terun, type ζ"
     ],
     "set": "Xmas Gals"
   },
@@ -6653,8 +6667,7 @@
     "rarity": "Uber Super Rare",
     "forms": [
       "Coastal Explorer Kanna",
-      "Deep-Diver Kanna",
-      "Great Deep-Diver Kanna"
+      "Deep-Diver Kanna"
     ],
     "set": "Gals of Summer"
   },
@@ -6771,7 +6784,8 @@
     "rarity": "Uber Super Rare",
     "forms": [
       "Ninja Girl Tomoe",
-      "Gourmand Ninja Girl Tomoe"
+      "Gourmand Ninja Girl Tomoe",
+      "Sugar Rush Shinobi Tomoe"
     ],
     "set": "Girls & Monsters"
   },
@@ -6850,7 +6864,8 @@
     "rarity": "Uber Super Rare",
     "forms": [
       "Pegasa",
-      "Pegasa, type \u03bd"
+      "Pegasa, type ν",
+      "Divine Pegasa ν"
     ],
     "set": "Cyber Academy Galaxy Gals"
   },
@@ -6889,7 +6904,7 @@
     "rarity": "Uber Super Rare",
     "forms": [
       "Floral Kalisa",
-      "Floral Kalisa, type \u03c7"
+      "Floral Kalisa, type χ"
     ],
     "set": "Easter Carnival"
   },
@@ -7108,7 +7123,7 @@
     "rarity": "Uber Super Rare",
     "forms": [
       "Music Fest Thundia",
-      "Music Fest Thundia \u03b2"
+      "Music Fest Thundia, type β"
     ],
     "set": "Gals of Summer"
   },
@@ -7167,8 +7182,7 @@
     "rarity": "Special",
     "forms": [
       "Sardine",
-      "Sardine CC",
-      "Dropping in from \"Survive! Mola Mola!\" Tiny bones"
+      "Sardine CC"
     ],
     "set": ""
   },
@@ -7286,7 +7300,7 @@
     "rarity": "Uber Super Rare",
     "forms": [
       "Madoka Cat & Homura",
-      "Magical Cat\u2606 Magica"
+      "Magical Cat☆ Magica"
     ],
     "set": ""
   },
@@ -7499,11 +7513,11 @@
   },
   {
     "id": 801,
-    "name": "Master of Logic Newton",
+    "name": "Master of Logic Newtone",
     "rarity": "Special",
     "forms": [
-      "Master of Logic Newton",
-      "Master of Logic Mewton"
+      "Master of Logic Newtone",
+      "Master of Logic Mewtone"
     ],
     "set": ""
   },
@@ -7689,7 +7703,7 @@
     "rarity": "Uber Super Rare",
     "forms": [
       "Seaside Pegasa",
-      "Seaside Pegasa v"
+      "Seaside Pegasa, type v"
     ],
     "set": "Gals of Summer"
   },
@@ -7777,7 +7791,7 @@
     "rarity": "Uber Super Rare",
     "forms": [
       "Raclesa",
-      "Raclesa, type \u03a3"
+      "Raclesa, type Σ"
     ],
     "set": "Cyber Academy Galaxy Gals"
   },
@@ -8074,6 +8088,87 @@
     "forms": [
       "The Invisible Cat",
       "Groom Cat"
+    ],
+    "set": ""
+  },
+  {
+    "id": 864,
+    "name": "Shirou Emiya",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Shirou Emiya",
+      "Shirou Emiya CC"
+    ],
+    "set": ""
+  },
+  {
+    "id": 865,
+    "name": "True Assassin",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "True Assassin",
+      "True Assassin CC"
+    ],
+    "set": ""
+  },
+  {
+    "id": 869,
+    "name": "Akane Tounji",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Akane Tounji",
+      "Let's Go! Akane"
+    ],
+    "set": "The Dynamites"
+  },
+  {
+    "id": 870,
+    "name": "Ancient Egg: N207",
+    "rarity": "Special",
+    "forms": [
+      "Ancient Egg: N207",
+      "Onyx Egg: N207",
+      "Tycoon Cat"
+    ],
+    "set": ""
+  },
+  {
+    "id": 871,
+    "name": "Ancient Egg: N208",
+    "rarity": "Special",
+    "forms": [
+      "Ancient Egg: N208",
+      "Green Egg: N208",
+      "Combat Crawfish Cat"
+    ],
+    "set": ""
+  },
+  {
+    "id": 872,
+    "name": "Jungle Gourmet Tomoe",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Jungle Gourmet Tomoe",
+      "Canopy Queen Tomoe"
+    ],
+    "set": "Gals of Summer"
+  },
+  {
+    "id": 873,
+    "name": "Metal Maiden Koneko",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Metal Maiden Koneko",
+      "Sonic Siren Koneko"
+    ],
+    "set": ""
+  },
+  {
+    "id": 875,
+    "name": "735_1",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "735_1"
     ],
     "set": ""
   }

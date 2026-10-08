@@ -1,0 +1,26 @@
+{% comment %}One overview table: a row per material family, a column per kind. A cell the
+game has no item for stays empty; one you happen to need none of shows a dash, so the
+family still reads as a set. Anything the families don't place trails as a plain row.
+{% endcomment %}
+{% if grid %}
+  <table class="res-grid">
+    <thead>
+      <tr><td></td>{% for kind in grid.kinds %}<th scope="col">{{ kind }}</th>{% endfor %}</tr>
+    </thead>
+    <tbody>
+      {% for row in grid.rows %}
+        <tr>
+          <th scope="row">{{ row.label }}</th>
+          {% for cell in row.cells %}
+            <td>{% if cell %}{% if cell.count %}{% include "planner/_res_item.html" with item=cell %}{% else %}<span class="res-nil" title="{{ cell.name }}">&ndash;</span>{% endif %}{% endif %}</td>
+          {% endfor %}
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+{% endif %}
+{% if extra %}
+  <div class="res-tally">
+    {% for item in extra %}{% include "planner/_res_item.html" %}{% endfor %}
+  </div>
+{% endif %}

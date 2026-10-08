@@ -40,6 +40,25 @@ def test_the_collection_page_renders_for_another_region(client):
     assert client.get("/collection/").status_code == 200
 
 
-def test_the_materials_page_renders_for_another_region(client):
+def test_the_resources_page_renders_for_another_region(client):
     Region.store("kr")
-    assert client.get("/materials/").status_code == 200
+    assert client.get("/resources/").status_code == 200
+
+
+def test_switching_region_comes_back_to_the_page_it_was_posted_from(client):
+    response = client.post("/region/", {"region": "jp"}, HTTP_REFERER="http://testserver/tiers/")
+    assert response["Location"] == "/tiers/"
+
+
+def test_switching_region_keeps_the_pages_query_string(client):
+    # The planner's permalink lives in the query (?seed=&rolls=), so a version switch that
+    # dropped it would quietly throw away the view you were looking at.
+    response = client.post(
+        "/region/", {"region": "jp"}, HTTP_REFERER="http://testserver/?seed=7&rolls=50"
+    )
+    assert response["Location"] == "/?seed=7&rolls=50"
+
+
+def test_switching_region_ignores_a_referer_that_is_not_one_of_our_routes(client):
+    response = client.post("/region/", {"region": "jp"}, HTTP_REFERER="http://testserver/nope/")
+    assert response["Location"] == "/"

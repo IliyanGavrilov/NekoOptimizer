@@ -1,5 +1,6 @@
 from django.db import models
 
+from neko.guidedata import load_guide
 from neko.region import CODES, DEFAULT_REGION
 from neko.region import current as active_region
 
@@ -40,6 +41,18 @@ class UnitQuerySet(models.QuerySet):
     def unnamed(self) -> UnitQuerySet:
         """The conjure/unreleased units whose name is still just their id."""
         return self.filter(name__regex=_NO_REAL_NAME)
+
+    def in_guide(self) -> UnitQuerySet:
+        """Only the units this region's in-game Cat Guide lists. Every region ships the
+        same unit table, so a catalogue carries units its players can never get - EN's
+        holds Droid Cat and the other Japan-only promos - and the Cat Guide is the game's
+        own statement of what a region actually has. Filtering is limited to the default
+        region: guidedata resolves the wiki's English names against THAT catalogue, so
+        the other regions' lists silently drop every unit it lacks (see its refresh())."""
+        listed = load_guide()["regions"].get(active_region(), [])
+        if not listed or active_region() != DEFAULT_REGION:
+            return self
+        return self.filter(unit_id__in=listed)
 
 
 class Unit(models.Model):
@@ -126,10 +139,12 @@ class Cat(models.Model):
         return bool(self.unit and self.unit.wanted)
 
 
-class EvolvePlan(models.Model):
-    """A unit the player wants to evolve: which forms' materials to grind for."""
+class UnitPlan(models.Model):
+    """A unit on the player's resources list. The row is the cat's place on the list -
+    it stays put with nothing ticked - and the flags are the evolutions they're grinding
+    for; the talents they want are TalentPlan rows hanging off the same unit."""
 
-    unit = models.OneToOneField(Unit, on_delete=models.CASCADE, related_name="evolve_plan")
+    unit = models.OneToOneField(Unit, on_delete=models.CASCADE, related_name="plan")
     tf = models.BooleanField(default=False)
     uf = models.BooleanField(default=False)
 
@@ -164,16 +179,17 @@ class TalentPlan(models.Model):
 
 
 class CannonPlan(models.Model):
-    """One cannon being developed: current and goal levels for each of its parts."""
+    """One Cat Base development being tracked: the level each part sits at now. The
+    cannon comes with the row; its matching Foundation and Style are add-ons, tracked
+    only once switched on (they cost Z Materials, a grind of their own)."""
 
     region = _region_field()
     cannon_id = models.PositiveSmallIntegerField()
     cannon_now = models.PositiveSmallIntegerField(default=0)
-    cannon_goal = models.PositiveSmallIntegerField(default=0)
     base_now = models.PositiveSmallIntegerField(default=0)
-    base_goal = models.PositiveSmallIntegerField(default=0)
     deco_now = models.PositiveSmallIntegerField(default=0)
-    deco_goal = models.PositiveSmallIntegerField(default=0)
+    base_on = models.BooleanField(default=False)
+    deco_on = models.BooleanField(default=False)
 
     objects = RegionManager()
     all_regions = models.Manager()

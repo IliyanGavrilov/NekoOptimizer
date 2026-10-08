@@ -1,5 +1,6 @@
 from django.urls import resolve
 
+from neko import region
 from planner.context_processors import tools
 from planner.links import PAGE_LINKS, unit_links
 
@@ -27,7 +28,7 @@ def test_unit_links_title_the_wiki_page_by_rarity():
 
 
 def test_page_links_come_from_the_resolved_url_name():
-    assert tools(_Request(resolve("/materials/")))["page_links"] == PAGE_LINKS["materials"]
+    assert tools(_Request(resolve("/resources/")))["page_links"] == PAGE_LINKS["resources"]
 
 
 def test_both_tier_list_routes_get_the_same_links():
@@ -41,3 +42,11 @@ def test_a_page_without_curated_links_gets_none():
 
 def test_an_unresolved_request_gets_no_links():
     assert tools(_Request())["page_links"] == ()
+
+
+def test_unit_links_drop_the_wiki_when_the_english_version_never_got_the_unit(monkeypatch):
+    monkeypatch.setattr("planner.services._english_names", lambda: {})
+    with region.using("jp"):
+        labels = [link.label for link in unit_links(999, "シロウ", "Rare")]
+
+    assert labels == ["battlecatsinfo", "battlecatsstats"]

@@ -1,0 +1,38 @@
+{% extends "planner/base.html" %}
+
+{% block title %}Resources &mdash; Neko Optimizer{% endblock %}
+
+{% block content %}
+  <h1>Resources</h1>
+  <p class="muted">Your grind list. Add a cat, tick the evolutions and talents you want, add
+    the base upgrades you&rsquo;re chasing &mdash; the running total alongside is everything you
+    still need. Saved instantly.</p>
+
+  <input type="hidden" id="csrfToken" value="{{ csrf_token }}">
+  {{ cat_options|json_script:"resCatOptions" }}
+
+  {% comment %}The board breaks out of the text column like the Rolls tables do: the
+  running total rides along beside the cards as a sticky sidebar, and that needs the
+  width. Narrow screens fold it back above them.{% endcomment %}
+  <div class="results-region">
+    <div class="rolls-head">
+      <div class="rolls-controls">
+        <label class="ctrl" title="Show each cat as its name, its form icon, or both"><select id="resDisplay">
+            <option value="text">Names</option>
+            <option value="icons">Icons</option>
+            <option value="both">Both</option>
+          </select></label>
+        <label class="ctrl" title="Show each cat as this form - name and icon; a unit without that form shows the last one it has"><select id="resForm">
+            <option value="0">Base</option>
+            <option value="1">Evolved</option>
+            <option value="2">True</option>
+            <option value="3">Ultra</option>
+          </select></label>
+      </div>
+    </div>
+
+    <div id="resBoard" data-cat-url="{% url 'resources_cat' %}" data-base-url="{% url 'resources_base' %}">
+      {% include "planner/_res_board.html" %}
+    </div>
+  </div>
+{% endblock %}

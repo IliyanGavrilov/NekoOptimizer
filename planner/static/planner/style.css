@@ -272,34 +272,204 @@ input[type="search"]::-webkit-search-cancel-button { appearance: none; -webkit-a
   border-color: var(--accent);
 }
 
-/* Materials page: two planner cards, rows of checkbox costs, a totals block. */
-.materials { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1rem; align-items: start; }
-.materials-panel { border: 1px solid var(--line); border-radius: 8px; background: var(--bg-2); padding: 0.8rem 1rem; }
-.materials-panel h2 { margin: 0 0 0.6rem; font-size: 1.1rem; }
-.materials-add { margin-bottom: 0.7rem; }
-.materials-pick { max-width: 100%; }
-.materials-row { border-top: 1px solid var(--line); padding: 0.5rem 0; position: relative; }
-.materials-name { font-weight: 700; display: inline-block; margin-bottom: 0.2rem; }
-.materials-remove {
-  position: absolute; top: 0.4rem; right: 0;
+/* Resources page: a running total that stays on screen while you tick, then one card
+   per cat and per base upgrade. Every row wraps rather than clipping - the cost lists
+   are as long as the game makes them. */
+/* The running total rides along in its own column so it can stay put without eating the
+   screen: cards on the left, totals pinned on the right. Both sit in row 1, which makes
+   the sidebar's grid area as tall as the cards - that's what lets it stick the whole way
+   down. Under 1100px the column is gone and it folds back above the cards, unpinned. */
+#resBoard {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(17rem, 21rem);
+  gap: 1rem;
+  align-items: start;
+}
+.res-lists { grid-column: 1; grid-row: 1; min-width: 0; }
+.res-overview {
+  grid-column: 2;
+  grid-row: 1;
+  position: sticky;
+  top: calc(var(--header-h, 52px) + 0.5rem);
+  max-height: calc(100vh - var(--header-h, 52px) - 1.5rem);
+  overflow: auto;
+  border: 1px solid var(--accent);
+  border-radius: 10px;
+  background: var(--bg-2);
+  padding: 0.6rem 0.9rem;
+}
+.res-overview > h2 { margin: 0 0 0.3rem; font-size: 0.95rem; color: var(--muted); }
+.res-overview > .muted { margin: 0; }
+.res-sub { font-size: 0.78rem; opacity: 0.8; }
+
+@media (max-width: 1100px) {
+  #resBoard { grid-template-columns: minmax(0, 1fr); }
+  .res-lists, .res-overview { grid-column: 1; grid-row: auto; }
+  .res-overview { position: static; max-height: none; margin-bottom: 1rem; }
+}
+/* The sidebar is narrow, so a family table that outgrows it scrolls on its own rather
+   than pushing the column wider. */
+.res-block { min-width: 0; overflow-x: auto; }
+.res-block h3 { margin: 0 0 0.3rem; font-size: 0.85rem; font-weight: 700; }
+.res-overview .item-icon { width: 20px; }
+/* A family per row, a kind per column: the members of a family level in step, so lining
+   them up says at a glance which colour is holding you back. */
+.res-grid { border-collapse: collapse; font-size: 0.9rem; }
+.res-grid th, .res-grid td { padding: 0.1rem 0.5rem 0.1rem 0; text-align: left; }
+.res-grid thead th { color: var(--muted); font-family: var(--head-font); font-weight: 600; font-size: 0.75rem; }
+.res-grid tbody th { color: var(--muted); font-weight: 600; padding-right: 0.7rem; white-space: nowrap; }
+.res-grid .res-item b { font-family: var(--head-font); }
+.res-nil { color: var(--muted); opacity: 0.45; }
+/* A leftover the family table doesn't place: a plain wrapping row of tiles. */
+.res-tally { display: flex; flex-wrap: wrap; gap: 0.3rem 0.6rem; margin-top: 0.3rem; }
+/* XP/NP and build time/engineers are counters the whole grind draws on, not something
+   you farm a stage for - a separate strip under their own table. */
+.res-counters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.2rem 1.2rem;
+  list-style: none;
+  margin: 0.4rem 0 0.6rem;
+  padding: 0.4rem 0 0;
+  border-top: 1px dashed var(--line);
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+.res-counter-n { color: var(--ink); font-weight: 700; font-family: var(--head-font); font-size: 1rem; }
+.res-counter { white-space: nowrap; }
+
+.res-section { margin-bottom: 1.4rem; }
+.res-section > h2 { display: flex; align-items: center; gap: 0.5rem; font-size: 1.05rem; margin: 0 0 0.5rem; }
+.res-note { font-size: 0.82rem; margin: -0.3rem 0 0.5rem; }
+.res-empty { margin: 0.4rem 0 0; }
+
+/* Picker: type, and up to a couple of dozen matches appear as chips. Ones already on
+   the list stay listed but read as taken. */
+.res-picker { margin-bottom: 0.7rem; }
+.res-picker input[type="search"] { width: 100%; }
+.res-matches { margin-top: 0.4rem; max-height: 9rem; overflow-y: auto; }
+.res-match.on { opacity: 0.45; }
+.res-hint { font-size: 0.78rem; margin: 0.25rem 0 0; }
+
+/* The eight Cat Base developments: a row of switches, like the rarity/facet pills -
+   click one on to track it, click it again to drop it. */
+.res-switches { display: flex; flex-wrap: wrap; gap: 0.35rem; margin-bottom: 0.7rem; }
+.res-switch {
+  background: var(--bg);
+  color: var(--muted);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 0.18rem 0.7rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin: 0;
+}
+.res-switch:hover { color: var(--ink); border-color: var(--accent); filter: none; }
+.res-switch[aria-pressed="true"] {
+  background: var(--accent);
+  color: var(--accent-ink);
+  border-color: var(--accent);
+}
+
+.res-card {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--bg-2);
+  padding: 0.5rem 0.75rem;
+  margin-bottom: 0.5rem;
+}
+.res-card-head { display: flex; flex-wrap: wrap; align-items: center; gap: 0.25rem 0.6rem; }
+.res-name { font-weight: 700; }
+button.res-name { background: none; border: 0; padding: 0; margin: 0; font: inherit; font-weight: 700; color: var(--ink); }
+.res-card-cost {
+  flex: 1 1 12rem;
+  min-width: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.1rem 0.55rem;
+  color: var(--muted);
+  font-size: 0.82rem;
+}
+.res-card-cost b { color: var(--ink); font-weight: 700; }
+.res-all {
+  margin: 0 0 0 auto;
+  background: var(--bg);
+  border: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 600;
+  padding: 0.1rem 0.5rem;
+}
+.res-all:hover { color: var(--accent); border-color: var(--accent); filter: none; }
+.res-remove {
   background: none; border: none; color: var(--muted);
   font-size: 1rem; line-height: 1; padding: 0.1rem 0.3rem; margin: 0;
 }
-.materials-remove:hover { color: var(--accent); filter: none; }
-.materials-form { display: flex; gap: 0.4rem; align-items: baseline; padding: 0.1rem 0; cursor: pointer; }
-.materials-form input { margin: 0; }
-.materials-cost { color: var(--muted); font-size: 0.9rem; }
-.ultra-badge {
-  font-size: 0.7rem; font-weight: 700; text-transform: uppercase;
-  color: var(--accent-ink); background: var(--accent);
-  border-radius: 4px; padding: 0 0.3rem;
+.res-remove:hover { color: var(--accent); filter: none; }
+
+/* One tickable line (an evolution) or one base part: label, then its price, both free
+   to wrap onto the next line rather than run past the card's edge. */
+.res-pick {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.1rem 0.6rem;
+  padding: 0.22rem 0;
+  border-top: 1px solid var(--line);
+  margin-top: 0.35rem;
 }
-.materials-part { display: flex; gap: 0.4rem; align-items: baseline; flex-wrap: wrap; padding: 0.1rem 0; }
-.materials-levels { white-space: nowrap; }
-.materials-totals { border-top: 2px solid var(--line); margin-top: 0.5rem; padding-top: 0.5rem; }
-.materials-totals h3 { margin: 0 0 0.3rem; font-size: 0.95rem; }
-.materials-totals ul { list-style: none; margin: 0; padding: 0; columns: 2; }
-.materials-totals li { padding: 0.1rem 0; }
+label.res-pick { cursor: pointer; }
+.res-pick input[type="checkbox"] { margin: 0; }
+.res-pick-label { font-weight: 600; flex: 0 0 auto; min-width: 5.5rem; }
+/* An add-on the development doesn't have switched on: listed, so you can see it's there
+   to add, but dimmed and priceless. */
+.res-pick.off { opacity: 0.6; }
+.res-addon { display: inline-flex; align-items: center; gap: 0.35rem; cursor: pointer; }
+.res-pick-level { color: var(--muted); font-size: 0.85rem; white-space: nowrap; }
+.res-pick-level select { padding: 0.1rem 0.2rem; margin-right: 0.35rem; }
+.res-pick-cost {
+  flex: 1 1 12rem;
+  min-width: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.1rem 0.55rem;
+  color: var(--muted);
+  font-size: 0.82rem;
+}
+.res-pick.on .res-pick-cost, .res-pick.on .res-pick-label { color: var(--ink); }
+
+/* A material, wherever it's listed: its picture with the count beside it (the name is
+   the hover title). Items the source publishes no picture for keep their name instead -
+   app.js marks those .no-icon when the image 404s. */
+.res-item { display: inline-flex; align-items: center; gap: 0.25rem; white-space: nowrap; }
+.res-item .item-icon { width: 22px; height: auto; }
+.res-item .item-name { display: none; }
+.res-item.no-icon .item-icon { display: none; }
+.res-item.no-icon .item-name { display: inline; }
+
+/* Talents are toggle pills - eight of them per cat, so a row of chips keeps the card
+   short where eight checkbox lines would not. */
+.res-talents { display: flex; flex-wrap: wrap; gap: 0.3rem; margin-top: 0.4rem; }
+.res-talent {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.35rem;
+  max-width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--bg);
+  color: var(--muted);
+  font-size: 0.8rem;
+  padding: 0.12rem 0.6rem;
+  cursor: pointer;
+}
+.res-talent input { position: absolute; opacity: 0; pointer-events: none; }
+.res-talent:hover { border-color: var(--accent); }
+.res-talent:has(input:focus-visible) { outline: 2px solid var(--accent); outline-offset: 1px; }
+.res-talent.on { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.res-talent.ultra { border-style: dashed; }
+.res-talent-name { font-weight: 600; min-width: 0; overflow-wrap: anywhere; }
+.res-talent-np { white-space: nowrap; opacity: 0.75; }
 
 /* Facet panel: multi-select pills per group, folded away until wanted. */
 .facet-panel { margin-bottom: 0.5rem; border: 1px solid var(--line); border-radius: 6px; padding: 0.3rem 0.6rem; background: var(--bg-2); }
@@ -835,7 +1005,34 @@ td.cell.flash-locate {
 .sol-cats { color: var(--ink); }
 .sol-cost { margin-left: auto; color: var(--accent); font-size: 0.85rem; font-weight: 600; }
 .sol-cost.not-found { color: var(--muted); font-weight: 400; }
+/* How many of the cats you're hunting these rolls actually hold, and - on a plan row -
+   how many of them that plan gets. The same shape in both places: it's the same question. */
+.found-count, .sol-count {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--muted);
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 0.02rem 0.45rem;
+  white-space: nowrap;
+}
+/* The beam's whole-set row: honest about being the best found rather than the cheapest
+   possible, so its price isn't read as a floor it never promised. */
+.sol-approx {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+  border: 1px dashed var(--line);
+  border-radius: 4px;
+  padding: 0 0.3rem;
+  white-space: nowrap;
+  cursor: help;
+}
 .solution-body { padding: 0.7rem 0.8rem; }
+
 /* Apply pinned right, on its own row above the merged step-list + track. */
 .view-bar {
   display: flex;
@@ -906,7 +1103,23 @@ td.cell.flash-locate {
   overflow-y: auto;
   overflow-x: hidden;
 }
-.plan-track { flex: 1 1 auto; min-width: 0; }
+/* A plan's track is the browse track minus the 15rem step list beside it, so it - and only
+   it - can run short of room. It scrolls inside itself instead of widening the results band
+   and dragging the whole page sideways (which also strands the site header, since that only
+   paints one window wide). Same treatment as the step list next to it: a pane of its own,
+   capped to the window, scrolling internally. Names are never shortened - a track you can't
+   read the names in isn't a track. */
+.plan-track {
+  flex: 1 1 auto;
+  min-width: 0;
+  max-height: calc(100vh - var(--header-h, 56px) - 1.5rem);
+  overflow: auto;
+}
+/* Inside the pane, "under the site header" means under the pane's own top edge: the banner
+   legend and the header row below it are measured against --header-h, so zero it for them
+   (not for .plan-track itself, whose max-height still needs the real height). Without this
+   both pin a site-header's height down INTO the pane and overlap the first rows. */
+.plan-track .track-legend, .plan-track table.track { --header-h: 0px; }
 @media (max-width: 760px) {
   .plan-follow { flex-direction: column; }
   .plan-steps { flex-basis: auto; width: 100%; position: static; max-height: none; }
@@ -1102,10 +1315,24 @@ table.track .entry {
   padding: 0.1rem 0.5rem;
   margin: 0 -0.5rem;
   border-radius: 2px;
-  /* One line per unit (tag, name, tier, marks, rarity, dice) - branches get their own
-     line via .arrow's display:block; short rarity labels keep the width in check. */
+  /* One line per unit, split into columns: name (with the tag and debut mark), rarity,
+     tier and dice. Every cell in a column is the same width, so the fixed tracks line
+     the rarities, tiers and dice up down the whole table instead of letting them drift
+     with the name lengths. The dupe branch spans all four on its own row. */
+  display: grid;
+  grid-template-columns: minmax(min-content, 1fr);
+  align-items: baseline;
+  column-gap: 0.35rem;
   white-space: nowrap;
 }
+/* Fixed trailing tracks, so they hold the same x whatever the name's length; the name
+   never drops below its own width (min-content, with nowrap = the whole name). */
+table.track:not(.normal-track) .entry {
+  grid-template-columns: minmax(min-content, 1fr) 4.5rem 2.8rem 1.5rem;
+}
+table.track .entry > .arrow { grid-column: 1 / -1; }
+table.track .entry-rarity, table.track .entry-tier { justify-self: start; }
+table.track .entry-dice { justify-self: end; }
 /* Two-level highlight: the whole on-path cell greys out, and inside it the exact
    banner+unit you pull lights up gold (target units, below, glow brightest). */
 table.track td.cell:has(.entry.on-path) { background: var(--panel-2); }
@@ -1654,24 +1881,26 @@ table.track th.guaranteed-col, table.track td.guaranteed-col {
 .catlink.future { cursor: default; font-style: italic; }
 .catlink.future:hover { color: inherit; text-decoration-color: transparent; }
 
-/* Rolls display-mode toggle: a cell's form icon, hotlinked and injected by app.js only
-   once an icon mode is picked. Hidden by default (names mode); the mode classes on
-   #resultsRegion reveal it at the sprite's native size (104x79 - godfat's), letting the
-   rows and columns grow to fit. In "both" the name sits centred under its icon. */
+/* Display-mode toggle: a cat's form icon, hotlinked and injected by app.js only once an
+   icon mode is picked. Hidden by default (names mode); the mode class the page puts on
+   its container reveals every .icon-host's icon at the sprite's native size (104x79 -
+   godfat's), letting the rows and columns grow to fit. In "both" the name sits centred
+   under its icon. Shared by both Rolls tables, Collection and Resources. */
 .cat-icon {
   display: none;
   width: 104px;
   max-width: 100%;
   height: auto;
 }
-#resultsRegion.rolls-icons .entry > .catlink,
-#resultsRegion.rolls-both .entry > .catlink { display: inline-block; vertical-align: middle; }
-#resultsRegion.rolls-both .entry > .catlink { text-align: center; }
-#resultsRegion.rolls-icons .entry > .catlink .cat-icon,
-#resultsRegion.rolls-both .entry > .catlink .cat-icon { display: block; margin: 0 auto; }
+.rolls-icons .icon-host, .rolls-both .icon-host { display: inline-block; vertical-align: middle; }
+.rolls-both .icon-host { text-align: center; }
+.rolls-icons .icon-host .cat-icon, .rolls-both .icon-host .cat-icon { display: block; margin: 0 auto; }
 /* Icons-only: drop the name, but keep it as a fallback when the icon 404s. */
-#resultsRegion.rolls-icons .entry > .catlink:not(.no-icon) .catname { display: none; }
-#resultsRegion.rolls-icons .entry > .catlink.no-icon .cat-icon { display: none; }
+.rolls-icons .icon-host:not(.no-icon) .catname { display: none; }
+.rolls-icons .icon-host.no-icon .cat-icon { display: none; }
+/* Chips and tracker rows are laid out as text, not as a table of cells - a full-size
+   sprite would push them apart, so they take a thumbnail. */
+.own-chip .cat-icon, .res-card .cat-icon { width: 56px; }
 
 /* The small "ⓘ" opener on collection + picker chips (they toggle on their main click,
    so the forms/wiki popup gets its own affordance). */
@@ -2139,3 +2368,34 @@ table.track th.guaranteed-col, table.track td.guaranteed-col {
   background: color-mix(in srgb, var(--r-uber) 26%, transparent);
   box-shadow: 0 0 12px color-mix(in srgb, var(--r-uber) 45%, transparent);
 }
+
+/* Narrowing a big breakdown: tick the cats a plan has to get. Sits above the rows, quiet
+   until something is ticked - it only matters when there are more plans than anyone reads. */
+.plan-filter {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem 0.6rem;
+  margin: 0 0 0.6rem;
+  font-size: 0.85rem;
+}
+.plan-filter-label { color: var(--muted); font-family: var(--head-font); font-weight: 600; }
+.plan-filter-cats { display: flex; flex-wrap: wrap; gap: 0.3rem; }
+.filter-cat {
+  margin: 0;
+  padding: 0.1rem 0.5rem;
+  font-size: 0.8rem;
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  color: var(--muted);
+}
+.filter-cat:hover { color: var(--ink); border-color: var(--accent); filter: none; }
+.filter-cat[aria-pressed="true"] {
+  background: color-mix(in srgb, var(--accent) 18%, transparent);
+  border-color: var(--accent);
+  color: var(--accent);
+  font-weight: 600;
+}
+.plan-filter-clear { margin: 0; padding: 0.1rem 0.5rem; font-size: 0.8rem; background: none; color: var(--muted); border: 0; text-decoration: underline; }
+.plan-filter-count { margin-left: auto; color: var(--muted); white-space: nowrap; }
