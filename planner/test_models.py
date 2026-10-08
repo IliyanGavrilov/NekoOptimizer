@@ -3,48 +3,74 @@ from itertools import count
 import pytest
 
 from neko import region
-from planner.models import Cat, Seed, Unit, UnitPlan
+from planner.models import Profile, Seed, Unit, UnitPlan
 
 _ids = count(1)
 
 
-def make_cat(name, owned=False, wanted=False):
-    unit = Unit.objects.create(unit_id=next(_ids), name=name, owned=owned, wanted=wanted)
-    return Cat.objects.create(name=name, unit=unit)
+def make_unit(name):
+    return Unit.objects.create(unit_id=next(_ids), name=name)
 
 
 @pytest.mark.django_db
 def test_wishlist_excludes_owned():
-    make_cat("Bahamut", wanted=True)
-    make_cat("Kasli", wanted=True, owned=True)
-    assert list(Unit.objects.wishlist().values_list("name", flat=True)) == ["Bahamut"]
+    profile = Profile.objects.create()
+    bahamut, kasli = make_unit("Bahamut"), make_unit("Kasli")
+    profile.wanted.add(bahamut, kasli)
+    profile.owned.add(kasli)
+    assert list(profile.wishlist().values_list("name", flat=True)) == ["Bahamut"]
 
 
 @pytest.mark.django_db
-def test_seed_round_trips():
-    Seed.store(123456789)
-    assert Seed.current() == 123456789
+def test_marks_belong_to_one_profile():
+    profile = Profile.objects.create()
+    Profile.objects.create().owned.add(make_unit("Bahamut"))
+    assert profile.marks() == (set(), set())
 
 
 @pytest.mark.django_db
-def test_seed_missing_is_none():
-    assert Seed.current() is None
+def test_an_unsaved_profile_has_no_marks():
+    make_unit("Bahamut")
+    assert Profile().marks() == (set(), set())
+
+
+@pytest.mark.django_db
+def test_an_unsaved_profile_has_an_empty_wishlist():
+    assert not Profile().wishlist().exists()
+
+
+@pytest.mark.django_db
+def test_marks_are_scoped_to_the_active_region():
+    profile = Profile.objects.create()
+    with region.using("jp"):
+        profile.owned.add(make_unit("ネコ"))
+
+    assert not profile.units("owned").exists()
 
 
 @pytest.mark.django_db
 def test_seed_store_overwrites_previous():
-    Seed.store(1)
-    Seed.store(2)
-    assert Seed.current() == 2
+    profile = Profile.objects.create()
+    Seed.store(profile, 1)
+    Seed.store(profile, 2)
+    assert Seed.objects.get().value == 2
 
 
 @pytest.mark.django_db
 def test_seed_is_kept_per_region():
-    Seed.store(1)
+    profile = Profile.objects.create()
+    Seed.store(profile, 1)
     with region.using("jp"):
-        Seed.store(2)
+        Seed.store(profile, 2)
 
-    assert Seed.current() == 1
+    assert Seed.objects.get(region="en").value == 1
+
+
+@pytest.mark.django_db
+def test_seed_is_kept_per_profile():
+    Seed.store(Profile.objects.create(), 1)
+    Seed.store(Profile.objects.create(), 2)
+    assert Seed.objects.count() == 2
 
 
 @pytest.mark.django_db
@@ -67,7 +93,11 @@ def test_the_same_unit_id_lives_in_every_region():
 @pytest.mark.django_db
 def test_plans_are_scoped_through_the_unit_they_hang_off():
     with region.using("jp"):
-        UnitPlan.objects.create(unit=Unit.objects.create(unit_id=1, name="ネコ"), tf=True)
+        UnitPlan.objects.create(
+            profile=Profile.objects.create(),
+            unit=Unit.objects.create(unit_id=1, name="ネコ"),
+            tf=True,
+        )
 
     assert list(UnitPlan.objects.all()) == []
 
