@@ -9,6 +9,7 @@ from itertools import combinations
 from typing import NamedTuple
 from urllib.parse import quote
 
+from neko.bcdata import load_records
 from neko.catalogue import match_names, name_index
 from neko.gachadata import (
     GachaEventRow,
@@ -53,6 +54,7 @@ from neko.normal import (
     roll_normal,
 )
 from neko.normal_plan import CHEAP_KEYS, plan_normal
+from neko.region import DEFAULT_REGION
 from neko.region import current as active_region
 from neko.roller import (
     DEFAULT_COUNT,
@@ -90,11 +92,34 @@ def wiki_url(name: str, rarity: str = "") -> str:
     """The unit's Battle Cats Wiki (Miraheze) page URL; if the rarity is unknown it falls
     back to just the name, with no rarity in brackets."""
     label = _WIKI_RARITY.get(rarity)
-    title = f"{name} ({label})" if label else name
+    # The catalogue spells collab duos with a fullwidth ampersand and the wiki with a
+    # plain one (Kano ＆ Souma), the same fold guidedata does to match those names.
+    title = (f"{name} ({label})" if label else name).replace("＆", "&")
 
     # MediaWiki resolves '&' literally in a page-title path (e.g. Bunny_&_Canard);
     # percent-encoding it to %26 lands on a nonexistent page, so keep it unescaped.
     return WIKI_BASE + quote(title.replace(" ", "_"), safe="()'&")
+
+
+@cache
+def _english_names() -> dict[int, str]:
+    """{unit_id: name} from the English catalogue. Unit ids are the same in every game
+    version, so this is how a localized region reaches an English-titled page."""
+    return {record["id"]: record["name"] for record in load_records(DEFAULT_REGION)}
+
+
+# A page title the English wiki could carry: unreleased units still answer to their id
+# ("789-2"), and one unit the English files never translated keeps its Japanese name.
+_HAS_ENGLISH_NAME = re.compile(r"[A-Za-z]")
+
+
+def wiki_unit_url(unit_id: int, name: str, rarity: str = "") -> str:
+    """The unit's wiki page, or "" when the wiki can have none. The wiki is English-only:
+    a localized catalogue name builds a title that doesn't exist there, so every other
+    region looks the page up by the English name for the same unit id - and a unit the
+    English version never got (a Japan-only collab) has no page to link at all."""
+    english = name if active_region() == DEFAULT_REGION else _english_names().get(unit_id, "")
+    return wiki_url(english, rarity) if _HAS_ENGLISH_NAME.search(english) else ""
 
 
 _TIER_RANK = {tier: rank for rank, tier in enumerate(TIER_ORDER)}
@@ -2264,8 +2289,15 @@ def plan_summary(plans, equivalents, owned=None, wanted=None, titles=None):
 # when few enough are obtainable. Past this many, wishlist searches get the bounded view.
 SUBSET_TARGET_LIMIT = 10
 
-# Frontier width for the big-wishlist fallback's whole-set beam search.
-_WISHLIST_BEAM_WIDTH = 200
+# Past this many result rows the accordion gets a cat filter above it: a handful of plans
+# reads fine as a list, a few hundred needs a way to say "only the ones with Gilgamesh".
+PLAN_FILTER_ROWS = 12
+
+# Frontier width for the big-wishlist fallback's whole-set beam search. 500, not 200: on a
+# 16-cat collab wishlist 200 settles for 9600 catfood-equivalent in 0.5s where 500 finds
+# 9450 in 1.2s, and 1000/2000/4000 all return that same plan - the frontier stops paying
+# right about here, so the extra second buys the plateau and nothing past it costs less.
+_WISHLIST_BEAM_WIDTH = 500
 
 
 def _missing_subsets(items, found_keys):
@@ -2283,39 +2315,38 @@ def _wishlist_plans(graphs, wanted, start, multis, ticket_value, banner_currency
     """Bounded plans for when even the obtainable targets are too many to list out one by
     one: the whole set in a single beam search (fast, not guaranteed optimal) plus each
     target on its own, exactly. Linear in the wishlist where the full breakdown would be
-    exponential."""
+    exponential. Returns ``(plans, inexact keys)`` - the beam's row is the only one that
+    isn't proven cheapest, and the UI says so rather than quietly calling it the best."""
     found = []
-    full = beam_search(
-        graphs,
-        wanted,
-        start,
-        _WISHLIST_BEAM_WIDTH,
-        multis=multis,
-        ticket_value=ticket_value,
-        banner_currency=banner_currency,
-    )
-    if full is not None:
-        found.append(SubsetPlan(frozenset(wanted), full))
+    inexact = set()
+    search = dict(multis=multis, ticket_value=ticket_value, banner_currency=banner_currency)
+    full = beam_search(graphs, wanted, start, _WISHLIST_BEAM_WIDTH, **search)
+    got = frozenset(wanted)
+    if full is None:
+        # Nothing buys the whole wishlist on this budget - which is the usual case, and
+        # answering it with nothing but one-cat plans reads as "the planner gave up". Ask
+        # for the biggest haul the budget does buy instead, and list what it gets.
+        full = beam_search(graphs, wanted, start, _WISHLIST_BEAM_WIDTH, partial=True, **search)
+        got = frozenset(wanted) & frozenset(full.cats) if full is not None else frozenset()
+    # One cat is already covered exactly by the per-cat plans below, so a haul that small
+    # would only duplicate a row - and a worse one, since the beam doesn't prove cheapest.
+    if full is not None and len(got) > 1:
+        found.append(SubsetPlan(got, full))
+        inexact.add(got)
 
     for cat in wanted:
-        single = astar(
-            graphs,
-            {cat},
-            start,
-            multis=multis,
-            ticket_value=ticket_value,
-            banner_currency=banner_currency,
-        )
+        single = astar(graphs, {cat}, start, **search)
         if single is not None:
             found.append(SubsetPlan(frozenset({cat}), single))
 
     found.sort(key=lambda sp: (-len(sp.targets), sp.plan.cost))
 
-    return found
+    return found, inexact
 
 
 def _subset_plans(graphs, targets, start, multis, ticket_value, banner_currency):
-    """The plan rows behind subset_solutions: ``(found plans, missing target-lists)``.
+    """The plan rows behind subset_solutions: ``(found plans, missing target-lists, keys
+    whose plan is a bounded search rather than a proven-cheapest one)``.
 
     Picks that can't drop on any selected banner are filtered out first - out of the search
     and the subset enumeration alike, since each one otherwise multiplies the missing rows -
@@ -2336,13 +2367,14 @@ def _subset_plans(graphs, targets, start, multis, ticket_value, banner_currency)
     if len(pool) <= SUBSET_TARGET_LIMIT:
         found = solve_subsets(graphs, pool, start, **search)
         missing = _missing_subsets(pool, {sp.targets for sp in found})
+        inexact = frozenset()
     else:
-        found = _wishlist_plans(graphs, pool, start, **search)
+        found, inexact = _wishlist_plans(graphs, pool, start, **search)
         found_keys = {sp.targets for sp in found}
         missing = [pool] if frozenset(pool) not in found_keys else []
         missing += [[cat] for cat in pool if frozenset({cat}) not in found_keys]
 
-    return found, missing + unobtainable
+    return found, missing + unobtainable, inexact
 
 
 def subset_solutions(
@@ -2367,6 +2399,7 @@ def subset_solutions(
     debuts=None,
     unit_ids=None,
     tiers=None,
+    detail=None,
 ):
     """Every non-empty target subset and its best plan, biggest-then-cheapest, with the
     unreachable subsets listed after. Reachable ones carry the steps + highlighted track
@@ -2374,9 +2407,129 @@ def subset_solutions(
 
     ``last_cat`` is the pull you got just before this view (the dupe memory): if the
     search's first roll lands on a cell that repeats it, it comes up as a dupe. The
-    subset/plan breakdown itself is _subset_plans."""
+    subset/plan breakdown itself is _subset_plans.
+
+    ``detail`` caps how many of the ranked rows carry a built track; the rest come back
+    summary-only, for subset_plan to fill in when their row is opened. The exact breakdown
+    is 2^n rows, and a track apiece renders to hundreds of megabytes of HTML - past what a
+    browser will take, let alone what anyone reads. None builds every one."""
     graphs = build_graphs(pulls, guaranteed_pulls, rerolls, guaranteed_rerolls)
-    start = State(
+    start = _start_state(tickets, catfood, platinum, legend, last_cat)
+    found, missing, inexact = _subset_plans(
+        graphs, targets, start, multis, ticket_value, banner_currency
+    )
+    track_args = dict(
+        owned=owned,
+        guaranteed=guaranteed_pulls,
+        wanted=wanted,
+        titles=titles,
+        debuts=debuts,
+        unit_ids=unit_ids,
+        tiers=tiers,
+        currencies=_currencies(banner_currency, equivalents),
+        guaranteed_rerolls=guaranteed_rerolls,
+    )
+    solutions = []
+
+    for index, sp in enumerate(found):
+        solution = _plan_row(
+            sp,
+            graphs,
+            pulls,
+            rerolls,
+            equivalents,
+            multis,
+            banner_currency,
+            owned,
+            wanted,
+            titles,
+            track=detail is None or index < detail,
+            track_args=track_args,
+        )
+        # Exact = this really is the cheapest plan for those cats. Past SUBSET_TARGET_LIMIT
+        # the whole-set row comes from the beam instead, which can only promise "best found".
+        solution["exact"] = sp.targets not in inexact
+        solutions.append(solution)
+
+    for row in missing:
+        solutions.append({"targets": row, "found": False})
+
+    # Every row says how many of your cats it gets, against the total the view passes in.
+    for solution in solutions:
+        solution["size"] = len(solution["targets"])
+
+    return solutions
+
+
+def subset_plan(
+    pulls,
+    rerolls,
+    equivalents,
+    targets,
+    *,
+    tickets,
+    catfood,
+    platinum=0,
+    legend=0,
+    guaranteed_pulls=None,
+    multis=None,
+    ticket_value=CATFOOD_PER_DRAW,
+    banner_currency=None,
+    owned=None,
+    wanted=None,
+    titles=None,
+    guaranteed_rerolls=None,
+    last_cat="",
+    debuts=None,
+    unit_ids=None,
+    tiers=None,
+):
+    """One named subset's cheapest plan, with its steps and highlighted track - the body of
+    an accordion row, solved when that row is opened. Exact (A*), since a single set is one
+    search; the breakdown it belongs to is what's exponential, not this.
+
+    Returns None when those cats have no plan within the budget."""
+    graphs = build_graphs(pulls, guaranteed_pulls, rerolls, guaranteed_rerolls)
+    plan = astar(
+        graphs,
+        sorted(targets),
+        _start_state(tickets, catfood, platinum, legend, last_cat),
+        multis=multis,
+        ticket_value=ticket_value,
+        banner_currency=banner_currency,
+    )
+    if plan is None:
+        return None
+
+    return _plan_row(
+        SubsetPlan(frozenset(targets), plan),
+        graphs,
+        pulls,
+        rerolls,
+        equivalents,
+        multis,
+        banner_currency,
+        owned,
+        wanted,
+        titles,
+        track=True,
+        track_args=dict(
+            owned=owned,
+            guaranteed=guaranteed_pulls,
+            wanted=wanted,
+            titles=titles,
+            debuts=debuts,
+            unit_ids=unit_ids,
+            tiers=tiers,
+            currencies=_currencies(banner_currency, equivalents),
+            guaranteed_rerolls=guaranteed_rerolls,
+        ),
+    )
+
+
+def _start_state(tickets, catfood, platinum, legend, last_cat):
+    """The search's opening state: position 0 with the budget you have."""
+    return State(
         0,
         tickets,
         catfood // CATFOOD_PER_DRAW,
@@ -2385,52 +2538,55 @@ def subset_solutions(
         legend_left=legend,
         last_cat=last_cat,
     )
-    found, missing = _subset_plans(graphs, targets, start, multis, ticket_value, banner_currency)
-    # The capsule banners each render under one representative name; tag those so the track
-    # legend can badge them and their lit path cells read as platinum/legend pulls.
-    currencies = {
+
+
+def _currencies(banner_currency, equivalents):
+    """The capsule banners each render under one representative name; tag those so the track
+    legend can badge them and their lit path cells read as platinum/legend pulls."""
+    return {
         _representative(name, equivalents): currency
         for name, currency in (banner_currency or {}).items()
     }
-    solutions = []
 
-    for sp in found:
-        marks = plan_highlight(sp, equivalents)
-        marks.shared, marks.gshared = plan_shared(
-            sp, graphs, equivalents, multis, exclude=set(banner_currency or ())
-        )
-        # Stripe where the plan drops you: the cell the seed continues on after its
-        # last draw, on the banner that draw was rolled on.
-        landing = plan_landing(sp.plan, graphs)
-        if landing is not None:
-            marks.nexts = {_representative(sp.plan.pulls[-1].banner_id, equivalents): {landing}}
-        solution = plan_summary([sp], equivalents, owned, wanted, titles)[0]
-        solution["found"] = True
-        solution["seed_after"] = plan_seed(sp.plan, graphs)
-        # The plan's final pull, remembered with seed_after: applying the plan can then
-        # flag a dupe on the very first roll of the advanced view.
-        solution["last_cat"] = sp.plan.pulls[-1].cat if sp.plan.pulls else ""
-        solution["track"] = build_tracks(
-            pulls,
-            rerolls,
-            equivalents,
-            marks,
-            owned=owned,
-            guaranteed=guaranteed_pulls,
-            wanted=wanted,
-            titles=titles,
-            debuts=debuts,
-            unit_ids=unit_ids,
-            tiers=tiers,
-            currencies=currencies,
-            guaranteed_rerolls=guaranteed_rerolls,
-        )
-        solutions.append(solution)
 
-    for row in missing:
-        solutions.append({"targets": row, "found": False})
+def _plan_row(
+    sp,
+    graphs,
+    pulls,
+    rerolls,
+    equivalents,
+    multis,
+    banner_currency,
+    owned,
+    wanted,
+    titles,
+    *,
+    track,
+    track_args,
+):
+    """One accordion row for a solved subset. ``track`` off leaves out the highlighted
+    table (and the highlighting only it uses), for a row whose body isn't being shown."""
+    solution = plan_summary([sp], equivalents, owned, wanted, titles)[0]
+    solution["found"] = True
+    solution["seed_after"] = plan_seed(sp.plan, graphs)
+    # The plan's final pull, remembered with seed_after: applying the plan can then
+    # flag a dupe on the very first roll of the advanced view.
+    solution["last_cat"] = sp.plan.pulls[-1].cat if sp.plan.pulls else ""
+    if not track:
+        return solution
 
-    return solutions
+    marks = plan_highlight(sp, equivalents)
+    marks.shared, marks.gshared = plan_shared(
+        sp, graphs, equivalents, multis, exclude=set(banner_currency or ())
+    )
+    # Stripe where the plan drops you: the cell the seed continues on after its
+    # last draw, on the banner that draw was rolled on.
+    landing = plan_landing(sp.plan, graphs)
+    if landing is not None:
+        marks.nexts = {_representative(sp.plan.pulls[-1].banner_id, equivalents): {landing}}
+    solution["track"] = build_tracks(pulls, rerolls, equivalents, marks, **track_args)
+
+    return solution
 
 
 def unit_match_report() -> tuple[dict[str, int], list[str]]:

@@ -162,3 +162,13 @@ def _import(client, payload):
         "/collection/import/",
         {"file": _upload(json.dumps(payload).encode())},
     )
+
+
+@pytest.mark.django_db
+def test_collection_hides_units_the_regions_cat_guide_doesnt_list(client, monkeypatch):
+    listed = unit("Bahamut")
+    unit("Droid Cat")
+    monkeypatch.setattr("planner.models.load_guide", lambda: {"regions": {"en": [listed.unit_id]}})
+    page = client.get("/collection/").content
+
+    assert (b"Bahamut" in page, b"Droid Cat" in page) == (True, False)
