@@ -6,6 +6,7 @@
     {# plan-solution tracks don't set found_cats, so no panel there. #}
     <div class="found-cats">
       <span class="found-label" title="Every cat you're searching for - the targets you picked, your wishlist (when that search is on), and any future ubers you've toggled - with its next spot in these rolls. Click a position to jump to its cell.">Targets</span>
+      <span class="found-count" title="{{ track.found_hits }} of them turn up in these rolls">{{ track.found_cats|length }}</span>
       <ul class="found-list">
         {% for f in track.found_cats %}
           <li class="found-item{% if f.unreachable %} is-unreachable{% elif not f.found %} is-out{% endif %}{% if f.owned %} owned{% endif %}{% if f.wanted %} wanted{% endif %}">

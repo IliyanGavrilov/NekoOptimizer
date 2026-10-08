@@ -1,5 +1,6 @@
 from django.db import models
 
+from neko.guidedata import load_guide
 from neko.region import CODES, DEFAULT_REGION
 from neko.region import current as active_region
 
@@ -40,6 +41,18 @@ class UnitQuerySet(models.QuerySet):
     def unnamed(self) -> UnitQuerySet:
         """The conjure/unreleased units whose name is still just their id."""
         return self.filter(name__regex=_NO_REAL_NAME)
+
+    def in_guide(self) -> UnitQuerySet:
+        """Only the units this region's in-game Cat Guide lists. Every region ships the
+        same unit table, so a catalogue carries units its players can never get - EN's
+        holds Droid Cat and the other Japan-only promos - and the Cat Guide is the game's
+        own statement of what a region actually has. Filtering is limited to the default
+        region: guidedata resolves the wiki's English names against THAT catalogue, so
+        the other regions' lists silently drop every unit it lacks (see its refresh())."""
+        listed = load_guide()["regions"].get(active_region(), [])
+        if not listed or active_region() != DEFAULT_REGION:
+            return self
+        return self.filter(unit_id__in=listed)
 
 
 class Unit(models.Model):

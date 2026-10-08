@@ -4,7 +4,7 @@
 
 from dataclasses import dataclass
 
-from planner.services import wiki_url
+from planner.services import wiki_unit_url
 
 # battlecatsinfo's unit page takes the same unit id the catalogue and its icons use.
 INFO_UNIT = "https://battlecatsinfo.github.io/unit.html?id={unit_id}"
@@ -147,9 +147,12 @@ TOOL_DIRECTORY = (
 
 
 def unit_links(unit_id: int, name: str, rarity: str = "") -> list[Link]:
-    """Where to read up on one catalogue unit, for the cat popup."""
+    """Where to read up on one catalogue unit, for the cat popup. The two id-keyed sites
+    carry every version's units; the wiki is English-only, so its link rides along just
+    when there's a page for this unit (see wiki_unit_url)."""
+    wiki = wiki_unit_url(unit_id, name, rarity)
     return [
-        Link("Battle Cats Wiki", wiki_url(name, rarity), "Full page: forms, talents, lore."),
+        *([Link("Battle Cats Wiki", wiki, "Full page: forms, talents, lore.")] if wiki else []),
         Link("battlecatsinfo", INFO_UNIT.format(unit_id=unit_id), "Stats, animations, drop rates."),
         Link("battlecatsstats", STATS_UNIT.format(unit_id=unit_id + 1), "DPS and matchup graphs."),
     ]

@@ -202,6 +202,64 @@ def test_multiple_targets_list_every_subset(client, monkeypatch):
 
 
 @pytest.mark.django_db
+def test_every_subset_row_counts_its_cats_against_the_targets(client, monkeypatch):
+    a = Cat.objects.create(name="Aaa")
+    b = Cat.objects.create(name="Bbb")
+    monkeypatch.setattr(
+        "planner.views.fetch_banners",
+        fixed_banners(TrackPull(1, "A", "Aaa", U), TrackPull(2, "A", "Bbb", U)),
+    )
+    response = client.post(
+        "/plan/", {"seed": 7, "tickets": 5, "catfood": 0, "targets": [a.pk, b.pk]}
+    )
+    html = response.json()["solutions_html"]
+    # Each row says how much of what you asked for it gets, so a short plan is readable
+    # against the full target list without counting names.
+    assert html.count('class="sol-count"') == 3
+    assert ">2/2<" in html and ">1/2<" in html
+
+
+@pytest.mark.django_db
+def test_only_the_best_plan_ships_a_track_and_the_rest_carry_their_cats(client, monkeypatch):
+    a = Cat.objects.create(name="Aaa")
+    b = Cat.objects.create(name="Bbb")
+    monkeypatch.setattr(
+        "planner.views.fetch_banners",
+        fixed_banners(TrackPull(1, "A", "Aaa", U), TrackPull(2, "A", "Bbb", U)),
+    )
+    response = client.post(
+        "/plan/", {"seed": 7, "tickets": 5, "catfood": 0, "targets": [a.pk, b.pk]}
+    )
+    html = response.json()["solutions_html"]
+    # Three rows, one rendered table: the other two name their cats for plan_row instead.
+    assert html.count('class="plan-track"') == 1
+    assert html.count("data-subset=") == 2
+
+
+@pytest.mark.django_db
+def test_plan_row_renders_one_subsets_plan_when_its_row_is_opened(client, monkeypatch):
+    a = Cat.objects.create(name="Aaa")
+    b = Cat.objects.create(name="Bbb")
+    monkeypatch.setattr(
+        "planner.views.fetch_banners",
+        fixed_banners(TrackPull(1, "A", "Aaa", U), TrackPull(2, "A", "Bbb", U)),
+    )
+    html = client.post(
+        "/plan/row/",
+        {"seed": 7, "tickets": 5, "catfood": 0, "targets": [a.pk, b.pk], "subset": ["Bbb"]},
+    ).content.decode()
+    assert 'class="plan-track"' in html
+    assert "Bbb" in html
+
+
+@pytest.mark.django_db
+def test_plan_row_refuses_a_request_that_names_no_cats(client, monkeypatch):
+    monkeypatch.setattr("planner.views.fetch_banners", fixed_banners(TrackPull(1, "A", "Aaa", U)))
+    response = client.post("/plan/row/", {"seed": 7, "tickets": 5, "catfood": 0})
+    assert response.status_code == 400
+
+
+@pytest.mark.django_db
 def test_unreachable_subset_is_listed_not_found(client, monkeypatch):
     a = Cat.objects.create(name="Aaa")
     b = Cat.objects.create(name="Bbb")
@@ -678,6 +736,20 @@ def test_unit_info_links_to_the_wiki_page(client):
 @pytest.mark.django_db
 def test_unit_info_reports_an_unknown_cat_as_not_found(client):
     assert client.get("/unit/info/", {"name": "Nobody"}).json() == {"found": False}
+
+
+@pytest.mark.django_db
+def test_unit_info_by_id_tells_apart_two_units_sharing_a_name(client):
+    Unit.objects.create(unit_id=108, name="Cat Bros", rarity="Special")
+    Unit.objects.create(unit_id=501, name="Cat Bros", rarity="Rare")
+    links = client.get("/unit/info/", {"uid": "501", "name": "Cat Bros"}).json()["links"]
+    assert any(link["url"].endswith("/Cat_Bros_(Rare_Cat)") for link in links)
+
+
+@pytest.mark.django_db
+def test_unit_info_falls_back_to_the_name_when_the_opener_carries_no_id(client):
+    Unit.objects.create(unit_id=25, name="Bahamut", rarity="Uber Super Rare")
+    assert client.get("/unit/info/", {"uid": "", "name": "Bahamut"}).json()["unit_id"] == 25
 
 
 @pytest.mark.django_db

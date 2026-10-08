@@ -1,34 +1,18 @@
 {% if solutions %}
-  <div id="planResults" data-apply-url="{% url 'apply_plan' %}">
-  {% for s in solutions %}
-    <details class="solution"{% if forloop.first and s.found %} open{% endif %}>
-      <summary>
-        <span class="sol-cats">{{ s.targets|join:", " }}</span>
-        <span class="sol-cost{% if not s.found %} not-found{% endif %}">{% if s.found %}{{ s.cost_label }}{% else %}Not found{% endif %}</span>
-      </summary>
-      {% if s.found %}
-        <div class="solution-body">
-          <div class="view-bar">
-            <button type="button" class="apply-plan"
-                    data-cats="{{ s.cats }}"
-                    data-tickets="{{ s.tickets_used }}"
-                    data-catfood="{{ s.cost }}"
-                    data-platinum="{{ s.platinum_used }}"
-                    data-legend="{{ s.legend_used }}"{% if s.seed_after %}
-                    data-seed-after="{{ s.seed_after }}"
-                    data-last-cat="{{ s.last_cat }}"{% endif %}>Apply this plan <span class="apply-cost">{{ s.cost_label }}</span></button>
-          </div>
-          {# Steps and track merged into one follow-along: the step list walks the plan #}
-          {# and lights each move on the track (app.js). Steps first so they stack above #}
-          {# the track on narrow screens. #}
-          <div class="plan-follow">
-            {% include "planner/_steps.html" with legs=s.legs total=s.cost_label %}
-            <div class="plan-track">{% include "planner/_tracks.html" with track=s.track %}</div>
-          </div>
-        </div>
-      {% endif %}
-    </details>
-  {% endfor %}
+  {% if filter_cats %}
+    {# Hundreds of rows is a list nobody reads: tick the cats a plan must get and the rest #}
+    {# fold away. Purely a view over the rows already here - nothing is re-solved. #}
+    <div class="plan-filter" id="planFilter">
+      <span class="plan-filter-label">Only plans with</span>
+      <span class="plan-filter-cats">
+        {% for cat in filter_cats %}<button type="button" class="filter-cat" aria-pressed="false" data-cat="{{ cat }}">{{ cat }}</button>{% endfor %}
+      </span>
+      <button type="button" class="plan-filter-clear" hidden>Clear</button>
+      <span class="plan-filter-count" aria-live="polite">{{ solutions|length }} plans</span>
+    </div>
+  {% endif %}
+  <div id="planResults" data-apply-url="{% url 'apply_plan' %}" data-row-url="{% url 'plan_row' %}">
+  {% for s in solutions %}{% include "planner/_solution.html" with s=s open=forloop.first %}{% endfor %}
   </div>
 {% else %}
   <p class="muted">No reachable plan with given resources.</p>

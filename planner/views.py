@@ -32,8 +32,10 @@ from planner.services import (
     CANNON_ADDONS,
     NORMAL_DEFAULT_KEYS,
     NORMAL_TARGET_PRESETS,
+    PLAN_FILTER_ROWS,
     RARITY_ORDER,
     SECTION_NOTES,
+    SUBSET_TARGET_LIMIT,
     banner_currencies,
     banner_debuts,
     banner_titles,
@@ -64,6 +66,7 @@ from planner.services import (
     seek_pool_groups,
     seek_run_choices,
     set_sections,
+    subset_plan,
     subset_solutions,
     tier_badges,
     tier_list_doc,
@@ -386,19 +389,18 @@ def tracks(request):
         if item["future"] and item["banner"]:
             item["banner"] = titles.get(item["banner"], item["banner"])
     track["found_cats"] = found_cats
+    # The same count a plan row carries, for the cats you're hunting: how many turn up in
+    # these rolls out of everything you're searching for.
+    track["found_hits"] = sum(1 for item in found_cats if item["found"])
     # The selected banners' titles, for the ⚠ row's "won't drop on: …" tooltip.
     track["selected_titles"] = ", ".join(sorted({titles.get(n, n) for n in result.banners}))
 
     return render(request, "planner/_tracks.html", {"track": track})
 
 
-@require_POST
-def find_plan(request):
-    """Solve every target subset; return the accordion of solutions as an HTML fragment."""
-    form = PlannerForm(request.POST)
-    if not form.is_valid():
-        return JsonResponse({"errors": form.errors}, status=400)
-
+def _search_setup(request, form):
+    """Everything both plan endpoints need from one posted form: the scoped target set and
+    the keyword arguments the solvers take. Returns ``(targets, kwargs)``."""
     seed = form.cleaned_data["seed"]
     Seed.store(seed)
     targets = {cat.name for cat in form.cleaned_data["targets"]}
@@ -423,13 +425,7 @@ def find_plan(request):
     if result.pools:
         targets &= frozenset().union(*result.pools.values())
     targets |= future_targets
-    equivalents = equivalent_banners(result.banners)
     pulls, guaranteed_pulls, rerolls, guaranteed_rerolls = _rolls_by_banner(result)
-    banner_currency = banner_currencies(pulls)
-    # Platinum/Legend Capsules always run on their own scarce ticket pools, so their counts
-    # come straight from the form even in explore mode (which only frees the rare/catfood budget).
-    platinum = form.cleaned_data["platinum_cap"]
-    legend = form.cleaned_data["legend_cap"]
 
     if explore:
         # Ignore the budget but still fund single pulls with tickets (their real
@@ -439,21 +435,20 @@ def find_plan(request):
     else:
         tickets, catfood = form.cleaned_data["tickets"], form.cleaned_data["catfood"]
 
-    # One accordion row per target subset: each reachable one carries its own
-    # highlighted track + steps; the rest are listed as "Not found".
-    solutions = subset_solutions(
-        pulls,
-        rerolls,
-        equivalents,
-        targets,
+    kwargs = dict(
+        pulls=pulls,
+        rerolls=rerolls,
+        equivalents=equivalent_banners(result.banners),
         tickets=tickets,
         catfood=catfood,
-        platinum=platinum,
-        legend=legend,
+        # Platinum/Legend Capsules always run on their own scarce ticket pools, so their counts
+        # come straight from the form even in explore mode (which frees only rare/catfood).
+        platinum=form.cleaned_data["platinum_cap"],
+        legend=form.cleaned_data["legend_cap"],
         guaranteed_pulls=guaranteed_pulls,
         multis=result.multis,
         ticket_value=form.cleaned_data["ticket_value"],
-        banner_currency=banner_currency,
+        banner_currency=banner_currencies(pulls),
         owned=_owned_names(),
         wanted=_wanted_names(),
         titles=display_titles(),
@@ -464,19 +459,74 @@ def find_plan(request):
         tiers=tier_badges(),
     )
 
+    return targets, kwargs
+
+
+@require_POST
+def find_plan(request):
+    """Solve every target subset; return the accordion of solutions as an HTML fragment."""
+    form = PlannerForm(request.POST)
+    if not form.is_valid():
+        return JsonResponse({"errors": form.errors}, status=400)
+
+    targets, kwargs = _search_setup(request, form)
+    # One accordion row per target subset, but only the best one arrives with its track:
+    # the breakdown is 2^n rows, and a 100-row table apiece is hundreds of megabytes. The
+    # rest fetch theirs from plan_row when opened.
+    pulls = kwargs.pop("pulls")
+    rerolls = kwargs.pop("rerolls")
+    equivalents = kwargs.pop("equivalents")
+    solutions = subset_solutions(pulls, rerolls, equivalents, targets, detail=1, **kwargs)
+
     return JsonResponse(
         {
             "solutions_html": render_to_string(
-                "planner/_solutions.html", {"solutions": solutions}, request
+                "planner/_solutions.html",
+                {
+                    "solutions": solutions,
+                    "target_total": len(targets),
+                    "subset_limit": SUBSET_TARGET_LIMIT,
+                    # The filter is dead weight over a handful of rows, so it ships only
+                    # when the breakdown is big enough to need narrowing down.
+                    "filter_cats": sorted(targets) if len(solutions) > PLAN_FILTER_ROWS else [],
+                },
+                request,
             ),
         }
     )
 
 
+@require_POST
+def plan_row(request):
+    """One accordion row's body - its steps and highlighted track - solved when the row is
+    opened. The same posted form the accordion came from, plus the row's own cats."""
+    form = PlannerForm(request.POST)
+    if not form.is_valid():
+        return JsonResponse({"errors": form.errors}, status=400)
+
+    subset = {name for name in request.POST.getlist("subset") if name}
+    if not subset:
+        return HttpResponseBadRequest("subset must name at least one cat")
+
+    _, kwargs = _search_setup(request, form)
+    pulls = kwargs.pop("pulls")
+    rerolls = kwargs.pop("rerolls")
+    equivalents = kwargs.pop("equivalents")
+    solution = subset_plan(pulls, rerolls, equivalents, subset, **kwargs)
+    if solution is None:
+        return HttpResponse("")
+
+    return render(request, "planner/_solution_body.html", {"s": solution})
+
+
 def unit_info(request):
-    """A unit's forms, rarity and reference links, for the cat popup (looked up by
-    base-form name - the label every cat chip and track cell carries)."""
-    unit = Unit.objects.filter(name=request.GET.get("name", "")).first()
+    """A unit's forms, rarity and reference links, for the cat popup. Keyed by catalogue
+    id where the caller knows it: names repeat across rarities (the Special and the Rare
+    Cat Bros), so a name alone would always open the lower-id one. Roll cells carry only
+    the base-form name, so that stays the fallback."""
+    unit_id = request.GET.get("uid", "")
+    lookup = {"unit_id": unit_id} if unit_id.isdigit() else {"name": request.GET.get("name", "")}
+    unit = Unit.objects.filter(**lookup).first()
     if unit is None:
         return JsonResponse({"found": False})
 
@@ -716,10 +766,11 @@ def normal_seek_start(request):
 
 
 def collection(request):
-    """The whole cat dictionary in one page with the player's owned/wishlist marks,
-    browsable by rarity or by gacha set. A unit can sit in several set sections (fests
-    repeat their cats) - the marks are per unit, so every copy stays in step."""
-    units = list(Unit.objects.named())
+    """The cat dictionary in one page with the player's owned/wishlist marks, browsable
+    by rarity or by gacha set. A unit can sit in several set sections (fests repeat their
+    cats) - the marks are per unit, so every copy stays in step. Units this region's Cat
+    Guide doesn't list are left out: the catalogue ships them, the region can't get them."""
+    units = list(Unit.objects.named().in_guide())
     badges = tier_badges()
     # Each unit's chip is rendered once and reused: the page lays the whole catalogue out
     # three times over (dictionary, rarity, sets), and fests repeat their cats on top.

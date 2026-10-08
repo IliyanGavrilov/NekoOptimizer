@@ -1005,7 +1005,34 @@ td.cell.flash-locate {
 .sol-cats { color: var(--ink); }
 .sol-cost { margin-left: auto; color: var(--accent); font-size: 0.85rem; font-weight: 600; }
 .sol-cost.not-found { color: var(--muted); font-weight: 400; }
+/* How many of the cats you're hunting these rolls actually hold, and - on a plan row -
+   how many of them that plan gets. The same shape in both places: it's the same question. */
+.found-count, .sol-count {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--muted);
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 0.02rem 0.45rem;
+  white-space: nowrap;
+}
+/* The beam's whole-set row: honest about being the best found rather than the cheapest
+   possible, so its price isn't read as a floor it never promised. */
+.sol-approx {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+  border: 1px dashed var(--line);
+  border-radius: 4px;
+  padding: 0 0.3rem;
+  white-space: nowrap;
+  cursor: help;
+}
 .solution-body { padding: 0.7rem 0.8rem; }
+
 /* Apply pinned right, on its own row above the merged step-list + track. */
 .view-bar {
   display: flex;
@@ -1076,7 +1103,23 @@ td.cell.flash-locate {
   overflow-y: auto;
   overflow-x: hidden;
 }
-.plan-track { flex: 1 1 auto; min-width: 0; }
+/* A plan's track is the browse track minus the 15rem step list beside it, so it - and only
+   it - can run short of room. It scrolls inside itself instead of widening the results band
+   and dragging the whole page sideways (which also strands the site header, since that only
+   paints one window wide). Same treatment as the step list next to it: a pane of its own,
+   capped to the window, scrolling internally. Names are never shortened - a track you can't
+   read the names in isn't a track. */
+.plan-track {
+  flex: 1 1 auto;
+  min-width: 0;
+  max-height: calc(100vh - var(--header-h, 56px) - 1.5rem);
+  overflow: auto;
+}
+/* Inside the pane, "under the site header" means under the pane's own top edge: the banner
+   legend and the header row below it are measured against --header-h, so zero it for them
+   (not for .plan-track itself, whose max-height still needs the real height). Without this
+   both pin a site-header's height down INTO the pane and overlap the first rows. */
+.plan-track .track-legend, .plan-track table.track { --header-h: 0px; }
 @media (max-width: 760px) {
   .plan-follow { flex-direction: column; }
   .plan-steps { flex-basis: auto; width: 100%; position: static; max-height: none; }
@@ -2325,3 +2368,34 @@ table.track th.guaranteed-col, table.track td.guaranteed-col {
   background: color-mix(in srgb, var(--r-uber) 26%, transparent);
   box-shadow: 0 0 12px color-mix(in srgb, var(--r-uber) 45%, transparent);
 }
+
+/* Narrowing a big breakdown: tick the cats a plan has to get. Sits above the rows, quiet
+   until something is ticked - it only matters when there are more plans than anyone reads. */
+.plan-filter {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem 0.6rem;
+  margin: 0 0 0.6rem;
+  font-size: 0.85rem;
+}
+.plan-filter-label { color: var(--muted); font-family: var(--head-font); font-weight: 600; }
+.plan-filter-cats { display: flex; flex-wrap: wrap; gap: 0.3rem; }
+.filter-cat {
+  margin: 0;
+  padding: 0.1rem 0.5rem;
+  font-size: 0.8rem;
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  color: var(--muted);
+}
+.filter-cat:hover { color: var(--ink); border-color: var(--accent); filter: none; }
+.filter-cat[aria-pressed="true"] {
+  background: color-mix(in srgb, var(--accent) 18%, transparent);
+  border-color: var(--accent);
+  color: var(--accent);
+  font-weight: 600;
+}
+.plan-filter-clear { margin: 0; padding: 0.1rem 0.5rem; font-size: 0.8rem; background: none; color: var(--muted); border: 0; text-decoration: underline; }
+.plan-filter-count { margin-left: auto; color: var(--muted); white-space: nowrap; }

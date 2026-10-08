@@ -519,8 +519,14 @@ def beam_search(
     ticket_value: int = CATFOOD_PER_DRAW,
     banner_currency: Mapping[str, str] | None = None,
     upper_bound: float = INF,
+    partial: bool = False,
 ) -> Path | None:
-    """Keep only the `width` most promising paths each step. Fast, not guaranteed optimal."""
+    """Keep only the `width` most promising paths each step. Fast, not guaranteed optimal.
+
+    ``partial`` answers "how many of these can I get?" instead of "can I get them all?":
+    with no path to every target it returns the one that collects the most (cheapest among
+    those) rather than nothing. A budget short of the whole wishlist is the normal case, and
+    the useful answer there is the biggest haul it buys."""
     graphs = list(graphs)
     targets = frozenset(targets)
 
@@ -532,7 +538,7 @@ def beam_search(
     # reachability BFS: the frontier is width-capped, so a target set that can't be
     # collected just runs off the end of the rolled window and returns None anyway - the
     # full pre-check can cost more than the whole beam search.
-    if not _all_occur_ahead(occurrences, targets - start.found, start.position):
+    if not partial and not _all_occur_ahead(occurrences, targets - start.found, start.position):
         return None
 
     floor = _multi_floor(multis)
@@ -542,6 +548,11 @@ def beam_search(
     came_from: dict[State, tuple] = {}
     best_goal: State | None = None
     best_goal_cost = (INF, INF, INF)
+    # The best haul seen anywhere, for `partial`: most targets collected, then cheapest.
+    # Tracked over every state reached, including the ones dropped from the frontier for
+    # being unable to finish the set - those are exactly where a partial answer lives.
+    best_haul: State | None = None
+    best_haul_key: tuple = (0, (INF, INF, INF))
     frontier = [start]
 
     while frontier:
@@ -562,6 +573,10 @@ def beam_search(
                     best_cost[nxt] = new_g
                     came_from[nxt] = (state, leg)
 
+                    hits = len(targets & nxt.found) if partial else 0
+                    if hits and (-hits, new_g) < best_haul_key:
+                        best_haul, best_haul_key = nxt, (-hits, new_g)
+
                     if targets <= nxt.found:
                         if new_g < best_goal_cost:
                             best_goal, best_goal_cost = nxt, new_g
@@ -576,4 +591,7 @@ def beam_search(
         ranked.sort(key=lambda item: (item[0], item[1], item[2]))
         frontier = [state for *_, state in ranked[:width]]
 
-    return _reconstruct(best_goal, came_from, start) if best_goal is not None else None
+    if best_goal is not None:
+        return _reconstruct(best_goal, came_from, start)
+
+    return _reconstruct(best_haul, came_from, start) if best_haul is not None else None

@@ -70,3 +70,33 @@ def test_plans_are_scoped_through_the_unit_they_hang_off():
         UnitPlan.objects.create(unit=Unit.objects.create(unit_id=1, name="ネコ"), tf=True)
 
     assert list(UnitPlan.objects.all()) == []
+
+
+def _guide(**regions):
+    return lambda: {"regions": regions}
+
+
+@pytest.mark.django_db
+def test_in_guide_drops_units_the_cat_guide_doesnt_list(monkeypatch):
+    monkeypatch.setattr("planner.models.load_guide", _guide(en=[1]))
+    Unit.objects.create(unit_id=1, name="Cat")
+    Unit.objects.create(unit_id=77, name="Droid Cat")
+
+    assert list(Unit.objects.in_guide().values_list("name", flat=True)) == ["Cat"]
+
+
+@pytest.mark.django_db
+def test_in_guide_keeps_every_unit_of_a_region_the_guide_cant_list_in_full(monkeypatch):
+    monkeypatch.setattr("planner.models.load_guide", _guide(jp=[1]))
+    with region.using("jp"):
+        Unit.objects.create(unit_id=77, name="ドロイド")
+
+        assert Unit.objects.in_guide().count() == 1
+
+
+@pytest.mark.django_db
+def test_in_guide_keeps_every_unit_when_the_guide_lists_none(monkeypatch):
+    monkeypatch.setattr("planner.models.load_guide", _guide())
+    Unit.objects.create(unit_id=77, name="Droid Cat")
+
+    assert Unit.objects.in_guide().count() == 1
