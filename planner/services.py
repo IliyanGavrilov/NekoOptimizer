@@ -9,6 +9,8 @@ from itertools import combinations
 from typing import NamedTuple
 from urllib.parse import quote
 
+from django.db import transaction
+
 from neko.bcdata import load_records
 from neko.catalogue import match_names, name_index
 from neko.gachadata import (
@@ -2718,38 +2720,66 @@ def unit_for_cat(name: str, rarity: str = "") -> Unit:
     return unit
 
 
+_BATCH = 1000  # rows per bulk statement
+
+
+@transaction.atomic
 def import_cats(
     banners: Mapping[str, BannerRolls],
     dates: Mapping[str, tuple[date, date]] | None = None,
 ) -> int:
-    """Add rolled cats and their banner membership to the catalogue; return new-cat count."""
+    """Add rolled cats and their banner membership to the catalogue; return new-cat count.
+    Written in bulk: a region's schedule rolls ~200k pulls, and a few queries per pull
+    take hours against a remote database."""
     dates = dates or {}
-    created = 0
+    members = {
+        name: {pull.cat for pull in (*rolls.pulls, *rolls.guaranteed)}
+        for name, rolls in banners.items()
+    }
+    rarities = {}  # each cat's last non-empty rolled rarity
+    for rolls in banners.values():
+        for pull in (*rolls.pulls, *rolls.guaranteed):
+            if pull.rarity.value:
+                rarities[pull.cat] = pull.rarity.value
 
-    for banner_name, rolls in banners.items():
-        banner, _ = Banner.objects.get_or_create(name=banner_name)
-        run = dates.get(banner_name)
+    known = set(Banner.objects.filter(name__in=members).values_list("name", flat=True))
+    Banner.objects.bulk_create(
+        [Banner(name=name) for name in members.keys() - known], batch_size=_BATCH
+    )
+    stored = {banner.name: banner for banner in Banner.objects.filter(name__in=members)}
+    moved = []
+    for name, banner in stored.items():
+        run = dates.get(name)
         if run and (banner.start, banner.end) != run:
             banner.start, banner.end = run
-            banner.save(update_fields=["start", "end"])
+            moved.append(banner)
+    Banner.objects.bulk_update(moved, ["start", "end"], batch_size=_BATCH)
 
-        for pull in (*rolls.pulls, *rolls.guaranteed):
-            cat, was_created = Cat.objects.get_or_create(
-                name=pull.cat, defaults={"rarity": pull.rarity.value}
-            )
-            created += int(was_created)
+    names = set().union(*members.values())
+    cats = {cat.name: cat for cat in Cat.objects.filter(name__in=names)}
+    new = [Cat(name=name, rarity=rarities.get(name, "")) for name in names - cats.keys()]
+    Cat.objects.bulk_create(new, batch_size=_BATCH)
+    rerated = [
+        cat for name, cat in cats.items() if name in rarities and cat.rarity != rarities[name]
+    ]
+    for cat in rerated:
+        cat.rarity = rarities[cat.name]
+    Cat.objects.bulk_update(rerated, ["rarity"], batch_size=_BATCH)
 
-            if not was_created and pull.rarity.value and cat.rarity != pull.rarity.value:
-                cat.rarity = pull.rarity.value
-                cat.save(update_fields=["rarity"])
+    cats = {cat.name: cat for cat in Cat.objects.filter(name__in=names)}
+    unlinked = [cat for cat in cats.values() if cat.unit_id is None]
+    for cat in unlinked:
+        cat.unit = unit_for_cat(cat.name, cat.rarity)
+    Cat.objects.bulk_update(unlinked, ["unit"], batch_size=_BATCH)
 
-            if cat.unit_id is None:
-                cat.unit = unit_for_cat(pull.cat, pull.rarity.value)
-                cat.save(update_fields=["unit"])
+    link = Cat.banners.through
+    linked = set(link.objects.filter(banner__in=stored.values()).values_list("banner_id", "cat_id"))
+    pairs = {(stored[b].pk, cats[c].pk) for b, cat_names in members.items() for c in cat_names}
+    link.objects.bulk_create(
+        [link(banner_id=b, cat_id=c) for b, c in pairs - linked], batch_size=_BATCH
+    )
 
-            banner.cats.add(cat)
-
-    return created
+    return len(new)
 
 
 # ---- Normal Capsules: the normal-side gacha on its own seed ----------------------
