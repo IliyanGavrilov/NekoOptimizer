@@ -3,6 +3,7 @@ from datetime import date
 
 import pytest
 
+from neko import region
 from neko.gachadata import GachaEventRow
 from neko.graph import build_graphs
 from neko.models import BannerRolls, Leg, Path, Pull, Rarity, TrackPull
@@ -33,6 +34,7 @@ from planner.services import (
     plan_summary,
     series_names,
     set_sections,
+    subset_plan,
     subset_solutions,
     tier_badges,
     tier_list_doc,
@@ -41,6 +43,7 @@ from planner.services import (
     trace_marks,
     unit_facets,
     unit_stats,
+    wiki_unit_url,
     wiki_url,
 )
 
@@ -1602,6 +1605,77 @@ def test_subset_solutions_lists_unobtainable_picks_individually_not_as_combos():
     assert not_found == [["Ghost"], ["Phantom"]]
 
 
+def test_subset_solutions_marks_every_row_exact_while_the_breakdown_is_exhaustive():
+    pulls = {"X": [TrackPull(1, "A", "Bahamut", U), TrackPull(2, "A", "Kasli", U)]}
+    solutions = subset_solutions(pulls, {}, {}, {"Bahamut", "Kasli"}, tickets=2, catfood=0)
+    assert all(s["exact"] for s in solutions)
+
+
+def test_subset_solutions_detail_builds_a_track_only_for_the_rows_that_will_show_one():
+    # 2^n rows each holding a 100-row table is hundreds of megabytes of HTML, so the rest
+    # come back summary-only and subset_plan fills one in when its row is opened.
+    pulls = {"X": [TrackPull(1, "A", "Bahamut", U), TrackPull(2, "A", "Kasli", U)]}
+    solutions = subset_solutions(
+        pulls, {}, {}, {"Bahamut", "Kasli"}, tickets=2, catfood=0, detail=1
+    )
+    found = [s for s in solutions if s["found"]]
+    assert len(found) == 3
+    assert "track" in found[0]
+    assert all("track" not in s for s in found[1:])
+    # Summary-only still means priced and applicable - only the table is missing.
+    assert all(s["cost_label"] and s["cats"] for s in found[1:])
+
+
+def test_subset_plan_solves_one_named_subset_with_its_track():
+    pulls = {"X": [TrackPull(1, "A", "Bahamut", U), TrackPull(2, "A", "Kasli", U)]}
+    row = subset_plan(pulls, {}, {}, {"Kasli"}, tickets=2, catfood=0)
+    assert row["targets"] == ["Kasli"]
+    assert row["track"]["rows"]
+
+
+def test_subset_plan_is_none_when_the_budget_cannot_reach_those_cats():
+    pulls = {"X": [TrackPull(1, "A", "Bahamut", U), TrackPull(2, "A", "Kasli", U)]}
+    assert subset_plan(pulls, {}, {}, {"Kasli"}, tickets=0, catfood=0) is None
+
+
+def test_a_wishlist_too_big_for_the_budget_still_gets_a_how_far_can_i_get_plan(monkeypatch):
+    # The bounded branch used to answer "can\'t afford all of them" with nothing but one-cat
+    # plans, which reads as the planner giving up. A budget short of the whole wishlist is
+    # the normal case; the useful row is the biggest haul it does buy.
+    monkeypatch.setattr("planner.services.SUBSET_TARGET_LIMIT", 2)
+    pulls = {
+        "X": [
+            TrackPull(1, "A", "Bahamut", U),
+            TrackPull(2, "A", "Kasli", U),
+            TrackPull(3, "A", "Gao", U),
+        ]
+    }
+    solutions = subset_solutions(pulls, {}, {}, {"Bahamut", "Kasli", "Gao"}, tickets=2, catfood=0)
+    best = solutions[0]
+    assert best["found"] and best["size"] == 2
+    # Best-effort, so it says so rather than passing itself off as the cheapest plan.
+    assert best["exact"] is False
+
+
+def test_subset_solutions_flags_only_the_beams_whole_set_row_as_not_proven_cheapest(
+    monkeypatch,
+):
+    # Past the limit the whole set comes from a bounded beam search while each single cat is
+    # still solved exactly, so the UI can say which price is a floor and which is a best-so-far.
+    monkeypatch.setattr("planner.services.SUBSET_TARGET_LIMIT", 2)
+    pulls = {
+        "X": [
+            TrackPull(1, "A", "Bahamut", U),
+            TrackPull(2, "A", "Kasli", U),
+            TrackPull(3, "A", "Gao", U),
+        ]
+    }
+    solutions = subset_solutions(pulls, {}, {}, {"Bahamut", "Kasli", "Gao"}, tickets=3, catfood=0)
+    exact = {tuple(s["targets"]): s["exact"] for s in solutions if s["found"]}
+    assert exact[("Bahamut", "Gao", "Kasli")] is False
+    assert all(flag for key, flag in exact.items() if len(key) == 1)
+
+
 @pytest.mark.parametrize(
     "rarity, title",
     [
@@ -1634,6 +1708,35 @@ def test_wiki_url_keeps_an_ampersand_literal():
 
 def test_wiki_url_falls_back_to_the_bare_name_for_an_unknown_rarity():
     assert wiki_url("Doge", "") == WIKI_BASE + "Doge"
+
+
+def test_wiki_url_folds_the_catalogues_fullwidth_ampersand():
+    # The catalogue writes 'Kano ＆ Souma'; the wiki files the page under a plain '&'.
+    assert wiki_url("Kano ＆ Souma", "Rare") == WIKI_BASE + "Kano_&_Souma_(Rare_Cat)"
+
+
+def test_wiki_unit_url_titles_a_localized_region_by_its_english_name(monkeypatch):
+    monkeypatch.setattr("planner.services._english_names", lambda: {77: "Droid Cat"})
+    with region.using("jp"):
+        assert wiki_unit_url(77, "ドロイド", "Rare") == WIKI_BASE + "Droid_Cat_(Rare_Cat)"
+
+
+def test_wiki_unit_url_is_empty_for_a_unit_the_english_version_never_got(monkeypatch):
+    monkeypatch.setattr("planner.services._english_names", lambda: {})
+    with region.using("jp"):
+        assert wiki_unit_url(999, "シロウ", "Rare") == ""
+
+
+def test_wiki_unit_url_is_empty_when_the_english_name_is_still_an_id(monkeypatch):
+    monkeypatch.setattr("planner.services._english_names", lambda: {788: "789-2"})
+    with region.using("kr"):
+        assert wiki_unit_url(788, "고양이", "Special") == ""
+
+
+def test_wiki_unit_url_is_empty_when_the_english_files_never_translated_the_name(monkeypatch):
+    monkeypatch.setattr("planner.services._english_names", lambda: {673: "ネコチーター"})
+    with region.using("jp"):
+        assert wiki_unit_url(673, "ネコチーター", "Uber Super Rare") == ""
 
 
 def _tier_doc(*rows):

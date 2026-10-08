@@ -1,5 +1,6 @@
 from django.urls import resolve
 
+from neko import region
 from planner.context_processors import tools
 from planner.links import PAGE_LINKS, unit_links
 
@@ -41,3 +42,11 @@ def test_a_page_without_curated_links_gets_none():
 
 def test_an_unresolved_request_gets_no_links():
     assert tools(_Request())["page_links"] == ()
+
+
+def test_unit_links_drop_the_wiki_when_the_english_version_never_got_the_unit(monkeypatch):
+    monkeypatch.setattr("planner.services._english_names", lambda: {})
+    with region.using("jp"):
+        labels = [link.label for link in unit_links(999, "シロウ", "Rare")]
+
+    assert labels == ["battlecatsinfo", "battlecatsstats"]

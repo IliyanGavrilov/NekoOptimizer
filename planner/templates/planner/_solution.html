@@ -1,0 +1,21 @@
+{% comment %}One plan row of the solutions accordion: the targets it gets, how many of your
+picks that is, its price, and - once opened - the steps + highlighted track. Only the best
+row ships its body; the rest carry their cats and fetch it from plan_row on first open.
+{% endcomment %}
+<details class="solution" data-cats="{{ s.targets|join:"|" }}"{% if open and s.found %} open{% endif %}>
+  <summary>
+    <span class="sol-cats">{{ s.targets|join:", " }}</span>
+    <span class="sol-count" title="This plan gets {{ s.size }} of the {{ target_total }} cat{{ target_total|pluralize }} you searched for">{{ s.size }}/{{ target_total }}</span>
+    {% if s.found and not s.exact %}<span class="sol-approx" title="Best plan found, not a proven cheapest one. Past {{ subset_limit }} cats the search for the whole set is bounded - an exact one would take 2^N searches - so a cheaper plan may exist. Every smaller row here IS exact.">best found</span>{% endif %}
+    <span class="sol-cost{% if not s.found %} not-found{% endif %}">{% if s.found %}{{ s.cost_label }}{% else %}Not found{% endif %}</span>
+  </summary>
+  {% if s.found %}
+    <div class="solution-body"{% if not s.track %} data-subset="{{ s.targets|join:"|" }}"{% endif %}>
+      {% if s.track %}
+        {% include "planner/_solution_body.html" with s=s %}
+      {% else %}
+        <p class="muted plan-loading">Working out this plan&hellip;</p>
+      {% endif %}
+    </div>
+  {% endif %}
+</details>

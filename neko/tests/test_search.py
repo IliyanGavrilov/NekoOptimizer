@@ -185,6 +185,20 @@ def test_beam_collects_multiple_targets():
     assert set(result.cats) == {"Bahamut", "Kasli"}
 
 
+def test_partial_beam_returns_the_biggest_haul_the_budget_buys():
+    # One ticket short of both: "nothing" is the wrong answer to "what can I get" - the
+    # budget still buys one of them, and that is the plan worth showing.
+    g = banner("x", (1, "A", "Bahamut", U), (2, "A", "Kasli", U))
+    assert beam_search([g], {"Bahamut", "Kasli"}, start(tickets=1), width=5) is None
+    result = beam_search([g], {"Bahamut", "Kasli"}, start(tickets=1), width=5, partial=True)
+    assert set(result.cats) == {"Bahamut"}
+
+
+def test_partial_beam_still_returns_none_when_nothing_is_reachable():
+    g = banner("x", (1, "A", "Cat", R))
+    assert beam_search([g], {"Bahamut"}, start(tickets=5), 5, partial=True) is None
+
+
 def test_impossible_pair_returns_none_without_exhausting_the_state_space():
     g = banner("x", (1, "A", "Aaa", U), (1, "B", "Bbb", U), (2, "A", "Cat", R), (2, "B", "Dog", R))
     assert astar([g], {"Aaa", "Bbb"}, start(tickets=9)) is None

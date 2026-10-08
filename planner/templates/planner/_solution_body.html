@@ -1,0 +1,21 @@
+{% comment %}A solution row's body: apply button, step list and highlighted track. Rendered
+with the row for the best plan, and fetched from plan_row when any other row is opened -
+the breakdown is 2^n rows and a track apiece is far more HTML than a browser will take.
+{% endcomment %}
+<div class="view-bar">
+  <button type="button" class="apply-plan"
+          data-cats="{{ s.cats }}"
+          data-tickets="{{ s.tickets_used }}"
+          data-catfood="{{ s.cost }}"
+          data-platinum="{{ s.platinum_used }}"
+          data-legend="{{ s.legend_used }}"{% if s.seed_after %}
+          data-seed-after="{{ s.seed_after }}"
+          data-last-cat="{{ s.last_cat }}"{% endif %}>Apply this plan <span class="apply-cost">{{ s.cost_label }}</span></button>
+</div>
+{# Steps and track merged into one follow-along: the step list walks the plan #}
+{# and lights each move on the track (app.js). Steps first so they stack above #}
+{# the track on narrow screens. #}
+<div class="plan-follow">
+  {% include "planner/_steps.html" with legs=s.legs total=s.cost_label %}
+  <div class="plan-track">{% include "planner/_tracks.html" with track=s.track %}</div>
+</div>

@@ -679,7 +679,7 @@ if (picker) {
 
   // The Rolls-table display controls live outside the form (they sit with the table),
   // so fold their current values into every roll/plan post.
-  const post = (url) => {
+  const post = (url, extra) => {
     const body = new FormData(plannerForm);
     body.set("track_length", trackLengthEl.value);
     body.set("simulate_guaranteed", simGuaranteedEl.value);
@@ -700,6 +700,7 @@ if (picker) {
       if (traceState.guaranteed) body.set("trace_guaranteed", "1");
       if (traceState.reroll) body.set("trace_reroll", "1");
     }
+    for (const [key, value] of extra || []) body.append(key, value);
     return fetch(url, { method: "POST", body, headers: { "X-CSRFToken": token } });
   };
 
@@ -757,6 +758,76 @@ if (picker) {
     clearTimeout(shareTimer);
     shareTimer = setTimeout(() => (shareLink.textContent = "Copy link"), 2000);
   });
+
+  // ---- Narrowing a big breakdown ---------------------------------------
+  // An exact breakdown is 2^n rows. Ticking cats keeps only the plans that get all of
+  // them; everything else folds away. A view over the rows already on the page - nothing
+  // is re-solved, so it stays instant however many there are.
+  const filterPlans = () => {
+    const bar = solutions.querySelector("#planFilter");
+    if (!bar) return;
+    const wanted = [...bar.querySelectorAll('.filter-cat[aria-pressed="true"]')].map(
+      (b) => b.dataset.cat,
+    );
+    const rows = solutions.querySelectorAll("#planResults > .solution");
+    let shown = 0;
+    rows.forEach((row) => {
+      const cats = new Set(row.dataset.cats ? row.dataset.cats.split("|") : []);
+      const keep = wanted.every((name) => cats.has(name));
+      row.hidden = !keep;
+      if (keep) shown += 1;
+    });
+    bar.querySelector(".plan-filter-clear").hidden = !wanted.length;
+    const count = bar.querySelector(".plan-filter-count");
+    count.textContent = wanted.length
+      ? `${shown} of ${rows.length} plans`
+      : `${rows.length} plan${rows.length === 1 ? "" : "s"}`;
+  };
+
+  solutions.addEventListener("click", (e) => {
+    const chip = e.target.closest(".filter-cat");
+    if (chip) {
+      chip.setAttribute("aria-pressed", chip.getAttribute("aria-pressed") === "true" ? "false" : "true");
+      return filterPlans();
+    }
+    if (e.target.closest(".plan-filter-clear")) {
+      solutions
+        .querySelectorAll(".filter-cat")
+        .forEach((b) => b.setAttribute("aria-pressed", "false"));
+      filterPlans();
+    }
+  });
+
+  // ---- A row's plan, fetched when you open it --------------------------
+  // Only the best plan arrives with its track; every other row carries just its cats and
+  // asks for the rest on first open. The full breakdown is 2^n rows, and a 100-row table
+  // apiece is hundreds of megabytes of HTML - more than a browser will take, and nobody
+  // reads 1023 tracks anyway. `toggle` doesn't bubble, so this listens in the capture phase.
+  solutions.addEventListener(
+    "toggle",
+    async (e) => {
+      const row = e.target;
+      if (!(row instanceof HTMLDetailsElement) || !row.classList.contains("solution")) return;
+      const body = row.open && row.querySelector(".solution-body[data-subset]");
+      if (!body || body.dataset.loading) return;
+      body.dataset.loading = "1";
+      const cats = new URLSearchParams();
+      body.dataset.subset.split("|").forEach((name) => cats.append("subset", name));
+      const resp = await post(row.closest("#planResults").dataset.rowUrl, cats);
+      const html = resp.ok ? await resp.text() : "";
+      if (!resp.ok) {
+        delete body.dataset.loading; // a failed fetch shouldn't wedge the row shut
+        body.querySelector(".plan-loading").textContent = "Couldn't work this plan out.";
+        return;
+      }
+      delete body.dataset.subset;
+      body.innerHTML = html || '<p class="muted">No plan for these cats within your resources.</p>';
+      syncRollDisplay(); // this track carries icons too
+      wireFollowAlong(body); // step list + track walk together
+      setLegendHeight();
+    },
+    true,
+  );
 
   // ---- Apply a plan (delegated; solutions are injected by AJAX) --------
   // Own its cats, drop them from the wishlist, and spend its tickets/catfood.
@@ -1609,19 +1680,23 @@ if (catPopup) {
   const gridEl = catPopup.querySelector(".cat-stats-grid");
   const chipsEl = catPopup.querySelector(".cat-popup-chips");
   const noteEl = catPopup.querySelector(".cat-stats-note");
-  const cache = new Map(); // name -> Promise<info | null>
+  // Keyed by catalogue id where the opener carries one: two units can share a name
+  // (the Special and the Rare Cat Bros), and a name lookup always lands on the same one.
+  const cache = new Map(); // "#id" or name -> Promise<info | null>
 
-  const load = (name) => {
-    if (!cache.has(name)) {
+  const load = (name, uid) => {
+    const key = uid ? `#${uid}` : name;
+    if (!cache.has(key)) {
+      const query = uid ? `uid=${encodeURIComponent(uid)}` : `name=${encodeURIComponent(name)}`;
       cache.set(
-        name,
-        fetch(`${infoUrl}?name=${encodeURIComponent(name)}`)
+        key,
+        fetch(`${infoUrl}?${query}`)
           .then((r) => (r.ok ? r.json() : null))
           .then((d) => (d && d.found ? d : null))
           .catch(() => null),
       );
     }
-    return cache.get(name);
+    return cache.get(key);
   };
 
   const chip = (text, kind) => {
@@ -1674,8 +1749,8 @@ if (catPopup) {
     noteEl.textContent = `Lv ${info.stats.level} stats with max treasures; cost in chapter 2.`;
   }
 
-  async function openFor(name) {
-    const info = await load(name);
+  async function openFor(name, uid) {
+    const info = await load(name, uid);
     if (!info) return; // a cat not in the catalogue yet: no forms or links to show
     nameEl.textContent = info.name;
     rarityEl.textContent = info.rarity;
@@ -1724,7 +1799,7 @@ if (catPopup) {
     );
     if (!trigger) return;
     e.preventDefault();
-    openFor(trigger.dataset.name);
+    openFor(trigger.dataset.name, trigger.dataset.uid);
   });
   // Close on the ×, or on a click in the backdrop (outside the dialog's box). Esc is
   // handled natively by showModal().
