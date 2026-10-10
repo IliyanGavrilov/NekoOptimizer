@@ -8,7 +8,7 @@ from neko.rng import backtrack
 from neko.roller import DEFAULT_COUNT, RollResult
 from neko.search import Multi
 from planner.forms import MAX_FUTURE_UBERS, MAX_TRACK_LENGTH
-from planner.models import Banner, Cat, Seed, Unit
+from planner.models import Banner, Cat, Profile, Seed, Unit
 
 R = Rarity.RARE
 U = Rarity.UBER_SUPER_RARE
@@ -16,8 +16,12 @@ U = Rarity.UBER_SUPER_RARE
 _ids = count(1)
 
 
-def cat_with_unit(name, owned=False, wanted=False):
-    unit = Unit.objects.create(unit_id=next(_ids), name=name, owned=owned, wanted=wanted)
+def cat_with_unit(name, profile=None, owned=False, wanted=False):
+    unit = Unit.objects.create(unit_id=next(_ids), name=name)
+    if owned:
+        profile.owned.add(unit)
+    if wanted:
+        profile.wanted.add(unit)
     return Cat.objects.create(name=name, unit=unit)
 
 
@@ -71,12 +75,12 @@ def test_post_persists_seed(client, monkeypatch):
         "planner.views.fetch_banners", fixed_banners(TrackPull(1, "A", "Bahamut", U))
     )
     client.post("/plan/", {"seed": 7, "tickets": 1, "catfood": 0, "targets": [cat.pk]})
-    assert Seed.current() == 7
+    assert Seed.objects.get().value == 7
 
 
 @pytest.mark.django_db
-def test_use_wishlist_searches_wanted_cats(client, monkeypatch):
-    cat_with_unit("Bahamut", wanted=True)
+def test_use_wishlist_searches_wanted_cats(client, profile, monkeypatch):
+    cat_with_unit("Bahamut", profile, wanted=True)
     monkeypatch.setattr(
         "planner.views.fetch_banners", fixed_banners(TrackPull(1, "A", "Bahamut", U))
     )
@@ -85,12 +89,14 @@ def test_use_wishlist_searches_wanted_cats(client, monkeypatch):
 
 
 @pytest.mark.django_db
-def test_find_plan_drops_off_banner_targets_instead_of_flooding_not_found_rows(client, monkeypatch):
+def test_find_plan_drops_off_banner_targets_instead_of_flooding_not_found_rows(
+    client, profile, monkeypatch
+):
     monkeypatch.setattr(
         "planner.views.fetch_banners", fixed_banners(TrackPull(1, "A", "Bahamut", U))
     )
     on_banner = cat_with_unit("Bahamut")  # in this banner's pool
-    cat_with_unit("Off Banner Cat", wanted=True)  # wishlisted, but not in the pool
+    cat_with_unit("Off Banner Cat", profile, wanted=True)  # wishlisted, but not in the pool
     html = client.post(
         "/plan/",
         {"seed": 7, "tickets": 1, "catfood": 0, "targets": [on_banner.pk], "use_wishlist": "on"},
@@ -291,38 +297,37 @@ def test_explore_mode_rolls_to_the_horizon(client, monkeypatch):
 
 
 @pytest.mark.django_db
-def test_owned_cats_are_still_targetable(client):
-    cat_with_unit("Bahamut", owned=True).banners.add(Banner.objects.create(name="Epic"))
+def test_owned_cats_are_still_targetable(client, profile):
+    cat_with_unit("Bahamut", profile, owned=True).banners.add(Banner.objects.create(name="Epic"))
     assert b"Bahamut" in client.get("/").content
 
 
 @pytest.mark.django_db
-def test_seed_field_starts_empty(client):
-    Seed.store(42)
+def test_seed_field_starts_empty(client, profile):
+    Seed.store(profile, 42)
     assert b'name="seed" value="42"' not in client.get("/").content
 
 
 @pytest.mark.django_db
-def test_apply_plan_owns_cats_and_keeps_the_wishlist_mark(client):
-    cat = cat_with_unit("Bahamut", owned=False, wanted=True)
+def test_apply_plan_owns_cats_and_keeps_the_wishlist_mark(client, profile):
+    cat = cat_with_unit("Bahamut", profile, wanted=True)
     client.post("/apply/", {"cats": ["Bahamut"]})
-    cat.refresh_from_db()
     # Getting a cat doesn't un-want it: owned wins, but the wishlist star is left intact.
-    assert (cat.owned, cat.wanted) == (True, True)
+    assert profile.marks() == ({cat.unit_id}, {cat.unit_id})
 
 
 @pytest.mark.django_db
-def test_apply_plan_advances_the_stored_seed(client):
-    Seed.store(7)
+def test_apply_plan_advances_the_stored_seed(client, profile):
+    Seed.store(profile, 7)
     client.post("/apply/", {"cats": ["Bahamut"], "seed_after": 12345})
-    assert Seed.current() == 12345
+    assert Seed.objects.get().value == 12345
 
 
 @pytest.mark.django_db
-def test_apply_plan_without_a_seed_after_keeps_the_stored_seed(client):
-    Seed.store(7)
+def test_apply_plan_without_a_seed_after_keeps_the_stored_seed(client, profile):
+    Seed.store(profile, 7)
     client.post("/apply/", {"cats": ["Bahamut"]})
-    assert Seed.current() == 7
+    assert Seed.objects.get().value == 7
 
 
 @pytest.mark.django_db
@@ -428,11 +433,11 @@ def test_tracks_endpoint_omits_the_found_panel_without_picked_cats(client, monke
 
 
 @pytest.mark.django_db
-def test_tracks_endpoint_find_includes_the_wishlist_when_enabled(client, monkeypatch):
+def test_tracks_endpoint_find_includes_the_wishlist_when_enabled(client, profile, monkeypatch):
     monkeypatch.setattr(
         "planner.views.fetch_banners", fixed_banners(TrackPull(2, "A", "Aphrodite", U))
     )
-    cat_with_unit("Aphrodite", wanted=True)
+    cat_with_unit("Aphrodite", profile, wanted=True)
     assert b"found-cats" not in client.post("/tracks/", {"seed": 7}).content  # off by default
     html = client.post("/tracks/", {"seed": 7, "use_wishlist": "on"}).content.decode()
     assert "found-cats" in html
@@ -458,13 +463,15 @@ def test_tracks_endpoint_flags_a_pick_no_banner_carries_as_unreachable(client, m
 
 
 @pytest.mark.django_db
-def test_tracks_endpoint_find_ceilings_an_in_pool_wishlist_miss(client, monkeypatch):
+def test_tracks_endpoint_find_ceilings_an_in_pool_wishlist_miss(client, profile, monkeypatch):
     monkeypatch.setattr(
         "planner.views.fetch_banners",
         # Ghost Cat can drop on this banner (in its pool) but doesn't in the rolled window.
         fixed_banners(TrackPull(1, "A", "Aphrodite", U), pool=["Ghost Cat"]),
     )
-    cat_with_unit("Ghost Cat", wanted=True)  # on the wishlist, in the pool, but never rolled
+    cat_with_unit(
+        "Ghost Cat", profile, wanted=True
+    )  # on the wishlist, in the pool, but never rolled
     html = client.post("/tracks/", {"seed": 7, "use_wishlist": "on"}).content.decode()
     # A searched wishlist cat these banners CAN give but that never surfaces ceilings at 999+,
     # the same as a picked target - confirmed not coming, with the ★ wishlist mark (a "wanted"
@@ -525,11 +532,13 @@ def test_find_plan_can_target_a_future_uber(client, monkeypatch):
 
 
 @pytest.mark.django_db
-def test_tracks_endpoint_find_drops_an_off_banner_wishlist_cat(client, monkeypatch):
+def test_tracks_endpoint_find_drops_an_off_banner_wishlist_cat(client, profile, monkeypatch):
     monkeypatch.setattr(
         "planner.views.fetch_banners", fixed_banners(TrackPull(1, "A", "Aphrodite", U))
     )
-    cat_with_unit("Off Banner Cat", wanted=True)  # wishlisted, but not in this banner's pool
+    cat_with_unit(
+        "Off Banner Cat", profile, wanted=True
+    )  # wishlisted, but not in this banner's pool
     html = client.post("/tracks/", {"seed": 7, "use_wishlist": "on"}).content.decode()
     # Not in the pool: the wishlist search skips it rather than ceilinging it, so the panel
     # doesn't flood with every off-banner cat you want - it stays hidden with nothing to show.
@@ -836,3 +845,19 @@ def test_tier_list_page_renders_the_per_set_list_its_slug_names(client, monkeypa
 def test_tier_list_page_404s_on_an_unknown_list(client, monkeypatch):
     monkeypatch.setattr("planner.views.load_tiers", _set_list_doc)
     assert client.get("/tiers/base-tier-lists/nope/").status_code == 404
+
+
+@pytest.mark.django_db
+def test_apply_plan_owns_cats_for_the_visitor_alone(client, profile):
+    cat_with_unit("Bahamut")
+    other = Profile.objects.create()
+    client.post("/apply/", {"cats": ["Bahamut"]})
+    assert not other.units("owned").exists()
+
+
+@pytest.mark.django_db
+def test_the_picker_marks_only_the_visitors_own_cats(client, profile):
+    cat_with_unit("Bahamut", Profile.objects.create(), owned=True).banners.add(
+        Banner.objects.create(name="Epic")
+    )
+    assert b"chip owned" not in client.get("/").content

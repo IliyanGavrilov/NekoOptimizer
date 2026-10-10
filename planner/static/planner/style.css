@@ -205,6 +205,27 @@ a:hover { text-decoration: underline; }
 }
 .region-switch button:focus-visible { outline-offset: -2px; }
 
+/* Log in / sign up, or log out: plain links like the nav's. */
+.account { display: flex; align-items: center; gap: 0.3rem; }
+.account form { margin: 0; }
+.account a, .account button {
+  padding: 0.35rem 0.7rem;
+  border-radius: 999px;
+  color: var(--muted);
+  white-space: nowrap;
+}
+.account button { background: transparent; border: 0; font: inherit; cursor: pointer; }
+.account a:hover, .account button:hover {
+  background: var(--panel);
+  color: var(--ink);
+  text-decoration: none;
+  filter: none;
+}
+
+.account-form { display: grid; gap: 0.6rem; max-width: 22rem; margin: 1rem 0; }
+.account-form label { display: grid; gap: 0.25rem; }
+.account-form .errorlist { margin: 0; padding-left: 1.1rem; color: var(--r-legend); font-size: 0.82rem; }
+
 /* ---- Layout ---------------------------------------------------------- */
 main {
   max-width: 760px;

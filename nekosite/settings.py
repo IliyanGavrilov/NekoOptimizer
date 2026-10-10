@@ -13,21 +13,42 @@ https://docs.djangoproject.com/en/6.0/ref/settings/
 import os
 from pathlib import Path
 
+import dj_database_url
+from django.core.exceptions import ImproperlyConfigured
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
+# Development defaults; a deploy sets DJANGO_DEBUG=0 and supplies the rest from the
+# environment. See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
+DEBUG = os.environ.get("DJANGO_DEBUG", "1") == "1"
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = "django-insecure-jxaoc&fydf#a6k(%p(ww0x2q9#%1o52sq^g(&yc(p3g1#rby9("
+SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY", "")
+if not SECRET_KEY:
+    if not DEBUG:
+        raise ImproperlyConfigured("DJANGO_SECRET_KEY must be set when DEBUG is off.")
+    SECRET_KEY = "django-insecure-jxaoc&fydf#a6k(%p(ww0x2q9#%1o52sq^g(&yc(p3g1#rby9("
 
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
-
-ALLOWED_HOSTS = ["*"]  # dev-only: LAN testing from another machine
-CSRF_TRUSTED_ORIGINS = ["http://192.168.0.3:8000", "http://192.168.0.3"]  # dev-only: LAN testing
+ALLOWED_HOSTS = os.environ.get("DJANGO_ALLOWED_HOSTS", "*" if DEBUG else "").split(",")
+if render_host := os.environ.get("RENDER_EXTERNAL_HOSTNAME"):
+    ALLOWED_HOSTS.append(render_host)
+if DEBUG:  # LAN testing from another machine
+    CSRF_TRUSTED_ORIGINS = ["http://192.168.0.3:8000", "http://192.168.0.3"]
+else:
+    SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+    SECURE_SSL_REDIRECT = True
+    SESSION_COOKIE_SECURE = CSRF_COOKIE_SECURE = True
+    SECURE_HSTS_SECONDS = 365 * 24 * 60 * 60
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True
+    # With DEBUG off Django logs request errors only to mail_admins; send them to stderr.
+    LOGGING = {
+        "version": 1,
+        "disable_existing_loggers": False,
+        "handlers": {"console": {"class": "logging.StreamHandler"}},
+        "root": {"handlers": ["console"], "level": "WARNING"},
+    }
 
 
 # Application definition
@@ -44,15 +65,16 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
-    "django.middleware.gzip.GZipMiddleware",  # the picker/collection pages are large and repetitive
     "django.middleware.security.SecurityMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",  # ahead of gzip: static files come precompressed
+    "django.middleware.gzip.GZipMiddleware",  # the picker/collection pages are large and repetitive
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
-    "planner.middleware.region_scope",  # every view reads one game version's data
+    "planner.middleware.profile_scope",  # the visitor's own state, and its game version
 ]
 
 ROOT_URLCONF = "nekosite.urls"
@@ -81,11 +103,11 @@ WSGI_APPLICATION = "nekosite.wsgi.application"
 # Database
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
 
+# SQLite locally; a deploy points DATABASE_URL at Postgres.
 DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
-    }
+    "default": dj_database_url.config(
+        default=f"sqlite:///{BASE_DIR / 'db.sqlite3'}", conn_max_age=600, conn_health_checks=True
+    )
 }
 
 
@@ -124,6 +146,19 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
 
 STATIC_URL = "static/"
+STATIC_ROOT = BASE_DIR / "staticfiles"
+STORAGES = {
+    "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
+    "staticfiles": {
+        "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage"
+        if DEBUG
+        else "whitenoise.storage.CompressedManifestStaticFilesStorage"
+    },
+}
+# Dev and tests have no collectstatic output; look files up per request instead.
+WHITENOISE_AUTOREFRESH = DEBUG
+
+LOGIN_REDIRECT_URL = LOGOUT_REDIRECT_URL = "planner"
 
 # Where a cat icon's "<unit id>/<form>.png" hangs off. `fetch_icons` downloads the whole
 # set into static/ (gitignored); the moment it has, we serve our own copies and stop

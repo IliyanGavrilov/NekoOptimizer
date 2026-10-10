@@ -1,0 +1,110 @@
+name: Refresh game data
+
+# Once a day: re-fetch every version's catalogue, schedule and tier lists, and when any
+# committed data changed, merge it through a pull request (Render redeploys on the merge)
+# and import it into the live database. A day that brings nothing new ends after the fetch.
+on:
+  schedule:
+    - cron: "17 5 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+  actions: write # dispatches the checks main requires; a token-made PR triggers none itself
+
+concurrency:
+  group: refresh-data
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.14"
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -r requirements-dev.txt
+
+      # One tarball per version feeds all four BCData-backed commands.
+      - name: Fetch catalogues and schedules
+        run: |
+          curl -sSfL https://git.battlecatsmodding.org/fieryhenry/BCData/raw/metadata.json -o "$RUNNER_TEMP/metadata.json"
+          for region in en jp tw kr; do
+            url=$(python -c 'import json, sys; from neko.bcdata import latest_version, release_url; m = json.load(open(sys.argv[1])); r = sys.argv[2]; print(release_url(m, latest_version(m, r), r))' "$RUNNER_TEMP/metadata.json" "$region")
+            curl -sSfL "$url" -o "$RUNNER_TEMP/$region.tar.xz"
+            for command in fetch_units fetch_gamedata fetch_stats fetch_gacha; do
+              python manage.py "$command" --region "$region" --tarball "$RUNNER_TEMP/$region.tar.xz"
+            done
+          done
+
+      # Both scrape community sites that may turn a runner away; the day's data still lands.
+      - name: Fetch the Cat Guide order and tier lists
+        continue-on-error: true
+        run: |
+          python manage.py fetch_guide
+          python manage.py fetch_tiers
+
+      - name: Look for changes
+        id: diff
+        run: echo "changed=$(python .github/scripts/data_changed.py)" >> "$GITHUB_OUTPUT"
+
+      # The golden seed proves the roll engine still matches godfat on the new data.
+      - name: Tests
+        if: steps.diff.outputs.changed != '0'
+        run: pytest -q
+
+      - name: Open the data pull request
+        if: steps.diff.outputs.changed != '0'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git switch -c data-refresh
+          git add neko/data
+          git commit -m "Refresh game data"
+          git push --force origin data-refresh
+          if [ "$(gh pr view data-refresh --json state -q .state 2>/dev/null)" != "OPEN" ]; then
+            gh pr create --base main --head data-refresh --title "Refresh game data" --body "The daily fetch found new game data. Merged automatically once the checks pass."
+          fi
+          for workflow in ci.yml security.yml codeql.yml; do
+            gh workflow run "$workflow" --ref data-refresh
+          done
+
+      - name: Merge once the checks pass
+        if: steps.diff.outputs.changed != '0'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          sha=$(git rev-parse HEAD)
+          for workflow in ci.yml security.yml codeql.yml; do
+            run=""
+            for attempt in $(seq 30); do
+              run=$(gh run list --workflow "$workflow" --branch data-refresh --event workflow_dispatch --json databaseId,headSha -q "map(select(.headSha == \"$sha\"))[0].databaseId")
+              [ -n "$run" ] && break
+              sleep 10
+            done
+            test -n "$run" || { echo "::error::$workflow never started on the data branch."; exit 1; }
+            gh run watch "$run" --exit-status > /dev/null
+          done
+          gh pr merge data-refresh --squash --delete-branch
+
+      # Render's build applies migrations; this only loads the refreshed rows.
+      - name: Import into the live database
+        if: steps.diff.outputs.changed != '0'
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: |
+          test -n "$DATABASE_URL" || { echo "::error::Add the DATABASE_URL repository secret."; exit 1; }
+          for region in en jp tw kr; do
+            python manage.py import_units --region "$region"
+            python manage.py import_catalogue --region "$region"
+            python manage.py reconcile_units --region "$region"
+          done
