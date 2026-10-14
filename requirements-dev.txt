@@ -6,7 +6,7 @@
 
 pytest==9.1.1
 pytest-django==4.13.0
-ruff==0.16.2
+ruff==0.17.0
 
 # Pulled in transitively by the above, pinned for reproducible dev installs.
 colorama==0.4.6
