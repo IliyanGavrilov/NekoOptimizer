@@ -61,6 +61,7 @@ from planner.services import (
     fetch_for_banners,
     find_cats,
     import_collection,
+    live_run_debuts,
     normal_banner_choices,
     normal_item_options,
     normal_seek_banner,
@@ -115,7 +116,9 @@ def planner(request):
     target_flat = sorted(cats, key=lambda cat: (-rank.get(cat.rarity, -1), cat.name))
 
     groups, past_count = [], 0
-    for label, rows in picker_groups(cats, titles=banner_titles(), banner_names=cat_banner_names()):
+    for label, rows in picker_groups(
+        cats, titles=banner_titles(), banner_names=cat_banner_names(), debuts=live_run_debuts()
+    ):
         if label == "Past":
             past_count = len(rows)
             groups.append((label, None))  # rendered as a lazy shell in its place
