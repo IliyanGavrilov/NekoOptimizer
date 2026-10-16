@@ -8,7 +8,7 @@ from neko.roller import prepare_selected, roll_selected
 from neko.tests.test_seek import GOLDEN_SEED
 from planner.services import engine_request
 
-RNG = random.Random(20261016)
+RNG = random.Random(20261016)  # nosec B311
 
 
 def _runs(count):

@@ -9,7 +9,7 @@ from planner.test_tracks_engine import _same, catalogue  # noqa: F401
 # The reference normal views are routed only for tests (planner.reference_urls).
 pytestmark = [pytest.mark.django_db, pytest.mark.urls("planner.reference_urls")]
 
-RNG = random.Random(20261018)
+RNG = random.Random(20261018)  # nosec B311
 ALL = [banner.key for banner in NORMAL_BANNERS]
 # The ce grid shows a Dark Catseye at 15B for this seed (see test_normal_plan).
 DARK_SEED = 2157514271
