@@ -1,0 +1,15 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "buildCommand": "bash build.sh",
+  "git": {
+    "deploymentEnabled": {
+      "**": false,
+      "main": true
+    }
+  },
+  "functions": {
+    "nekosite/wsgi.py": {
+      "excludeFiles": "{wasm/**,.github/**,planner/fixtures/**,**/test_*.py,**/conftest.py,planner/reference_urls.py}"
+    }
+  }
+}
