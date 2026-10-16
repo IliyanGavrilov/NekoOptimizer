@@ -12,7 +12,7 @@ wasmtime==49.0.0  # runs the page's seek.wasm in the tests
 
 # Pulled in transitively by the above, pinned for reproducible dev installs.
 colorama==0.4.6
-iniconfig==2.3.0
+iniconfig==2.3.1
 packaging==26.3
 pluggy==1.6.0
 Pygments==2.21.0
