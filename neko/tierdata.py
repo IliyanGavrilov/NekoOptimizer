@@ -82,6 +82,13 @@ _ALIASES = {
     "m.bison": 575,  # M. Bison
     "sonic the hedgehog": 803,  # Sonic
     "shadow the hedgehog": 806,  # Shadow
+    # The site's nicknames and spellings for the rest.
+    "izu": 641,  # Iz the Dancer
+    "dark izu": 657,  # Iz the Dancer of Grief
+    "wedding hanzo": 862,  # Hanzo the Betrothed
+    "giga nyan rex": 836,  # Giga-Nyan Rex
+    "rei": 286,  # Strike Unit R.E.I., not Night Oracle Rei
+    "rockstar koneko": 873,  # Metal Maiden Koneko, the newer of the two
 }
 
 _NOISE = re.compile(
