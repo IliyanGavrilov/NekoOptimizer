@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
-# Render's build. Free instances have no pre-deploy step, so migrations run here too; the
-# icons are third-party PNGs, never committed, so every build fetches them afresh.
+# Vercel's build command. It runs after the dependencies install and before Vercel's own
+# collectstatic, so the icons - third-party PNGs, never committed - land in that collection.
 set -o errexit
 
-pip install -r requirements.txt
 python manage.py fetch_icons
-python manage.py collectstatic --no-input
-python manage.py migrate --no-input
-# Warnings only: Render's generated SECRET_KEY is 256 random bits but 44 characters, under
-# the 50 Django's length heuristic asks for. CI enforces the rest at WARNING level.
+# Only the production build touches the live database: a preview never migrates it early.
+if [ "$VERCEL_ENV" = production ]; then
+  python manage.py migrate --no-input
+fi
+# Warnings only; CI enforces the deploy checks at WARNING level.
 python manage.py check --deploy
