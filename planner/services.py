@@ -2599,10 +2599,13 @@ def unit_match_report() -> tuple[dict[str, int], list[str]]:
 
 
 def import_units(records: Iterable[Mapping]) -> int:
-    """Upsert the canonical catalogue from units.json records; return the new-unit count."""
-    created = 0
+    """Upsert the canonical catalogue from units.json records; return the new-unit count.
+    New gacha units are starred for every player who opted into auto-wishlisting - unless
+    this is the region's first import, where every unit is "new"."""
+    seeded = Unit.objects.exists()
+    created = []
     for record in records:
-        _, was_created = Unit.objects.update_or_create(
+        unit, was_created = Unit.objects.update_or_create(
             unit_id=record["id"],
             defaults={
                 "name": record["name"],
@@ -2611,9 +2614,19 @@ def import_units(records: Iterable[Mapping]) -> int:
                 "set_name": record.get("set", ""),
             },
         )
-        created += int(was_created)
+        if was_created:
+            created.append(unit)
 
-    return created
+    gacha = [unit for unit in created if unit.rarity in GACHA_RARITIES]
+    if seeded and gacha:
+        through = Profile.wanted.through
+        opted = Profile.objects.filter(auto_wishlist=True).values_list("pk", flat=True)
+        through.objects.bulk_create(
+            [through(profile_id=pk, unit=unit) for pk in opted for unit in gacha],
+            ignore_conflicts=True,
+        )
+
+    return len(created)
 
 
 COLLECTION_FORMAT = 1

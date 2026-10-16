@@ -1,7 +1,7 @@
 import pytest
 from django.core.management import call_command
 
-from planner.models import Unit
+from planner.models import Profile, Unit
 from planner.services import import_units
 
 RECORD = {"id": 25, "name": "Bahamut Cat", "rarity": "Special", "forms": ["Bahamut Cat"]}
@@ -48,3 +48,22 @@ def test_command_loads_records(monkeypatch):
     monkeypatch.setattr("planner.management.commands.import_units.load_records", lambda: [RECORD])
     call_command("import_units")
     assert Unit.objects.filter(unit_id=25).exists()
+
+
+UBER = {"id": 700, "name": "New Uber", "rarity": "Uber Super Rare"}
+
+
+@pytest.mark.django_db
+def test_new_gacha_unit_lands_on_opted_in_wishlists():
+    import_units([RECORD])
+    fan, other = Profile.objects.create(auto_wishlist=True), Profile.objects.create()
+    import_units([RECORD, UBER, {**RECORD, "id": 26, "name": "New Special"}])
+    assert list(fan.wanted.values_list("name", flat=True)) == ["New Uber"]
+    assert not other.wanted.exists()
+
+
+@pytest.mark.django_db
+def test_first_import_wishlists_nothing():
+    fan = Profile.objects.create(auto_wishlist=True)
+    import_units([UBER])
+    assert not fan.wanted.exists()

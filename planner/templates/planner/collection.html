@@ -25,6 +25,7 @@
         <option value="2">True</option>
         <option value="3">Ultra</option>
       </select></label>
+    <label class="ctrl" title="Star every new gacha cat for you as soon as it's added to the game"><input type="checkbox" id="autoWishlist" data-url="{% url 'collection_auto_wishlist' %}"{% if request.profile.auto_wishlist %} checked{% endif %}> Wishlist new cats</label>
     <span id="collectionTotal" class="collection-total" aria-live="polite"></span>
     <span class="collection-io">
       <a class="io-btn" href="{% url 'collection_export' %}" download>Export</a>

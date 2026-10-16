@@ -89,6 +89,13 @@ def test_toggle_wanted_twice_returns_to_false(client, profile):
 
 
 @pytest.mark.django_db
+def test_auto_wishlist_switch_saves_the_choice(client, profile):
+    client.post("/collection/auto-wishlist/", {"on": "1"})
+    profile.refresh_from_db()
+    assert profile.auto_wishlist
+
+
+@pytest.mark.django_db
 def test_toggle_leaves_another_visitors_collection_alone(client, profile):
     u = unit("Bahamut")
     other = Profile.objects.create()
