@@ -31,8 +31,11 @@ if not SECRET_KEY:
     SECRET_KEY = "django-insecure-jxaoc&fydf#a6k(%p(ww0x2q9#%1o52sq^g(&yc(p3g1#rby9("
 
 ALLOWED_HOSTS = os.environ.get("DJANGO_ALLOWED_HOSTS", "*" if DEBUG else "").split(",")
-if render_host := os.environ.get("RENDER_EXTERNAL_HOSTNAME"):
-    ALLOWED_HOSTS.append(render_host)
+# Vercel names each deployment's own hosts at runtime: its unique URL, its branch's, and
+# the production domain.
+ALLOWED_HOSTS += filter(
+    None, map(os.environ.get, ("VERCEL_URL", "VERCEL_BRANCH_URL", "VERCEL_PROJECT_PRODUCTION_URL"))
+)
 if DEBUG:  # LAN testing from another machine
     CSRF_TRUSTED_ORIGINS = ["http://192.168.0.3:8000", "http://192.168.0.3"]
 else:

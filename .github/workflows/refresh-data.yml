@@ -1,7 +1,7 @@
 name: Refresh game data
 
 # Once a day: re-fetch every version's catalogue, schedule and tier lists, and when any
-# committed data changed, merge it through a pull request (Render redeploys on the merge)
+# committed data changed, merge it through a pull request (Vercel redeploys on the merge)
 # and import it into the live database. A day that brings nothing new ends after the fetch.
 # Three jobs, each holding only what it needs: fetching parses third-party data with a
 # read-only token, publishing gets write access, and only the import sees the database.
@@ -120,8 +120,8 @@ jobs:
           done
           gh pr merge data-refresh --squash --delete-branch
 
-  # Render's build applies migrations; this only loads the refreshed rows, from the main
-  # the merge just produced - exactly what Render is deploying.
+  # Vercel's build applies migrations; this only loads the refreshed rows, from the main
+  # the merge just produced - exactly what Vercel is deploying.
   import:
     needs: publish
     runs-on: ubuntu-latest
