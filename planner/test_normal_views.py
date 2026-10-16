@@ -1,10 +1,8 @@
 import json
-import time
 
 import pytest
 
 from neko.normal_plan import plan_normal
-from neko.seek import SeekMatch, SeekResult
 from planner.forms import MIN_SEEK_ROLLS
 
 # Every request reads the persisted region row (planner.middleware.region_scope).
@@ -16,17 +14,6 @@ pytestmark = pytest.mark.django_db
 SEED = 1515525936
 
 EIGHT_ROLLS = ["0:0", "0:1", "0:2", "0:3", "0:4", "0:5", "0:6", "0:7"]
-
-
-def wait_done(client, job):
-    for _ in range(200):
-        data = client.get(f"/seek/status/?job={job}").json()
-        if data["done"]:
-            return data
-
-        time.sleep(0.01)
-
-    raise AssertionError("seek job never finished")
 
 
 def test_normal_page_offers_machines_finder_and_planner(client):
@@ -92,17 +79,11 @@ def test_normal_seek_start_rejects_bad_posts(client):
     assert str(MIN_SEEK_ROLLS) in short.content.decode()
 
 
-def test_normal_seek_start_polls_to_matches(client, monkeypatch):
-    result = SeekResult((SeekMatch(seed_before=11, seed_after=22, run=0),))
-    monkeypatch.setattr(
-        "planner.seekjobs.seek_normal", lambda banner, observed, progress=None: result
-    )
+def test_normal_seek_start_hands_back_the_search_for_the_page(client):
+    data = client.post("/normal/seek/start/", {"banner": "n", "rolls": EIGHT_ROLLS}).json()
 
-    job = client.post("/normal/seek/start/", {"banner": "n", "rolls": EIGHT_ROLLS}).json()["job"]
-    data = wait_done(client, job)
-
-    assert data["matches"] == [{"seed_before": 11, "seed_after": 22, "run": 0}]
-    assert data["truncated"] is False
+    assert data["cats"] == [[0, slot] for slot in range(8)]
+    assert data["rerollable"] == [0]
     # The dupe memory the "show my rolls" button carries: 0:7 is Lizard Cat.
     assert data["last_cat"] == "Lizard Cat"
 

@@ -1,10 +1,7 @@
-import time
-
 import pytest
 
 from neko.models import Banner as RollBanner
 from neko.models import Rarity
-from neko.seek import SeekMatch, SeekResult
 from planner.forms import MIN_SEEK_ROLLS
 
 # Every request reads the persisted region row (planner.middleware.region_scope).
@@ -29,17 +26,6 @@ FIVE_ROLLS = ["0:0", "0:1", "0:2", "1:0", "2:1"]
 def banner(monkeypatch):
     monkeypatch.setattr("planner.views.seek_banner", lambda selection: BANNER)
     return BANNER
-
-
-def wait_done(client, job):
-    for _ in range(200):
-        data = client.get(f"/seek/status/?job={job}").json()
-        if data["done"]:
-            return data
-
-        time.sleep(0.01)
-
-    raise AssertionError("seek job never finished")
 
 
 @pytest.mark.django_db
@@ -78,32 +64,12 @@ def test_seek_start_rejects_malformed_rolls(client, banner, bad):
     assert client.post("/seek/start/", {"banner": "x", "rolls": rolls}).status_code == 400
 
 
-def test_seek_start_polls_to_matches(client, banner, monkeypatch):
-    result = SeekResult((SeekMatch(seed_before=11, seed_after=22, run=0),))
-    monkeypatch.setattr("planner.seekjobs.seek_seed", lambda b, observed, progress=None: result)
+def test_seek_start_hands_back_the_search_for_the_page(client, banner):
+    data = client.post("/seek/start/", {"banner": "x", "rolls": FIVE_ROLLS}).json()
 
-    job = client.post("/seek/start/", {"banner": "x", "rolls": FIVE_ROLLS}).json()["job"]
-    data = wait_done(client, job)
-
-    assert data["matches"] == [{"seed_before": 11, "seed_after": 22, "run": 0}]
-    assert data["truncated"] is False
-    assert data["error"] == ""
+    assert data["cats"] == [[0, 0], [0, 1], [0, 2], [1, 0], [2, 1]]
+    assert data["bands"] == [0, 7000, 9500, 10000, 10000]
+    assert data["sizes"] == [3, 1, 2, 0]
+    assert data["rerollable"] == [0]
     # The dupe memory the "open at your position" link carries: 2:1 is Uber B.
     assert data["last_cat"] == "Uber B"
-
-
-def test_seek_start_surfaces_a_search_error(client, banner, monkeypatch):
-    def boom(b, observed, progress=None):
-        raise ValueError("bad window")
-
-    monkeypatch.setattr("planner.seekjobs.seek_seed", boom)
-
-    job = client.post("/seek/start/", {"banner": "x", "rolls": FIVE_ROLLS}).json()["job"]
-    data = wait_done(client, job)
-
-    assert data["error"] == "bad window"
-    assert "matches" not in data
-
-
-def test_seek_status_rejects_an_unknown_job(client):
-    assert client.get("/seek/status/?job=nope").status_code == 400
