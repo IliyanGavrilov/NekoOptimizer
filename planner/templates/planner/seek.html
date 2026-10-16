@@ -38,7 +38,7 @@
   <form id="seekForm" class="seek-panel" novalidate
         data-pool-url="{% url 'seek_pool' %}"
         data-start-url="{% url 'seek_start' %}"
-        data-wasm-url="{% static 'planner/seek.wasm' %}" data-worker-url="{% static 'planner/seek-worker.js' %}"
+        data-wasm-url="{% static 'planner/neko.wasm' %}" data-worker-url="{% static 'planner/seek-worker.js' %}"
         data-planner-url="{% url 'planner' %}"
         data-min-rolls="{{ min_rolls }}"
         data-max-rolls="{{ max_rolls }}">

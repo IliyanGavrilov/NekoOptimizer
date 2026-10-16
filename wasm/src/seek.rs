@@ -1,8 +1,6 @@
-// neko/seek.py for the browser: the same seed sieve, one candidate at a time instead of
-// numpy lanes, so the 2^32 sweep runs on the visitor's machine rather than the server.
-// The Python module stays the reference; the tests below replay its results.
-// After a change: cargo build --release --target wasm32-unknown-unknown, then copy
-// target/wasm32-unknown-unknown/release/seekwasm.wasm to planner/static/planner/seek.wasm.
+// neko/seek.py's seed sieve, one candidate at a time instead of numpy lanes, so the 2^32
+// sweep runs on the visitor's machine rather than the server. The Python module stays
+// the reference; the tests below replay its results.
 
 const BASE: u32 = 10_000; // rarity scores and rates are parts-per-10000
 const SPACE: u64 = 1 << 32;
@@ -262,77 +260,6 @@ pub fn seek(spec: &Spec, limit: usize, progress: &mut impl FnMut(u32, f64)) -> (
         }
     }
     (found, truncated)
-}
-
-// The page's interface: a worker writes the spec into ``input`` as
-// [pools, sizes.., bands.. (pools + 1), rerollable mask, pulls, (pool, slot)..], asks
-// ``candidates`` for a pass's size, ``scan``s its slice and reads (seed_before,
-// seed_after, run) triples from ``output``. Counts cross as f64: at most 2^32, exact.
-#[cfg(target_arch = "wasm32")]
-mod exports {
-    use super::{candidates, scan, Spec};
-    use std::cell::UnsafeCell;
-
-    const MAX_OUT: usize = 64;
-
-    struct Buffer<const N: usize>(UnsafeCell<[u32; N]>);
-    // A wasm32 instance runs on one thread; each worker gets its own instance.
-    unsafe impl<const N: usize> Sync for Buffer<N> {}
-
-    static INPUT: Buffer<1024> = Buffer(UnsafeCell::new([0; 1024]));
-    static OUTPUT: Buffer<{ 3 * MAX_OUT }> = Buffer(UnsafeCell::new([0; 3 * MAX_OUT]));
-
-    #[link(wasm_import_module = "env")]
-    extern "C" {
-        fn progress(run: u32, fraction: f64);
-    }
-
-    fn spec() -> Spec {
-        let words = unsafe { &*INPUT.0.get() };
-        let pools = words[0] as usize;
-        let n = words[3 + 2 * pools] as usize;
-        let pairs = &words[4 + 2 * pools..4 + 2 * pools + 2 * n];
-        Spec {
-            cats: pairs.chunks(2).map(|p| (p[0] as usize, p[1])).collect(),
-            bands: words[1 + pools..2 + 2 * pools].to_vec(),
-            sizes: words[1..1 + pools].to_vec(),
-            rerollable: words[2 + 2 * pools],
-        }
-    }
-
-    #[no_mangle]
-    pub extern "C" fn input() -> *mut u32 {
-        INPUT.0.get().cast()
-    }
-
-    #[no_mangle]
-    pub extern "C" fn output() -> *const u32 {
-        OUTPUT.0.get().cast()
-    }
-
-    #[no_mangle]
-    pub extern "C" fn pass_size(run: u32) -> f64 {
-        candidates(&spec(), run) as f64
-    }
-
-    /// Scan candidates ``from..to`` of pass ``run``; the match count written to output.
-    #[no_mangle]
-    pub extern "C" fn search(run: u32, from: f64, to: f64, cap: u32) -> u32 {
-        let cap = (cap as usize).clamp(1, MAX_OUT);
-        let found = scan(
-            &spec(),
-            run,
-            from as u64,
-            to as u64,
-            cap,
-            &mut |run, f| unsafe { progress(run, f) },
-        );
-        let out = unsafe { &mut *OUTPUT.0.get() };
-        for (i, m) in found.iter().enumerate() {
-            out[3 * i..3 * i + 3].copy_from_slice(&[m.seed_before, m.seed_after, m.run]);
-        }
-        found.len() as u32
-    }
 }
 
 // Expected results come from neko/seek.py on the same inputs (see neko/tests/test_seek.py).
