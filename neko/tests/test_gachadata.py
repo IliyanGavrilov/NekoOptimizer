@@ -1,10 +1,13 @@
+import io
 import json
+import tarfile
 from datetime import date
 
 from neko import region
 from neko.gachadata import (
     GachaEventRow,
     build_banner,
+    download_events,
     event_records,
     events_path,
     load_events,
@@ -103,6 +106,25 @@ def test_merge_events_dedupes_by_event_id():
     b = parse_events(tsv_row(pools=[{**POOL, "name": "Renamed"}]))
     merged = merge_events([a, b])
     assert len(merged) == 1 and merged[0].name == "Renamed"
+
+
+def test_download_events_merges_the_archives_tsvs_in_filename_order(monkeypatch):
+    # The archive lists the newer snapshot first; filename order must still let it win.
+    files = {
+        "events/2025-02-01.tsv": tsv_row(pools=[{**POOL, "name": "Renamed"}]),
+        "events/2025-01-01.tsv": tsv_row(pools=[POOL]),
+        "events/README.md": "not a schedule",
+    }
+    buffer = io.BytesIO()
+    with tarfile.open(fileobj=buffer, mode="w:gz") as tar:
+        for name, text in files.items():
+            data = text.encode()
+            info = tarfile.TarInfo(name)
+            info.size = len(data)
+            tar.addfile(info, io.BytesIO(data))
+    monkeypatch.setattr("neko.gachadata._get", lambda url: buffer.getvalue())
+
+    assert [event.name for event in download_events("en")] == ["Renamed"]
 
 
 def test_event_records_roundtrip(tmp_path, monkeypatch):
