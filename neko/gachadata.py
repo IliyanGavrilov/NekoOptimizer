@@ -17,12 +17,12 @@ from neko.region import DEFAULT_REGION, data_path
 
 # godfat's event schedule lives in its Apache-2.0 gitlab repo, one dated TSV per snapshot.
 # Its per-language data directories are named exactly like our region codes.
-_PROJECT = "9827349"  # gitlab project id for godfat/battle-cats-rolls
-_EVENTS_TREE = (
-    f"https://gitlab.com/api/v4/projects/{_PROJECT}/repository/tree"
-    "?path=data/{lang}/events&per_page=100&page={page}&ref=master"
+# One archive of the language's events folder - a single request, where fetching each TSV
+# on its own (hundreds a region, daily) got the job throttled by gitlab.
+_EVENTS_ARCHIVE = (
+    "https://gitlab.com/godfat/battle-cats-rolls/-/archive/master/"
+    "battle-cats-rolls-master.tar.gz?path=data/{lang}/events"
 )
-_EVENTS_RAW = "https://gitlab.com/godfat/battle-cats-rolls/-/raw/master/data/{lang}/events/{name}"
 
 EVENTS_FILE = "gacha_events.json"
 POOLS_FILE = "gacha_pools.json"
@@ -234,26 +234,15 @@ def build_banner(
     )
 
 
-def _event_files(lang: str) -> list[str]:
-    """List every event-TSV filename in godfat's repo (paginated gitlab tree)."""
-    names: list[str] = []
-    page = 1
-
-    while True:
-        batch = json.loads(_get(_EVENTS_TREE.format(lang=lang, page=page)))
-        names += [entry["name"] for entry in batch if entry["name"].endswith(".tsv")]
-        if len(batch) < 100:
-            return names
-
-        page += 1
-
-
 def download_events(region: str = DEFAULT_REGION) -> list[GachaEventRow]:
-    """Fetch and merge every event TSV into the full schedule (network)."""
-    lists = [
-        parse_events(_get(_EVENTS_RAW.format(lang=region, name=name)).decode("utf-8", "replace"))
-        for name in _event_files(region)
-    ]
+    """Fetch every event TSV and merge them into the full schedule (network)."""
+    archive = _get(_EVENTS_ARCHIVE.format(lang=region))
+    with tarfile.open(fileobj=io.BytesIO(archive), mode="r:gz") as tar:
+        files = sorted(
+            (m for m in tar.getmembers() if m.isfile() and m.name.endswith(".tsv")),
+            key=lambda m: Path(m.name).name,
+        )
+        lists = [parse_events(tar.extractfile(m).read().decode("utf-8", "replace")) for m in files]
 
     return merge_events(lists)
 
