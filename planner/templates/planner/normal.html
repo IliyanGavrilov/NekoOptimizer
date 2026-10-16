@@ -50,7 +50,9 @@
   </details>
 
   <form id="normalForm" data-tracks-url="{% url 'normal_tracks' %}"
-        data-plan-url="{% url 'normal_plan' %}">
+        data-plan-url="{% url 'normal_plan' %}"
+        data-wasm-url="{% static 'planner/neko.wasm' %}"
+        data-engine-worker-url="{% static 'planner/engine-worker.js' %}">
     {% csrf_token %}
     <div class="roll-options">
       <label class="opt">Normal seed

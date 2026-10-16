@@ -6,7 +6,7 @@ from neko.normal_plan import plan_normal
 from planner.forms import MIN_SEEK_ROLLS
 
 # Every request reads the persisted region row (planner.middleware.region_scope).
-pytestmark = pytest.mark.django_db
+pytestmark = [pytest.mark.django_db, pytest.mark.urls("planner.reference_urls")]
 
 # The ampuri-verified golden seed the engine fixtures use: on Normal Capsules its
 # cell 1A is Fish Cat, and with Fish Cat as the remembered last pull that cell
@@ -35,7 +35,7 @@ def test_normal_page_offers_machines_finder_and_planner(client):
 @pytest.mark.django_db
 def test_normal_tracks_roll_the_chosen_machines(client):
     response = client.post(
-        "/normal/tracks/", {"seed": SEED, "banners": ["n", "ce"], "track_length": 20}
+        "/reference/normal/tracks/", {"seed": SEED, "banners": ["n", "ce"], "track_length": 20}
     )
     content = response.content.decode()
 
@@ -48,7 +48,7 @@ def test_normal_tracks_roll_the_chosen_machines(client):
 @pytest.mark.django_db
 def test_normal_tracks_remember_the_last_item(client):
     response = client.post(
-        "/normal/tracks/",
+        "/reference/normal/tracks/",
         {"seed": SEED, "banners": ["n"], "track_length": 5, "last_item": "Fish Cat"},
     )
     content = response.content.decode()
@@ -60,8 +60,8 @@ def test_normal_tracks_remember_the_last_item(client):
 
 @pytest.mark.django_db
 def test_normal_tracks_need_a_seed_and_a_machine(client):
-    assert client.post("/normal/tracks/", {"seed": "junk"}).content == b""
-    content = client.post("/normal/tracks/", {"seed": SEED}).content.decode()
+    assert client.post("/reference/normal/tracks/", {"seed": "junk"}).content == b""
+    content = client.post("/reference/normal/tracks/", {"seed": SEED}).content.decode()
     assert "at least one capsule machine" in content
 
 
@@ -98,7 +98,7 @@ def test_normal_plan_lights_a_path(client):
     assert expected.hits  # the fixture seed must actually reach a dark
 
     response = client.post(
-        "/normal/plan/",
+        "/reference/normal/plan/",
         {
             "seed": PLAN_SEED,
             "banners": ["ce"],
@@ -119,7 +119,7 @@ def test_normal_plan_lights_a_path(client):
 def test_normal_plan_reports_an_unreachable_target(client):
     # One catseye roll from a cell that isn't a dark: nothing to collect.
     response = client.post(
-        "/normal/plan/",
+        "/reference/normal/plan/",
         {
             "seed": 1515525936,
             "banners": ["ce"],
@@ -134,7 +134,7 @@ def test_normal_plan_reports_an_unreachable_target(client):
 def test_normal_plan_rejects_bad_posts(client):
     def plan(**fields):
         fields.setdefault("banners", ["ce"])
-        return client.post("/normal/plan/", fields).status_code
+        return client.post("/reference/normal/plan/", fields).status_code
 
     assert plan(seed="junk", tickets='{"normal": 5}', target="dark") == 400
     assert plan(seed=PLAN_SEED, tickets="{}", target="dark") == 400
@@ -144,6 +144,8 @@ def test_normal_plan_rejects_bad_posts(client):
     assert plan(seed=PLAN_SEED, tickets='{"normal": 5}', target="item:Not A Thing") == 400
 
 
-@pytest.mark.parametrize("path", ["/normal/tracks/", "/normal/seek/start/", "/normal/plan/"])
+@pytest.mark.parametrize(
+    "path", ["/reference/normal/tracks/", "/normal/seek/start/", "/reference/normal/plan/"]
+)
 def test_normal_posts_reject_get(client, path):
     assert client.get(path).status_code == 405

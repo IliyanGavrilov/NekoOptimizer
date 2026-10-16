@@ -1,0 +1,528 @@
+// The Normal Capsules page, worked out here instead of the server: planner.services'
+// build_normal_tracks and build_normal_plan over neko/normal.py's roll and
+// neko/normal_plan.py's beam search, and the _normal_tracks.html / _normal_cell.html /
+// _normal_plan.html markup. planner/test_normal_engine.py holds them to the Python.
+
+use std::collections::{HashMap, HashSet};
+use std::fmt::Write;
+
+use serde::Deserialize;
+
+use crate::engine::Request;
+use crate::roll::{roll_banner, BannerRolls, TrackPull, NONE};
+use crate::seek::xorshift;
+use crate::tracks::esc;
+
+const BASE: u32 = 10_000;
+const BEAM: usize = 200;
+const MAX_ROLLS: i64 = 500;
+const CHEAP: &str = "Normal Cat Ticket";
+const CURRENCIES: [&str; 3] = [CHEAP, "Lucky Ticket", "Lucky Ticket G"];
+const DICE: &str = "<svg width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" aria-hidden=\"true\"><use href=\"#dice-icon\"/></svg>\n";
+
+#[derive(Deserialize)]
+pub struct NormalArgs {
+    /// Per name: its catalogue unit id and form names joined by "|", for a cat item.
+    pub units: Vec<Option<(u32, String)>>,
+    pub upgrades: Vec<u32>,
+    #[serde(default)]
+    pub plan: Option<PlanArgs>,
+}
+
+#[derive(Deserialize)]
+pub struct PlanArgs {
+    pub label: String,
+    pub targets: Vec<u32>,
+    /// Each currency's rolls and the banners (request indices) it feeds.
+    pub budgets: Vec<(i64, Vec<usize>)>,
+}
+
+/// One pull of a normal banner from ``seed`` holding ``last`` (normal.pull_once): the item,
+/// the state after it, and the extra values a dupe's cascade used.
+fn pull_once(req: &Request, banner: usize, seed: u32, last: u32) -> (u32, u32, u32) {
+    let b = &req.banners[banner];
+    let mut seed = xorshift(seed);
+    let score = seed % BASE;
+    let pool_index = b.banner.band(score);
+    let pool = &b.banner.pools[pool_index];
+    seed = xorshift(seed);
+    let mut slots = pool.clone();
+    let mut slot = seed as usize % slots.len();
+    let mut name = slots[slot];
+    let mut steps = 0;
+    if b.banner.rerolls_band(pool_index) && name != NONE && name == last {
+        let copies = pool.iter().filter(|&&c| c == name).count();
+        for _ in 0..copies {
+            seed = xorshift(seed);
+            steps += 1;
+            slots.remove(slot);
+            if slots.is_empty() {
+                break;
+            }
+            slot = seed as usize % slots.len();
+            if slots[slot] != name {
+                break;
+            }
+        }
+        name = if slots.is_empty() { NONE } else { slots[slot] };
+    }
+    (name, seed, steps)
+}
+
+/// The 1-based cell a reroll's extra ``steps`` land the chain on (normal.landing).
+fn landing(position: usize, track: usize, steps: usize) -> (usize, usize) {
+    (
+        position + (track + steps) / 2 + 1,
+        ((track + steps - 1) ^ 1) & 1,
+    )
+}
+
+#[derive(Clone)]
+struct Step {
+    machine: usize,
+    item: u32,
+    position: usize,
+    track: usize,
+    dupe: bool,
+    target: bool,
+}
+
+#[derive(Clone)]
+struct Node {
+    seed: u32,
+    position: usize,
+    track: usize,
+    last: u32,
+    budgets: Vec<i64>,
+    hits: i64,
+    premium: i64,
+    cheap: i64,
+    steps: Vec<Step>,
+}
+
+impl Node {
+    fn rank(&self) -> (i64, i64, i64) {
+        (-self.hits, self.premium, self.cheap)
+    }
+}
+
+/// The pull sequence from ``seed`` collecting the most targets (normal_plan.plan_normal):
+/// a beam over the shared stream, one machine per pull, hoarding the lucky tickets.
+fn plan(req: &Request, seed: u32, last: u32, args: &PlanArgs) -> Node {
+    let targets: HashSet<u32> = args.targets.iter().copied().collect();
+    let groups: Vec<(i64, &Vec<usize>)> = args
+        .budgets
+        .iter()
+        .filter(|(count, keys)| *count > 0 && !keys.is_empty())
+        .map(|(count, keys)| ((*count).min(MAX_ROLLS), keys))
+        .collect();
+    let start = Node {
+        seed,
+        position: 1,
+        track: 0,
+        last,
+        budgets: groups.iter().map(|(count, _)| *count).collect(),
+        hits: 0,
+        premium: 0,
+        cheap: 0,
+        steps: Vec::new(),
+    };
+    if groups.is_empty() || targets.is_empty() {
+        return start;
+    }
+    let choices: Vec<(usize, usize)> = groups
+        .iter()
+        .enumerate()
+        .flat_map(|(i, (_, keys))| keys.iter().map(move |&k| (i, k)))
+        .collect();
+    let depth = start.budgets.iter().sum::<i64>().min(MAX_ROLLS);
+    let mut best = start.clone();
+    let mut nodes = vec![start];
+
+    for _ in 0..depth {
+        // Python's dict: a better child for a seen state takes that state's first slot.
+        let mut order: Vec<Node> = Vec::new();
+        let mut at: HashMap<(u32, u32, Vec<i64>), usize> = HashMap::new();
+        for node in &nodes {
+            for &(index, key) in &choices {
+                if node.budgets[index] == 0 {
+                    continue;
+                }
+                let (item, after, extra) = pull_once(req, key, node.seed, node.last);
+                let dupe = extra > 0;
+                let hit = targets.contains(&item);
+                let step = Step {
+                    machine: key,
+                    item,
+                    position: node.position,
+                    track: node.track,
+                    dupe,
+                    target: hit,
+                };
+                let (position, track) = if dupe {
+                    landing(node.position, node.track, extra as usize)
+                } else {
+                    (node.position + 1, node.track)
+                };
+                let mut budgets = node.budgets.clone();
+                budgets[index] -= 1;
+                let cheap = req.banners[key].currency == CHEAP;
+                let mut steps = node.steps.clone();
+                steps.push(step);
+                let child = Node {
+                    seed: after,
+                    position,
+                    track,
+                    last: item,
+                    budgets,
+                    hits: node.hits + i64::from(hit),
+                    premium: node.premium + i64::from(!cheap),
+                    cheap: node.cheap + i64::from(cheap),
+                    steps,
+                };
+                if hit && child.rank() < best.rank() {
+                    best = child.clone();
+                }
+                let state = (child.seed, child.last, child.budgets.clone());
+                match at.get(&state) {
+                    Some(&i) => {
+                        if child.rank() < order[i].rank() {
+                            order[i] = child;
+                        }
+                    }
+                    None => {
+                        at.insert(state, order.len());
+                        order.push(child);
+                    }
+                }
+            }
+        }
+        order.sort_by_key(Node::rank);
+        order.truncate(BEAM);
+        nodes = order;
+        if nodes.is_empty() {
+            break;
+        }
+    }
+    best
+}
+
+/// A plan's lit cells: (position, track) -> banner -> (dupe, target, step).
+type Marks = HashMap<(usize, usize), HashMap<usize, (bool, bool, usize)>>;
+
+struct Column {
+    tag: usize,
+    banner: usize,
+    rolls: BannerRolls,
+}
+
+impl Column {
+    fn pull(&self, position: usize, track: usize) -> &TrackPull {
+        &self.rolls.pulls[2 * (position - 1) + track]
+    }
+
+    fn reroll(&self, position: usize, track: usize) -> Option<&TrackPull> {
+        self.rolls.rerolls.iter().find(|r| {
+            r.position as usize == position && usize::from(r.track) == track && r.realized
+        })
+    }
+}
+
+const TRACKS: [&str; 2] = ["A", "B"];
+
+/// The merged A/B table over the chosen banners (build_normal_tracks + _normal_tracks.html).
+fn tracks(
+    req: &Request,
+    args: &NormalArgs,
+    banners: &[usize],
+    rows: usize,
+    marks: &Marks,
+) -> String {
+    let last = req.id(&req.last_cat);
+    let columns: Vec<Column> = banners
+        .iter()
+        .enumerate()
+        .map(|(i, &b)| Column {
+            tag: i + 1,
+            banner: b,
+            rolls: roll_banner(req.seed, &req.banners[b].banner, rows, 0, last),
+        })
+        .collect();
+    if columns.is_empty() || rows == 0 {
+        return "\n<p class=\"muted\">Pick at least one capsule machine to roll.</p>\n".to_owned();
+    }
+    let upgrades: HashSet<u32> = args.upgrades.iter().copied().collect();
+    let dark = req.id("Dark Catseye");
+    let unit = |id: u32| args.units.get(id as usize).and_then(Option::as_ref);
+
+    let mut out = String::from("\n<details class=\"track-guide\">\n<summary>Legend</summary>\n<ul class=\"symbol-legend\">\n<li><span class=\"sym\">A / B</span> alternate timelines; a dupe rerolls and switches track</li>\n");
+    let _ = writeln!(out, "<li><span class=\"sym dice-sym\">{DICE}</span> &ldquo;I rolled this cell&rdquo; &mdash; jumps the seed to just after it</li>");
+    out.push_str("<li><span class=\"arrow sample\">&#8627; if dupe</span> the reroll branch (its own dice &amp; landing)</li>\n<li><span class=\"item sample\" data-pool=\"2\">gold</span> <span class=\"sep\">&middot;</span> <span class=\"item sample\" data-pool=\"3\">red</span> <span class=\"sep\">&middot;</span> <span class=\"item sample\" data-pool=\"4\">aqua</span> the machine's rarer rate bands, scarcest last</li>\n<li><span class=\"item upgrade sample\">blue</span> an upgrade (Special Skill), not a cat</li>\n<li><span class=\"item dark-catseye sample\">Dark Catseye</span> the 1% Catseye-event jackpot</li>\n<li><span class=\"entry on-path sample\">path</span> a planned pull <span class=\"sep\">&middot;</span> <span class=\"entry target sample\"><span class=\"item got\">target</span></span> what it collects</li>\n</ul>\n</details>\n");
+    if columns.len() > 1 {
+        out.push_str("<ul class=\"track-legend\">\n");
+        for c in &columns {
+            let _ = writeln!(
+                out,
+                "<li><span class=\"tag\">{}</span> {}</li>",
+                c.tag,
+                esc(&req.banners[c.banner].name)
+            );
+        }
+        out.push_str("</ul>\n");
+    }
+    out.push_str("<table class=\"track normal-track\">\n<thead><tr>\n<th class=\"pos\">#</th>\n<th>Track A</th>\n<th>Track B</th>\n</tr></thead>\n<tbody>\n");
+    let none = HashMap::new();
+    for position in 1..=rows {
+        let _ = write!(
+            out,
+            "<tr>\n<th scope=\"row\" class=\"pos\">{position}</th>\n"
+        );
+        for (track, label) in TRACKS.iter().enumerate() {
+            let cell_marks = marks.get(&(position, track)).unwrap_or(&none);
+            out.push_str("\n<td class=\"cell\">");
+            for c in &columns {
+                let pull = c.pull(position, track);
+                let mark = cell_marks.get(&c.banner);
+                let target = mark.is_some_and(|&(dupe, target, _)| !dupe && target);
+                let alt = c.reroll(position, track);
+                let alt_target =
+                    alt.is_some() && mark.is_some_and(|&(dupe, target, _)| dupe && target);
+                out.push_str("<div class=\"entry");
+                if mark.is_some() {
+                    out.push_str(" on-path");
+                }
+                if target {
+                    out.push_str(" target");
+                }
+                if alt_target {
+                    out.push_str(" target");
+                }
+                out.push('"');
+                let step = mark.map(|&(_, _, step)| step).filter(|&s| s != 0);
+                if let Some(step) = step {
+                    let _ = write!(out, " data-step=\"{step}\"");
+                }
+                out.push_str("><span class=\"entry-name\">");
+                if let Some(step) = step {
+                    let _ = write!(
+                        out,
+                        "<span class=\"step-dot\" aria-hidden=\"true\">{step}</span> "
+                    );
+                }
+                if columns.len() > 1 {
+                    let _ = write!(out, "<span class=\"tag\">{}</span> ", c.tag);
+                }
+                let item = esc(req.name(pull.cat));
+                let pool = pull.rarity;
+                match unit(pull.cat) {
+                    Some((uid, forms)) => {
+                        let _ = write!(
+                            out,
+                            "<button type=\"button\" class=\"catlink item icon-host{}\" data-name=\"{item}\" data-uid=\"{uid}\" data-forms=\"{}\" data-pool=\"{pool}\"><span class=\"catname\">{item}</span></button>",
+                            if target { " target" } else { "" },
+                            esc(forms)
+                        );
+                    }
+                    None => {
+                        out.push_str("<span class=\"item");
+                        if upgrades.contains(&pull.cat) {
+                            out.push_str(" upgrade");
+                        }
+                        if pull.cat == dark && dark != NONE {
+                            out.push_str(" dark-catseye");
+                        }
+                        if target {
+                            out.push_str(" got");
+                        }
+                        let _ = write!(out, "\" data-pool=\"{pool}\">{item}</span>");
+                    }
+                }
+                out.push_str("</span>");
+                if let Some(alt) = alt {
+                    let (to_pos, to_track) = landing(position, track, alt.steps as usize);
+                    let alt_item = esc(req.name(alt.cat));
+                    out.push_str("<span class=\"arrow\" title=\"Following the track dupes here: the previous pull obtains this same item, so this cell rerolls into the branch value and jumps tracks\">&#8627; if dupe: ");
+                    if unit(alt.cat).is_some() {
+                        let _ = write!(
+                            out,
+                            "<button type=\"button\" class=\"catlink item{}\" data-name=\"{alt_item}\">{alt_item}</button>",
+                            if alt_target { " target" } else { "" }
+                        );
+                    } else {
+                        out.push_str("<span class=\"item");
+                        if alt.cat == dark && dark != NONE {
+                            out.push_str(" dark-catseye");
+                        }
+                        if alt_target {
+                            out.push_str(" got");
+                        }
+                        let _ = write!(out, "\" data-pool=\"{pool}\">{alt_item}</span>");
+                    }
+                    let _ = write!(
+                        out,
+                        ", jumps to {to_pos}{} <button type=\"button\" class=\"reseed inline\" data-seed=\"{}\" data-item=\"{alt_item}\" title=\"Got {alt_item} here? Jump the seed to just after that reroll\" aria-label=\"Jump the seed to just after {alt_item}\">{DICE}</button></span>",
+                        TRACKS[to_track],
+                        alt.seed
+                    );
+                }
+                out.push_str("</div>");
+            }
+            let seed = columns[0].pull(position, track).seed;
+            if seed != 0 {
+                let items: HashSet<u32> = columns
+                    .iter()
+                    .map(|c| c.pull(position, track).cat)
+                    .collect();
+                let item = if items.len() == 1 {
+                    esc(req.name(*items.iter().next().unwrap_or(&NONE)))
+                } else {
+                    String::new()
+                };
+                let cell = format!("{position}{label}");
+                let _ = write!(
+                    out,
+                    "<button type=\"button\" class=\"reseed\" data-seed=\"{seed}\" data-item=\"{item}\" title=\"Rolled {cell}? Jump the seed to just after it (its clean roll; a dupe's branch has its own dice)\" aria-label=\"Jump the seed to just after {cell}\">{DICE}</button>"
+                );
+            }
+            out.push_str("</td>\n");
+        }
+        out.push_str("</tr>\n");
+    }
+    out.push_str("</tbody>\n</table>\n");
+    out
+}
+
+/// The Normal Capsules table for the posted machines (normal_tracks).
+pub fn normal_tracks(req: &Request, args: &NormalArgs) -> String {
+    let banners: Vec<usize> = (0..req.banners.len()).collect();
+    tracks(req, args, &banners, req.count, &HashMap::new())
+}
+
+fn plural(n: usize) -> &'static str {
+    if n == 1 {
+        ""
+    } else {
+        "s"
+    }
+}
+
+/// The path planner's result (build_normal_plan + _normal_plan.html). ``req.banners``
+/// are the live machines in the page's column order.
+pub fn normal_plan(req: &Request, args: &NormalArgs, plan_args: &PlanArgs) -> String {
+    let last = req.id(&req.last_cat);
+    let best = plan(req, req.seed, last, plan_args);
+    let found = !best.steps.is_empty();
+    let seed_after = if found { best.seed } else { req.seed };
+    let last_item = if found { best.last } else { last };
+
+    // Legs (runs of pulls on one machine) and the track marks, numbered together.
+    struct Leg {
+        n: usize,
+        machine: usize,
+        pulls: Vec<Step>,
+    }
+    let mut legs: Vec<Leg> = Vec::new();
+    let mut marks: Marks = HashMap::new();
+    for step in &best.steps {
+        let n = match legs.last() {
+            Some(leg) if leg.machine == step.machine => leg.n,
+            _ => {
+                legs.push(Leg {
+                    n: legs.len() + 1,
+                    machine: step.machine,
+                    pulls: Vec::new(),
+                });
+                legs.len()
+            }
+        };
+        marks
+            .entry((step.position, step.track))
+            .or_default()
+            .insert(step.machine, (step.dupe, step.target, n));
+        if let Some(leg) = legs.last_mut() {
+            leg.pulls.push(step.clone());
+        }
+    }
+    let rows = best.steps.iter().map(|s| s.position).max().unwrap_or(0);
+    let banners: Vec<usize> = (0..req.banners.len()).collect();
+    let track = tracks(req, args, &banners, req.count.max(rows + 2), &marks);
+    let dark = req.id("Dark Catseye");
+
+    let mut out = String::from("\n<div class=\"normal-plan\">\n");
+    if best.hits > 0 {
+        let mut spent: Vec<(&str, usize)> = Vec::new();
+        for currency in CURRENCIES {
+            let n = best
+                .steps
+                .iter()
+                .filter(|s| req.banners[s.machine].currency == currency)
+                .count();
+            if n > 0 {
+                spent.push((currency, n));
+            }
+        }
+        let _ = write!(
+            out,
+            "<p class=\"plan-haul\">\n<strong>{}</strong> {}\nfor\n",
+            best.hits,
+            esc(&plan_args.label)
+        );
+        for (i, (name, n)) in spent.iter().enumerate() {
+            if i > 0 {
+                out.push_str(" + ");
+            }
+            let _ = write!(out, "{n} {name}{}", plural(*n));
+        }
+        let _ = write!(
+            out,
+            ".\n<button type=\"button\" class=\"seek-use plan-apply\" data-seed=\"{seed_after}\" data-item=\"{}\" title=\"You rolled this plan: the seed jumps to just after its final pull\">I rolled it &mdash; advance my seed</button>\n</p>\n",
+            esc(req.name(last_item))
+        );
+        out.push_str("<div class=\"plan-follow\">\n<div class=\"plan-steps\">\n<div class=\"steps-head\">\n<span class=\"steps-title\">Steps</span>\n<div class=\"step-nav\" role=\"group\" aria-label=\"Walk the plan step by step\">\n<button type=\"button\" class=\"step-nav-btn step-prev\" aria-label=\"Previous step\">&#8249;</button>\n<span class=\"step-count\" aria-live=\"polite\"></span>\n<button type=\"button\" class=\"step-nav-btn step-next\" aria-label=\"Next step\">&#8250;</button>\n</div>\n</div>\n<div class=\"step-list\">\n");
+        for leg in &legs {
+            let b = &req.banners[leg.machine];
+            let count = leg.pulls.len();
+            let _ = write!(
+                out,
+                "<button type=\"button\" class=\"step-card\" data-step=\"{0}\">\n<span class=\"step-card-head\">\n<span class=\"step-dot\">{0}</span>\n<span class=\"step-banner\">{1}</span>\n</span>\n<span class=\"step-meta\">\n<span class=\"step-kind\">{count}&times; pull{2}</span>\n<span class=\"step-cost\">{count} {3}{2}</span>\n</span>\n",
+                leg.n,
+                esc(&b.name),
+                plural(count),
+                esc(&b.currency)
+            );
+            let gets: Vec<&Step> = leg.pulls.iter().filter(|p| p.target).collect();
+            if !gets.is_empty() {
+                out.push_str("<span class=\"step-gets\">gets ");
+                for (i, p) in gets.iter().enumerate() {
+                    if i > 0 {
+                        out.push_str(", ");
+                    }
+                    let class = if p.item == dark && dark != NONE {
+                        " dark-catseye"
+                    } else {
+                        ""
+                    };
+                    let _ = write!(
+                        out,
+                        "<span class=\"step-get{class}\">{}</span>",
+                        esc(req.name(p.item))
+                    );
+                }
+                out.push_str("</span>\n");
+            }
+            out.push_str("</button>\n");
+        }
+        let _ = write!(
+            out,
+            "</div>\n</div>\n<div class=\"plan-track\">{track}</div>\n</div>\n"
+        );
+    } else {
+        let _ = write!(
+            out,
+            "<p class=\"seek-none\">No {} reachable with those rolls. Give a machine more\nbudget, or try again after your next real pulls move the seed.</p>\n{track}",
+            esc(&plan_args.label)
+        );
+    }
+    out.push_str("</div>\n");
+    out
+}

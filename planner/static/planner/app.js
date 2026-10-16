@@ -814,8 +814,8 @@ if (picker) {
       const cats = new URLSearchParams();
       body.dataset.subset.split("|").forEach((name) => cats.append("subset", name));
       const resp = await post(row.closest("#planResults").dataset.rowUrl, cats);
-      const html = resp.ok ? await resp.text() : "";
-      if (!resp.ok) {
+      const html = resp.ok ? await runPlans(await resp.text()).catch(() => null) : null;
+      if (html === null) {
         delete body.dataset.loading; // a failed fetch shouldn't wedge the row shut
         body.querySelector(".plan-loading").textContent = "Couldn't work this plan out.";
         return;
@@ -884,6 +884,13 @@ if (picker) {
     document.documentElement.style.setProperty("--legend-h", legend ? `${legend.offsetHeight}px` : "0px");
   };
   addEventListener("resize", setLegendHeight);
+  // The page's own engine (neko.wasm), in workers so the page stays live: the server sends
+  // a request - the seed, the selected banners' pools, the budget, your marks - and the
+  // Rolls table or the plans are rolled, solved and rendered right here. Tables and plans
+  // get a worker each, so a long explore-mode search never holds up the table.
+  const engine = () => nekoEngine(trackHost.dataset.wasmUrl, trackHost.dataset.engineWorkerUrl);
+  const runTables = engine();
+  const runPlans = engine();
   async function refreshTracks(keepTrace = false) {
     // Any refresh besides a trace click means the rolls changed: drop the trace.
     if (!keepTrace) traceState = null;
@@ -892,9 +899,9 @@ if (picker) {
       resultsRegion.hidden = !solutions.firstElementChild;
       return;
     }
-    const resp = await post(trackHost.dataset.tracksUrl);
+    const resp = await post(trackHost.dataset.engineUrl);
     if (!resp.ok) return;
-    trackHost.innerHTML = await resp.text();
+    trackHost.innerHTML = await runTables(await resp.text());
     resultsRegion.hidden = !trackHost.firstElementChild;
     // These steppers are (re)rendered with the fragment, so wire up drag-to-scrub
     // each time - the page-load pass never saw them.
@@ -1183,10 +1190,9 @@ if (picker) {
     try {
       const resp = await post(trackHost.dataset.planUrl);
       if (resp.ok) {
-        const data = await resp.json();
         // Swap the browse track for the subset-solution accordion, with a "Back to rolls"
         // button so you can return to browsing without reloading the page.
-        solutions.innerHTML = data.solutions_html;
+        solutions.innerHTML = await runPlans(await resp.text());
         browseTrack.hidden = true;
         backToRolls.hidden = false;
         resultsRegion.hidden = !solutions.firstElementChild;

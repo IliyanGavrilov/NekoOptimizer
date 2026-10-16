@@ -1,5 +1,5 @@
 import json
-from dataclasses import asdict
+from dataclasses import asdict, dataclass
 from urllib.parse import urlsplit
 
 from django.contrib.auth import login
@@ -16,11 +16,11 @@ from django.views.generic import FormView
 from neko.gamedata import load_cannons, load_evolve, load_talents
 from neko.guidedata import load_guide
 from neko.models import CATFOOD_PER_DRAW, GACHA_RARITIES, Rarity, is_future_uber
-from neko.normal import BANNERS_BY_KEY
+from neko.normal import BANNERS_BY_KEY, NORMAL_BANNERS
 from neko.region import CODES
 from neko.region import current as active_region
 from neko.rng import backtrack
-from neko.roller import DEFAULT_COUNT, GUARANTEED_OPTIONS
+from neko.roller import DEFAULT_COUNT, GUARANTEED_OPTIONS, prepare_active, prepare_selected
 from neko.seekspec import MAX_MATCHES, normal_spec, seed_spec
 from neko.statsdata import ABILITY_LABELS, ATTACK_LABELS, IMMUNITY_LABELS, TARGET_LABELS
 from neko.tierdata import load_tiers
@@ -66,10 +66,14 @@ from planner.services import (
     import_collection,
     live_run_debuts,
     normal_banner_choices,
+    normal_budgets,
     normal_item_options,
+    normal_plan_targets,
+    normal_request,
     normal_seek_banner,
     normal_seek_pools,
     picker_groups,
+    plan_request,
     plannable_form,
     read_guide,
     resources_board,
@@ -84,6 +88,7 @@ from planner.services import (
     tier_list_index,
     tier_list_rows,
     trace_marks,
+    tracks_request,
     unit_stats,
 )
 
@@ -311,34 +316,116 @@ def _future_targets(request):
     return [str(name) for name in raw if is_future_uber(str(name))]
 
 
-@require_POST
-def tracks(request):
-    """A/B track tables for the current seed + banners, before any plan is run.
+@dataclass(frozen=True)
+class _TracksPost:
+    """One Rolls-table POST, read once for the server-rendered table and the engine
+    request alike. ``last_cat`` is the dupe memory: the cat the previous pull got (a dice
+    jump, an applied plan, or a seed you came back to) - it can dupe the very first cell.
+    ``targets`` folds the toggled future ubers in as explicit uber picks."""
 
-    ``last_cat`` is the dupe memory: the cat the previous pull got (a dice jump, an
-    applied plan, or a seed you came back to) - it can dupe the very first cell."""
+    seed: int
+    banners: list[str]
+    last_cat: str
+    display: int
+    future_ubers: dict[str, int]
+    simulate_guaranteed: int
+    trace: tuple | None
+    targets: dict[str, str]
+    wishlist: dict[str, str]
+    pks: dict[str, int]
+    include_guaranteed: bool
+
+
+def _tracks_post(request):
+    """The posted Rolls-table inputs, or None when the seed isn't a number."""
     try:
         seed = int(request.POST.get("seed", ""))
     except ValueError:
+        return None
+
+    targets, wishlist, pks = _find_targets(request)
+    # A toggled future uber searches like an explicit pick (its qualified name is already in
+    # the padded pool), so fold it into the target map at uber rarity.
+    future = {name: str(Rarity.UBER_SUPER_RARE) for name in _future_targets(request)}
+
+    return _TracksPost(
+        seed=seed,
+        banners=request.POST.getlist("banners"),
+        last_cat=request.POST.get("last_cat", "").strip(),
+        display=_track_length(request),
+        future_ubers=_future_ubers(request),
+        simulate_guaranteed=_simulate_guaranteed(request),
+        trace=_trace(request),
+        targets={**targets, **future},
+        wishlist=wishlist,
+        pks=pks,
+        include_guaranteed=request.POST.get("exclude_guaranteed") != "1",
+    )
+
+
+@require_POST
+def tracks_engine(request):
+    """The Rolls table as a request for the page's own engine (neko.wasm) to roll and
+    render - the same POST ``tracks`` takes, with none of its rolling done here."""
+    post = _tracks_post(request)
+    if post is None:
+        return HttpResponseBadRequest("the seed must be a number")
+
+    options = {"simulate_guaranteed": post.simulate_guaranteed, "future_ubers": post.future_ubers}
+    prepared = (
+        prepare_selected(post.banners, **options) if post.banners else prepare_active(**options)
+    )
+
+    return JsonResponse(
+        tracks_request(
+            post.seed,
+            prepared,
+            max(post.display, MAX_TRACK_LENGTH),
+            post.last_cat,
+            rows=post.display,
+            owned=_owned_names(request.profile),
+            wanted=_wanted_names(request.profile),
+            unit_ids=_unit_ids(),
+            tiers=tier_badges(),
+            titles=display_titles(),
+            debuts=banner_debuts(),
+            future=post.future_ubers,
+            targets=post.targets,
+            wishlist=post.wishlist,
+            pks=post.pks,
+            include_guaranteed=post.include_guaranteed,
+            trace=post.trace,
+        )
+    )
+
+
+@require_POST
+def tracks(request):
+    """A/B track tables for the current seed + banners, before any plan is run."""
+    post = _tracks_post(request)
+    if post is None:
         return HttpResponse("")
 
-    last_cat = request.POST.get("last_cat", "").strip()
-    display = _track_length(request)
-    future_ubers = _future_ubers(request)
+    seed, last_cat, display, future_ubers = (
+        post.seed,
+        post.last_cat,
+        post.display,
+        post.future_ubers,
+    )
     # Roll the find window deep (godfat's Find ceiling): the "Find next" panel locates cats
     # far past the visible table, but only ``display`` rows render (build_tracks caps them).
     count = max(display, MAX_TRACK_LENGTH)
     result = _roll(
         seed,
-        request.POST.getlist("banners"),
+        post.banners,
         count,
         last_cat,
-        simulate_guaranteed=_simulate_guaranteed(request),
+        simulate_guaranteed=post.simulate_guaranteed,
         future_ubers=future_ubers,
     )
     equivalents = equivalent_banners(result.banners)
     pulls, guaranteed, rerolls, guaranteed_rerolls = _rolls_by_banner(result)
-    trace = _trace(request)
+    trace = post.trace
     marks = None
     if trace is not None:
         marks = trace_marks(
@@ -362,11 +449,7 @@ def tracks(request):
     # The unified targets panel (godfat's Find, enriched): every cat you're searching for -
     # picks, wishlist and toggled future ubers - with its next position or a ⚠. Attached to
     # the browse track only, so the shared _tracks.html renders no panel on plan tracks.
-    targets, wishlist, pks = _find_targets(request)
-    # A toggled future uber searches like an explicit pick (its qualified name is already in
-    # the padded pool), so fold it into the target map at uber rarity.
-    future_targets = _future_targets(request)
-    targets = {**targets, **{name: str(Rarity.UBER_SUPER_RARE) for name in future_targets}}
+    targets, wishlist, pks = post.targets, post.wishlist, post.pks
     # Scope the wishlist search to what these banners can actually drop (their unioned pools),
     # so "search my wishlist" lists only obtainable cats, not every unowned cat you want.
     obtainable = frozenset().union(*result.pools.values()) if result.pools else None
@@ -374,7 +457,7 @@ def tracks(request):
         pulls,
         targets,
         guaranteed=guaranteed,
-        include_guaranteed=request.POST.get("exclude_guaranteed") != "1",
+        include_guaranteed=post.include_guaranteed,
         wishlist=wishlist,
         pool=obtainable,
         owned=owned,
@@ -416,9 +499,36 @@ def tracks(request):
     return render(request, "planner/_tracks.html", {"track": track})
 
 
-def _search_setup(request, form):
-    """Everything both plan endpoints need from one posted form: the scoped target set and
-    the keyword arguments the solvers take. Returns ``(targets, kwargs)``."""
+@dataclass(frozen=True)
+class _PlanSetup:
+    """What a plan search reads off one posted form, before any rolling: the selected
+    banners (unrolled), the rows to roll, the scoped targets and the budget."""
+
+    seed: int
+    banners: list[str]
+    prepared: dict
+    count: int
+    last_cat: str
+    future_ubers: dict[str, int]
+    picked: set[str]
+    future_targets: set[str]
+    tickets: int
+    catfood: int
+    platinum: int
+    legend: int
+    ticket_value: int
+
+    def targets(self, pools) -> set[str]:
+        """The targets scoped to what these banners can actually drop (their unioned
+        ``pools``), the same rule the panel uses: a picked or wishlisted cat that isn't in
+        them is dropped rather than listed as a dead "Not found" row (a whole wishlist
+        against one banner). Future-uber placeholders are always in their padded pool."""
+        pools = list(pools)
+        scoped = self.picked & frozenset().union(*pools) if pools else set(self.picked)
+        return scoped | self.future_targets
+
+
+def _plan_setup(request, form):
     seed = form.cleaned_data["seed"]
     Seed.store(owner(request), seed)
     targets = {cat.name for cat in form.cleaned_data["targets"]}
@@ -431,19 +541,9 @@ def _search_setup(request, form):
     future_ubers = _future_ubers(request)
 
     explore = form.cleaned_data["explore"]
-    count = form.cleaned_data["horizon"] if explore else DEFAULT_COUNT
-    last_cat = request.POST.get("last_cat", "").strip()
-    result = _roll(
-        seed, request.POST.getlist("banners"), count, last_cat, future_ubers=future_ubers
-    )
-    # Scope real-cat targets to what the selected banners can actually drop (their unioned
-    # pools), the same rule the panel uses: a picked or wishlisted cat that isn't in these
-    # banners is dropped rather than listed as a dead "Not found" row (a whole wishlist against
-    # one banner). Future-uber placeholders are always in their padded pool, so keep them.
-    if result.pools:
-        targets &= frozenset().union(*result.pools.values())
-    targets |= future_targets
-    pulls, guaranteed_pulls, rerolls, guaranteed_rerolls = _rolls_by_banner(result)
+    banners = request.POST.getlist("banners")
+    prepare = prepare_selected if banners else prepare_active
+    prepared = prepare(*([banners] if banners else []), future_ubers=future_ubers)
 
     if explore:
         # Ignore the budget but still fund single pulls with tickets (their real
@@ -453,19 +553,102 @@ def _search_setup(request, form):
     else:
         tickets, catfood = form.cleaned_data["tickets"], form.cleaned_data["catfood"]
 
-    kwargs = dict(
-        pulls=pulls,
-        rerolls=rerolls,
-        equivalents=equivalent_banners(result.banners),
+    return _PlanSetup(
+        seed=seed,
+        banners=banners,
+        prepared=prepared,
+        count=form.cleaned_data["horizon"] if explore else DEFAULT_COUNT,
+        last_cat=request.POST.get("last_cat", "").strip(),
+        future_ubers=future_ubers,
+        picked=targets,
+        future_targets=future_targets,
         tickets=tickets,
         catfood=catfood,
         # Platinum/Legend Capsules always run on their own scarce ticket pools, so their counts
         # come straight from the form even in explore mode (which frees only rare/catfood).
         platinum=form.cleaned_data["platinum_cap"],
         legend=form.cleaned_data["legend_cap"],
+        ticket_value=form.cleaned_data["ticket_value"],
+    )
+
+
+def _plan_engine_request(request, setup, op, **extra):
+    """A plan search for the page's engine to run (neko.wasm) - the same search, nothing
+    rolled or solved here."""
+    return plan_request(
+        op,
+        setup.seed,
+        setup.prepared,
+        setup.count,
+        setup.last_cat,
+        targets=setup.targets(run.pool for run in setup.prepared.values()),
+        tickets=setup.tickets,
+        catfood=setup.catfood,
+        platinum=setup.platinum,
+        legend=setup.legend,
+        ticket_value=setup.ticket_value,
+        owned=_owned_names(request.profile),
+        wanted=_wanted_names(request.profile),
+        unit_ids=_unit_ids(),
+        tiers=tier_badges(),
+        titles=display_titles(),
+        debuts=banner_debuts(),
+        apply_url=reverse("apply_plan"),
+        row_url=reverse("plan_row"),
+        **extra,
+    )
+
+
+@require_POST
+def find_plan_engine(request):
+    """find_plan for the page's engine: every target subset's plan, as a request the
+    page solves and renders itself."""
+    form = PlannerForm(request.POST, profile=request.profile)
+    if not form.is_valid():
+        return JsonResponse({"errors": form.errors}, status=400)
+
+    return JsonResponse(
+        _plan_engine_request(request, _plan_setup(request, form), "solutions", detail=1)
+    )
+
+
+@require_POST
+def plan_row_engine(request):
+    """plan_row for the page's engine: one opened row's subset, as a request."""
+    form = PlannerForm(request.POST, profile=request.profile)
+    if not form.is_valid():
+        return JsonResponse({"errors": form.errors}, status=400)
+
+    subset = {name for name in request.POST.getlist("subset") if name}
+    if not subset:
+        return HttpResponseBadRequest("subset must name at least one cat")
+
+    setup = _plan_setup(request, form)
+    return JsonResponse(_plan_engine_request(request, setup, "plan_row", subset=subset))
+
+
+def _search_setup(request, form):
+    """Everything both reference plan views need from one posted form: the scoped target
+    set and the keyword arguments the solvers take. Returns ``(targets, kwargs)``."""
+    setup = _plan_setup(request, form)
+    result = _roll(
+        setup.seed, setup.banners, setup.count, setup.last_cat, future_ubers=setup.future_ubers
+    )
+    targets, last_cat = setup.targets(result.pools.values()), setup.last_cat
+    tickets, catfood = setup.tickets, setup.catfood
+    pulls, guaranteed_pulls, rerolls, guaranteed_rerolls = _rolls_by_banner(result)
+
+    kwargs = dict(
+        pulls=pulls,
+        rerolls=rerolls,
+        equivalents=equivalent_banners(result.banners),
+        tickets=tickets,
+        catfood=catfood,
+        platinum=setup.platinum,
+        legend=setup.legend,
         guaranteed_pulls=guaranteed_pulls,
         multis=result.multis,
-        ticket_value=form.cleaned_data["ticket_value"],
+        ticket_value=setup.ticket_value,
         banner_currency=banner_currencies(pulls),
         owned=_owned_names(request.profile),
         wanted=_wanted_names(request.profile),
@@ -689,6 +872,26 @@ def normal_tracks(request):
     return render(request, "planner/_normal_tracks.html", {"track": track})
 
 
+@require_POST
+def normal_tracks_engine(request):
+    """normal_tracks for the page's engine: the machines' bands and the seed, as a request
+    the page rolls and renders itself."""
+    try:
+        seed = int(request.POST.get("seed", ""))
+    except ValueError:
+        return HttpResponseBadRequest("seed must be an integer")
+
+    return JsonResponse(
+        normal_request(
+            "normal_tracks",
+            seed,
+            request.POST.getlist("banners"),
+            _track_length(request),
+            request.POST.get("last_item", "").strip(),
+        )
+    )
+
+
 MAX_PLAN_ROLLS = 500  # per currency; normal_plan caps the total look-ahead anyway
 
 # The plan panel's currencies: Normal Cat Tickets feed the plain capsule and the
@@ -745,6 +948,42 @@ def normal_plan(request):
         return HttpResponseBadRequest("unknown target")
 
     return render(request, "planner/_normal_plan.html", {"plan": plan, "track": plan["track"]})
+
+
+@require_POST
+def normal_plan_engine(request):
+    """normal_plan for the page's engine: the search's machines, budgets and target, as a
+    request the page solves and renders itself."""
+    try:
+        seed = int(request.POST.get("seed", ""))
+    except ValueError:
+        return HttpResponseBadRequest("seed must be an integer")
+
+    tickets = _normal_tickets(request)
+    machines = [key for key in request.POST.getlist("banners") if key in BANNERS_BY_KEY]
+    if not tickets or not machines:
+        return HttpResponseBadRequest("give some tickets to at least one shown machine")
+
+    resolved = normal_plan_targets(request.POST.get("target", "dark"))
+    if resolved is None:
+        return HttpResponseBadRequest("unknown target")
+
+    label, targets = resolved
+    # The table shows the live machines in the page's fixed order; the search tries them in
+    # the order posted, as the server's planner did.
+    columns = [banner.key for banner in NORMAL_BANNERS if banner.key in machines]
+    return JsonResponse(
+        normal_request(
+            "normal_plan",
+            seed,
+            columns,
+            _track_length(request),
+            request.POST.get("last_item", "").strip(),
+            label=label,
+            targets=targets,
+            budgets=normal_budgets(machines, tickets),
+        )
+    )
 
 
 def _observed_normal_rolls(request, banner):

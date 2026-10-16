@@ -8,7 +8,7 @@ from datetime import date
 from neko.bcdata import load_records
 from neko.gacha import GachaRule, load_rules, multi_configs
 from neko.gachadata import GachaEventRow, build_banner, load_events, load_pools
-from neko.models import BannerRolls, TrackPull
+from neko.models import Banner, BannerRolls, TrackPull
 from neko.roll import roll_banner
 from neko.search import Multi
 
@@ -136,6 +136,52 @@ def _latest_runs(events: Iterable[GachaEventRow]) -> dict[str, GachaEventRow]:
     return latest
 
 
+@dataclass(frozen=True, slots=True)
+class Prepared:
+    """A selected run, ready to roll: its banner (with any future-uber placeholders padded
+    into the uber pool), the guaranteed multi length it rolls with, its multi options
+    (None when the rules give it none), its dates and its real droppable pool."""
+
+    banner: Banner
+    guaranteed_rolls: int
+    multis: tuple[Multi, ...] | None
+    dates: tuple[date, date]
+    pool: frozenset[str]
+
+
+def _prepare(
+    events: Iterable[GachaEventRow],
+    pools: Mapping[int, list[int]],
+    units: Mapping[int, tuple[str, str]],
+    rules: Iterable[GachaRule],
+    simulate_guaranteed: int = 0,
+    future_ubers: Mapping[str, int] | None = None,
+) -> dict[str, Prepared]:
+    """Each event as a banner keyed by name, keeping a recurring banner's latest run."""
+    latest = _latest_runs(events)
+    configs = multi_configs(latest.values(), rules)
+    future_ubers = future_ubers or {}
+    prepared = {}
+
+    for name, event in latest.items():
+        base = build_banner(event, pools, units)
+        guaranteed_rolls = _guaranteed_rolls(event, force=simulate_guaranteed)
+        multis = None
+        if event.event_id in configs:
+            multis = _event_multis(configs[event.event_id], guaranteed_rolls)
+
+        prepared[name] = Prepared(
+            base.with_future_ubers(future_ubers.get(name, 0)),
+            guaranteed_rolls,
+            multis,
+            (event.start, event.end),
+            # The real pool (no future-uber placeholders), for scoping a wishlist search.
+            frozenset(cat for pool in base.pools.values() for cat in pool),
+        )
+
+    return prepared
+
+
 def _roll_events(
     seed: int,
     events: Iterable[GachaEventRow],
@@ -148,27 +194,20 @@ def _roll_events(
     future_ubers: Mapping[str, int] | None = None,
 ) -> RollResult:
     """Roll each event and key it by banner name, keeping a recurring banner's latest run."""
-    latest = _latest_runs(events)
-    configs = multi_configs(latest.values(), rules)
-    future_ubers = future_ubers or {}
-    banners, multis, dates, banner_pools = {}, {}, {}, {}
-
-    for name, event in latest.items():
-        base = build_banner(event, pools, units)
-        banner = base.with_future_ubers(future_ubers.get(name, 0))
-        guaranteed_rolls = _guaranteed_rolls(event, force=simulate_guaranteed)
-        banners[name] = roll_banner(
-            seed, banner, count, guaranteed_rolls=guaranteed_rolls, last_cat=last_cat
+    prepared = _prepare(events, pools, units, rules, simulate_guaranteed, future_ubers)
+    banners = {
+        name: roll_banner(
+            seed, run.banner, count, guaranteed_rolls=run.guaranteed_rolls, last_cat=last_cat
         )
-        # The banner's real pool (no future-uber placeholders), for scoping a wishlist search.
-        banner_pools[name] = frozenset(cat for pool in base.pools.values() for cat in pool)
+        for name, run in prepared.items()
+    }
 
-        if event.event_id in configs:
-            multis[name] = _event_multis(configs[event.event_id], guaranteed_rolls)
-
-        dates[name] = (event.start, event.end)
-
-    return RollResult(banners, multis, dates, banner_pools)
+    return RollResult(
+        banners,
+        {name: run.multis for name, run in prepared.items() if run.multis is not None},
+        {name: run.dates for name, run in prepared.items()},
+        {name: run.pool for name, run in prepared.items()},
+    )
 
 
 def _load(events, pools, units, rules):
@@ -237,6 +276,44 @@ def roll_selected(
 
     return _roll_events(
         seed, chosen, pools, units, count, rules, last_cat, simulate_guaranteed, future_ubers
+    )
+
+
+def prepare_selected(
+    names: Iterable[str],
+    *,
+    today: date | None = None,
+    events: Iterable[GachaEventRow] | None = None,
+    pools: Mapping[int, list[int]] | None = None,
+    units: Mapping[int, tuple[str, str]] | None = None,
+    rules: Iterable[GachaRule] | None = None,
+    simulate_guaranteed: int = 0,
+    future_ubers: Mapping[str, int] | None = None,
+) -> dict[str, Prepared]:
+    """The selected banners as roll_selected would roll them, unrolled - for an engine
+    that rolls them elsewhere (the page's neko.wasm)."""
+    events, pools, units, rules = _load(events, pools, units, rules)
+
+    return _prepare(
+        select_events(events, names, today), pools, units, rules, simulate_guaranteed, future_ubers
+    )
+
+
+def prepare_active(
+    *,
+    today: date | None = None,
+    events: Iterable[GachaEventRow] | None = None,
+    pools: Mapping[int, list[int]] | None = None,
+    units: Mapping[int, tuple[str, str]] | None = None,
+    rules: Iterable[GachaRule] | None = None,
+    simulate_guaranteed: int = 0,
+    future_ubers: Mapping[str, int] | None = None,
+) -> dict[str, Prepared]:
+    """prepare_selected for the banners live on ``today`` (what roll_active rolls)."""
+    events, pools, units, rules = _load(events, pools, units, rules)
+
+    return _prepare(
+        active_events(events, today), pools, units, rules, simulate_guaranteed, future_ubers
     )
 
 

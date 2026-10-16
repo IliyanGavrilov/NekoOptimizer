@@ -7,6 +7,10 @@
 // so app.js's drag-to-scrub picks it up too).
 const normalForm = document.getElementById("normalForm");
 if (normalForm) {
+  // The machines' tables and the path planner run in the page's own engine (neko.wasm,
+  // engine.js), a worker each so a long plan never holds up the table.
+  const runTables = nekoEngine(normalForm.dataset.wasmUrl, normalForm.dataset.engineWorkerUrl);
+  const runPlans = nekoEngine(normalForm.dataset.wasmUrl, normalForm.dataset.engineWorkerUrl);
   const token = normalForm.querySelector("[name=csrfmiddlewaretoken]").value;
   const seedEl = document.getElementById("normalSeed");
   const countEl = document.getElementById("normalCount");
@@ -118,10 +122,9 @@ if (normalForm) {
     } catch {
       resp = null;
     }
+    const failed = `<p class="field-error">Couldn't load the tracks - is the server still running?</p>`;
     tracksHost.innerHTML =
-      resp && resp.ok
-        ? await resp.text()
-        : `<p class="field-error">Couldn't load the tracks - is the server still running?</p>`;
+      resp && resp.ok ? await runTables(await resp.text()).catch(() => failed) : failed;
     applyDisplay();
   };
 
@@ -240,7 +243,12 @@ if (normalForm) {
       planError.textContent = resp ? await resp.text() : "Lost the server - try again.";
       return;
     }
-    tracksHost.innerHTML = await resp.text();
+    try {
+      tracksHost.innerHTML = await runPlans(await resp.text());
+    } catch {
+      planError.textContent = "Couldn't work out a path - try again.";
+      return;
+    }
     applyDisplay();
     wireFollowAlong(tracksHost); // step list + track walk together (defined in app.js)
     tracksHost.scrollIntoView({ behavior: "smooth", block: "start" });

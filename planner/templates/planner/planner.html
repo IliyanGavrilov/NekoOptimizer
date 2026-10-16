@@ -1,4 +1,5 @@
 {% extends "planner/base.html" %}
+{% load static %}
 
 {% block content %}
   <h1>Neko Optimizer</h1>
@@ -145,7 +146,7 @@
           <label class="ctrl find-guaranteed-ctl" title="When a guaranteed multi is in play, ignore the guaranteed column when finding cats - so Find next lists only normal-roll positions" hidden><input type="checkbox" id="excludeGuaranteed"> Skip guaranteed in Find</label>
         </div>
       </div>
-      <div id="trackHost" data-tracks-url="{% url 'tracks' %}" data-plan-url="{% url 'find_plan' %}" data-backtrack-url="{% url 'seed_backtrack' %}"></div>
+      <div id="trackHost" data-engine-url="{% url 'tracks_engine' %}" data-wasm-url="{% static 'planner/neko.wasm' %}" data-engine-worker-url="{% static 'planner/engine-worker.js' %}" data-plan-url="{% url 'find_plan' %}" data-backtrack-url="{% url 'seed_backtrack' %}"></div>
     </div>
     {# Shown only while a plan is on screen: drops the solutions and brings the Rolls table #}
     {# back, so you can browse again without reloading the page. #}
