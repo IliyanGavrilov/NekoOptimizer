@@ -21,9 +21,9 @@ from neko.region import CODES
 from neko.region import current as active_region
 from neko.rng import backtrack
 from neko.roller import DEFAULT_COUNT, GUARANTEED_OPTIONS
+from neko.seekspec import MAX_MATCHES, normal_spec, seed_spec
 from neko.statsdata import ABILITY_LABELS, ATTACK_LABELS, IMMUNITY_LABELS, TARGET_LABELS
 from neko.tierdata import load_tiers
-from planner import seekjobs
 from planner.forms import (
     MAX_FUTURE_UBERS,
     MAX_SEEK_ROLLS,
@@ -613,8 +613,8 @@ def _observed_rolls(request, banner):
 
 @require_POST
 def seek_start(request):
-    """Kick off a seed search for the posted banner + observed rolls; returns the job
-    key the page polls seek_status with."""
+    """Validate the posted banner + observed rolls and hand back the seed search for the
+    page to run."""
     banner = seek_banner(request.POST.get("banner", ""))
     if banner is None:
         return HttpResponseBadRequest("unknown banner")
@@ -626,18 +626,23 @@ def seek_start(request):
         return HttpResponseBadRequest(f"enter between {MIN_SEEK_ROLLS} and {MAX_SEEK_ROLLS} rolls")
 
     rarity, slot = observed[-1]
-    last_cat = banner.pool(rarity)[slot]
 
-    return JsonResponse({"job": seekjobs.start(banner, observed, last_cat)})
+    return _search(seed_spec(banner, observed), banner.pool(rarity)[slot])
 
 
-def seek_status(request):
-    """One poll of a running search: progress while sieving, matches once done."""
-    job = seekjobs.get(request.GET.get("job", ""))
-    if job is None:
-        return HttpResponseBadRequest("unknown job")
-
-    return JsonResponse(job.snapshot())
+def _search(spec, last_cat):
+    """The search the page runs itself (seek.wasm on every core) for a validated window,
+    plus the last pull's name - the found seed's dupe memory."""
+    return JsonResponse(
+        {
+            "cats": spec.cats,
+            "bands": spec.bands,
+            "sizes": spec.sizes,
+            "rerollable": sorted(spec.rerollable),
+            "limit": MAX_MATCHES,
+            "last_cat": last_cat,
+        }
+    )
 
 
 def normal_capsules(request):
@@ -761,8 +766,7 @@ def _observed_normal_rolls(request, banner):
 
 @require_POST
 def normal_seek_start(request):
-    """Kick off a normal-seed search for the posted banner + observed rolls; returns
-    the job key the page polls seek_status with (the finders share the registry)."""
+    """seek_start for the normal seed: validate the posted rolls, hand back the search."""
     banner = normal_seek_banner(request.POST.get("banner", ""))
     if banner is None:
         return HttpResponseBadRequest("unknown banner")
@@ -774,9 +778,8 @@ def normal_seek_start(request):
         return HttpResponseBadRequest(f"enter between {MIN_SEEK_ROLLS} and {MAX_SEEK_ROLLS} rolls")
 
     pool, slot = observed[-1]
-    last_item = banner.pools[pool].items[slot]
 
-    return JsonResponse({"job": seekjobs.start_normal(banner, observed, last_item)})
+    return _search(normal_spec(banner, observed), banner.pools[pool].items[slot])
 
 
 def collection(request):

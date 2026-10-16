@@ -1,7 +1,7 @@
-// ---- Seed Finder: enter your real pulls, poll the background search ----------
+// ---- Seed Finder: enter your real pulls, sieve the seed space locally ---------
 // Picking a banner fetches its pools and builds one searchable cat box per pull;
-// submitting starts a server-side sieve of the whole 2^32 seed space and this page
-// polls its progress until the matching seed(s) come back.
+// submitting has the server check the pulls, then this page sieves the whole 2^32
+// seed space itself (seekrun.js) until the matching seed(s) come back.
 const seekForm = document.getElementById("seekForm");
 if (seekForm) {
   const token = seekForm.querySelector("[name=csrfmiddlewaretoken]").value;
@@ -201,7 +201,7 @@ if (seekForm) {
     addRow.hidden = rollsEl.children.length >= MAX;
   });
 
-  // ---- The search itself: start the job, poll until it's done ----------------
+  // ---- The search itself: validate on the server, sieve right here ----------------
 
   const PASS_LABELS = [
     "Searching the seed space…",
@@ -253,30 +253,22 @@ if (seekForm) {
       notes + data.matches.map((m) => matchCard(m, data.last_cat)).join("");
   };
 
-  const poll = (job) => {
-    const tick = async () => {
-      let resp;
-      try {
-        resp = await fetch(`${seekForm.dataset.statusUrl}?job=${job}`);
-      } catch {
-        resp = null;
-      }
-      if (!resp || !resp.ok) {
-        progressWrap.hidden = true;
-        goBtn.disabled = false;
-        setError("Lost the search - is the server still running? Try again.");
-        return;
-      }
-      const data = await resp.json();
-      if (data.done) {
-        render(data);
-        return;
-      }
-      bar.value = data.progress;
-      progressText.textContent = `${PASS_LABELS[data.run]} ${Math.round(data.progress * 100)}%`;
-      setTimeout(tick, 500);
-    };
-    tick();
+  const search = async (spec) => {
+    let data;
+    try {
+      const found = await localSeek(spec, {
+        wasmUrl: seekForm.dataset.wasmUrl,
+        workerUrl: seekForm.dataset.workerUrl,
+        onProgress: (run, fraction) => {
+          bar.value = fraction;
+          progressText.textContent = `${PASS_LABELS[run]} ${Math.round(fraction * 100)}%`;
+        },
+      });
+      data = { ...found, last_cat: spec.last_cat };
+    } catch (error) {
+      data = { error: error.message };
+    }
+    render(data);
   };
 
   seekForm.addEventListener("submit", async (e) => {
@@ -312,6 +304,6 @@ if (seekForm) {
     bar.value = 0;
     progressText.textContent = PASS_LABELS[0];
     progressWrap.hidden = false;
-    poll((await resp.json()).job);
+    search(await resp.json());
   });
 }
