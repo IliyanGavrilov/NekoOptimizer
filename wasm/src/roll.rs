@@ -218,11 +218,10 @@ fn build_grid(seed: u32, banner: &Banner, rows: usize, last_cat: u32) -> Vec<[Ca
         .collect();
 
     for seq in 1..rows {
-        for track in 0..2 {
-            let prev = grid[seq - 1][track].name;
-            let realized = grid[seq][track].duped(prev);
-            grid[seq][track].realized = realized;
-            grid[seq - 1][track].next = Some(if realized {
+        let (done, rest) = grid.split_at_mut(seq);
+        for (track, (prev, cur)) in done[seq - 1].iter_mut().zip(rest[0].iter_mut()).enumerate() {
+            cur.realized = cur.duped(prev.name);
+            prev.next = Some(if cur.realized {
                 Link::Reroll(seq, track)
             } else {
                 Link::Cell(seq, track)

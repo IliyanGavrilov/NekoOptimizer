@@ -81,8 +81,11 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
+      # The compiler neko.wasm is built with locally: clippy's lints change between releases.
       - name: Toolchain
-        run: rustup target add wasm32-unknown-unknown && rustup component add clippy rustfmt
+        run: |
+          rustup toolchain install 1.90.0 --profile minimal --component clippy,rustfmt --target wasm32-unknown-unknown
+          rustup override set 1.90.0
 
       - name: Format
         run: cargo fmt --check

@@ -12,7 +12,7 @@ from planner.test_tracks_engine import _same, _twins, catalogue  # noqa: F401
 # The reference plan views are routed only for tests (planner.reference_urls).
 pytestmark = [pytest.mark.django_db, pytest.mark.urls("planner.reference_urls")]
 
-RNG = random.Random(20261017)
+RNG = random.Random(20261017)  # nosec B311
 EVENTS = load_events()
 
 
@@ -132,7 +132,8 @@ def test_plans_match_when_a_ticket_is_worth_more_than_a_draw(client, engine, cat
 
 def test_plans_match_for_a_big_wishlist(client, engine, catalogue):  # noqa: F811
     # More than SUBSET_TARGET_LIMIT obtainable cats: the bounded beam search plus per-cat rows.
-    seed, runs = GOLDEN_SEED, [f"{e.start}|{e.name}" for e in random.Random(7).sample(EVENTS, 2)]
+    picker = random.Random(7)  # nosec B311
+    seed, runs = GOLDEN_SEED, [f"{e.start}|{e.name}" for e in picker.sample(EVENTS, 2)]
     first = next(iter(roll_selected(seed, runs, count=40).banners.values()))
     wanted = list(dict.fromkeys(p.cat for p in first.pulls if p.cat))[:14]
     catalogue.owned.clear()
