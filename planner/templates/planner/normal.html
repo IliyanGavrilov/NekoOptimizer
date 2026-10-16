@@ -29,7 +29,7 @@
     </ul>
     <form id="nseekForm" class="seek-panel" novalidate
           data-start-url="{% url 'normal_seek_start' %}"
-          data-status-url="{% url 'seek_status' %}"
+          data-wasm-url="{% static 'planner/seek.wasm' %}" data-worker-url="{% static 'planner/seek-worker.js' %}"
           data-min-rolls="{{ min_rolls }}"
           data-max-rolls="{{ max_rolls }}">
       {% csrf_token %}
@@ -151,5 +151,6 @@
 {% endblock %}
 
 {% block scripts %}
+  <script src="{% static 'planner/seekrun.js' %}"></script>
   <script src="{% static 'planner/normal.js' %}"></script>
 {% endblock %}

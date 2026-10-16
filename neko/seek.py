@@ -13,14 +13,11 @@ import numpy as np
 from neko.models import GACHA_RARITIES, Banner, Rarity
 from neko.normal import NormalBanner
 from neko.rng import unxorshift, xorshift
+from neko.seekspec import BASE as _BASE
+from neko.seekspec import MAX_MATCHES, SeekSpec, normal_spec, pool_sizes, rate_bands, seed_spec
 
-_BASE = 10000  # rarity scores and rates are parts-per-10000 (godfat's GachaPool::Base)
 _SPACE = 1 << 32  # seeds are uint32: the whole space is small enough to sieve
 _CHUNK = 1 << 23  # candidates per numpy pass: array sizes stay tens of MB
-
-# Past this many matches the observed pulls underdetermine the seed: stop collecting
-# and have the caller ask for more rolls instead.
-MAX_MATCHES = 20
 
 ProgressFn = Callable[[int, float], None]
 
@@ -47,21 +44,6 @@ class SeekResult:
 
     matches: tuple[SeekMatch, ...]
     truncated: bool = False
-
-
-def _bands(banner: Banner) -> tuple[int, int, int, int, int]:
-    """Cumulative band starts: a score s means GACHA_RARITIES[r] where
-    bands[r] <= s < bands[r + 1], exactly like roll.pick_rarity (legend is the
-    catch-all past uber, whatever the rates sum to)."""
-    rare = banner.rates.get(Rarity.RARE, 0)
-    supa = banner.rates.get(Rarity.SUPER_RARE, 0)
-    uber = banner.rates.get(Rarity.UBER_SUPER_RARE, 0)
-
-    return (0, rare, rare + supa, rare + supa + uber, _BASE)
-
-
-def _sizes(banner: Banner) -> tuple[int, ...]:
-    return tuple(len(banner.pool(rarity)) for rarity in GACHA_RARITIES)
 
 
 def _xs(x: np.ndarray) -> np.ndarray:
@@ -284,56 +266,29 @@ def _seek(
     return SeekResult(tuple(found), truncated)
 
 
-def seek_seed(
-    banner: Banner,
-    observed: Sequence[tuple[Rarity, int]],
+def seek_spec(
+    spec: SeekSpec,
     *,
     progress: ProgressFn | None = None,
     chunk: int = _CHUNK,
     limit: int = MAX_MATCHES,
 ) -> SeekResult:
-    """Every seed that reproduces ``observed`` - the player's consecutive in-game
-    pulls on ``banner``, oldest first, each as (rarity, slot in that rarity's pool) -
-    found by sieving the whole 2^32 space like godfat's Seeker-VampireFlower.
-    ``progress`` is called after each sieved chunk with (run, fraction of that pass
-    done). Only the Rare pool rerolls dupes, exactly like the game's rare gacha."""
-    sizes = _sizes(banner)
-    cats: list[tuple[int, int]] = []
-    for rarity, slot in observed:
-        if rarity not in GACHA_RARITIES:
-            raise ValueError(f"{rarity} never drops from the gacha")
+    """Every seed that reproduces the spec's pulls, found by sieving the whole 2^32 space
+    like godfat's Seeker-VampireFlower. ``progress`` is called after each sieved chunk
+    with (run, fraction of that pass done)."""
+    cats = list(spec.cats)
 
-        index = GACHA_RARITIES.index(rarity)
-        if not 0 <= slot < sizes[index]:
-            raise ValueError(f"slot {slot} outside the {rarity} pool of {sizes[index]}")
-
-        cats.append((index, slot))
-
-    return _seek(cats, _bands(banner), sizes, frozenset({0}), progress, chunk, limit)
+    return _seek(cats, spec.bands, spec.sizes, spec.rerollable, progress, chunk, limit)
 
 
-def seek_normal(
-    banner: NormalBanner,
-    observed: Sequence[tuple[int, int]],
-    *,
-    progress: ProgressFn | None = None,
-    chunk: int = _CHUNK,
-    limit: int = MAX_MATCHES,
-) -> SeekResult:
-    """seek_seed for the normal-side gacha: ``observed`` are the player's consecutive
-    normal-capsule pulls, oldest first, each as (pool index, slot in that pool).
-    The normal seed is independent of the rare one, but the stream mechanics are
-    identical, so the same sieve recovers it."""
-    sizes = tuple(len(pool.items) for pool in banner.pools)
-    for pool, slot in observed:
-        if not 0 <= pool < len(banner.pools):
-            raise ValueError(f"{banner.name} has no pool {pool}")
-        if not 0 <= slot < sizes[pool]:
-            raise ValueError(f"slot {slot} outside pool {pool} of {sizes[pool]}")
+def seek_seed(banner: Banner, observed: Sequence[tuple[Rarity, int]], **kwargs) -> SeekResult:
+    """seek_spec over seed_spec: the seeds that deal ``observed`` on ``banner``."""
+    return seek_spec(seed_spec(banner, observed), **kwargs)
 
-    rerollable = frozenset(i for i, pool in enumerate(banner.pools) if pool.reroll)
 
-    return _seek(list(observed), banner.bands(), sizes, rerollable, progress, chunk, limit)
+def seek_normal(banner: NormalBanner, observed: Sequence[tuple[int, int]], **kwargs) -> SeekResult:
+    """seek_spec over normal_spec: the normal seeds that deal ``observed``."""
+    return seek_spec(normal_spec(banner, observed), **kwargs)
 
 
 def play(seed: int, banner: Banner, count: int) -> tuple[list[tuple[Rarity, int]], int]:
@@ -342,8 +297,8 @@ def play(seed: int, banner: Banner, count: int) -> tuple[list[tuple[Rarity, int]
     the linear play stream - two values per pull, one more when a rare repeats the
     previous pull's slot and repicks - the same chain roll_banner traces through its
     A/B grid, without the grid."""
-    bands = _bands(banner)
-    sizes = _sizes(banner)
+    bands = rate_bands(banner)
+    sizes = pool_sizes(banner)
     pulls: list[tuple[Rarity, int]] = []
     prev_rarity, prev_slot = -1, -1
 

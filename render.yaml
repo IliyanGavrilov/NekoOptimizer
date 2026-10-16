@@ -6,8 +6,8 @@ services:
     runtime: python
     plan: free
     buildCommand: bash build.sh
-    # One process: the seed finder's jobs live in memory, so every poll must reach the
-    # worker that started the search. The long timeout covers explore-mode searches.
+    # One process: the free plan's 0.1 CPU gains nothing from a second, and its 512 MB
+    # fits one copy of the app. The long timeout covers explore-mode searches.
     startCommand: gunicorn nekosite.wsgi --workers 1 --threads 4 --timeout 300
     envVars:
       - key: DJANGO_DEBUG

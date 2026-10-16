@@ -1,8 +1,8 @@
 // ---- Normal Capsules: its own seed, its own tracks, finder and path planner --
 // The normal-side gacha shares nothing with the rare seed the planner follows, so
 // this page keeps its seed in localStorage (?seed= permalinks override it), renders
-// the A/B tracks from the server, and runs the normal seed finder against the same
-// polling endpoints the rare finder uses. Tracks reload live as the seed, machines
+// the A/B tracks from the server, and runs the normal seed finder through the same
+// local sieve the rare finder uses (seekrun.js). Tracks reload live as the seed, machines
 // or roll count change, exactly like the planner (the seed field is a number input,
 // so app.js's drag-to-scrub picks it up too).
 const normalForm = document.getElementById("normalForm");
@@ -393,7 +393,7 @@ if (normalForm) {
     addRow.hidden = rollsEl.children.length >= MAX;
   });
 
-  // ---- The search itself: start the job, poll until it's done -----------------
+  // ---- The search itself: validate on the server, sieve right here -----------------
   const PASS_LABELS = [
     "Searching the seed space…",
     "No clean match — retrying your first pull as a dupe reroll (below the shadow slot)…",
@@ -454,30 +454,22 @@ if (normalForm) {
     tracksHost.scrollIntoView({ behavior: "smooth", block: "start" });
   });
 
-  const poll = (job, machine) => {
-    const tick = async () => {
-      let resp;
-      try {
-        resp = await fetch(`${nseekForm.dataset.statusUrl}?job=${job}`);
-      } catch {
-        resp = null;
-      }
-      if (!resp || !resp.ok) {
-        progressWrap.hidden = true;
-        goBtn.disabled = false;
-        setError("Lost the search - is the server still running? Try again.");
-        return;
-      }
-      const data = await resp.json();
-      if (data.done) {
-        render(data, machine);
-        return;
-      }
-      bar.value = data.progress;
-      progressText.textContent = `${PASS_LABELS[data.run]} ${Math.round(data.progress * 100)}%`;
-      setTimeout(tick, 500);
-    };
-    tick();
+  const search = async (spec, machine) => {
+    let data;
+    try {
+      const found = await localSeek(spec, {
+        wasmUrl: nseekForm.dataset.wasmUrl,
+        workerUrl: nseekForm.dataset.workerUrl,
+        onProgress: (run, fraction) => {
+          bar.value = fraction;
+          progressText.textContent = `${PASS_LABELS[run]} ${Math.round(fraction * 100)}%`;
+        },
+      });
+      data = { ...found, last_cat: spec.last_cat };
+    } catch (error) {
+      data = { error: error.message };
+    }
+    render(data, machine);
   };
 
   nseekForm.addEventListener("submit", async (e) => {
@@ -514,6 +506,6 @@ if (normalForm) {
     bar.value = 0;
     progressText.textContent = PASS_LABELS[0];
     progressWrap.hidden = false;
-    poll((await resp.json()).job, machine);
+    search(await resp.json(), machine);
   });
 }
