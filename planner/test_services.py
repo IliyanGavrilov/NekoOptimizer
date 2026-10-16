@@ -32,6 +32,7 @@ from planner.services import (
     plan_seed,
     plan_shared,
     plan_summary,
+    run_debuts,
     series_names,
     set_sections,
     subset_plan,
@@ -348,7 +349,7 @@ def test_picker_groups_titles_rows_from_their_pool():
     today = date(2026, 7, 3)
     events = [_run(date(2026, 6, 26), date(2026, 7, 10), 5, "Brave new adventurers join!")]
     groups = dict(picker_groups([], today=today, events=events, titles={5: "The Dynamites"}))
-    assert [(n, t) for n, t, _d, _c in groups["Available now"]] == [
+    assert [(n, t) for n, t, _d, _c, _new in groups["Available now"]] == [
         ("Brave new adventurers join!", "The Dynamites")
     ]
 
@@ -371,12 +372,12 @@ def test_picker_groups_lists_each_scheduled_run_separately():
     cat = Cat.objects.create(name="Luno", rarity="Uber Super Rare")
     cat.banners.add(Banner.objects.create(name="Platinum"))
     groups = dict(picker_groups(Cat.objects.all(), today=today, events=events))
-    now = [(name, dates) for name, _title, dates, _ in groups["Available now"]]
+    now = [(name, dates) for name, _title, dates, _, _new in groups["Available now"]]
     assert now == [
         ("Platinum", (date(2026, 4, 24), date(2026, 7, 10))),
         ("Trixi", (date(2026, 6, 26), date(2026, 7, 3))),
     ]
-    upcoming = [(n, d) for n, _t, d, _ in groups["Upcoming"]]
+    upcoming = [(n, d) for n, _t, d, _, _new in groups["Upcoming"]]
     assert upcoming == [("Platinum", (date(2026, 7, 11), sentinel))]
     assert groups["Available now"][0][3] == [("Uber Super Rare", [cat])]
     assert groups["Upcoming"][0][3] == [("Uber Super Rare", [cat])]
@@ -387,7 +388,7 @@ def test_picker_groups_keeps_unscheduled_past_banners_db_dated():
     today = date(2026, 7, 3)
     _dated_banner("OldFest", date(2026, 5, 1), date(2026, 5, 4))
     groups = dict(picker_groups(Cat.objects.all(), today=today, events=[]))
-    assert [(n, d) for n, _t, d, _ in groups["Past"]] == [
+    assert [(n, d) for n, _t, d, _, _new in groups["Past"]] == [
         ("OldFest", (date(2026, 5, 1), date(2026, 5, 4)))
     ]
 
@@ -402,7 +403,7 @@ def test_picker_groups_lists_every_past_rerun_with_cats_on_the_newest():
     cat = Cat.objects.create(name="Bahamut", rarity="Uber Super Rare")
     cat.banners.add(Banner.objects.create(name="Fest"))
     groups = dict(picker_groups(Cat.objects.all(), today=today, events=events))
-    assert [(n, d) for n, _t, d, _ in groups["Past"]] == [
+    assert [(n, d) for n, _t, d, _, _new in groups["Past"]] == [
         ("Fest", (date(2026, 5, 1), date(2026, 5, 5))),
         ("Fest", (date(2026, 2, 1), date(2026, 2, 5))),
     ]
@@ -485,6 +486,26 @@ def test_newly_added_ubers_are_the_ubers_debuting_with_a_banner_run():
     units = {1: ("Base Uber", U.value), 2: ("Late Uber", U.value), 3: ("June Uber", U.value)}
     added = newly_added_ubers(events=events, pools=pools, units=units)
     assert added == {"base": {"Base Uber"}, "fest": {"Late Uber"}, "rerun": {"June Uber"}}
+
+
+def test_run_debuts_name_every_rarity_a_run_brings_first_rarest_first():
+    events = [
+        _gacha_event("base", date(2025, 1, 1), 10),
+        _gacha_event("collab", date(2025, 3, 1), 11),
+    ]
+    pools = {10: [1], 11: [1, 2, 3]}
+    units = {1: ("Old Uber", U.value), 2: ("Collab Rare", "Rare"), 3: ("Collab Uber", U.value)}
+    added = run_debuts(events=events, pools=pools, units=units)
+    assert added == {"base": ["Old Uber"], "collab": ["Collab Uber", "Collab Rare"]}
+
+
+@pytest.mark.django_db
+def test_picker_groups_call_out_a_live_runs_debuts():
+    today = date(2026, 7, 3)
+    events = [_run(date(2026, 6, 26), date(2026, 7, 10), 5, "Vornado added!")]
+    debuts = {"2026-06-26_5": ["Vornado"]}
+    groups = dict(picker_groups([], today=today, events=events, debuts=debuts))
+    assert groups["Available now"][0][4] == ["Vornado"]
 
 
 def test_newly_added_ubers_keys_a_rerun_name_by_its_latest_run():

@@ -1,7 +1,7 @@
 import json
 import re
 from collections import Counter
-from collections.abc import Iterable, Mapping
+from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass, field
 from datetime import date, timedelta
 from functools import cache
@@ -367,6 +367,53 @@ def fetch_for_banners(
     )
 
 
+def _debut_dates(events, pools, units) -> dict[str, date]:
+    """Each gacha unit's first appearance: the earliest start of any event carrying it."""
+    debut: dict[str, date] = {}
+    for event in events:
+        for unit_id in pools.get(event.pool_id, ()):
+            if unit_id in units:
+                name = units[unit_id][0]
+                if name not in debut or event.start < debut[name]:
+                    debut[name] = event.start
+
+    return debut
+
+
+def run_debuts(events=None, pools=None, units=None) -> dict[str, list[str]]:
+    """Per event id, the units that run brings to the game for the first time - any
+    rarity, rarest first - so a picker row can call out what's actually new on it."""
+    events = load_events() if events is None else events
+    pools = load_pools() if pools is None else pools
+    units = units_from_records() if units is None else units
+    debut = _debut_dates(events, pools, units)
+    rank = {rarity.value: i for i, rarity in enumerate(GACHA_RARITIES)}
+
+    added: dict[str, list[str]] = {}
+    for event in events:
+        new = {
+            units[u]
+            for u in pools.get(event.pool_id, ())
+            if u in units and units[u][1] in rank and debut[units[u][0]] == event.start
+        }
+        if new:
+            added[event.event_id] = [
+                name for name, rarity in sorted(new, key=lambda nr: (-rank[nr[1]], nr[0]))
+            ]
+
+    return added
+
+
+@cache
+def _region_run_debuts(region: str) -> dict[str, list[str]]:
+    return run_debuts()
+
+
+def live_run_debuts() -> dict[str, list[str]]:
+    """``run_debuts`` for the live committed data, memoized per region like banner_debuts."""
+    return _region_run_debuts(active_region())
+
+
 def newly_added_ubers(events=None, pools=None, units=None) -> dict[str, set[str]]:
     """Per banner, the ubers making their game DEBUT with that run - the game's "New
     units added" set. Debut means no event anywhere started earlier carrying the unit:
@@ -386,12 +433,9 @@ def newly_added_ubers(events=None, pools=None, units=None) -> dict[str, set[str]
             if u in units and units[u][1] == Rarity.UBER_SUPER_RARE.value
         }
 
-    debut: dict[str, date] = {}
+    debut = _debut_dates(events, pools, units)
     latest: dict[str, GachaEventRow] = {}
     for event in events:
-        for name in ubers(event.pool_id):
-            if name not in debut or event.start < debut[name]:
-                debut[name] = event.start
         held = latest.get(event.name)
         if held is None or event.start > held.start:
             latest[event.name] = event
@@ -1190,6 +1234,17 @@ class Run(NamedTuple):
         return self.end.isoformat()
 
 
+class PickerRow(NamedTuple):
+    """One banner row of the target picker: the run's name and display title, its dates
+    (None for an undated banner), its cats binned by rarity, and the units it debuts."""
+
+    name: str
+    title: str
+    dates: Run | None
+    rarities: list
+    new: Sequence[str] = ()
+
+
 def cat_banner_names() -> dict[int, list[str]]:
     """{cat pk: its banners' names}, read straight off the membership table.
 
@@ -1213,6 +1268,7 @@ def picker_groups(
     events=None,
     titles: Mapping[int, str] = (),
     banner_names: Mapping[int, list[str]] | None = None,
+    debuts: Mapping[str, list[str]] | None = None,
 ) -> list:
     """The target picker's banner sections, one row per SCHEDULED RUN, like godfat: every
     rerun of every gacha, past and future. A recurring name (Platinum/Legend Capsules,
@@ -1223,14 +1279,17 @@ def picker_groups(
 
     ``titles`` maps a run's pool id to its set's display name (banner_titles); rows
     without one fall back to the run's marketing text. ``banner_names`` (cat_banner_names)
-    supplies each cat's banner names; left out, they're looked up in one go. Returns
-    ``[(label, [(name, title, (start, end), rarities)])]``."""
+    supplies each cat's banner names; left out, they're looked up in one go. ``debuts``
+    (live_run_debuts) names the units each run brings to the game for the first time,
+    called out on the Available now and Upcoming rows. Returns
+    ``[(label, [PickerRow, ...])]``."""
     today = today or date.today()
 
     if events is None:
         events = load_events()
 
     titles = titles or {}
+    debuts = debuts or {}
     cats = list(cats)
     if banner_names is None:
         banner_names = cat_banner_names() if cats else {}
@@ -1245,16 +1304,19 @@ def picker_groups(
         if not names:
             other.append(cat)
 
-    def row(name, dates, title="", with_cats=True):
+    def row(name, dates, title="", with_cats=True, new=()):
         cats_here = _by_rarity(by_name.get(name, []), reverse=True) if with_cats else []
-        return (name, title or name, dates, cats_here)
+        return PickerRow(name, title or name, dates, cats_here, new)
 
-    def run_row(event, start, end, with_cats=True):
-        return row(event.name, Run(start, end), titles.get(event.pool_id, ""), with_cats)
+    def run_row(event, start, end, with_cats=True, new=()):
+        return row(event.name, Run(start, end), titles.get(event.pool_id, ""), with_cats, new)
+
+    def live_row(event, start, end):
+        return run_row(event, start, end, new=debuts.get(event.event_id, ()))
 
     runs = _effective_runs(events)
-    now = [run_row(e, start, end) for e, start, end in runs if start <= today <= end]
-    upcoming = [run_row(e, start, end) for e, start, end in runs if start > today]
+    now = [live_row(e, start, end) for e, start, end in runs if start <= today <= end]
+    upcoming = [live_row(e, start, end) for e, start, end in runs if start > today]
     past_runs = sorted(
         (run for run in runs if run[2] < today), key=lambda run: run[1], reverse=True
     )
@@ -1277,7 +1339,7 @@ def picker_groups(
     dated = scheduled | {name for name, banner in banners.items() if banner.end}
     leftovers = [row(name, None) for name in sorted(by_name) if name not in dated]
     if other:
-        leftovers.append(("Other", "Other", None, _by_rarity(other, reverse=True)))
+        leftovers.append(PickerRow("Other", "Other", None, _by_rarity(other, reverse=True)))
 
     groups = [
         ("Available now", now),
