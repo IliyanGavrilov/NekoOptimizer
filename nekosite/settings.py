@@ -22,7 +22,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 # Development defaults; a deploy sets DJANGO_DEBUG=0 and supplies the rest from the
 # environment. See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
-DEBUG = os.environ.get("DJANGO_DEBUG", "1") == "1"
+# On Vercel DEBUG defaults off, so a deploy missing its variables fails rather than serving
+# tracebacks.
+DEBUG = os.environ.get("DJANGO_DEBUG", "0" if "VERCEL" in os.environ else "1") == "1"
 
 SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY", "")
 if not SECRET_KEY:
@@ -107,6 +109,8 @@ WSGI_APPLICATION = "nekosite.wsgi.application"
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
 
 # SQLite locally; a deploy points DATABASE_URL at Postgres.
+if not DEBUG and "DATABASE_URL" not in os.environ:
+    raise ImproperlyConfigured("DATABASE_URL must be set when DEBUG is off.")
 DATABASES = {
     "default": dj_database_url.config(
         default=f"sqlite:///{BASE_DIR / 'db.sqlite3'}", conn_max_age=600, conn_health_checks=True

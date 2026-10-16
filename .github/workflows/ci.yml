@@ -54,6 +54,7 @@ jobs:
         env:
           DJANGO_DEBUG: "0"
           DJANGO_SECRET_KEY: ci-only-not-a-real-secret-but-long-enough-for-the-deploy-check-0123456789
+          DATABASE_URL: sqlite:///ci.sqlite3
 
   tests:
     runs-on: ubuntu-latest

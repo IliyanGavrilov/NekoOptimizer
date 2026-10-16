@@ -1,6 +1,7 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "buildCommand": "bash build.sh",
+  "regions": ["fra1"],
   "git": {
     "deploymentEnabled": {
       "**": false,
@@ -11,5 +12,15 @@
     "nekosite/wsgi.py": {
       "excludeFiles": "{wasm/**,.github/**,planner/fixtures/**,**/test_*.py,**/conftest.py,planner/reference_urls.py}"
     }
-  }
+  },
+  "headers": [
+    {
+      "source": "/static/((?!planner/icons/).*)",
+      "headers": [{ "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }]
+    },
+    {
+      "source": "/static/planner/icons/(.*)",
+      "headers": [{ "key": "Cache-Control", "value": "public, max-age=604800" }]
+    }
+  ]
 }

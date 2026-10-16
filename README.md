@@ -6,7 +6,7 @@
 ![Python 3.14+](https://img.shields.io/badge/python-3.14%2B-blue)
 ![Django 6.0](https://img.shields.io/badge/Django-6.0-092E20)
 
-**Live: [neko-optimizer.onrender.com](https://neko-optimizer.onrender.com)** - free to use, no sign-up needed (an account just keeps your collection across devices). The free server sleeps when idle, so the first visit can take ~50 seconds.
+**Live: [neko-optimizer.vercel.app](https://neko-optimizer.vercel.app/)** - free to use, no sign-up needed (an account just keeps your collection across devices).
 
 A planning tool for *The Battle Cats* gacha. Given a set of target cats and a
 budget of tickets and catfood, it computes **where and when to pull, in which
@@ -153,11 +153,11 @@ visual design.
 - [thanksfeanor.pythonanywhere.com](https://thanksfeanor.pythonanywhere.com/) - a hosted collection of Battle Cats utilities.
 
 ### Stats, calculators & databases
-- [battlecatsdata.com](https://www.battlecatsdata.com/) - version-current English enemy database with HP, DPS, range, traits, abilities, immunities, filters, and individual enemy pages.
 - [battlecatsstats.com](https://battlecatsstats.com/) - true-damage calculator, talents/abilities, range DPS graphs, unit comparison.
 - [battlecats-calc.com](https://battlecats-calc.com/) - a "Manage Cats" checkbox page feeding a "My Cats" view (like our Collection).
 - [matthewmarks stat calculator](https://production.matthewmarks.com/battle-cats-stat-calculator/) - stat breakdowns and tier list.
 - [Miraheze Cat Stats Tool](https://battlecats.miraheze.org/wiki/Cat_Stats_Tool) - view / compare / filter cats by stats, with True/Ultra-form and talent toggles.
+- [battlecatsdata.com](https://www.battlecatsdata.com/) - version-current English enemy database with HP, DPS, range, traits, abilities, immunities, filters, and individual enemy pages.
 
 ### Tier lists
 - [battlecatstierlist.com](https://www.battlecatstierlist.com/) - tier lists per banner, DPS-to-range, DPS graphs, matchup charts, Top 10, statistics; links to the Miraheze wiki.
