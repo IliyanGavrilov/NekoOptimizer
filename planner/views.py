@@ -1333,25 +1333,20 @@ def resources_base(request):
 
 @require_POST
 def collection_toggle(request):
-    """Flip a single unit's owned/wanted flag and return the new state as JSON."""
+    """Set a single unit's owned/wanted flag to the posted value. The page has already
+    shown the change, so a repeated or reordered request lands on the same state."""
     field = request.POST.get("field")
     if field not in {"owned", "wanted"}:
         return HttpResponseBadRequest("field must be 'owned' or 'wanted'")
 
     unit = get_object_or_404(Unit, pk=request.POST.get("pk"))
-    profile = owner(request)
-    marked = getattr(profile, field)
-    if marked.filter(pk=unit.pk).exists():
-        marked.remove(unit)
-    else:
+    marked = getattr(owner(request), field)
+    if request.POST.get("on") == "1":
         marked.add(unit)
+    else:
+        marked.remove(unit)
 
-    return JsonResponse(
-        {
-            "owned": profile.owned.filter(pk=unit.pk).exists(),
-            "wanted": profile.wanted.filter(pk=unit.pk).exists(),
-        }
-    )
+    return HttpResponse(status=204)
 
 
 @require_POST
