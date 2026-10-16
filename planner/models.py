@@ -149,6 +149,7 @@ class Profile(models.Model):
     region = models.CharField(max_length=2, default=DEFAULT_REGION)
     owned = models.ManyToManyField(Unit, related_name="owned_by", blank=True)
     wanted = models.ManyToManyField(Unit, related_name="wanted_by", blank=True)
+    auto_wishlist = models.BooleanField(default=False)  # star gacha cats new to the catalogue
     created = models.DateTimeField(auto_now_add=True)
 
     def __str__(self) -> str:
