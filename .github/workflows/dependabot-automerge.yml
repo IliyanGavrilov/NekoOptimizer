@@ -1,0 +1,23 @@
+name: Dependabot auto-merge
+
+# Queue every minor/patch Dependabot PR to merge itself once main's required checks pass.
+# Majors arrive as their own PRs (see dependabot.yml) and wait for a human.
+on: pull_request
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  automerge:
+    if: github.event.pull_request.user.login == 'dependabot[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: dependabot/fetch-metadata@v3
+        id: meta
+
+      - if: steps.meta.outputs.update-type != 'version-update:semver-major'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR: ${{ github.event.pull_request.html_url }}
+        run: gh pr merge --auto --squash --delete-branch "$PR"
