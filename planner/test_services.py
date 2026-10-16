@@ -14,6 +14,7 @@ from planner.services import (
     ADDONS_LABEL,
     REGULARS_LABEL,
     WIKI_BASE,
+    Run,
     TrackMarks,
     _pos_label,
     banner_currencies,
@@ -352,6 +353,18 @@ def test_picker_groups_titles_rows_from_their_pool():
     assert [(n, t) for n, t, _d, _c, _new in groups["Available now"]] == [
         ("Brave new adventurers join!", "The Dynamites")
     ]
+
+
+@pytest.mark.parametrize(
+    ("start", "end", "label"),
+    [
+        (date(2026, 10, 9), date(2026, 10, 16), "Oct 9 – Oct 16, 2026"),
+        (date(2025, 12, 29), date(2026, 1, 1), "Dec 29, 2025 – Jan 1, 2026"),
+        (date(2026, 7, 24), date(2030, 1, 1), "Since Jul 24, 2026"),
+    ],
+)
+def test_run_label_prints_the_year_once_unless_the_run_crosses_new_year(start, end, label):
+    assert Run(start, end).label == label
 
 
 def _run(start, end, pool_id, name):
