@@ -73,7 +73,7 @@ if (normalForm) {
     if (normalToggle.checked) stored.superfeline = stored.machines.includes("np");
   }
   if (stored.superfeline !== undefined) superfeline.checked = stored.superfeline;
-  seedEl.value = stored.seed || "";
+  seedEl.value = stored.seed ?? "0"; // a first visit starts the tracks from seed 0
 
   const checkedMachines = () => {
     const keys = normalToggle.checked ? [normalKey()] : [];

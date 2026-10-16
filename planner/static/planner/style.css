@@ -125,16 +125,18 @@ a:hover { text-decoration: underline; }
 .site-header .bar {
   /* Wider than the 760px content column so the brand, every nav link and the controls
      (version, account, theme) sit on one row on a desktop screen. */
-  max-width: 1280px;
+  max-width: 1320px;
   margin: 0 auto;
-  padding: 0.7rem 1.25rem;
-  display: flex;
+  padding: 0.6rem 1.25rem;
+  /* Brand | nav | controls: the equal side columns keep the nav centred on the bar. */
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
   align-items: center;
-  gap: 0.6rem;
-  flex-wrap: wrap;
+  gap: 0.6rem 1rem;
 }
 
 .brand {
+  justify-self: start;
   font-size: 1.05rem;
   color: var(--accent);
   display: inline-flex;
@@ -145,22 +147,22 @@ a:hover { text-decoration: underline; }
 .brand:hover { text-decoration: none; }
 
 .site-header nav {
-  margin-left: 0.6rem;
   display: flex;
-  flex-wrap: wrap;
+  justify-content: center;
   gap: 0.15rem;
 }
 
 .header-tools {
-  margin-left: auto;
+  justify-self: end;
   display: flex;
   align-items: center;
   gap: 0.6rem;
 }
 
-.site-header nav a {
+/* Nav links and the account links share one size. */
+.site-header nav a, .account > a {
   padding: 0.35rem 0.5rem;
-  font-size: 0.92rem;
+  font-size: 1rem;
   border-radius: var(--pill);
   color: var(--muted);
   white-space: nowrap;
@@ -232,22 +234,56 @@ a:hover { text-decoration: underline; }
 }
 .region-switch button:focus-visible { outline-offset: -2px; }
 
-/* Log in / sign up, or log out: plain links like the nav's. */
-.account { display: flex; align-items: center; gap: 0.3rem; }
-.account form { margin: 0; }
-.account a, .account button {
-  padding: 0.35rem 0.7rem;
-  border-radius: var(--pill);
-  color: var(--muted);
-  white-space: nowrap;
-}
-.account button { background: transparent; border: 0; font: inherit; cursor: pointer; }
-.account a:hover, .account button:hover {
-  background: var(--panel);
+/* Log in / sign up like the nav links; logged in, a cat avatar opening a small menu. */
+.account { display: flex; align-items: center; gap: 0.1rem; }
+.account > a:hover {
   color: var(--ink);
-  text-decoration: none;
-  filter: none;
+  text-decoration: underline;
+  text-decoration-color: var(--accent);
+  text-underline-offset: 6px;
 }
+.account-menu { position: relative; }
+.account-menu summary { display: flex; list-style: none; cursor: pointer; }
+.account-menu summary::-webkit-details-marker { display: none; }
+.avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  object-fit: cover;
+  background: var(--panel);
+  border: 1px solid var(--line);
+}
+.account-menu summary:hover .avatar, .account-menu[open] .avatar { border-color: var(--accent); }
+.account-pop {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 0.5rem);
+  z-index: 20;
+  display: grid;
+  gap: 0.1rem;
+  min-width: 11rem;
+  padding: 0.6rem 0.75rem;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
+}
+.account-pop .muted { font-size: 0.78rem; }
+.account-pop form { margin: 0.4rem 0 0; }
+.account-pop button {
+  width: 100%;
+  margin: 0;
+  padding: 0.35rem 0;
+  background: transparent;
+  border: 0;
+  border-top: 1px solid var(--line);
+  border-radius: 0;
+  color: var(--muted);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.account-pop button:hover { color: var(--ink); filter: none; }
 
 .account-form { display: grid; gap: 0.6rem; max-width: 22rem; margin: 1rem 0; }
 .account-form label { display: grid; gap: 0.25rem; }
@@ -2085,18 +2121,18 @@ table.track th.guaranteed-col, table.track td.guaranteed-col {
 
 /* ---- Responsive ------------------------------------------------------ */
 
-/* Below the width where brand + all nav links + theme switch fit on one row, drop the
-   nav to its own centered second row (brand left, switch right above it) instead of
-   letting just the theme switch dangle on a line of its own. */
-@media (max-width: 900px) {
-  .site-header .bar { justify-content: space-between; }
-  .site-header nav {
-    order: 1;
-    width: 100%;
-    margin-left: 0;
-    justify-content: center;
-    flex-wrap: wrap;
-  }
+/* Below the width where brand, nav and controls fit on one row, the nav drops to its
+   own centred second row under brand (left) and controls (right); on a phone, all three
+   stack centred. */
+@media (max-width: 1180px) {
+  .site-header .bar { grid-template-columns: auto 1fr; }
+  .site-header nav { grid-row: 2; grid-column: 1 / -1; flex-wrap: wrap; }
+}
+@media (max-width: 560px) {
+  .site-header .bar { grid-template-columns: 1fr; justify-items: center; }
+  .brand, .header-tools { justify-self: center; }
+  .header-tools { flex-wrap: wrap; justify-content: center; }
+  .site-header nav { grid-row: auto; }
 }
 
 @media (max-width: 640px) {
@@ -2104,7 +2140,6 @@ table.track th.guaranteed-col, table.track td.guaranteed-col {
   h1 { font-size: 1.6rem; }
 
   button { width: 100%; margin: 0.3rem 0; }
-  .site-header nav { margin-left: 0; width: 100%; }
 
   /* Collapse each table row into a stacked card */
   table, tbody, tr, td { display: block; width: 100%; }

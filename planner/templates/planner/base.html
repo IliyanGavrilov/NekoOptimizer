@@ -41,7 +41,7 @@
         <a href="{% url 'seed_finder' %}">Seed Finder</a>
         <a href="{% url 'about' %}">About</a>
       </nav>
-      {# The controls stay together at the right edge, however the bar wraps. #}
+      {# Brand left, nav centred, the controls together at the right edge. #}
       <div class="header-tools">
         <form class="region-switch" method="post" action="{% url 'set_region' %}" aria-label="Game version">
           {% csrf_token %}
@@ -52,11 +52,20 @@
         </form>
         <div class="account">
           {% if user.is_authenticated %}
-          <form method="post" action="{% url 'logout' %}">
-            {% csrf_token %}
-            <input type="hidden" name="next" value="{{ request.path }}">
-            <button type="submit" title="Logged in as {{ user.username }}">Log out</button>
-          </form>
+          <details class="account-menu">
+            <summary title="Logged in as {{ user.username }}" aria-label="Account">
+              <img class="avatar" src="{{ icon_base }}/0/0.png" alt="" width="28" height="28">
+            </summary>
+            <div class="account-pop">
+              <span class="muted">Logged in as</span>
+              <strong>{{ user.username }}</strong>
+              <form method="post" action="{% url 'logout' %}">
+                {% csrf_token %}
+                <input type="hidden" name="next" value="{{ request.path }}">
+                <button type="submit">Log out</button>
+              </form>
+            </div>
+          </details>
           {% else %}
           <a href="{% url 'login' %}?next={{ request.path|urlencode }}">Log in</a>
           <a href="{% url 'signup' %}?next={{ request.path|urlencode }}">Sign up</a>

@@ -69,23 +69,31 @@ def test_browsing_creates_no_profile(client):
 @pytest.mark.django_db
 def test_a_first_mark_creates_the_visitors_profile(client):
     u = unit("Bahamut")
-    response = client.post("/collection/toggle/", {"pk": u.pk, "field": "owned"})
+    response = client.post("/collection/toggle/", {"pk": u.pk, "field": "owned", "on": "1"})
     assert response.cookies[PROFILE_COOKIE].value == Profile.objects.get().key
 
 
 @pytest.mark.django_db
-def test_toggle_owned_flips_flag(client, profile):
+def test_toggle_marks_the_unit_owned(client, profile):
     u = unit("Bahamut")
-    client.post("/collection/toggle/", {"pk": u.pk, "field": "owned"})
+    client.post("/collection/toggle/", {"pk": u.pk, "field": "owned", "on": "1"})
     assert marked(profile, "owned") == {"Bahamut"}
 
 
 @pytest.mark.django_db
-def test_toggle_wanted_twice_returns_to_false(client, profile):
+def test_toggle_off_clears_the_mark(client, profile):
     u = unit("Bahamut")
-    client.post("/collection/toggle/", {"pk": u.pk, "field": "wanted"})
-    client.post("/collection/toggle/", {"pk": u.pk, "field": "wanted"})
+    profile.wanted.add(u)
+    client.post("/collection/toggle/", {"pk": u.pk, "field": "wanted", "on": "0"})
     assert marked(profile, "wanted") == set()
+
+
+@pytest.mark.django_db
+def test_toggle_repeated_lands_on_the_same_state(client, profile):
+    u = unit("Bahamut")
+    for _ in range(2):
+        client.post("/collection/toggle/", {"pk": u.pk, "field": "wanted", "on": "1"})
+    assert marked(profile, "wanted") == {"Bahamut"}
 
 
 @pytest.mark.django_db
@@ -100,7 +108,7 @@ def test_toggle_leaves_another_visitors_collection_alone(client, profile):
     u = unit("Bahamut")
     other = Profile.objects.create()
     other.owned.add(u)
-    client.post("/collection/toggle/", {"pk": u.pk, "field": "owned"})
+    client.post("/collection/toggle/", {"pk": u.pk, "field": "owned", "on": "0"})
     assert marked(other, "owned") == {"Bahamut"}
 
 

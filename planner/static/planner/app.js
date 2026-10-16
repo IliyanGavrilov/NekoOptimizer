@@ -1424,6 +1424,8 @@ if (collectionBrowser) {
     }
   }
 
+  const saving = new Map(); // pk -> the cat's latest queued save
+
   collectionBrowser.addEventListener("click", async (e) => {
     // The bulk own/wishlist buttons live in the header; let them win before the
     // header-wide collapse click below claims the rest of the bar.
@@ -1440,16 +1442,25 @@ if (collectionBrowser) {
     const star = e.target.closest(".chip-star");
     if (!star && !e.target.closest(".chip-own")) return;
     const chip = e.target.closest(".own-chip");
+    const { pk } = chip.dataset;
     const field = star ? "wanted" : "owned";
-    const body = new URLSearchParams({ pk: chip.dataset.pk, field, csrfmiddlewaretoken: token });
-    const resp = await fetch(collectionBrowser.dataset.toggleUrl, {
-      method: "POST",
-      headers: { "X-CSRFToken": token },
-      body,
-    });
-    if (!resp.ok) return;
-    mark(chip.dataset.pk, await resp.json());
+    const before = { owned: chip.classList.contains("owned"), wanted: chip.classList.contains("wanted") };
+    const on = !before[field];
+    // Shown at once; the save follows. A cat's saves queue behind each other, so rapid
+    // taps reach the server in tap order and the last one is what sticks.
+    mark(pk, { ...before, [field]: on });
     updateCounts();
+    const body = new URLSearchParams({ pk, field, on: on ? "1" : "0", csrfmiddlewaretoken: token });
+    const save = (saving.get(pk) || Promise.resolve()).then(() =>
+      fetch(collectionBrowser.dataset.toggleUrl, { method: "POST", headers: { "X-CSRFToken": token }, body })
+        .then((resp) => resp.ok)
+        .catch(() => false),
+    );
+    saving.set(pk, save);
+    if (!(await save) && saving.get(pk) === save) {
+      mark(pk, before);
+      updateCounts();
+    }
   });
 
   // Section-header ✓/★: mark the whole section owned/wanted, or clear it when it
@@ -1683,6 +1694,17 @@ document.querySelectorAll('input[type="number"]').forEach(scrubNumberInput);
   }
   systemDark.addEventListener("change", applyTheme);
   applyTheme();
+}
+
+// ---- Account menu: folds away on a click anywhere else, or Escape ------
+const accountMenu = document.querySelector(".account-menu");
+if (accountMenu) {
+  document.addEventListener("click", (e) => {
+    if (!accountMenu.contains(e.target)) accountMenu.open = false;
+  });
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") accountMenu.open = false;
+  });
 }
 
 // ---- Cat popup: a unit's forms (icons), stats + a link to its wiki page ------
