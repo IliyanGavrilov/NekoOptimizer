@@ -105,7 +105,7 @@ jobs:
         working-directory: .
         run: |
           pip install -r requirements-dev.txt
-          NEKO_WASM=wasm/target/wasm32-unknown-unknown/release/nekowasm.wasm pytest -q planner/test_seek_wasm.py planner/test_guide_wasm.py
+          NEKO_WASM=wasm/target/wasm32-unknown-unknown/release/nekowasm.wasm pytest -q planner/test_seek_wasm.py planner/test_guide_wasm.py planner/test_engine_wasm.py planner/test_tracks_engine.py planner/test_plans_engine.py planner/test_normal_engine.py
 
   # The one check main's branch protection requires: it passes only when every job above
   # did, so jobs can be added or split without touching the protection rule. (Runs even

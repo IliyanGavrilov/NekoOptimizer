@@ -1,10 +1,18 @@
 // The site's browser-side number crunching, compiled to planner/static/planner/neko.wasm:
-// the seed finder's sieve (seek) and the Cat Guide screenshot reader (guide).
+// the planner engine (engine, over roll), the seed finder's sieve (seek) and the Cat
+// Guide screenshot reader (guide).
 // After a change: cargo build --release --target wasm32-unknown-unknown, then copy
 // target/wasm32-unknown-unknown/release/nekowasm.wasm to planner/static/planner/neko.wasm.
 
+pub mod engine;
+pub mod graph;
 pub mod guide;
+pub mod normal;
+pub mod plans;
+pub mod roll;
+pub mod search;
 pub mod seek;
+pub mod tracks;
 
 #[cfg(target_arch = "wasm32")]
 mod exports {
@@ -23,6 +31,7 @@ mod exports {
         Buffer(UnsafeCell::new([0; 3 * MAX_MATCHES]));
     static GUIDE_PAGE: Buffer<[f64; 9]> = Buffer(UnsafeCell::new([0.0; 9]));
     static GUIDE_MARKS: Buffer<[u8; CELLS]> = Buffer(UnsafeCell::new([0; CELLS]));
+    static ENGINE_OUT: Buffer<String> = Buffer(UnsafeCell::new(String::new()));
 
     #[link(wasm_import_module = "env")]
     extern "C" {
@@ -160,5 +169,29 @@ mod exports {
             *slot = mark as u8;
         }
         out.as_ptr()
+    }
+
+    // ---- engine: the page copies a UTF-8 JSON request into ``alloc``ed memory and calls
+    // ``engine``; the response stays in the module until the next call, at
+    // ``engine_out`` for ``engine_out_len`` bytes.
+
+    #[no_mangle]
+    pub extern "C" fn engine(ptr: *const u8, len: usize) {
+        let bytes = unsafe { std::slice::from_raw_parts(ptr, len) };
+        let response = match std::str::from_utf8(bytes) {
+            Ok(request) => crate::engine::handle(request),
+            Err(_) => r#"{"error":"request is not UTF-8"}"#.to_owned(),
+        };
+        unsafe { *ENGINE_OUT.0.get() = response };
+    }
+
+    #[no_mangle]
+    pub extern "C" fn engine_out() -> *const u8 {
+        unsafe { (&*ENGINE_OUT.0.get()).as_ptr() }
+    }
+
+    #[no_mangle]
+    pub extern "C" fn engine_out_len() -> usize {
+        unsafe { (&*ENGINE_OUT.0.get()).len() }
     }
 }

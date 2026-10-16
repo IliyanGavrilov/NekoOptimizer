@@ -1384,6 +1384,167 @@ def equivalent_banners(banners: Mapping[str, BannerRolls]) -> dict[str, list[str
     return {name: names for names in groups.values() for name in names}
 
 
+def engine_request(op: str, seed: int, prepared: Mapping, count: int, last_cat: str = "") -> dict:
+    """A request for the page's engine (neko.wasm): the selected banners (``prepared``,
+    roller.prepare_selected) as rates, pools of ids into one name table (so the engine
+    compares cats as integers and every name crosses once), multis and capsule currency."""
+    names: dict[str, int] = {}
+
+    def ids(pool):
+        return [names.setdefault(cat, len(names)) for cat in pool]
+
+    currencies = banner_currencies(prepared)
+    banners = [
+        {
+            "key": key,
+            "rates": [run.banner.rates.get(rarity, 0) for rarity in GACHA_RARITIES[:3]],
+            "pools": [ids(run.banner.pool(rarity)) for rarity in GACHA_RARITIES],
+            "guaranteed_rolls": run.guaranteed_rolls,
+            "multis": [[m.rolls, m.cost, m.guaranteed] for m in run.multis or ()],
+            "currency": currencies.get(key, ""),
+        }
+        for key, run in prepared.items()
+    ]
+
+    return {
+        "op": op,
+        "names": list(names),
+        "seed": seed,
+        "count": count,
+        "last_cat": last_cat,
+        "banners": banners,
+    }
+
+
+class _NameTable:
+    """An engine request's name table, growing as other cats get named."""
+
+    def __init__(self, names: list[str]):
+        self.names = names
+        self.index = {name: i for i, name in enumerate(names)}
+
+    def ids(self, cats) -> list[int]:
+        for cat in cats:
+            if cat not in self.index:
+                self.index[cat] = len(self.names)
+                self.names.append(cat)
+        return [self.index[cat] for cat in cats]
+
+    def marks(self, view, owned, wanted, unit_ids, tiers) -> dict:
+        """``view`` completed with what every rendered cat carries - its ✓ / ★ marks, unit id
+        and tier badge - once no more names are coming. Only names in the table can show,
+        so the rest of the collection stays home."""
+        view["owned"] = [self.index[cat] for cat in owned if cat in self.index]
+        view["wanted"] = [self.index[cat] for cat in wanted if cat in self.index]
+        view["uids"] = [unit_ids.get(cat) for cat in self.names]
+        view["tiers"] = [tiers.get(unit_ids.get(cat)) for cat in self.names]
+        return view
+
+
+def tracks_request(
+    seed: int,
+    prepared: Mapping,
+    count: int,
+    last_cat: str = "",
+    *,
+    rows: int,
+    owned: set[str],
+    wanted: set[str],
+    unit_ids: Mapping[str, int],
+    tiers: Mapping[int, dict],
+    titles: Mapping[str, str],
+    debuts: Mapping[str, set[str]],
+    future: Mapping[str, int],
+    targets: Mapping[str, str],
+    wishlist: Mapping[str, str],
+    pks: Mapping[str, int],
+    include_guaranteed: bool = True,
+    trace: tuple | None = None,
+) -> dict:
+    """The browse view's Rolls table as an engine request: engine_request plus what
+    build_tracks and find_cats take beyond the rolls (the tracks view's inputs), every
+    cat an id into the shared name table and every per-banner value in banner order."""
+    request = engine_request("tracks", seed, prepared, count, last_cat)
+    table = _NameTable(request["names"])
+    ids = table.ids
+    keys = list(prepared)
+    pool = frozenset().union(*(run.pool for run in prepared.values())) if prepared else None
+    view = {
+        "rows": rows,
+        "targets": [[i, rarity] for i, rarity in zip(ids(targets), targets.values(), strict=True)],
+        "wishlist": [
+            [i, rarity] for i, rarity in zip(ids(wishlist), wishlist.values(), strict=True)
+        ],
+        "pks": [[i, pk] for i, pk in zip(ids(pks), pks.values(), strict=True)],
+        "debuts": [ids(sorted(debuts.get(key, ()))) for key in keys],
+        "pool": None if pool is None else ids(sorted(pool)),
+        "titles": [titles.get(key, key) for key in keys],
+        "future": [future.get(key, 0) for key in keys],
+        "include_guaranteed": include_guaranteed,
+        "horizon": MAX_TRACK_LENGTH,
+        "selected_titles": ", ".join(sorted({titles.get(key, key) for key in keys})),
+        "trace": None,
+    }
+    if trace is not None:
+        tag, idx, guaranteed, reroll = trace
+        view["trace"] = {"tag": tag, "idx": idx, "guaranteed": guaranteed, "reroll": reroll}
+    request["view"] = table.marks(view, owned, wanted, unit_ids, tiers)
+
+    return request
+
+
+def plan_request(
+    op: str,
+    seed: int,
+    prepared: Mapping,
+    count: int,
+    last_cat: str = "",
+    *,
+    targets: set[str],
+    tickets: int,
+    catfood: int,
+    platinum: int,
+    legend: int,
+    ticket_value: int,
+    owned: set[str],
+    wanted: set[str],
+    unit_ids: Mapping[str, int],
+    tiers: Mapping[int, dict],
+    titles: Mapping[str, str],
+    debuts: Mapping[str, set[str]],
+    apply_url: str,
+    row_url: str,
+    detail: int | None = None,
+    subset: set[str] = frozenset(),
+) -> dict:
+    """A plan search as an engine request: ``op`` "solutions" is find_plan's accordion
+    (subset_solutions, ``detail`` rows with their tracks), "plan_row" one opened row's body
+    (subset_plan for ``subset``); the budget, the scoped targets and what the rendered
+    tracks show, as subset_solutions takes them."""
+    request = engine_request(op, seed, prepared, count, last_cat)
+    table = _NameTable(request["names"])
+    keys = list(prepared)
+    request["plan"] = {
+        "targets": table.ids(sorted(targets)),
+        "tickets": tickets,
+        "catfood": catfood,
+        "platinum": platinum,
+        "legend": legend,
+        "ticket_value": ticket_value,
+        "detail": detail,
+        "subset": table.ids(sorted(subset)),
+        "apply_url": apply_url,
+        "row_url": row_url,
+    }
+    view = {
+        "titles": [titles.get(key, key) for key in keys],
+        "debuts": [table.ids(sorted(debuts.get(key, ()))) for key in keys],
+    }
+    request["view"] = table.marks(view, owned, wanted, unit_ids, tiers)
+
+    return request
+
+
 TRACK_ROW_CAP = 100  # A/B rows rendered by default, before a plan extends the window
 
 # Only Uber/Legend cats are worth flagging as "not yet in your collection" in the grid.
@@ -1406,11 +1567,6 @@ def cost_label(tickets, catfood, platinum=0, legend=0):
         parts.append(f"{catfood} catfood")
 
     return " + ".join(parts) or "free"
-
-
-def _pos_label(index):
-    """A stream index back to its godfat slot, e.g. 5 -> '3B'."""
-    return f"{index // 2 + 1}{'A' if index % 2 == 0 else 'B'}"
 
 
 def _collection_marks(cat, rarity, owned, wanted, debuts=()):
@@ -3134,6 +3290,86 @@ def build_normal_tracks(
     }
 
 
+_NORMAL_CURRENCY = {"lt": "Lucky Ticket", "ltg": "Lucky Ticket G"}
+
+
+def normal_request(
+    op: str,
+    seed: int,
+    keys: Iterable[str],
+    count: int,
+    last_item: str = "",
+    *,
+    label: str = "",
+    targets: Iterable[str] = (),
+    budgets: Iterable[tuple[int, Iterable[str]]] = (),
+) -> dict:
+    """The Normal Capsules page as an engine request: ``op`` "normal_tracks" is the
+    merged table over the machines ``keys`` (build_normal_tracks), "normal_plan" the path
+    planner over them (build_normal_plan, with its ``label``/``targets`` and the currency
+    ``budgets`` as (rolls, machine keys fed) pairs). Machines are items in one name
+    table, each with its bands' rates, pools and reroll flags."""
+    banners = [BANNERS_BY_KEY[key] for key in keys if key in BANNERS_BY_KEY]
+    table = _NameTable([])
+    request = {
+        "op": op,
+        "names": table.names,
+        "seed": seed,
+        "count": count,
+        "last_cat": last_item,
+        "banners": [
+            {
+                "key": banner.key,
+                "name": banner.name,
+                "rates": [pool.rate for pool in banner.pools],
+                "pools": [table.ids(pool.items) for pool in banner.pools],
+                "reroll": [pool.reroll for pool in banner.pools],
+                "currency": _NORMAL_CURRENCY.get(banner.key, "Normal Cat Ticket"),
+            }
+            for banner in banners
+        ],
+    }
+    index = {banner.key: i for i, banner in enumerate(banners)}
+    plan = None
+    if op == "normal_plan":
+        plan = {
+            "label": label,
+            "targets": table.ids(sorted(targets)),
+            "budgets": [
+                [count, [index[key] for key in fed if key in index]] for count, fed in budgets
+            ],
+        }
+    # Cat items get their catalogue id and form names, so the page's form/icon picker
+    # reaches them exactly like the rare tracks' cells.
+    units = {
+        name: (uid, "|".join(forms))
+        for name, uid, forms in Unit.objects.values_list("name", "unit_id", "forms")
+    }
+    request["normal"] = {
+        "units": [units.get(name) for name in table.names],
+        "upgrades": [table.index[name] for name in UPGRADES if name in table.index],
+        "plan": plan,
+    }
+
+    return request
+
+
+def normal_budgets(machines: Iterable[str], tickets: Mapping[str, int]) -> list:
+    """The currency budgets a plan searches with (as build_normal_plan builds them): one
+    pool of Normal Cat Tickets feeding every live ticket machine, and each live lucky
+    machine its own."""
+    live = [key for key in machines if key in BANNERS_BY_KEY]
+    budgets = []
+    normal_fed = [key for key in live if key in CHEAP_KEYS]
+    if normal_fed:
+        budgets.append((tickets.get("normal", 0), normal_fed))
+    if "lt" in live:
+        budgets.append((tickets.get("lucky", 0), ["lt"]))
+    if "ltg" in live:
+        budgets.append((tickets.get("luckyg", 0), ["ltg"]))
+    return budgets
+
+
 # The plan's target picker: what to chase on the normal-side machines. Dark
 # Catseyes head the list - the rarest, most valuable drop there is - the rest are
 # the classic farming goals (upgrades merge 5-into-a-rare-ticket, cat dupes sell
@@ -3191,14 +3427,7 @@ def build_normal_plan(
         return None
 
     live = [key for key in machines if key in BANNERS_BY_KEY]
-    budgets = []
-    normal_fed = [key for key in live if key in CHEAP_KEYS]
-    if normal_fed:
-        budgets.append((tickets.get("normal", 0), normal_fed))
-    if "lt" in live:
-        budgets.append((tickets.get("lucky", 0), ["lt"]))
-    if "ltg" in live:
-        budgets.append((tickets.get("luckyg", 0), ["ltg"]))
+    budgets = normal_budgets(live, tickets)
 
     label, targets = resolved
     plan = plan_normal(seed, budgets, targets, last_item=last_item)
