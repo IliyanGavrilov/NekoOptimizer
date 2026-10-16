@@ -1,11 +1,22 @@
 version: 2
 updates:
+  # One PR a week for all minor/patch bumps: separate PRs edit neighbouring lines of the
+  # same requirements file, so merging one leaves the rest conflicting. Majors stay
+  # separate so they don't hold the group back from auto-merging.
   - package-ecosystem: pip
     directory: "/"
     schedule:
       interval: weekly
     open-pull-requests-limit: 5
+    groups:
+      pip:
+        patterns: ["*"]
+        update-types: [minor, patch]
   - package-ecosystem: github-actions
     directory: "/"
     schedule:
       interval: weekly
+    groups:
+      actions:
+        patterns: ["*"]
+        update-types: [minor, patch]

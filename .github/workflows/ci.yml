@@ -11,7 +11,7 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  check:
+  lint:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -30,6 +30,19 @@ jobs:
       - name: Format
         run: ruff format --check neko/ planner/
 
+  django:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.14"
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -r requirements-dev.txt
+
       - name: Migration drift
         run: python manage.py makemigrations --check --dry-run
 
@@ -42,5 +55,65 @@ jobs:
           DJANGO_DEBUG: "0"
           DJANGO_SECRET_KEY: ci-only-not-a-real-secret-but-long-enough-for-the-deploy-check-0123456789
 
+  tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.14"
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -r requirements-dev.txt
+
       - name: Tests
         run: pytest -q
+
+  # The seed finder's sieve: the Rust source must pass its own tests, and a fresh build
+  # must agree with neko/seek.py just like the committed planner/static/planner/seek.wasm.
+  seekwasm:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: seekwasm
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Toolchain
+        run: rustup target add wasm32-unknown-unknown && rustup component add clippy rustfmt
+
+      - name: Format
+        run: cargo fmt --check
+
+      - name: Lint
+        run: cargo clippy --release --all-targets --target wasm32-unknown-unknown -- -D warnings
+
+      - name: Tests
+        run: cargo test --release
+
+      - name: Build
+        run: cargo build --release --target wasm32-unknown-unknown
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.14"
+          cache: pip
+
+      - name: Fresh build against the Python sieve
+        working-directory: .
+        run: |
+          pip install -r requirements-dev.txt
+          SEEK_WASM=seekwasm/target/wasm32-unknown-unknown/release/seekwasm.wasm pytest -q planner/test_seek_wasm.py
+
+  # The one check main's branch protection requires: it passes only when every job above
+  # did, so jobs can be added or split without touching the protection rule. (Runs even
+  # when one fails - a skipped required check would count as passing.)
+  check:
+    if: always()
+    needs: [lint, django, tests, seekwasm]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Every CI job passed
+        run: test "${{ contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled') }}" = false

@@ -3,24 +3,26 @@ name: Refresh game data
 # Once a day: re-fetch every version's catalogue, schedule and tier lists, and when any
 # committed data changed, merge it through a pull request (Render redeploys on the merge)
 # and import it into the live database. A day that brings nothing new ends after the fetch.
+# Three jobs, each holding only what it needs: fetching parses third-party data with a
+# read-only token, publishing gets write access, and only the import sees the database.
 on:
   schedule:
     - cron: "17 5 * * *"
   workflow_dispatch:
 
 permissions:
-  contents: write
-  pull-requests: write
-  actions: write # dispatches the checks main requires; a token-made PR triggers none itself
+  contents: read
 
 concurrency:
   group: refresh-data
   cancel-in-progress: false
 
 jobs:
-  refresh:
+  fetch:
     runs-on: ubuntu-latest
-    timeout-minutes: 120
+    timeout-minutes: 60
+    outputs:
+      changed: ${{ steps.diff.outputs.changed }}
     steps:
       - uses: actions/checkout@v7
 
@@ -60,8 +62,31 @@ jobs:
         if: steps.diff.outputs.changed != '0'
         run: pytest -q
 
-      - name: Open the data pull request
+      - uses: actions/upload-artifact@v7
         if: steps.diff.outputs.changed != '0'
+        with:
+          name: game-data
+          path: neko/data
+          retention-days: 3
+
+  publish:
+    needs: fetch
+    if: needs.fetch.outputs.changed != '0'
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    permissions:
+      contents: write
+      pull-requests: write
+      actions: write # dispatches the checks main requires; a token-made PR triggers none itself
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/download-artifact@v8
+        with:
+          name: game-data
+          path: neko/data
+
+      - name: Open the data pull request
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
@@ -79,7 +104,6 @@ jobs:
           done
 
       - name: Merge once the checks pass
-        if: steps.diff.outputs.changed != '0'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
@@ -96,9 +120,26 @@ jobs:
           done
           gh pr merge data-refresh --squash --delete-branch
 
-      # Render's build applies migrations; this only loads the refreshed rows.
+  # Render's build applies migrations; this only loads the refreshed rows, from the main
+  # the merge just produced - exactly what Render is deploying.
+  import:
+    needs: publish
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: main
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.14"
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
       - name: Import into the live database
-        if: steps.diff.outputs.changed != '0'
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
         run: |
