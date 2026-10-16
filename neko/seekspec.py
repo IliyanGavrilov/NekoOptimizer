@@ -1,5 +1,5 @@
 # What a seed search looks for, built from a banner and the player's observed pulls - the
-# input both sieves take: neko/seek.py (the numpy reference) and the page's seek.wasm.
+# input both sieves take: neko/seek.py (the numpy reference) and the page's neko.wasm.
 # Kept apart from the sieve so the site can hand searches out without loading numpy.
 
 from collections.abc import Sequence

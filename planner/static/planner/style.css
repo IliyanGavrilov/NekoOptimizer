@@ -275,6 +275,7 @@ input[type="search"]::-webkit-search-cancel-button { appearance: none; -webkit-a
 }
 .io-btn:hover { color: var(--accent); border-color: var(--accent); filter: none; }
 .io-msg { color: var(--muted); font-weight: 600; margin: 0 0 0.75rem; }
+.io-msg ul { margin: 0.25rem 0 0; padding-left: 1.2rem; font-weight: 400; }
 
 /* Ownership + rarity pills: one pressed at a time, "All" by default. */
 .rarity-filter, .status-filter { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-bottom: 0.5rem; }

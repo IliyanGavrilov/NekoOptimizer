@@ -4,11 +4,12 @@
 # .github/workflows/security.yml for why.
 -r requirements.txt
 
-numpy==2.5.4  # the reference seed sieve (neko/seek.py); the site runs seek.wasm
+numpy==2.5.4  # the reference seed sieve (neko/seek.py); the site runs neko.wasm
+pillow==12.3.0  # decodes the Cat Guide screenshot fixtures for the wasm tests
 pytest==9.1.1
 pytest-django==4.14.0
 ruff==0.17.0
-wasmtime==49.0.0  # runs the page's seek.wasm in the tests
+wasmtime==49.0.0  # runs the page's neko.wasm in the tests
 
 # Pulled in transitively by the above, pinned for reproducible dev installs.
 colorama==0.4.6

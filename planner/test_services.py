@@ -1,5 +1,6 @@
 import json
 from datetime import date
+from types import SimpleNamespace
 
 import pytest
 
@@ -26,6 +27,7 @@ from planner.services import (
     dictionary_sections,
     equivalent_banners,
     find_cats,
+    guide_pages,
     newly_added_ubers,
     picker_groups,
     plan_highlight,
@@ -33,6 +35,7 @@ from planner.services import (
     plan_seed,
     plan_shared,
     plan_summary,
+    read_guide,
     run_debuts,
     series_names,
     set_sections,
@@ -2034,3 +2037,75 @@ def test_find_cats_keeps_the_plain_roll_on_a_tie():
     guaranteed = {"X": [TrackPull(3, "A", "A Legend", L)]}
     found = find_cats({"X": pulls}, {"A Legend": "Legend Rare"}, guaranteed=guaranteed)
     assert found[0]["guaranteed"] is False
+
+
+def _guide(*sizes):
+    """Guide pages of the given sizes, unit pks numbered from 1 across them."""
+    pks = iter(range(1, sum(sizes) + 1))
+    return [("Rare", [SimpleNamespace(pk=next(pks)) for _ in range(size)]) for size in sizes]
+
+
+def _shot(index, pages, marks=None, taken=0, name="shot.png"):
+    """A screenshot of page ``index`` as the reader would report it."""
+    size = len(pages[index][1])
+    marks = marks if marks is not None else "O" * size
+    return {
+        "name": name,
+        "position": index / (len(pages) - 1),
+        "marks": marks.ljust(24, "."),
+        "taken": taken,
+    }
+
+
+def test_guide_pages_start_every_rarity_on_a_fresh_page():
+    units = [Unit(unit_id=i, name=f"N{i}", rarity="Normal") for i in range(3)]
+    units += [Unit(unit_id=10 + i, name=f"R{i}", rarity="Rare") for i in range(25)]
+    pages = guide_pages(units, [])
+    assert [(rarity, len(page)) for rarity, page in pages] == [
+        ("Normal", 3),
+        ("Rare", 24),
+        ("Rare", 1),
+    ]
+
+
+def test_read_guide_owns_exactly_the_unlocked_cells():
+    pages = _guide(24, 2)
+    shots = [_shot(0, pages, "O?" * 12), _shot(1, pages, "?O")]
+    result = read_guide(shots, pages)
+    assert (result.errors, result.owned) == ([], [*range(1, 24, 2), 26])
+
+
+def test_read_guide_rejects_a_shot_between_our_pages():
+    pages = _guide(24, 24, 2)
+    shots = [_shot(0, pages), _shot(1, pages), {**_shot(2, pages), "position": 0.75}]
+    assert "different number of pages" in read_guide(shots, pages).errors[0]
+
+
+def test_read_guide_rejects_a_page_with_another_cell_count():
+    pages = _guide(24, 2)
+    shots = [_shot(0, pages), _shot(1, pages, "OOO")]
+    assert "shows 3 cells where ours has 2" in read_guide(shots, pages).errors[0]
+
+
+def test_read_guide_names_the_missing_pages():
+    pages = _guide(24, 24, 2)
+    shots = [_shot(0, pages), _shot(2, pages)]
+    assert read_guide(shots, pages).errors == ["Missing 1 of 3 pages: Rare page 2 of 3."]
+
+
+def test_read_guide_rejects_shots_taken_more_than_a_day_apart():
+    pages = _guide(24, 2)
+    shots = [_shot(0, pages), _shot(1, pages, taken=2 * 24 * 60 * 60 * 1000)]
+    assert "in one go" in read_guide(shots, pages).errors[0]
+
+
+def test_read_guide_rejects_two_shots_of_one_page_that_disagree():
+    pages = _guide(24, 2)
+    shots = [
+        _shot(0, pages, name="a.png"),
+        _shot(0, pages, "?" * 24, name="b.png"),
+        _shot(1, pages),
+    ]
+    assert read_guide(shots, pages).errors == [
+        "a.png and b.png are both Rare page 1 of 2 but differ."
+    ]

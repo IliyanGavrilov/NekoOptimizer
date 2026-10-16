@@ -1,4 +1,4 @@
-// ---- Local seed search: the Rust sieve (seek.wasm) on every core ---------------
+// ---- Local seed search: the Rust sieve (neko.wasm) on every core ---------------
 // The server only validates the pulls and hands back the search; the 2^32 sweep runs
 // here, one worker per core, each scanning a slice of the pass. Slices come back in
 // seed-space order, so concatenating them gives exactly what one sweep would - the
@@ -18,14 +18,14 @@ async function localSeek(search, { wasmUrl, workerUrl, onProgress }) {
   ];
   // Pass sizes come from the module itself, so the slicing can't drift from the sieve.
   const sizer = (await WebAssembly.instantiate(module, { env: { progress() {} } })).exports;
-  new Uint32Array(sizer.memory.buffer, sizer.input(), words.length).set(words);
+  new Uint32Array(sizer.memory.buffer, sizer.seek_input(), words.length).set(words);
 
   const count = Math.max(1, Math.min(navigator.hardwareConcurrency || 4, 16));
   const workers = Array.from({ length: count }, () => new Worker(workerUrl));
 
   // One pass, split across the workers; resolves to its first ``cap`` matches.
   const pass = (run, cap) => {
-    const total = sizer.pass_size(run);
+    const total = sizer.seek_pass_size(run);
     if (!total) return Promise.resolve([]);
     const step = Math.ceil(total / count);
     const done = new Array(count).fill(0);
