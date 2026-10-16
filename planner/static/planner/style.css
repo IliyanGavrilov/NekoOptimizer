@@ -722,6 +722,14 @@ section > h3, .banner-group > summary {
   overflow: hidden;
   text-overflow: ellipsis;
 }
+/* The units a run debuts, under its marketing text. */
+.banner-name .banner-new {
+  display: block;
+  color: var(--muted);
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+.banner-new b { color: var(--new); font-weight: 700; }
 
 /* Banner "include in roll" toggle */
 .banner-include {
