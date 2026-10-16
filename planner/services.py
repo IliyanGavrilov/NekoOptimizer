@@ -289,7 +289,7 @@ _SEEK_PAST_DAYS = 120
 
 def seek_run_choices(events=None, today=None) -> list:
     """The seed finder's banner picker rows as
-    ``[(group label, [(value, title, name, (start, end))])]``, one pinned
+    ``[(group label, [(value, title, name, Run)])]``, one pinned
     "start|name" value per run - the SAME runs, titles and grouping as the planner's
     picker (_effective_runs caps a recurring run at its next rerun, so the permanent
     capsules appear once as their current session, not once per scheduled rerun;
@@ -303,7 +303,7 @@ def seek_run_choices(events=None, today=None) -> list:
 
     def option(event, start, end):
         title = titles.get(event.pool_id, "") or event.name
-        return (f"{event.start}|{event.name}", title, event.name, (start, end))
+        return (f"{event.start}|{event.name}", title, event.name, Run(start, end))
 
     runs = _effective_runs(events)
     live = [option(e, start, end) for e, start, end in runs if start <= today <= end]
@@ -1218,9 +1218,9 @@ def _effective_runs(events) -> list[tuple[GachaEventRow, date, date]]:
 
 class Run(NamedTuple):
     """A picker row's date span, inclusive. The ISO pair is what the row's
-    data-start/data-end carry (the client compares them lexically); they're worked out
-    here because a locale-aware date filter per attribute, on every one of ~2000 rows,
-    was a quarter of the Past fragment's render."""
+    data-start/data-end carry (the client compares them lexically), the label what it
+    prints; both are worked out here because a locale-aware date filter per row, on
+    every one of ~2000 rows, was a fifth of the Past fragment's render."""
 
     start: date
     end: date
@@ -1232,6 +1232,27 @@ class Run(NamedTuple):
     @property
     def iso_end(self) -> str:
         return self.end.isoformat()
+
+    @property
+    def label(self) -> str:
+        """The span as the picker prints it: "Since <start>" for a permanent run, both
+        years when it crosses New Year ("Dec 29 - Jan 1, 2026" would misread), else
+        the year once."""
+        if self.end.year >= 2030:
+            return f"Since {_day(self.start)}"
+        if self.start.year != self.end.year:
+            return f"{_day(self.start)} – {_day(self.end)}"
+
+        return f"{_day(self.start, year=False)} – {_day(self.end)}"
+
+
+_MONTHS = ("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec")
+
+
+def _day(day: date, year: bool = True) -> str:
+    """ "Oct 15, 2026" (or "Oct 15"): the |date:"M j, Y" format without its locale lookup."""
+    text = f"{_MONTHS[day.month - 1]} {day.day}"
+    return f"{text}, {day.year}" if year else text
 
 
 class PickerRow(NamedTuple):
