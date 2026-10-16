@@ -1105,6 +1105,16 @@ def collection_toggle(request):
     )
 
 
+@require_POST
+def collection_auto_wishlist(request):
+    """Turn auto-wishlisting of newly released gacha cats on or off."""
+    profile = owner(request)
+    profile.auto_wishlist = request.POST.get("on") == "1"
+    profile.save(update_fields=["auto_wishlist"])
+
+    return JsonResponse({"auto_wishlist": profile.auto_wishlist})
+
+
 def collection_export(request):
     """Download the owned/wishlist marks as a JSON snapshot the player can back up or move
     to another install."""

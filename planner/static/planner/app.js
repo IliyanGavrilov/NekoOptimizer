@@ -1500,6 +1500,18 @@ if (collectionBrowser) {
     location.reload();
   });
 
+  const autoWishlist = document.getElementById("autoWishlist");
+  autoWishlist.addEventListener("change", async () => {
+    const body = new URLSearchParams({ on: autoWishlist.checked ? "1" : "0" });
+    const resp = await fetch(autoWishlist.dataset.url, {
+      method: "POST",
+      headers: { "X-CSRFToken": token },
+      body,
+    });
+    if (resp.ok) autoWishlist.checked = (await resp.json()).auto_wishlist;
+    else autoWishlist.checked = !autoWishlist.checked;
+  });
+
   // Display + form pickers: every chip renames to the picked form and carries its icon
   // in the icon modes. Both share the Rolls table's persisted picks, so the whole site
   // shows cats the same way. Renaming goes through the chip index rather than
