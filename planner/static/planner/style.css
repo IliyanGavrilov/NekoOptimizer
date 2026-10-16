@@ -123,9 +123,9 @@ a:hover { text-decoration: underline; }
 }
 
 .site-header .bar {
-  /* Wider than the 760px content column so the brand, every nav link and the theme
-     switch sit on one row instead of the toggle wrapping to a second line. */
-  max-width: 1040px;
+  /* Wider than the 760px content column so the brand, every nav link and the controls
+     (version, account, theme) sit on one row on a desktop screen. */
+  max-width: 1280px;
   margin: 0 auto;
   padding: 0.7rem 1.25rem;
   display: flex;
@@ -145,13 +145,22 @@ a:hover { text-decoration: underline; }
 .brand:hover { text-decoration: none; }
 
 .site-header nav {
+  margin-left: 0.6rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.15rem;
+}
+
+.header-tools {
   margin-left: auto;
   display: flex;
-  gap: 0.3rem;
+  align-items: center;
+  gap: 0.6rem;
 }
 
 .site-header nav a {
-  padding: 0.35rem 0.7rem;
+  padding: 0.35rem 0.5rem;
+  font-size: 0.92rem;
   border-radius: var(--pill);
   color: var(--muted);
   white-space: nowrap;
@@ -2443,8 +2452,21 @@ table.track th.guaranteed-col, table.track td.guaranteed-col {
 .plan-filter-clear { margin: 0; padding: 0.1rem 0.5rem; font-size: 0.8rem; background: none; color: var(--muted); border: 0; text-decoration: underline; }
 .plan-filter-count { margin-left: auto; color: var(--muted); white-space: nowrap; }
 
-/* ---- Motion: small and quick - and none at all for anyone who asks for less ---- */
-body { transition: background-color 0.2s ease, color 0.2s ease; }
+/* ---- Motion: small and quick, never on a theme switch - and none at all for anyone
+   who asks for less ---- */
+.theme-switching *, .theme-switching *::before, .theme-switching *::after { transition: none !important; }
+/* Banners, the table legend and the filter panel slide open and shut (a browser without
+   ::details-content just snaps). The picker's big groups and the plan rows snap on purpose:
+   sliding them would re-lay out hundreds of rows a frame. Panels with a search dropdown
+   stay out too - the slide clips its overflow. */
+:root { interpolate-size: allow-keywords; }
+.banner-group::details-content, .track-guide::details-content, .facet-panel::details-content {
+  block-size: 0;
+  overflow-y: clip;
+  transition: block-size 0.2s ease, content-visibility 0.2s allow-discrete;
+}
+.banner-group[open]::details-content, .track-guide[open]::details-content,
+.facet-panel[open]::details-content { block-size: auto; }
 button, .chip, .entry, .banner-group, .banner-include, .step-card, .site-header nav a {
   transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease,
     box-shadow 0.15s ease, transform 0.1s ease;
