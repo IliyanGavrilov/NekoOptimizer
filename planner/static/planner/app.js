@@ -1665,8 +1665,12 @@ document.querySelectorAll('input[type="number"]').forEach(scrubNumberInput);
   };
   const applyTheme = () => {
     const pref = preference();
-    document.documentElement.dataset.theme =
-      pref === "system" ? (systemDark.matches ? "dark" : "light") : pref;
+    // Switch in one frame: with hover transitions live, every element would fade to the
+    // new colours at its own speed. Hold them off until the new theme has painted.
+    const root = document.documentElement;
+    root.classList.add("theme-switching");
+    root.dataset.theme = pref === "system" ? (systemDark.matches ? "dark" : "light") : pref;
+    requestAnimationFrame(() => requestAnimationFrame(() => root.classList.remove("theme-switching")));
     buttons.forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.setTheme === pref)));
   };
   for (const btn of buttons) {
