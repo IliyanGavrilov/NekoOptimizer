@@ -13,7 +13,7 @@ from planner.models import Cat, Unit
 # Every request reads the persisted region row (planner.middleware.region_scope).
 pytestmark = [pytest.mark.django_db, pytest.mark.urls("planner.reference_urls")]
 
-RNG = random.Random(1016)
+RNG = random.Random(1016)  # nosec B311
 EVENTS = load_events()
 
 
