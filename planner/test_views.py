@@ -15,6 +15,9 @@ U = Rarity.UBER_SUPER_RARE
 
 _ids = count(1)
 
+# The server-rendered Rolls table is routed only for tests (planner.reference_urls).
+pytestmark = pytest.mark.urls("planner.reference_urls")
+
 
 def cat_with_unit(name, profile=None, owned=False, wanted=False):
     unit = Unit.objects.create(unit_id=next(_ids), name=name)
@@ -64,7 +67,9 @@ def test_post_renders_plan(client, monkeypatch):
     monkeypatch.setattr(
         "planner.views.fetch_banners", fixed_banners(TrackPull(1, "A", "Bahamut", U))
     )
-    response = client.post("/plan/", {"seed": 7, "tickets": 1, "catfood": 0, "targets": [cat.pk]})
+    response = client.post(
+        "/reference/plan/", {"seed": 7, "tickets": 1, "catfood": 0, "targets": [cat.pk]}
+    )
     assert b"Bahamut" in response.content
 
 
@@ -74,7 +79,7 @@ def test_post_persists_seed(client, monkeypatch):
     monkeypatch.setattr(
         "planner.views.fetch_banners", fixed_banners(TrackPull(1, "A", "Bahamut", U))
     )
-    client.post("/plan/", {"seed": 7, "tickets": 1, "catfood": 0, "targets": [cat.pk]})
+    client.post("/reference/plan/", {"seed": 7, "tickets": 1, "catfood": 0, "targets": [cat.pk]})
     assert Seed.objects.get().value == 7
 
 
@@ -84,7 +89,9 @@ def test_use_wishlist_searches_wanted_cats(client, profile, monkeypatch):
     monkeypatch.setattr(
         "planner.views.fetch_banners", fixed_banners(TrackPull(1, "A", "Bahamut", U))
     )
-    response = client.post("/plan/", {"seed": 7, "tickets": 1, "catfood": 0, "use_wishlist": "on"})
+    response = client.post(
+        "/reference/plan/", {"seed": 7, "tickets": 1, "catfood": 0, "use_wishlist": "on"}
+    )
     assert b"Bahamut" in response.content
 
 
@@ -98,7 +105,7 @@ def test_find_plan_drops_off_banner_targets_instead_of_flooding_not_found_rows(
     on_banner = cat_with_unit("Bahamut")  # in this banner's pool
     cat_with_unit("Off Banner Cat", profile, wanted=True)  # wishlisted, but not in the pool
     html = client.post(
-        "/plan/",
+        "/reference/plan/",
         {"seed": 7, "tickets": 1, "catfood": 0, "targets": [on_banner.pk], "use_wishlist": "on"},
     ).content.decode()
     # The picked/wishlisted cat these banners can drop still gets its plan; the off-banner one
@@ -115,7 +122,9 @@ def test_guaranteed_config_reaches_target(client, monkeypatch):
         {"x": [Multi(rolls=2, cost=300)]},
     )
     monkeypatch.setattr("planner.views.fetch_banners", returns(result))
-    response = client.post("/plan/", {"seed": 7, "tickets": 0, "catfood": 300, "targets": [cat.pk]})
+    response = client.post(
+        "/reference/plan/", {"seed": 7, "tickets": 0, "catfood": 300, "targets": [cat.pk]}
+    )
     assert b"Target" in response.content
 
 
@@ -133,7 +142,8 @@ def test_selected_banners_use_chosen_rolls(client, monkeypatch):
     monkeypatch.setattr("planner.views.fetch_for_banners", fake_for_banners)
     monkeypatch.setattr("planner.views.fetch_banners", fixed_banners())
     client.post(
-        "/plan/", {"seed": 7, "tickets": 1, "catfood": 0, "targets": [cat.pk], "banners": ["Pick"]}
+        "/reference/plan/",
+        {"seed": 7, "tickets": 1, "catfood": 0, "targets": [cat.pk], "banners": ["Pick"]},
     )
     assert called["names"] == ["Pick"]
 
@@ -148,7 +158,7 @@ def test_platinum_cap_zero_excludes_the_banner(client, monkeypatch):
     )
     monkeypatch.setattr("planner.views.fetch_banners", returns(result))
     response = client.post(
-        "/plan/",
+        "/reference/plan/",
         {"seed": 7, "tickets": 1, "catfood": 0, "targets": [cat.pk], "platinum_cap": 0},
     )
     assert b"Not found" in response.content
@@ -161,7 +171,9 @@ def test_platinum_pull_spends_a_platinum_ticket_by_default(client, monkeypatch):
         {"Platinum Capsules": BannerRolls([TrackPull(1, "A", "Bahamut", U)], [])}, {}
     )
     monkeypatch.setattr("planner.views.fetch_banners", returns(result))
-    response = client.post("/plan/", {"seed": 7, "tickets": 0, "catfood": 0, "targets": [cat.pk]})
+    response = client.post(
+        "/reference/plan/", {"seed": 7, "tickets": 0, "catfood": 0, "targets": [cat.pk]}
+    )
     assert b"Bahamut" in response.content
     assert b"platinum ticket" in response.content
 
@@ -172,7 +184,7 @@ def test_legend_cap_zero_excludes_the_banner(client, monkeypatch):
     result = RollResult({"Legend Capsules": BannerRolls([TrackPull(1, "A", "Bahamut", U)], [])}, {})
     monkeypatch.setattr("planner.views.fetch_banners", returns(result))
     response = client.post(
-        "/plan/",
+        "/reference/plan/",
         {"seed": 7, "tickets": 1, "catfood": 0, "targets": [cat.pk], "legend_cap": 0},
     )
     assert b"Not found" in response.content
@@ -186,7 +198,8 @@ def test_explore_mode_funds_single_pulls_with_tickets(client, monkeypatch):
         fixed_banners(TrackPull(1, "A", "Filler", R), TrackPull(2, "A", "Bahamut", U)),
     )
     response = client.post(
-        "/plan/", {"seed": 7, "tickets": 0, "catfood": 0, "targets": [cat.pk], "explore": "on"}
+        "/reference/plan/",
+        {"seed": 7, "tickets": 0, "catfood": 0, "targets": [cat.pk], "explore": "on"},
     )
     assert b"2 tickets" in response.content
 
@@ -200,7 +213,7 @@ def test_multiple_targets_list_every_subset(client, monkeypatch):
         fixed_banners(TrackPull(1, "A", "Aaa", U), TrackPull(2, "A", "Bbb", U)),
     )
     response = client.post(
-        "/plan/", {"seed": 7, "tickets": 5, "catfood": 0, "targets": [a.pk, b.pk]}
+        "/reference/plan/", {"seed": 7, "tickets": 5, "catfood": 0, "targets": [a.pk, b.pk]}
     )
     html = response.json()["solutions_html"]
     assert html.count('<details class="solution"') == 3
@@ -216,7 +229,7 @@ def test_every_subset_row_counts_its_cats_against_the_targets(client, monkeypatc
         fixed_banners(TrackPull(1, "A", "Aaa", U), TrackPull(2, "A", "Bbb", U)),
     )
     response = client.post(
-        "/plan/", {"seed": 7, "tickets": 5, "catfood": 0, "targets": [a.pk, b.pk]}
+        "/reference/plan/", {"seed": 7, "tickets": 5, "catfood": 0, "targets": [a.pk, b.pk]}
     )
     html = response.json()["solutions_html"]
     # Each row says how much of what you asked for it gets, so a short plan is readable
@@ -234,7 +247,7 @@ def test_only_the_best_plan_ships_a_track_and_the_rest_carry_their_cats(client, 
         fixed_banners(TrackPull(1, "A", "Aaa", U), TrackPull(2, "A", "Bbb", U)),
     )
     response = client.post(
-        "/plan/", {"seed": 7, "tickets": 5, "catfood": 0, "targets": [a.pk, b.pk]}
+        "/reference/plan/", {"seed": 7, "tickets": 5, "catfood": 0, "targets": [a.pk, b.pk]}
     )
     html = response.json()["solutions_html"]
     # Three rows, one rendered table: the other two name their cats for plan_row instead.
@@ -251,7 +264,7 @@ def test_plan_row_renders_one_subsets_plan_when_its_row_is_opened(client, monkey
         fixed_banners(TrackPull(1, "A", "Aaa", U), TrackPull(2, "A", "Bbb", U)),
     )
     html = client.post(
-        "/plan/row/",
+        "/reference/plan/row/",
         {"seed": 7, "tickets": 5, "catfood": 0, "targets": [a.pk, b.pk], "subset": ["Bbb"]},
     ).content.decode()
     assert 'class="plan-track"' in html
@@ -261,7 +274,7 @@ def test_plan_row_renders_one_subsets_plan_when_its_row_is_opened(client, monkey
 @pytest.mark.django_db
 def test_plan_row_refuses_a_request_that_names_no_cats(client, monkeypatch):
     monkeypatch.setattr("planner.views.fetch_banners", fixed_banners(TrackPull(1, "A", "Aaa", U)))
-    response = client.post("/plan/row/", {"seed": 7, "tickets": 5, "catfood": 0})
+    response = client.post("/reference/plan/row/", {"seed": 7, "tickets": 5, "catfood": 0})
     assert response.status_code == 400
 
 
@@ -275,7 +288,7 @@ def test_unreachable_subset_is_listed_not_found(client, monkeypatch):
         "planner.views.fetch_banners", fixed_banners(TrackPull(1, "A", "Aaa", U), pool=["Bbb"])
     )
     response = client.post(
-        "/plan/", {"seed": 7, "tickets": 5, "catfood": 0, "targets": [a.pk, b.pk]}
+        "/reference/plan/", {"seed": 7, "tickets": 5, "catfood": 0, "targets": [a.pk, b.pk]}
     )
     html = response.json()["solutions_html"]
     assert "Not found" in html
@@ -292,7 +305,7 @@ def test_explore_mode_rolls_to_the_horizon(client, monkeypatch):
 
     monkeypatch.setattr("planner.views.fetch_banners", fake)
     data = {"seed": 7, "tickets": 0, "catfood": 0, "targets": [cat.pk]}
-    client.post("/plan/", {**data, "explore": "on", "horizon": 500})
+    client.post("/reference/plan/", {**data, "explore": "on", "horizon": 500})
     assert seen["count"] == 500
 
 
@@ -332,14 +345,16 @@ def test_apply_plan_without_a_seed_after_keeps_the_stored_seed(client, profile):
 
 @pytest.mark.django_db
 def test_requires_targets_or_wishlist(client):
-    response = client.post("/plan/", {"seed": 7, "tickets": 1, "catfood": 0})
+    response = client.post("/reference/plan/", {"seed": 7, "tickets": 1, "catfood": 0})
     assert response.status_code == 400
 
 
 @pytest.mark.django_db
 def test_negative_resources_rejected(client):
     cat = Cat.objects.create(name="Bahamut")
-    response = client.post("/plan/", {"seed": 7, "tickets": -1, "catfood": 0, "targets": [cat.pk]})
+    response = client.post(
+        "/reference/plan/", {"seed": 7, "tickets": -1, "catfood": 0, "targets": [cat.pk]}
+    )
     assert response.status_code == 400
 
 
@@ -350,7 +365,8 @@ def test_blank_budget_is_treated_as_zero(client, monkeypatch):
         "planner.views.fetch_banners", fixed_banners(TrackPull(1, "A", "Bahamut", U))
     )
     response = client.post(
-        "/plan/", {"seed": 7, "tickets": "", "catfood": "", "targets": [cat.pk], "explore": "on"}
+        "/reference/plan/",
+        {"seed": 7, "tickets": "", "catfood": "", "targets": [cat.pk], "explore": "on"},
     )
     assert response.status_code == 200
 
@@ -522,7 +538,7 @@ def test_find_plan_can_target_a_future_uber(client, monkeypatch):
     )
     # No Cat target and no wishlist - a future uber toggled on its own is a valid search.
     resp = client.post(
-        "/plan/",
+        "/reference/plan/",
         {"seed": 7, "explore": "on", "future_targets": json.dumps(["Future Uber 1 @ Epicfest"])},
     )
     assert resp.status_code == 200
