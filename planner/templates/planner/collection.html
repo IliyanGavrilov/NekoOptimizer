@@ -1,4 +1,5 @@
 {% extends "planner/base.html" %}
+{% load static %}
 
 {% block title %}Collection &mdash; Neko Optimizer{% endblock %}
 
@@ -31,6 +32,8 @@
       <a class="io-btn" href="{% url 'collection_export' %}" download>Export</a>
       <button type="button" class="io-btn" id="collectionImport">Import</button>
       <input type="file" id="collectionImportFile" accept="application/json,.json" hidden>
+      <button type="button" class="io-btn" id="guideImport" data-url="{% url 'collection_guide_import' %}" data-wasm-url="{% static 'planner/neko.wasm' %}" title="Screenshot every page of the in-game Cat Guide (filter off, first page to last) and pick them all: the cats you have get marked owned, the gray ? ones unmarked">From Cat Guide</button>
+      <input type="file" id="guideImportFiles" accept="image/*" multiple hidden>
     </span>
   </div>
   <p id="collectionIoMsg" class="io-msg" role="status" aria-live="polite" hidden></p>
@@ -111,4 +114,8 @@
     </div>
     <p class="muted no-matches" hidden>No cats match.</p>
   </div>
+{% endblock %}
+
+{% block scripts %}
+  <script src="{% static 'planner/guideimport.js' %}"></script>
 {% endblock %}

@@ -2776,6 +2776,106 @@ def import_collection(profile: Profile, data: Mapping) -> dict:
     }
 
 
+GUIDE_PAGE_CELLS = 24  # the in-game Cat Guide shows 6 x 4 units a page
+_GUIDE_SNAP = 0.25  # how far off a whole page a shot's indicator may sit
+_GUIDE_SESSION_MS = 24 * 60 * 60 * 1000  # every shot from one sitting: one game version
+
+
+def guide_pages(units: Iterable[Unit], order: Iterable[int]) -> list[tuple[str, list[Unit]]]:
+    """The in-game Cat Guide's pages as ``[(rarity, units)]``: each rarity's units in
+    guide order, 24 to a page, every rarity starting on a fresh page."""
+    return [
+        (rarity, section[i : i + GUIDE_PAGE_CELLS])
+        for rarity, section in dictionary_sections(units, order)
+        for i in range(0, len(section), GUIDE_PAGE_CELLS)
+    ]
+
+
+@dataclass
+class GuideRead:
+    """What a set of Cat Guide screenshots says: the owned unit pks, or why it can't be
+    trusted. Nothing is applied unless ``errors`` is empty."""
+
+    owned: list[int] = field(default_factory=list)
+    errors: list[str] = field(default_factory=list)
+
+
+def read_guide(shots: list[dict], pages: list[tuple[str, list[Unit]]]) -> GuideRead:
+    """Match screenshots - each ``{"name", "position", "marks", "taken"}`` as the page's
+    reader measured it: the indicator's 0..1 place, 24 cells of ``O`` owned / ``?``
+    locked / ``.`` empty, and the file's ms timestamp - onto the guide's pages.
+
+    Our layout is the check that the game is on the same version as our data: a guide
+    with another page count puts indicators between our pages, and a rarity that gained
+    or lost units shows a different number of cells on its last page. Every page must be
+    there, so the result covers every unit."""
+    labels = []
+    for index, (rarity, _) in enumerate(pages):
+        same = [i for i, (r, _) in enumerate(pages) if r == rarity]
+        labels.append(f"{rarity} page {same.index(index) + 1} of {len(same)}")
+
+    errors: list[str] = []
+    taken = [shot["taken"] for shot in shots]
+    if taken and max(taken) - min(taken) > _GUIDE_SESSION_MS:
+        errors.append(
+            "Take every screenshot in one go - these were taken more than a day apart, and "
+            "a game update in between would shuffle the guide."
+        )
+
+    seen: dict[int, tuple[str, str]] = {}
+    last = len(pages) - 1
+    for shot in shots:
+        name, position, marks = shot["name"], shot["position"], shot["marks"]
+        if position is None or marks is None:
+            errors.append(f"{name}: not a Cat Guide page (no page bar or cell grid found).")
+            continue
+
+        spot = position * last
+        index = round(spot)
+        if abs(spot - index) > _GUIDE_SNAP:
+            errors.append(
+                f"{name}: sits between our pages - your Cat Guide has a different number of "
+                f"pages than ours ({len(pages)}), so the game is on another version."
+            )
+            continue
+
+        size = len(pages[index][1])
+        cells = len(marks.rstrip("."))
+        if cells != size or "." in marks[:size]:
+            errors.append(
+                f"{name} ({labels[index]}): shows {cells} cells where ours has {size} - the "
+                "game is on another version, or a filter is on."
+            )
+            continue
+
+        if index in seen and seen[index][1] != marks:
+            errors.append(f"{seen[index][0]} and {name} are both {labels[index]} but differ.")
+        seen.setdefault(index, (name, marks))
+
+    missing = [labels[i] for i in range(len(pages)) if i not in seen]
+    if missing:
+        errors.append(f"Missing {len(missing)} of {len(pages)} pages: {', '.join(missing)}.")
+    if errors:
+        return GuideRead(errors=errors)
+
+    owned = [
+        unit.pk
+        for index, (_, units) in enumerate(pages)
+        for unit, mark in zip(units, seen[index][1], strict=False)
+        if mark == "O"
+    ]
+    return GuideRead(owned=owned)
+
+
+def apply_guide(profile: Profile, owned: Iterable[int], units: Iterable[Unit]) -> None:
+    """Make the guide authoritative for its units: owned exactly when the shots said so.
+    Units the guide doesn't show, and the wishlist, stay as they were."""
+    owned = set(owned)
+    guide = {unit.pk for unit in units}
+    profile.owned.remove(*profile.owned.filter(pk__in=guide - owned))
+    profile.owned.add(*owned)
+
+
 def reconcile_provisional_units() -> tuple[int, list[str]]:
     """Merge each provisional unit into its now-canonical version by the same name: move
     its cats and every player's owned/wishlist marks onto the canonical unit, then delete

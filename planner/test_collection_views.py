@@ -222,3 +222,47 @@ def test_collection_hides_units_the_regions_cat_guide_doesnt_list(client, monkey
     page = client.get("/collection/").content
 
     assert (b"Bahamut" in page, b"Droid Cat" in page) == (True, False)
+
+
+def _guide_post(client, marks, apply=True):
+    shots = [{"name": "p1.png", "position": 0, "marks": marks.ljust(24, "."), "taken": 0}]
+    return client.post(
+        "/collection/guide/",
+        json.dumps({"shots": shots, "apply": apply}),
+        content_type="application/json",
+    )
+
+
+@pytest.mark.django_db
+def test_guide_import_makes_owned_match_the_screenshots(client, profile, monkeypatch):
+    got, lost = unit("Bahamut"), unit("Lilith")
+    profile.owned.add(lost)
+    profile.wanted.add(lost)
+    order = {"regions": {"en": [got.unit_id, lost.unit_id]}}
+    monkeypatch.setattr("planner.models.load_guide", lambda: order)
+    monkeypatch.setattr("planner.views.load_guide", lambda: order)
+
+    assert _guide_post(client, "O?").json()["applied"]
+    assert (marked(profile, "owned"), marked(profile, "wanted")) == ({"Bahamut"}, {"Lilith"})
+
+
+@pytest.mark.django_db
+def test_guide_import_changes_nothing_when_the_shots_dont_fit(client, profile, monkeypatch):
+    owned = unit("Bahamut")
+    profile.owned.add(owned)
+    order = {"regions": {"en": [owned.unit_id]}}
+    monkeypatch.setattr("planner.models.load_guide", lambda: order)
+    monkeypatch.setattr("planner.views.load_guide", lambda: order)
+
+    data = _guide_post(client, "??").json()
+    assert (data["applied"], marked(profile, "owned")) == (False, {"Bahamut"})
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize("marks", ["OX" + "." * 22, "O" * 30])
+def test_guide_import_rejects_malformed_marks(client, marks):
+    shots = [{"name": "p.png", "position": 0, "marks": marks, "taken": 0}]
+    response = client.post(
+        "/collection/guide/", json.dumps({"shots": shots}), content_type="application/json"
+    )
+    assert response.status_code == 400

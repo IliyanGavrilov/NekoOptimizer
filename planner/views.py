@@ -36,12 +36,14 @@ from planner.middleware import adopt_guest, owner
 from planner.models import CannonPlan, Cat, Seed, TalentPlan, Unit, UnitPlan
 from planner.services import (
     CANNON_ADDONS,
+    GUIDE_PAGE_CELLS,
     NORMAL_DEFAULT_KEYS,
     NORMAL_TARGET_PRESETS,
     PLAN_FILTER_ROWS,
     RARITY_ORDER,
     SECTION_NOTES,
     SUBSET_TARGET_LIMIT,
+    apply_guide,
     banner_currencies,
     banner_debuts,
     banner_titles,
@@ -60,6 +62,7 @@ from planner.services import (
     fetch_banners,
     fetch_for_banners,
     find_cats,
+    guide_pages,
     import_collection,
     live_run_debuts,
     normal_banner_choices,
@@ -68,6 +71,7 @@ from planner.services import (
     normal_seek_pools,
     picker_groups,
     plannable_form,
+    read_guide,
     resources_board,
     seek_banner,
     seek_pool_groups,
@@ -631,7 +635,7 @@ def seek_start(request):
 
 
 def _search(spec, last_cat):
-    """The search the page runs itself (seek.wasm on every core) for a validated window,
+    """The search the page runs itself (neko.wasm on every core) for a validated window,
     plus the last pull's name - the found seed's dupe memory."""
     return JsonResponse(
         {
@@ -1149,3 +1153,66 @@ def collection_import(request):
         return HttpResponseBadRequest("not a Neko collection export")
 
     return JsonResponse(result)
+
+
+MAX_GUIDE_SHOTS = 100  # a guide runs to ~35 pages; room for duplicates, not for abuse
+
+
+def _guide_shots(raw):
+    """The posted shots in read_guide's shape, or None when anything isn't the page
+    reader's: a 0..1 position (null when not found), 24 marks, a ms timestamp."""
+    if not isinstance(raw, list) or not 0 < len(raw) <= MAX_GUIDE_SHOTS:
+        return None
+
+    shots = []
+    for shot in raw:
+        if not isinstance(shot, dict):
+            return None
+
+        position, marks, taken = shot.get("position"), shot.get("marks"), shot.get("taken")
+        number = (int, float)
+        if position is not None and (
+            isinstance(position, bool) or not isinstance(position, number) or not 0 <= position <= 1
+        ):
+            return None
+        if marks is not None and (
+            not isinstance(marks, str) or len(marks) != GUIDE_PAGE_CELLS or set(marks) - set("O?.")
+        ):
+            return None
+        if isinstance(taken, bool) or not isinstance(taken, number):
+            return None
+
+        name = str(shot.get("name", ""))[:80]
+        shots.append({"name": name, "position": position, "marks": marks, "taken": taken})
+
+    return shots
+
+
+@require_POST
+def collection_guide_import(request):
+    """Check Cat Guide screenshots - as the page's reader measured them - against our
+    guide, and with ``apply`` set and nothing wrong, make the owned marks match them."""
+    try:
+        data = json.loads(request.body)
+    except json.JSONDecodeError, UnicodeDecodeError:
+        return HttpResponseBadRequest("not JSON")
+
+    shots = _guide_shots(data.get("shots") if isinstance(data, dict) else None)
+    if shots is None:
+        return HttpResponseBadRequest("malformed screenshots")
+
+    units = list(Unit.objects.named().in_guide())
+    pages = guide_pages(units, load_guide()["regions"].get(active_region(), []))
+    result = read_guide(shots, pages)
+    applied = bool(data.get("apply")) and not result.errors
+    if applied:
+        apply_guide(owner(request), result.owned, units)
+
+    return JsonResponse(
+        {
+            "errors": result.errors,
+            "owned": len(result.owned),
+            "total": len(units),
+            "applied": applied,
+        }
+    )

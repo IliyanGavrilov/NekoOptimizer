@@ -71,13 +71,13 @@ jobs:
       - name: Tests
         run: pytest -q
 
-  # The seed finder's sieve: the Rust source must pass its own tests, and a fresh build
-  # must agree with neko/seek.py just like the committed planner/static/planner/seek.wasm.
-  seekwasm:
+  # The browser's Rust (seed sieve, Cat Guide reader): the source must pass its own tests,
+  # and a fresh build must pass the same checks as the committed planner/static/planner/neko.wasm.
+  wasm:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: seekwasm
+        working-directory: wasm
     steps:
       - uses: actions/checkout@v7
 
@@ -101,18 +101,18 @@ jobs:
           python-version: "3.14"
           cache: pip
 
-      - name: Fresh build against the Python sieve
+      - name: Fresh build against the Python checks
         working-directory: .
         run: |
           pip install -r requirements-dev.txt
-          SEEK_WASM=seekwasm/target/wasm32-unknown-unknown/release/seekwasm.wasm pytest -q planner/test_seek_wasm.py
+          NEKO_WASM=wasm/target/wasm32-unknown-unknown/release/nekowasm.wasm pytest -q planner/test_seek_wasm.py planner/test_guide_wasm.py
 
   # The one check main's branch protection requires: it passes only when every job above
   # did, so jobs can be added or split without touching the protection rule. (Runs even
   # when one fails - a skipped required check would count as passing.)
   check:
     if: always()
-    needs: [lint, django, tests, seekwasm]
+    needs: [lint, django, tests, wasm]
     runs-on: ubuntu-latest
     steps:
       - name: Every CI job passed

@@ -29,7 +29,7 @@
     </ul>
     <form id="nseekForm" class="seek-panel" novalidate
           data-start-url="{% url 'normal_seek_start' %}"
-          data-wasm-url="{% static 'planner/seek.wasm' %}" data-worker-url="{% static 'planner/seek-worker.js' %}"
+          data-wasm-url="{% static 'planner/neko.wasm' %}" data-worker-url="{% static 'planner/seek-worker.js' %}"
           data-min-rolls="{{ min_rolls }}"
           data-max-rolls="{{ max_rolls }}">
       {% csrf_token %}
