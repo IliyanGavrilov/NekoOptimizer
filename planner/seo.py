@@ -89,7 +89,8 @@ def tier_set_meta(label: str) -> PageMeta:
 
 def ld_json(data: dict) -> str:
     """Structured data, ready to drop into a <script type="application/ld+json">."""
-    return mark_safe(json.dumps(data, ensure_ascii=False).translate(_SCRIPT_SAFE))
+    # Safe: _SCRIPT_SAFE escapes every character that could end the script or open a tag.
+    return mark_safe(json.dumps(data, ensure_ascii=False).translate(_SCRIPT_SAFE))  # nosec B308 B703
 
 
 def home_graph() -> dict:
