@@ -2,6 +2,7 @@ import json
 from dataclasses import asdict, dataclass
 from urllib.parse import urlsplit
 
+from django.conf import settings
 from django.contrib.auth import login
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.views import LoginView, RedirectURLMixin
@@ -34,6 +35,7 @@ from planner.forms import (
 from planner.links import TOOL_DIRECTORY, unit_links
 from planner.middleware import adopt_guest, owner
 from planner.models import CannonPlan, Cat, Seed, TalentPlan, Unit, UnitPlan
+from planner.seo import BRAND, INDEXED_PAGES, breadcrumbs, ld_json, tier_set_meta
 from planner.services import (
     CANNON_ADDONS,
     GUIDE_PAGE_CELLS,
@@ -1082,8 +1084,41 @@ def tier_list(request, category="", name=""):
         "slug": f"{category}/{name}" if category else "",
         "index": tier_list_index(doc),
     }
+    if category:
+        context["page_meta"] = tier_set_meta(shown["label"])
+        context["structured_data"] = ld_json(
+            breadcrumbs(
+                (BRAND, reverse("planner")),
+                ("Tier List", reverse("tier_list")),
+                (shown["label"], request.path),
+            )
+        )
 
     return render(request, "planner/tiers.html", context)
+
+
+def sitemap(request):
+    """Every page worth a search listing - the tools, then each gacha set's tier list."""
+    pages = [{"loc": reverse(name)} for name in INDEXED_PAGES]
+    pages += [
+        {
+            "loc": reverse("tier_list_page", args=entry["slug"].split("/")),
+            "lastmod": entry["fetched"],
+        }
+        for _, entries in tier_list_index(load_tiers())
+        for entry in entries
+    ]
+    context = {"site_url": settings.SITE_URL, "pages": pages}
+
+    return render(request, "planner/sitemap.xml", context, content_type="application/xml")
+
+
+def robots(request):
+    """Crawl everything but the admin, and say where the sitemap is."""
+    sitemap_url = f"{settings.SITE_URL}{reverse('sitemap')}"
+    body = f"User-agent: *\nDisallow: /admin/\n\nSitemap: {sitemap_url}\n"
+
+    return HttpResponse(body, content_type="text/plain")
 
 
 def about(request):

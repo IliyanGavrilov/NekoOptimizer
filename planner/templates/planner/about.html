@@ -1,7 +1,5 @@
 {% extends "planner/base.html" %}
 
-{% block title %}About &mdash; Neko Optimizer{% endblock %}
-
 {% block content %}
   <h1>About</h1>
 
@@ -33,10 +31,11 @@
   <section class="about-section">
     <h2>Built with</h2>
     <ul class="about-list muted">
-      <li><strong>Python 3.14</strong> for the pure engine &mdash; RNG, roll engine, graph builder, and the A*/beam/subset search.</li>
-      <li><strong>Django 6.0</strong> for the web app, ORM, forms, and templates.</li>
-      <li><strong>pytest</strong> and <strong>ruff</strong> for the test suite and linting, wired into CI.</li>
-      <li>File-based <strong>SQLite</strong> and committed JSON data &mdash; no server, runs fully offline.</li>
+      <li><strong>Rust</strong> compiled to <strong>WebAssembly</strong> for the engine your browser runs &mdash; rolls, the A*/beam search, the seed finder's sweep of all 2<sup>32</sup> seeds, and reading Cat Guide screenshots, all in Web Workers.</li>
+      <li><strong>Python 3.14</strong> for the reference engine &mdash; RNG, roll engine, graph builder, and search &mdash; and the game-data pipeline.</li>
+      <li><strong>Django 6.1</strong> for the web app, accounts, ORM, forms, and templates; plain JavaScript on the page.</li>
+      <li><strong>PostgreSQL</strong> on <strong>Vercel</strong> in production, SQLite locally, with the game data committed as JSON.</li>
+      <li><strong>pytest</strong> and <strong>ruff</strong> for tests and linting, run with CodeQL and security scans in GitHub Actions.</li>
     </ul>
   </section>
 
@@ -71,8 +70,8 @@
     <p class="muted">
       Unit data and icons come from the
       <a href="https://battlecatsinfo.github.io/" target="_blank" rel="noopener">battlecatsinfo &#8599;</a>
-      catalogue, and the tier ranking from
-      <a href="https://battle-cats.fandom.com/wiki/The_Battle_Cats_Tier_List" target="_blank" rel="noopener">The Battle Cats Tier List &#8599;</a>.
+      catalogue, and the tier rankings from
+      <a href="https://www.battlecatstierlist.com/" target="_blank" rel="noopener">battlecatstierlist.com &#8599;</a>.
       Neko Optimizer is a fan-made tool and is not affiliated with PONOS.
     </p>
   </section>

@@ -1,7 +1,5 @@
 {% extends "planner/base.html" %}
 
-{% block title %}{% if label %}{{ label }}{% else %}Uber &amp; Legend{% endif %} Tier List &mdash; Neko Optimizer{% endblock %}
-
 {% block content %}
   <h1>{% if label %}{{ label }}{% else %}Uber &amp; Legend{% endif %} Tier List</h1>
   <p class="muted">
@@ -60,4 +58,19 @@
          target="_blank" rel="noopener">Full Uber &amp; Legend reference, with collabs and limiteds &#8599;</a>
     </p>
   {% endif %}
+
+  <nav class="tier-index" aria-label="Every tier list">
+    <h2>Every tier list</h2>
+    <ul class="tier-index-links">
+      <li><a href="{% url 'tier_list' %}"{% if not slug %} aria-current="page"{% endif %}>Cumulative &mdash; Uber &amp; Legend</a></li>
+    </ul>
+    {% for category, entries in index %}
+      <h3 class="about-group">{{ category }}</h3>
+      <ul class="tier-index-links">
+        {% for entry in entries %}
+          <li><a href="{% url 'tier_list' %}{{ entry.slug }}/"{% if entry.slug == slug %} aria-current="page"{% endif %}>{{ entry.label }}</a></li>
+        {% endfor %}
+      </ul>
+    {% endfor %}
+  </nav>
 {% endblock %}

@@ -1833,7 +1833,13 @@ def _list_doc(*lists):
     return {
         "tiers": [],
         "lists": [
-            {"path": path, "label": label, "category": category, "tiers": []}
+            {
+                "path": path,
+                "label": label,
+                "category": category,
+                "fetched": "2026-10-17",
+                "tiers": [],
+            }
             for path, label, category in lists
         ],
     }
@@ -1849,11 +1855,28 @@ def test_tier_list_index_groups_the_per_set_lists_by_category():
         (
             "Base",
             [
-                {"label": "Dynamites", "slug": "base-tier-lists/dynamites"},
-                {"label": "Nekolugas", "slug": "base-tier-lists/nekolugas"},
+                {
+                    "label": "Dynamites",
+                    "slug": "base-tier-lists/dynamites",
+                    "fetched": "2026-10-17",
+                },
+                {
+                    "label": "Nekolugas",
+                    "slug": "base-tier-lists/nekolugas",
+                    "fetched": "2026-10-17",
+                },
             ],
         ),
-        ("Collab", [{"label": "Evangelion", "slug": "collab-tier-lists/evangelion"}]),
+        (
+            "Collab",
+            [
+                {
+                    "label": "Evangelion",
+                    "slug": "collab-tier-lists/evangelion",
+                    "fetched": "2026-10-17",
+                }
+            ],
+        ),
     ]
 
 

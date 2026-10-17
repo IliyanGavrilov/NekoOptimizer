@@ -295,6 +295,14 @@ main {
   margin: 0 auto;
   padding: 1.75rem 1.25rem 4rem;
 }
+.site-footer {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 1rem 1.25rem 2rem;
+  border-top: 1px solid var(--line);
+  font-size: 0.85rem;
+}
+.site-footer p { margin: 0; }
 
 h1 { color: var(--accent); margin: 0.25rem 0 0.5rem; font-size: 1.9rem; }
 h2 { margin: 1.75rem 0 0.5rem; font-size: 1.3rem; }
@@ -1899,6 +1907,9 @@ table.track th.guaranteed-col, table.track td.guaranteed-col {
 .tier-controls { display: flex; justify-content: flex-end; margin-top: 1.25rem; }
 .tier-table { display: flex; flex-direction: column; gap: 0.45rem; margin-top: 0.6rem; }
 .tier-more { margin-top: 1.25rem; }
+.tier-index { margin-top: 2rem; }
+.tier-index-links { display: flex; flex-wrap: wrap; gap: 0.3rem 1.1rem; margin: 0.4rem 0 0; padding: 0; list-style: none; }
+.tier-index-links a[aria-current="page"] { color: var(--accent); font-weight: 600; }
 .tier-row {
   display: flex;
   align-items: stretch;
@@ -2137,6 +2148,7 @@ table.track th.guaranteed-col, table.track td.guaranteed-col {
 
 @media (max-width: 640px) {
   main { padding: 1.25rem 0.9rem 3rem; }
+  .site-footer { padding: 1rem 0.9rem 1.75rem; }
   h1 { font-size: 1.6rem; }
 
   button { width: 100%; margin: 0.3rem 0; }

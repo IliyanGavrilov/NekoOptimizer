@@ -2,6 +2,7 @@ from django.conf import settings
 
 from neko.region import DEFAULT_REGION, REGIONS
 from planner.links import PAGE_LINKS
+from planner.seo import home_graph, ld_json, page_meta
 
 
 def region(request) -> dict:
@@ -19,3 +20,18 @@ def tools(request) -> dict:
     match = getattr(request, "resolver_match", None)
 
     return {"page_links": PAGE_LINKS.get(match.url_name, ()) if match else ()}
+
+
+def seo(request) -> dict:
+    """The page's search listing, the URL it is filed under, and the home page's
+    structured data; a view with a listing of its own passes page_meta itself."""
+    match = getattr(request, "resolver_match", None)
+    url_name = match.url_name if match else None
+
+    return {
+        "page_meta": page_meta(url_name),
+        "site_url": settings.SITE_URL,
+        "canonical_url": f"{settings.SITE_URL}{request.path}",
+        "structured_data": ld_json(home_graph()) if url_name == "planner" else "",
+        "site_verification": settings.GOOGLE_SITE_VERIFICATION,
+    }

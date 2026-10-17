@@ -4,7 +4,7 @@
 [![CodeQL](https://github.com/IliyanGavrilov/NekoOptimizer/actions/workflows/codeql.yml/badge.svg)](https://github.com/IliyanGavrilov/NekoOptimizer/actions/workflows/codeql.yml)
 [![Security](https://github.com/IliyanGavrilov/NekoOptimizer/actions/workflows/security.yml/badge.svg)](https://github.com/IliyanGavrilov/NekoOptimizer/actions/workflows/security.yml)
 ![Python 3.14+](https://img.shields.io/badge/python-3.14%2B-blue)
-![Django 6.0](https://img.shields.io/badge/Django-6.0-092E20)
+![Django 6.1](https://img.shields.io/badge/Django-6.1-092E20)
 
 **Live: [neko-optimizer.vercel.app](https://neko-optimizer.vercel.app/)** - free to use, no sign-up needed (an account just keeps your collection across devices).
 
@@ -24,17 +24,21 @@ wishlist.
 |------|---------|
 | `neko/` | Pure-Python core - RNG, roll engine, models, graph builder, A\*/beam search, subset solver, and the game-data loaders. Django-independent and unit-testable in isolation. |
 | `neko/data/` | Committed game data as JSON, one directory per game version (`en/`, `jp/`, `tw/`, `kr/`) - the unit catalogue plus the gacha schedule, pools, series, stats and materials data - alongside the version-independent files (multi-roll configs, Cat Guide order, tier list). Lets the app run fully offline. |
-| `planner/` | The Django app - views, forms, models, `services.py` (the roll-to-plan glue), templates, and the data-fetch/import management commands. |
+| `planner/` | The Django app - views, forms, models, `services.py` (the roll-to-plan glue), templates, static JS, and the data-fetch/import management commands. |
+| `planner/static/planner/neko.wasm` | The compiled browser engine (built from `wasm/`), run in Web Workers by the page's JS. |
+| `wasm/` | Rust crate behind `neko.wasm` - the planner engine (rolls, graph, search), the seed finder's sieve over all 2^32 seeds, and the Cat Guide screenshot reader. |
 | `nekosite/` | Django project configuration (settings, URLs, WSGI/ASGI). |
 | `manage.py` | Django entry point. |
+| `vercel.json`, `build.sh` | Vercel deploy config and build step (icons, migrations, deploy checks). |
 
 ## Prerequisites
 
 - **[Python](https://www.python.org/) 3.14+**
 - **[Git](https://git-scm.com/)** (to clone)
-- No database server or build toolchain - the app uses file-based
-  [SQLite](https://www.sqlite.org/), and Python is interpreted (there is no
-  compile step).
+- No database server for local use - the app falls back to file-based
+  [SQLite](https://www.sqlite.org/) when `DATABASE_URL` is unset.
+- [Rust](https://www.rust-lang.org/) with the `wasm32-unknown-unknown` target only
+  if you change `wasm/`; the compiled `neko.wasm` is committed.
 - Internet access is only needed to *refresh* the game data; the committed files
   in `neko/data/` are enough to run everything offline.
 
@@ -52,8 +56,8 @@ python -m venv .venv
 .venv\Scripts\activate            # Windows (PowerShell/cmd)
 # source .venv/bin/activate       # Linux / macOS
 
-# 3. Install dependencies
-pip install -r requirements.txt
+# 3. Install dependencies (requirements.txt alone is enough to run the site)
+pip install -r requirements-dev.txt
 
 # 4. Create the local database
 python manage.py migrate
@@ -75,6 +79,24 @@ pytest                              # run the test suite
 ruff check .                        # lint
 ruff format .                       # format (2-space indent, 100 cols)
 ```
+
+### Rebuilding the browser engine
+
+```bash
+cd wasm
+cargo build --release --target wasm32-unknown-unknown
+cp target/wasm32-unknown-unknown/release/nekowasm.wasm ../planner/static/planner/neko.wasm
+cargo test --release                # the Rust tests
+```
+
+### Deploying
+
+Production runs on [Vercel](https://vercel.com/) (region `fra1`, next to its Postgres
+database); only `main` deploys. Set `DATABASE_URL` (Postgres) and `DJANGO_SECRET_KEY` in the project; Vercel's own
+hostnames are allowed automatically, `DJANGO_ALLOWED_HOSTS` adds a custom domain. `SITE_URL`
+(default `https://neko-optimizer.vercel.app`) is the public address canonical links, the
+sitemap and link previews use; `GOOGLE_SITE_VERIFICATION` adds Search Console's meta tag. With `DEBUG` off and no `DATABASE_URL` the app
+refuses to start rather than silently using SQLite.
 
 ### Refreshing the game data (network)
 
@@ -98,8 +120,10 @@ newer game version:
 
 ## How to use
 
-1. Open **http://127.0.0.1:8000/**.
-2. Enter your current shared **seed**.
+1. Open **http://127.0.0.1:8000/** (or the live site).
+2. Enter your current shared **seed** - or find it on the **Seed Finder** page
+   (`/seek/`): roll in-game, record the cats you got, and it scans every possible
+   seed in your browser for the one that deals exactly those.
 3. Pick the **target cats** you want, and/or tick **search my wishlist** to
    include everything you have marked wanted.
 4. Set your **budget** (tickets + catfood), or switch on **Explore mode** to plan
@@ -111,12 +135,18 @@ newer game version:
    so you can plan the next stretch from where you left off.
 7. The **Collection** page (`/collection/`) is the full cat dictionary in the
    in-game Cat Guide order (or by rarity / gacha set), where you manage owned /
-   wishlist marks and filter by targets, abilities, combos, and talents.
-8. The **Materials** page (`/materials/`) tracks what to grind: pick cats to
+   wishlist marks and filter by targets, abilities, combos, and talents. Import
+   it from Cat Guide screenshots (read in the browser), or export / import it as a file.
+8. The **Resources** page (`/resources/`) tracks what to grind: pick cats to
    evolve (catfruit / stones / gems + XP totals), talents to buy (NP totals),
    and cannons to develop (per-part level ranges with material / engineer /
    build-time totals).
-9. The **EN / JP / TW / KR** switch in the header picks the game version. Each
+9. The **Normal Capsules** page (`/normal/`) predicts the normal-seed machines
+   (Catfruit, Catseye, Lucky Tickets...) and plans the pulls that land what you want.
+10. The **Tier List** page (`/tiers/`) ranks Ubers and Legends overall and per gacha set.
+11. **Sign up / Log in** is optional: without an account your seed, collection and
+    plans are kept against a cookie in this browser; with one they follow you across devices.
+12. The **EN / JP / TW / KR** switch in the header picks the game version. Each
    version has its own catalogue, schedule, pools and localized names, and keeps
    its own seed and collection - the roll mechanics are identical across all four.
 
@@ -124,12 +154,22 @@ newer game version:
 
 - [Python 3.14](https://www.python.org/) - `dataclasses`, `heapq`, `csv`, `enum`
   from the standard library carry the core engine.
-- [Django](https://www.djangoproject.com/) - web framework (views, ORM, templates,
-  management commands).
-- [SQLite](https://www.sqlite.org/) - the local datastore for the catalogue and
-  ownership.
+- [Django 6.1](https://www.djangoproject.com/) - web framework (views, ORM, templates,
+  auth, management commands).
+- [Rust](https://www.rust-lang.org/) compiled to [WebAssembly](https://webassembly.org/) -
+  the engine that rolls, plans, sieves seeds and reads Cat Guide screenshots in the
+  browser, in Web Workers, so the server only renders.
+- Vanilla JavaScript - no frontend framework or bundler.
+- [PostgreSQL](https://www.postgresql.org/) in production via
+  [psycopg](https://www.psycopg.org/) and
+  [dj-database-url](https://github.com/jazzband/dj-database-url);
+  [SQLite](https://www.sqlite.org/) locally.
+- [WhiteNoise](https://whitenoise.readthedocs.io/) - compressed, cache-busted static files.
+- [Vercel](https://vercel.com/) - hosting (serverless Python).
+- [GitHub Actions](https://github.com/features/actions) - CI, CodeQL, security scans,
+  Dependabot, scheduled game-data refresh, releases.
 - [pytest](https://docs.pytest.org/) + [pytest-django](https://pytest-django.readthedocs.io/) -
-  test suite.
+  test suite; [wasmtime](https://wasmtime.dev/) runs the shipped `neko.wasm` in the tests.
 - [Ruff](https://docs.astral.sh/ruff/) - linter and formatter.
 
 The roll sequences are produced by our own engine, byte-validated against

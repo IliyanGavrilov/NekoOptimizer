@@ -190,13 +190,15 @@ def tier_list_rows(doc=None) -> list[dict]:
 
 
 def tier_list_index(doc=None) -> list[tuple[str, list[dict]]]:
-    """The per-set lists as ``[(category, [{"label", "slug"}])]`` in the source site's nav
-    order, for the tier page's list picker."""
+    """The per-set lists as ``[(category, [{"label", "slug", "fetched"}])]`` in the source
+    site's nav order, for the tier page's list picker and the sitemap."""
     doc = load_tiers() if doc is None else doc
     grouped: dict[str, list[dict]] = {}
     for entry in doc.get("lists", ()):
         slug = entry["path"].removeprefix("/tier-lists/")
-        grouped.setdefault(entry["category"], []).append({"label": entry["label"], "slug": slug})
+        grouped.setdefault(entry["category"], []).append(
+            {"label": entry["label"], "slug": slug, "fetched": entry["fetched"]}
+        )
 
     return list(grouped.items())
 
