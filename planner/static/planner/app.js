@@ -512,7 +512,7 @@ if (picker) {
     });
     // Group headings collapse away when nothing under them matches; matching drops
     // open so the hits are visible without another click.
-    grouped.querySelectorAll("h3.group").forEach((h) => {
+    grouped.querySelectorAll("h2.group").forEach((h) => {
       h.hidden = searching;
     });
     grouped.querySelectorAll("details.group-drop").forEach((drop) => {

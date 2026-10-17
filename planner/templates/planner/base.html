@@ -33,9 +33,8 @@
       document.documentElement.dataset.theme = theme;
     })();
   </script>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Source+Sans+3:wght@400;600;700&display=swap">
+  <link rel="preload" href="{% static 'planner/fonts/source-sans-3-latin.woff2' %}" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="{% static 'planner/fonts/jetbrains-mono-latin.woff2' %}" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="{% static 'planner/style.css' %}">
 </head>
 <body data-unit-info-url="{% url 'unit_info' %}" data-unit-forms-url="{% url 'unit_forms' %}"

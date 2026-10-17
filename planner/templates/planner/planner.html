@@ -43,7 +43,7 @@
         <div class="cat-browser" id="targetBrowser">
           {% for group_label, banner_sections in target_groups %}
             {% if group_label == "Available now" %}
-              <h3 class="group">{{ group_label }} <span class="count-pill">{{ banner_sections|length }}</span></h3>
+              <h2 class="group">{{ group_label }} <span class="count-pill">{{ banner_sections|length }}</span></h2>
               {% for banner, title, dates, rarities, new in banner_sections %}
                 {% include "planner/_banner.html" with banner=banner title=title dates=dates rarities=rarities new=new is_open=0 %}
               {% endfor %}

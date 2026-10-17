@@ -55,7 +55,7 @@
         {% for label, runs in run_groups %}
           {% if runs %}
             {% if forloop.first %}
-              <h3 class="group">{{ label }} <span class="count-pill">{{ runs|length }}</span></h3>
+              <h2 class="group">{{ label }} <span class="count-pill">{{ runs|length }}</span></h2>
               {% for value, title, name, dates in runs %}
                 {% include "planner/_seek_run.html" %}
               {% endfor %}
