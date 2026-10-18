@@ -33,5 +33,6 @@ def seo(request) -> dict:
         "site_url": settings.SITE_URL,
         "canonical_url": f"{settings.SITE_URL}{request.path}",
         "structured_data": ld_json(home_graph()) if url_name == "planner" else "",
-        "site_verification": settings.GOOGLE_SITE_VERIFICATION,
+        "google_verification": settings.GOOGLE_SITE_VERIFICATION,
+        "bing_verification": settings.BING_SITE_VERIFICATION,
     }

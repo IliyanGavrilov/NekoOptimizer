@@ -35,8 +35,9 @@ if not SECRET_KEY:
 # The one public address every page is filed under, whichever host served it: canonical
 # links, the sitemap and link previews all point here, never at a deployment's own URL.
 SITE_URL = os.environ.get("SITE_URL", "https://neko-optimizer.vercel.app").rstrip("/")
-# Search Console's ownership token, if the site is verified by meta tag.
+# Search Console's and Bing Webmaster Tools' ownership tokens, for sites verified by meta tag.
 GOOGLE_SITE_VERIFICATION = os.environ.get("GOOGLE_SITE_VERIFICATION", "")
+BING_SITE_VERIFICATION = os.environ.get("BING_SITE_VERIFICATION", "")
 
 ALLOWED_HOSTS = os.environ.get("DJANGO_ALLOWED_HOSTS", "*" if DEBUG else "").split(",")
 # Vercel names each deployment's own hosts at runtime: its unique URL, its branch's, and
