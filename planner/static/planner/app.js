@@ -1654,14 +1654,12 @@ document.querySelectorAll('input[type="number"]').forEach(scrubNumberInput);
 
 // ---- Sticky track headers pin below the site header ---------------------
 // The header's height varies (it wraps on narrow screens), so measure it into
-// a CSS variable the thead's sticky top offset reads.
-{
-  const siteHeader = document.querySelector(".site-header");
-  const setHeaderHeight = () =>
-    document.documentElement.style.setProperty("--header-h", `${siteHeader.offsetHeight}px`);
-  setHeaderHeight();
-  addEventListener("resize", setHeaderHeight);
-}
+// a CSS variable the thead's sticky top offset reads. Observed rather than read:
+// the size arrives after layout, so measuring never forces one.
+new ResizeObserver(([entry]) => {
+  const height = entry.borderBoxSize[0].blockSize;
+  document.documentElement.style.setProperty("--header-h", `${height}px`);
+}).observe(document.querySelector(".site-header"));
 
 // ---- Theme: light / dark / match-the-device, persisted -----------------
 // The <head> bootstrap already applied the saved choice before first paint;
