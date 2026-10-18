@@ -95,7 +95,8 @@ Production runs on [Vercel](https://vercel.com/) (region `fra1`, next to its Pos
 database); only `main` deploys. Set `DATABASE_URL` (Postgres) and `DJANGO_SECRET_KEY` in the project; Vercel's own
 hostnames are allowed automatically, `DJANGO_ALLOWED_HOSTS` adds a custom domain. `SITE_URL`
 (default `https://neko-optimizer.vercel.app`) is the public address canonical links, the
-sitemap and link previews use; `GOOGLE_SITE_VERIFICATION` adds Search Console's meta tag. With `DEBUG` off and no `DATABASE_URL` the app
+sitemap and link previews use; `GOOGLE_SITE_VERIFICATION` and `BING_SITE_VERIFICATION` add Search Console's and Bing
+Webmaster Tools' meta tags. With `DEBUG` off and no `DATABASE_URL` the app
 refuses to start rather than silently using SQLite.
 
 ### Refreshing the game data (network)
