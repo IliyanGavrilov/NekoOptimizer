@@ -5,7 +5,7 @@
 -r requirements.txt
 
 numpy==2.5.4  # the reference seed sieve (neko/seek.py); the site runs neko.wasm
-pillow==12.3.0  # decodes the Cat Guide screenshot fixtures for the wasm tests
+pillow==13.0.0  # decodes the Cat Guide screenshot fixtures for the wasm tests
 pytest==9.1.1
 pytest-django==4.14.0
 ruff==0.17.1
