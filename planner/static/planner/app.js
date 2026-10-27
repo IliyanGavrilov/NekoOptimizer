@@ -824,7 +824,7 @@ if (picker) {
       body.innerHTML = html || '<p class="muted">No plan for these cats within your resources.</p>';
       syncRollDisplay(); // this track carries icons too
       wireFollowAlong(body); // step list + track walk together
-      setLegendHeight();
+      watchLegends();
     },
     true,
   );
@@ -877,13 +877,6 @@ if (picker) {
   let traceState = null; // the traced cell, kept only across its own re-render
   let pendingFind = null; // a "Find next" position to scroll to once the table re-renders
   const anyBanner = () => includes.some((b) => b.getAttribute("aria-pressed") === "true");
-  // The banner legend sticks under the site header; the sticky thead sits just below it,
-  // so measure the visible legend's height into --legend-h whenever a track is (re)rendered.
-  const setLegendHeight = () => {
-    const legend = [...document.querySelectorAll(".track-legend")].find((el) => el.offsetParent);
-    document.documentElement.style.setProperty("--legend-h", legend ? `${legend.offsetHeight}px` : "0px");
-  };
-  addEventListener("resize", setLegendHeight);
   // The page's own engine (neko.wasm), in workers so the page stays live: the server sends
   // a request - the seed, the selected banners' pools, the budget, your marks - and the
   // Rolls table or the plans are rolled, solved and rendered right here. Tables and plans
@@ -908,7 +901,7 @@ if (picker) {
     trackHost.querySelectorAll(".future-ubers").forEach(scrubNumberInput);
     syncFutureTargets(); // restore the toggle chips' pressed state; prune any now gone
     syncRollDisplay(); // re-inject icons if the fresh cells need them
-    setLegendHeight();
+    watchLegends();
     // "Skip guaranteed in Find" only makes sense when the track has guaranteed columns.
     if (findGuaranteedCtl) findGuaranteedCtl.hidden = !trackHost.querySelector(".guaranteed-col");
     // A Find-position click that had to grow the table scrolls once the rows are here.
@@ -1198,7 +1191,7 @@ if (picker) {
         resultsRegion.hidden = !solutions.firstElementChild;
         syncRollDisplay(); // the solution tracks carry icons too
         wireFollowAlong(solutions); // step list + track walk together
-        setLegendHeight();
+        watchLegends();
       } else {
         const { errors = {} } = await resp.json().catch(() => ({}));
         const field = Object.keys(errors).find((k) => k in fieldSlot);
@@ -1660,6 +1653,22 @@ new ResizeObserver(([entry]) => {
   const height = entry.borderBoxSize[0].blockSize;
   document.documentElement.style.setProperty("--header-h", `${height}px`);
 }).observe(document.querySelector(".site-header"));
+
+// The banner legend sticks under the site header and the thead just below it, so the
+// visible legend's height is observed into --legend-h the same way: a one-off read rounded
+// to whole pixels and missed later reflows, leaving a strip of rows showing between the
+// two. Legends arrive with each rendered track, so the renderers call watchLegends().
+const legendObserver = new ResizeObserver(() => {
+  const legend = [...document.querySelectorAll(".track-legend")].find((el) => el.offsetParent);
+  const height = legend ? legend.getBoundingClientRect().height : 0;
+  document.documentElement.style.setProperty("--legend-h", `${height}px`);
+});
+function watchLegends() {
+  legendObserver.disconnect();
+  const legends = document.querySelectorAll(".track-legend");
+  legends.forEach((legend) => legendObserver.observe(legend));
+  if (!legends.length) document.documentElement.style.setProperty("--legend-h", "0px");
+}
 
 // ---- Theme: light / dark / match-the-device, persisted -----------------
 // The <head> bootstrap already applied the saved choice before first paint;
