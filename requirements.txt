@@ -1,4 +1,4 @@
-asgiref==3.12.1
+asgiref==3.13.0
 dj-database-url==3.1.2
 Django==6.1.2
 psycopg[binary]==3.3.6
