@@ -8,7 +8,7 @@ numpy==2.5.4  # the reference seed sieve (neko/seek.py); the site runs neko.wasm
 pillow==13.0.0  # decodes the Cat Guide screenshot fixtures for the wasm tests
 pytest==9.1.1
 pytest-django==4.14.0
-ruff==0.17.1
+ruff==0.17.2
 wasmtime==49.0.0  # runs the page's neko.wasm in the tests
 
 # Pulled in transitively by the above, pinned for reproducible dev installs.
