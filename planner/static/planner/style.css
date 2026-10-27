@@ -736,6 +736,10 @@ fieldset {
   background: var(--panel);
   margin: 1rem 0;
   padding: 1rem;
+  /* A fieldset defaults to min-content wide, so one long nowrap line (a banner tagline
+     machine-translated from a short CJK one) would push it out of the column; the line
+     ellipses instead. */
+  min-inline-size: 0;
 }
 
 legend { color: var(--ink); padding: 0 0.4rem; }
