@@ -1,11 +1,10 @@
 name: Refresh game data
 
 # Once a day: re-fetch every version's catalogue, schedule and tier lists, and when any
-# committed data changed, merge it through a pull request (Vercel redeploys on the merge)
-# and import it into the live database. A day that brings nothing new ends after the fetch.
-# Each job holds only what it needs: fetching parses third-party data with a read-only
-# token, publishing gets write access, only the import sees the database, and a failure
-# files an issue.
+# committed data changed, merge it through a pull request (Vercel redeploys on the merge,
+# import-data.yml loads it into the live database). A day that brings nothing new ends
+# after the fetch. Fetching parses third-party data with a read-only token, only
+# publishing gets write access, and a failure files an issue.
 on:
   schedule:
     - cron: "17 5 * * *"
@@ -106,7 +105,7 @@ jobs:
           echo "PR=$(gh pr view data-refresh --json url -q .url)" >> "$GITHUB_ENV"
           gh pr merge data-refresh --auto --squash --delete-branch
 
-      # The import below must load what main now holds, so wait for the merge itself.
+      # Waits so a failing check fails this run, and the report below files an issue.
       - name: Wait for the merge
         timeout-minutes: 45
         run: |
@@ -118,39 +117,9 @@ jobs:
             sleep 30
           done
 
-  # Vercel's build applies migrations; this only loads the refreshed rows, from the main
-  # the merge just produced - exactly what Vercel is deploying.
-  import:
-    needs: publish
-    runs-on: ubuntu-latest
-    timeout-minutes: 60
-    steps:
-      - uses: actions/checkout@v7
-        with:
-          ref: main
-
-      - uses: actions/setup-python@v7
-        with:
-          python-version: "3.14"
-          cache: pip
-
-      - name: Install dependencies
-        run: pip install -r requirements.txt
-
-      - name: Import into the live database
-        env:
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
-        run: |
-          test -n "$DATABASE_URL" || { echo "::error::Add the DATABASE_URL repository secret."; exit 1; }
-          for region in en jp tw kr; do
-            python manage.py import_units --region "$region"
-            python manage.py import_catalogue --region "$region"
-            python manage.py reconcile_units --region "$region"
-          done
-
   # A scheduled run fails silently unless someone opens Actions; an issue notifies the owner.
   report:
-    needs: [fetch, publish, import]
+    needs: [fetch, publish]
     if: failure()
     runs-on: ubuntu-latest
     permissions:
