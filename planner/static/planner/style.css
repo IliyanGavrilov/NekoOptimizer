@@ -2552,10 +2552,19 @@ table.track th.guaranteed-col, table.track td.guaranteed-col {
 .banner-group::details-content, .track-guide::details-content, .facet-panel::details-content {
   block-size: 0;
   overflow-y: clip;
-  transition: block-size 0.2s ease, content-visibility 0.2s allow-discrete;
+  transition: block-size 0.15s ease-out, content-visibility 0.15s allow-discrete;
 }
 .banner-group[open]::details-content, .track-guide[open]::details-content,
 .facet-panel[open]::details-content { block-size: auto; }
+/* Closing drops [open] at once, so the closed summary's negative margin snapped in and
+   pulled the still-sliding cats up over the bar: ease it with the slide, bar on top. */
+@supports selector(::details-content) {
+  .banner-group > summary {
+    position: relative;
+    z-index: 1;
+    transition: margin-bottom 0.15s ease-out;
+  }
+}
 button, .chip, .entry, .banner-group, .banner-include, .step-card, .site-header nav a {
   transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease,
     box-shadow 0.15s ease, transform 0.1s ease;
