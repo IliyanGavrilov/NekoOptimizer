@@ -3,8 +3,9 @@ name: Refresh game data
 # Once a day: re-fetch every version's catalogue, schedule and tier lists, and when any
 # committed data changed, merge it through a pull request (Vercel redeploys on the merge)
 # and import it into the live database. A day that brings nothing new ends after the fetch.
-# Three jobs, each holding only what it needs: fetching parses third-party data with a
-# read-only token, publishing gets write access, and only the import sees the database.
+# Each job holds only what it needs: fetching parses third-party data with a read-only
+# token, publishing gets write access, only the import sees the database, and a failure
+# files an issue.
 on:
   schedule:
     - cron: "17 5 * * *"
@@ -74,12 +75,17 @@ jobs:
     if: needs.fetch.outputs.changed != '0'
     runs-on: ubuntu-latest
     timeout-minutes: 60
-    permissions:
-      contents: write
-      pull-requests: write
-      actions: write # dispatches the checks main requires; a token-made PR triggers none itself
+    # Pushes and PRs made with the workflow's own token trigger no workflows, and checks
+    # dispatched by hand don't satisfy branch protection, so the PR never merged itself.
+    # A personal token makes them ordinary events: the PR runs its checks like any other.
+    env:
+      GH_TOKEN: ${{ secrets.DATA_PR_TOKEN }}
     steps:
+      - run: test -n "$GH_TOKEN" || { echo "::error::Add the DATA_PR_TOKEN repository secret."; exit 1; }
+
       - uses: actions/checkout@v7
+        with:
+          token: ${{ secrets.DATA_PR_TOKEN }}
 
       - uses: actions/download-artifact@v8
         with:
@@ -87,8 +93,6 @@ jobs:
           path: neko/data
 
       - name: Open the data pull request
-        env:
-          GH_TOKEN: ${{ github.token }}
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
@@ -99,26 +103,20 @@ jobs:
           if [ "$(gh pr view data-refresh --json state -q .state 2>/dev/null)" != "OPEN" ]; then
             gh pr create --base main --head data-refresh --title "Refresh game data" --body "The daily fetch found new game data. Merged automatically once the checks pass."
           fi
-          for workflow in ci.yml security.yml codeql.yml; do
-            gh workflow run "$workflow" --ref data-refresh
-          done
+          echo "PR=$(gh pr view data-refresh --json url -q .url)" >> "$GITHUB_ENV"
+          gh pr merge data-refresh --auto --squash --delete-branch
 
-      - name: Merge once the checks pass
-        env:
-          GH_TOKEN: ${{ github.token }}
+      # The import below must load what main now holds, so wait for the merge itself.
+      - name: Wait for the merge
+        timeout-minutes: 45
         run: |
-          sha=$(git rev-parse HEAD)
-          for workflow in ci.yml security.yml codeql.yml; do
-            run=""
-            for attempt in $(seq 30); do
-              run=$(gh run list --workflow "$workflow" --branch data-refresh --event workflow_dispatch --json databaseId,headSha -q "map(select(.headSha == \"$sha\"))[0].databaseId")
-              [ -n "$run" ] && break
-              sleep 10
-            done
-            test -n "$run" || { echo "::error::$workflow never started on the data branch."; exit 1; }
-            gh run watch "$run" --exit-status > /dev/null
+          until [ "$(gh pr view "$PR" --json state -q .state)" = MERGED ]; do
+            if gh pr checks "$PR" --required --json bucket -q '.[].bucket' | grep -q fail; then
+              echo "::error::A required check failed on the data pull request."
+              exit 1
+            fi
+            sleep 30
           done
-          gh pr merge data-refresh --squash --delete-branch
 
   # Vercel's build applies migrations; this only loads the refreshed rows, from the main
   # the merge just produced - exactly what Vercel is deploying.
@@ -149,3 +147,23 @@ jobs:
             python manage.py import_catalogue --region "$region"
             python manage.py reconcile_units --region "$region"
           done
+
+  # A scheduled run fails silently unless someone opens Actions; an issue notifies the owner.
+  report:
+    needs: [fetch, publish, import]
+    if: failure()
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+      RUN: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+    steps:
+      - run: |
+          issue=$(gh issue list --state open --search "Game data refresh failed in:title" --json number -q '.[0].number')
+          if [ -n "$issue" ]; then
+            gh issue comment "$issue" --body "Failed again: $RUN"
+          else
+            gh issue create --title "Game data refresh failed" --body "The daily refresh failed: $RUN"
+          fi
