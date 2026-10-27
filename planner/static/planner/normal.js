@@ -126,6 +126,7 @@ if (normalForm) {
     tracksHost.innerHTML =
       resp && resp.ok ? await runTables(await resp.text()).catch(() => failed) : failed;
     applyDisplay();
+    watchLegends();
   };
 
   // ---- Live reload: the seed field (typed or scrubbed), machines, roll count --
@@ -250,6 +251,7 @@ if (normalForm) {
       return;
     }
     applyDisplay();
+    watchLegends();
     wireFollowAlong(tracksHost); // step list + track walk together (defined in app.js)
     tracksHost.scrollIntoView({ behavior: "smooth", block: "start" });
   });
