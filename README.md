@@ -119,6 +119,12 @@ newer game version:
 | `python manage.py match_units` | Report which cat names map to a canonical unit. |
 | `python manage.py reconcile_units` | Merge provisional stand-in units into their now-canonical namesakes. |
 
+The `refresh-data` workflow runs all of this daily: it opens a pull request when the data
+changed, merges it once the checks pass and imports it into the live database. It needs two
+repository secrets: `DATABASE_URL`, and `DATA_PR_TOKEN`, a fine-grained token for this
+repository with Contents and Pull requests write access, since a pull request opened with
+the workflow's own token runs no checks. A failed run opens a "Game data refresh failed" issue.
+
 ## How to use
 
 1. Open **http://127.0.0.1:8000/** (or the live site).
