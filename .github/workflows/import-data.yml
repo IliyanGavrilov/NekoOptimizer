@@ -1,0 +1,63 @@
+name: Import game data
+
+# Load main's game data into the live database whenever it changes there, however it got
+# merged: tying this to the refresh's own merge skipped it every time a human merged.
+# Vercel's build applies migrations; this only loads the rows, from the commit Vercel is
+# deploying. Run it by hand to backfill.
+on:
+  push:
+    branches: [main]
+    paths: ["neko/data/**"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: import-data
+  cancel-in-progress: false
+
+jobs:
+  import:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.14"
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Import into the live database
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: |
+          test -n "$DATABASE_URL" || { echo "::error::Add the DATABASE_URL repository secret."; exit 1; }
+          for region in en jp tw kr; do
+            python manage.py import_units --region "$region"
+            python manage.py import_catalogue --region "$region"
+            python manage.py reconcile_units --region "$region"
+          done
+
+  report:
+    needs: import
+    if: failure()
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+      RUN: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+    steps:
+      - run: |
+          issue=$(gh issue list --state open --search "Game data import failed in:title" --json number -q '.[0].number')
+          if [ -n "$issue" ]; then
+            gh issue comment "$issue" --body "Failed again: $RUN"
+          else
+            gh issue create --title "Game data import failed" --body "Loading main's game data into the live database failed: $RUN"
+          fi
