@@ -33,9 +33,17 @@ from planner.forms import (
     PlannerForm,
 )
 from planner.links import TOOL_DIRECTORY, unit_links
-from planner.middleware import adopt_guest, owner
+from planner.middleware import adopt_guest, owner, region_path, split_region
 from planner.models import CannonPlan, Cat, Seed, TalentPlan, Unit, UnitPlan
-from planner.seo import BRAND, INDEXED_PAGES, breadcrumbs, ld_json, tier_set_meta
+from planner.seo import (
+    BRAND,
+    GUIDES,
+    INDEXED_PAGES,
+    REGION_PAGES,
+    breadcrumbs,
+    ld_json,
+    tier_set_meta,
+)
 from planner.services import (
     CANNON_ADDONS,
     GUIDE_PAGE_CELLS,
@@ -136,8 +144,10 @@ def planner(request):
         else:
             groups.append((label, rows))
 
+    saved = Seed.saved(request.profile)
     context = {
-        "form": PlannerForm(),
+        "form": PlannerForm(initial={"seed": saved.value} if saved else None),
+        "saved_seed": saved,
         "target_groups": groups,
         "past_count": past_count,
         "target_flat": target_flat,
@@ -253,6 +263,27 @@ def seed_backtrack(request):
         return HttpResponseBadRequest("seed must be an integer")
 
     return JsonResponse({"seed": backtrack(seed)})
+
+
+@require_POST
+def save_seed(request):
+    """Store the seed the page is on, as the player's own: the rare one (``kind=rare``) or
+    the Normal Capsules one. Pages call this on every change, so the seed lives with the
+    profile - not only in one browser's storage."""
+    kind = request.POST.get("kind", Seed.RARE)
+    if kind not in {Seed.RARE, Seed.NORMAL}:
+        return HttpResponseBadRequest("kind must be 'rare' or 'normal'")
+    try:
+        value = int(request.POST.get("seed", ""))
+    except ValueError:
+        return HttpResponseBadRequest("seed must be an integer")
+    if not 0 <= value < 2**32:
+        return HttpResponseBadRequest("seed must be between 0 and 4294967295")
+
+    last = request.POST.get("last", "")[:100]
+    Seed.store(owner(request), value, kind, last)
+
+    return JsonResponse({"seed": value, "account": request.user.is_authenticated})
 
 
 def _rolls_by_banner(result):
@@ -532,7 +563,6 @@ class _PlanSetup:
 
 def _plan_setup(request, form):
     seed = form.cleaned_data["seed"]
-    Seed.store(owner(request), seed)
     targets = {cat.name for cat in form.cleaned_data["targets"]}
     if form.cleaned_data["use_wishlist"]:
         targets |= _wanted_names(request.profile)
@@ -851,6 +881,7 @@ def normal_capsules(request):
                 (value, label) for value, (label, _) in NORMAL_TARGET_PRESETS.items()
             ],
             "item_options": normal_item_options(),
+            "saved_seed": Seed.saved(request.profile, Seed.NORMAL),
         },
     )
 
@@ -1097,16 +1128,59 @@ def tier_list(request, category="", name=""):
     return render(request, "planner/tiers.html", context)
 
 
+def _guide_links() -> list[tuple[str, str, str]]:
+    """Each guide as (slug, heading, summary), in reading order."""
+    return [
+        (slug, meta.title.removesuffix(f" | {BRAND}"), meta.description)
+        for slug, meta in GUIDES.items()
+    ]
+
+
+def guides(request):
+    """The how-to guides, listed."""
+    return render(request, "planner/guides.html", {"guides": _guide_links()})
+
+
+def guide(request, slug):
+    """One how-to guide, with the others linked at its foot."""
+    meta = GUIDES.get(slug)
+    if meta is None:
+        raise Http404("no such guide")
+
+    links = _guide_links()
+    heading = next(name for key, name, _ in links if key == slug)
+    context = {
+        "heading": heading,
+        "page_meta": meta,
+        "others": [link for link in links if link[0] != slug],
+        "structured_data": ld_json(
+            breadcrumbs(
+                (BRAND, reverse("planner")),
+                ("Guides", reverse("guides")),
+                (heading, request.path),
+            )
+        ),
+    }
+
+    return render(request, f"planner/guides/{slug}.html", context)
+
+
 def sitemap(request):
-    """Every page worth a search listing - the tools, then each gacha set's tier list."""
-    pages = [{"loc": reverse(name)} for name in INDEXED_PAGES]
-    pages += [
+    """Every page worth a search listing - the shared pages and guides once, then the
+    tools and each gacha set's tier list at every game version's URL."""
+    pages = [{"loc": reverse(name)} for name in INDEXED_PAGES if name not in REGION_PAGES]
+    pages += [{"loc": reverse("guide", args=[slug])} for slug in GUIDES]
+    regional = [{"loc": reverse(name)} for name in INDEXED_PAGES if name in REGION_PAGES]
+    regional += [
         {
             "loc": reverse("tier_list_page", args=entry["slug"].split("/")),
             "lastmod": entry["fetched"],
         }
         for _, entries in tier_list_index(load_tiers())
         for entry in entries
+    ]
+    pages += [
+        {**page, "loc": region_path(page["loc"], code)} for code in CODES for page in regional
     ]
     context = {"site_url": settings.SITE_URL, "pages": pages}
 
@@ -1158,7 +1232,8 @@ class Login(LoginView):
 
 
 def _posted_from(request) -> str:
-    """The page a post was made from, as a URL this site generated for itself.
+    """The page a post was made from, as a URL this site generated for itself - without
+    its version prefix, for the caller to put the version of its choosing on.
 
     The Referer header is attacker-controllable, so it never becomes the redirect target:
     it only picks one of our own routes. Off-site or wrong-scheme referers are rejected,
@@ -1166,28 +1241,29 @@ def _posted_from(request) -> str:
     output for the view that matched - so the destination is ours by construction, not by
     inspection. Only the query string rides along, which cannot change where it points.
     Anything that doesn't resolve lands on the planner."""
+    home = split_region(reverse("planner"))[1]
     back = request.META.get("HTTP_REFERER", "")
     if not url_has_allowed_host_and_scheme(
         back, allowed_hosts={request.get_host()}, require_https=request.is_secure()
     ):
-        return reverse("planner")
+        return home
 
     parts = urlsplit(back)
     try:
-        match = resolve(parts.path)
+        match = resolve(split_region(parts.path)[1])
     except Resolver404:
-        return reverse("planner")
+        return home
 
-    here = reverse(match.view_name, args=match.args, kwargs=match.kwargs)
+    here = split_region(reverse(match.view_name, args=match.args, kwargs=match.kwargs))[1]
 
     return f"{here}?{parts.query}" if parts.query else here
 
 
 @require_POST
 def set_region(request):
-    """Switch the game version the whole site shows. Each version ships its own
-    catalogue, schedule and pools, and keeps its own collection - so this is a data
-    switch, not a display language."""
+    """Switch the game version the whole site shows: back to the same page at that
+    version's URL. Each version ships its own catalogue, schedule and pools, and keeps
+    its own collection - so this is a data switch, not a display language."""
     code = request.POST.get("region", "")
     if code not in CODES:
         return HttpResponseBadRequest("unknown region")
@@ -1196,23 +1272,18 @@ def set_region(request):
     profile.region = code
     profile.save(update_fields=["region"])
 
-    return redirect(_posted_from(request))
+    return redirect(region_path(_posted_from(request), code))
 
 
 @require_POST
 def apply_plan(request):
     """Mark the cats a plan gets you as owned. The wishlist mark is left as-is - getting a
     cat doesn't un-want it (an owned cat is already excluded from wishlist searches), so the
-    star stays for when you browse your collection. Applying means "you rolled it", so the
-    plan's seed-after becomes the stored seed."""
+    star stays for when you browse your collection. The page moves the seed on itself
+    (save_seed), along with the cat the plan's last pull got."""
     profile = owner(request)
     units = Unit.objects.filter(name__in=request.POST.getlist("cats"))
     profile.owned.add(*units)
-
-    try:
-        Seed.store(profile, int(request.POST["seed_after"]))
-    except KeyError, ValueError:
-        pass
 
     return JsonResponse({"applied": len(units)})
 

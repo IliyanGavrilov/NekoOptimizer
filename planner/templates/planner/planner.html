@@ -13,6 +13,7 @@
     <div class="field-grid">
       <label><span class="label-row">{{ form.seed.label_tag }} <span class="req" title="required">*</span></span><span class="seed-row">{{ form.seed }}<button type="button" id="seedBack" class="seed-back" title="Step the seed back one roll">&#9665; back</button><button type="button" id="seedUndo" class="seed-undo" hidden>&#8630; undo</button></span><span class="field-error" id="seedError" aria-live="polite"></span></label>
     </div>
+    {% include "planner/_seed_keep.html" with kind="rare" saved=saved_seed %}
     <label class="check-row">{{ form.use_wishlist }} {{ form.use_wishlist.label_tag }}</label>
 
     <fieldset id="targetsSection">

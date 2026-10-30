@@ -1,6 +1,6 @@
 // ---- Normal Capsules: its own seed, its own tracks, finder and path planner --
 // The normal-side gacha shares nothing with the rare seed the planner follows, so
-// this page keeps its seed in localStorage (?seed= permalinks override it), renders
+// this page keeps a seed of its own on your profile (?seed= permalinks override it), renders
 // the A/B tracks from the server, and runs the normal seed finder through the same
 // local sieve the rare finder uses (seekrun.js). Tracks reload live as the seed, machines
 // or roll count change, exactly like the planner (the seed field is a number input,
@@ -40,10 +40,11 @@ if (normalForm) {
 
   const esc = (text) => text.replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
 
-  // ---- Seed + dupe memory, persisted like the planner's -----------------------
-  // A share link (?seed=&last=&m=) wins over the stored state; the dupe memory
-  // rides along since the remembered item can dupe 1A, and the machine set rides
-  // so the link shows the same columns.
+  // ---- Seed + dupe memory, kept on your profile like the planner's ------------
+  // The seed and the item that landed on it (it can dupe 1A) are stored server-side
+  // (seedKeeper); this browser keeps only the machine picks. A share link
+  // (?seed=&last=&m=) wins over both, and the machine set rides so the link shows
+  // the same columns.
   let stored = {};
   try {
     stored = JSON.parse(localStorage.getItem("nekoNormal") || "{}");
@@ -51,17 +52,29 @@ if (normalForm) {
     stored = {};
   }
   const save = () => {
+    const { seed, last, ...view } = stored;
     try {
-      localStorage.setItem("nekoNormal", JSON.stringify(stored));
+      localStorage.setItem("nekoNormal", JSON.stringify(view));
     } catch {
       /* private mode: the page still works, it just forgets on reload */
     }
   };
 
+  const keeper = seedKeeper(normalForm.querySelector(".seed-keep"), {
+    current: () => [seedEl.value.trim(), stored.last || ""],
+    onRestore: (seed, last) => setSeed(seed, last),
+    linkFor: () => location.href,
+  });
+  // A seed this browser kept from before seeds were stored on the server is the
+  // newest one it knows: upload it once (save() never writes it locally again).
+  if (stored.seed) keeper.migrate(String(stored.seed), stored.last || "");
+  [stored.seed, stored.last] = keeper.own();
+
   const linkParams = new URLSearchParams(location.search);
   if (linkParams.has("seed")) {
     stored.seed = linkParams.get("seed");
     stored.last = linkParams.get("last") || "";
+    keeper.viewing(stored.seed);
   }
   if (linkParams.has("m")) stored.machines = linkParams.get("m").split(",").filter(Boolean);
   if (linkParams.has("seed") || linkParams.has("m")) save();
@@ -73,7 +86,7 @@ if (normalForm) {
     if (normalToggle.checked) stored.superfeline = stored.machines.includes("np");
   }
   if (stored.superfeline !== undefined) superfeline.checked = stored.superfeline;
-  seedEl.value = stored.seed ?? "0"; // a first visit starts the tracks from seed 0
+  seedEl.value = stored.seed || "0"; // a first visit starts the tracks from seed 0
 
   const checkedMachines = () => {
     const keys = normalToggle.checked ? [normalKey()] : [];
@@ -141,6 +154,7 @@ if (normalForm) {
     stored.last = lastItem || "";
     save();
     seedEl.value = stored.seed;
+    keeper.push(stored.seed, stored.last);
     fetchTracks();
   };
 
@@ -149,6 +163,7 @@ if (normalForm) {
     stored.seed = seedEl.value.trim();
     stored.last = "";
     save();
+    keeper.push(stored.seed, stored.last);
     scheduleTracks();
   });
   countEl.addEventListener("input", scheduleTracks);
@@ -433,9 +448,18 @@ if (normalForm) {
       return;
     }
     if (!data.matches.length) {
-      results.innerHTML = `<p class="seek-none">No seed deals exactly those pulls. Double-check
-        the items and their order, the machine (plain Normal vs Normal+ with Superfeline
-        matters), and that the pulls were consecutive.</p>`;
+      results.innerHTML = `<div class="seek-none"><p>No seed deals exactly those pulls.
+        Almost always one of these:</p>
+        <ul>
+          <li><strong>Superfeline is set wrong.</strong> Once Superfeline is in your capsule
+            pool every roll changes - tick "Superfeline unlocked" only if it is.</li>
+          <li><strong>The order is off.</strong> Enter the items exactly in the order you
+            got them, oldest first.</li>
+          <li><strong>Something was rolled in between.</strong> The Catfruit, Catseye and
+            Lucky Ticket machines share this seed, so a roll on any of them in the middle
+            breaks the chain.</li>
+          <li><strong>A mis-picked item.</strong> Look-alike names are easy to swap.</li>
+        </ul></div>`;
       return;
     }
 

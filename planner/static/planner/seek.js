@@ -155,6 +155,8 @@ if (seekForm) {
 
     const pick = (row) => {
       hidden.value = row.dataset.value;
+      hidden.dataset.name = row.querySelector(".combo-cat").textContent;
+      checked = false; // the entry changed: look it over again before searching
       label.innerHTML = row.innerHTML; // rarity chip + name, exactly as listed
       label.classList.remove("roll-placeholder");
       panel.hidden = true;
@@ -224,6 +226,41 @@ if (seekForm) {
     </div>`;
   };
 
+  // One seed left: it's yours, so store it on your profile straight away - and nudge
+  // a backup, since the number is the one thing you can't get back without re-rolling.
+  const keepFound = async (m, lastCat) => {
+    const note = results.querySelector(".seek-kept");
+    const body = new URLSearchParams({
+      kind: "rare",
+      seed: m.seed_after,
+      last: lastCat || "",
+      csrfmiddlewaretoken: token,
+    });
+    let ok = false;
+    try {
+      const resp = await fetch(seekForm.dataset.saveUrl, {
+        method: "POST",
+        headers: { "X-CSRFToken": token },
+        body,
+      });
+      ok = resp.ok;
+    } catch {
+      ok = false;
+    }
+    note.innerHTML = ok
+      ? `Saved as your seed ✓ - the planner opens on it from now on. Back it up too:
+         write down <strong>${m.seed_after}</strong>, or
+         <button type="button" class="link-btn seek-copy">copy a link to it</button>.`
+      : `Couldn't save it automatically - write down <strong>${m.seed_after}</strong>
+         and open the planner with the link above; it saves from there.`;
+  };
+  results.addEventListener("click", async (e) => {
+    const btn = e.target.closest(".seek-copy");
+    if (!btn) return;
+    const url = new URL(results.querySelector(".seek-open").href, location.href).href;
+    btn.textContent = (await copyToClipboard(url)) ? "link copied ✓" : url;
+  });
+
   const render = (data) => {
     progressWrap.hidden = true;
     goBtn.disabled = false;
@@ -234,9 +271,20 @@ if (seekForm) {
       return;
     }
     if (!data.matches.length) {
-      results.innerHTML = `<p class="seek-none">No seed deals exactly those pulls. Double-check the
-        cats and their order, that this is the right banner run, and that the pulls
-        were consecutive (nothing rolled in between, no guaranteed uber included).</p>`;
+      results.innerHTML = `<div class="seek-none"><p>No seed deals exactly those pulls.
+        Almost always one of these:</p>
+        <ul>
+          <li><strong>A guaranteed Uber is in the list.</strong> The bonus Uber from a
+            guaranteed 11-draw (or the 15th roll of a step-up) doesn't come from the normal
+            roll sequence - remove it and anything after it.</li>
+          <li><strong>The order is off.</strong> Enter the cats exactly in the order you got
+            them, oldest first.</li>
+          <li><strong>Something was rolled in between.</strong> Every rare banner shares one
+            seed, so a roll on another banner in the middle breaks the chain.</li>
+          <li><strong>Wrong banner or run.</strong> Pick the exact event you rolled on - the
+            same name can come back with a different lineup.</li>
+          <li><strong>A mis-picked cat.</strong> Look-alike names are easy to swap.</li>
+        </ul></div>`;
       return;
     }
 
@@ -251,6 +299,12 @@ if (seekForm) {
     }
     results.innerHTML =
       notes + data.matches.map((m) => matchCard(m, data.last_cat)).join("");
+    if (data.matches.length === 1 && !data.truncated) {
+      results
+        .querySelector(".seek-match")
+        .insertAdjacentHTML("beforeend", `<p class="seek-kept muted">Saving it as your seed&hellip;</p>`);
+      keepFound(data.matches[0], data.last_cat);
+    }
   };
 
   const search = async (spec) => {
@@ -271,9 +325,49 @@ if (seekForm) {
     render(data);
   };
 
+  // ---- Look the entry over before searching: the classic mistakes ----------------
+  // Each is a warning, not a block - "Search anyway" goes ahead once they're read.
+  const checkEl = document.getElementById("seekCheck");
+  let checked = false;
+  const RARE = "0";
+  const UBERISH = new Set(["2", "3"]); // Uber Super Rare, Legend Rare
+  const preflight = (picks) => {
+    const notes = [];
+    const rarity = (i) => picks[i].value.split(":")[0];
+    for (const at of [10, 14]) {
+      if (picks.length > at && UBERISH.has(rarity(at))) {
+        notes.push(`Pull ${at + 1} is ${esc(picks[at].dataset.name)}. If that was the
+          <strong>guaranteed Uber</strong> of an 11-draw${at === 14 ? " or a step-up" : ""},
+          remove it and everything after it - it isn't part of the normal roll sequence.`);
+      }
+    }
+    for (let i = 1; i < picks.length; i++) {
+      if (rarity(i) === RARE && picks[i].value === picks[i - 1].value) {
+        notes.push(`Pulls ${i} and ${i + 1} are both ${esc(picks[i].dataset.name)}. The game
+          never deals the same Rare cat twice in a row (it rerolls the repeat), so one of
+          them is probably mis-picked or out of order.`);
+      }
+    }
+    return notes;
+  };
+
   seekForm.addEventListener("submit", async (e) => {
     e.preventDefault();
     setError("");
+
+    const picks = [...rollsEl.querySelectorAll(".seek-roll")].filter((h) => h.value);
+    const notes = checked ? [] : preflight(picks);
+    checkEl.hidden = !notes.length;
+    if (notes.length) {
+      checkEl.innerHTML = `<p>Quick check before searching:</p><ul>${notes
+        .map((n) => `<li>${n}</li>`)
+        .join("")}</ul><p>Fix it above, or search anyway if it's right.</p>`;
+      goBtn.textContent = "Search anyway";
+      checked = true;
+      return;
+    }
+    goBtn.textContent = "Find my seed";
+    checked = false;
 
     const values = [...rollsEl.querySelectorAll(".seek-roll")].map((h) => h.value);
     const last = values.length - 1 - [...values].reverse().findIndex(Boolean);

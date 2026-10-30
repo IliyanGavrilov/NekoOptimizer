@@ -1,0 +1,38 @@
+{% extends "planner/guide.html" %}
+
+{% block guide %}
+  <p>Your seeds are the one thing here you can't simply look up again: losing one means
+    rolling and searching all over. Neko Optimizer keeps two, your <strong>rare gacha</strong>
+    seed and your <strong>Normal Capsules</strong> seed, one pair per game version.</p>
+
+  <h2>Where they're kept</h2>
+  <p>Every change to a seed is saved to your profile on the server the moment you make it.
+    The line under the seed field says <strong>Saved ✓</strong> when it's done.</p>
+  <ul>
+    <li><strong>Without an account</strong>, your profile is tied to this browser by a cookie.
+      Clear your cookies or switch device and it's gone.</li>
+    <li><strong>With an account</strong>, your seeds, collection and plans follow you to any
+      device. <a href="{% url 'signup' %}">Signing up</a> is free, needs no email, and keeps
+      everything you've already done.</li>
+  </ul>
+
+  <h2>The ten-second backup</h2>
+  <p>Even with an account, keep a copy somewhere of your own:</p>
+  <ol>
+    <li>Under the seed field, press <strong>copy a link to it</strong>.</li>
+    <li>Paste it into your notes, or message it to yourself.</li>
+  </ol>
+  <p>Opening that link later brings back the seed and the view you had, on any device. Writing
+    the number itself down works just as well.</p>
+
+  <h2>Opening someone else's link</h2>
+  <p>A shared link shows its own seed, but it won't overwrite yours. The page says it's showing
+    a shared seed and offers <strong>Make this my seed</strong> or <strong>Back to my seed</strong>.
+    Nothing changes until you choose.</p>
+
+  <h2>If a seed does go missing</h2>
+  <p>Open your backup link, or find the seed again: the
+    <a href="{% url 'guide' 'find-your-seed' %}">rare seed</a> from a few rolls on any rare
+    banner, the <a href="{% url 'guide' 'normal-capsules' %}">normal seed</a> from a few plain
+    Normal Capsules.</p>
+{% endblock %}

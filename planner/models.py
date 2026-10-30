@@ -248,19 +248,40 @@ class CannonPlan(models.Model):
 
 
 class Seed(models.Model):
-    """A player's gacha seed, one row per game version (an account per version)."""
+    """A player's gacha seed, one row per game version (an account per version) and per
+    stream: the rare gacha and the Normal Capsules each run on a seed of their own.
+    ``last`` is the pull that landed on it - the next roll can dupe that cat."""
+
+    RARE, NORMAL = "rare", "normal"
 
     profile = models.ForeignKey(Profile, on_delete=models.CASCADE, related_name="seeds")
     region = _region_field()
+    kind = models.CharField(
+        max_length=6, choices=((RARE, "Rare gacha"), (NORMAL, "Normal Capsules")), default=RARE
+    )
     value = models.BigIntegerField()
+    last = models.CharField(max_length=100, blank=True)
 
     class Meta:
         constraints = [
-            models.UniqueConstraint(fields=("profile", "region"), name="unique_seed_per_region")
+            models.UniqueConstraint(
+                fields=("profile", "region", "kind"), name="unique_seed_per_region_kind"
+            )
         ]
 
     @classmethod
-    def store(cls, profile: Profile, value: int) -> None:
+    def store(cls, profile: Profile, value: int, kind: str = RARE, last: str = "") -> None:
         cls.objects.update_or_create(
-            profile=profile, region=active_region(), defaults={"value": value}
+            profile=profile,
+            region=active_region(),
+            kind=kind,
+            defaults={"value": value, "last": last},
         )
+
+    @classmethod
+    def saved(cls, profile: Profile, kind: str = RARE) -> Seed | None:
+        """The player's stored seed for the active version, if they have one."""
+        if profile.pk is None:
+            return None
+
+        return cls.objects.filter(profile=profile, region=active_region(), kind=kind).first()

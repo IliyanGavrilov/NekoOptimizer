@@ -20,6 +20,137 @@ function restorePick(el, key) {
   if (saved && [...el.options].some((o) => o.value === saved)) el.value = saved;
 }
 
+// Copy text to the clipboard, falling back to a hidden textarea where the clipboard API
+// is blocked (e.g. over plain HTTP). True when the copy went through.
+async function copyToClipboard(text) {
+  try {
+    await navigator.clipboard.writeText(text);
+    return true;
+  } catch {
+    const ta = document.createElement("textarea");
+    ta.value = text;
+    ta.style.cssText = "position:fixed;top:0;left:0;opacity:0";
+    document.body.appendChild(ta);
+    ta.select();
+    let ok = false;
+    try {
+      ok = document.execCommand("copy");
+    } catch {
+      ok = false;
+    }
+    ta.remove();
+    return ok;
+  }
+}
+
+// ---- Keeping your seed (the planner's and the Normal Capsules') ----------------
+// Each change is posted to the server, so the seed belongs to your profile: a new
+// device, cleared site data or a move to another web address can't lose it the way
+// a browser-only copy could. A page opened on a shared link holds the link's seed
+// back until you say it's yours. ``box`` is the _seed_keep.html block; ``current``
+// gives the page's [seed, last pull], ``onRestore`` lands the page on one, and
+// ``linkFor`` gives the page's shareable URL.
+function seedKeeper(box, { current, onRestore, linkFor }) {
+  const token = document.querySelector("[name=csrfmiddlewaretoken]").value;
+  const state = box.querySelector(".seed-state");
+  const held = box.querySelector(".seed-held");
+  const copy = box.querySelector(".seed-copy");
+  let own = box.dataset.saved;
+  let ownLast = box.dataset.savedLast;
+  let hold = false;
+  let pending = null; // [seed, last] waiting out the debounce
+  let timer;
+
+  const say = (text, kind) => {
+    state.textContent = text;
+    state.dataset.state = kind || "";
+  };
+  const bodyFor = (seed, last) =>
+    new URLSearchParams({ kind: box.dataset.kind, seed, last, csrfmiddlewaretoken: token });
+
+  async function send(seed, last) {
+    pending = null;
+    let ok = false;
+    try {
+      const resp = await fetch(box.dataset.url, {
+        method: "POST",
+        headers: { "X-CSRFToken": token },
+        body: bodyFor(seed, last),
+      });
+      ok = resp.ok;
+    } catch {
+      ok = false;
+    }
+    if (ok) {
+      own = seed;
+      ownLast = last;
+      say("Saved ✓", "ok");
+      return;
+    }
+    // Offline or a server hiccup: keep trying, so the seed never silently stays unsaved.
+    say("Not saved yet - retrying…", "error");
+    pending = [seed, last];
+    timer = setTimeout(() => send(seed, last), 10000);
+  }
+
+  // Leaving with a change still waiting out the debounce: send it anyway.
+  addEventListener("pagehide", () => {
+    if (pending) navigator.sendBeacon(box.dataset.url, bodyFor(...pending));
+  });
+
+  copy.addEventListener("click", async () => {
+    const url = new URL(linkFor(), location.href).href;
+    const copied = await copyToClipboard(url);
+    copy.textContent = copied ? "link copied ✓ - paste it somewhere safe" : url;
+  });
+
+  const showHeld = (link) => {
+    held.querySelector(".seed-held-link").textContent = link;
+    held.querySelector(".seed-held-own").textContent = own;
+    held.hidden = !hold;
+  };
+  held.querySelector(".seed-adopt").addEventListener("click", () => keeper.adopt());
+  held.querySelector(".seed-return").addEventListener("click", () => {
+    hold = false;
+    showHeld("");
+    onRestore(own, ownLast);
+  });
+
+  if (own) say("Saved ✓", "ok");
+
+  const keeper = {
+    own: () => [own, ownLast],
+    // A seed this browser kept before seeds were stored on the server: upload it once.
+    migrate(seed, last) {
+      if (!/^\d+$/.test(seed || "") || (seed === own && last === ownLast)) return;
+      own = seed;
+      ownLast = last || "";
+      send(own, ownLast);
+    },
+    // Opened on a link: if it isn't your own seed, don't overwrite yours until asked.
+    viewing(link) {
+      hold = Boolean(own) && link !== own;
+      showHeld(link);
+    },
+    // The seed on screen is yours after all (the held note's button, or a plan you applied).
+    adopt() {
+      hold = false;
+      showHeld("");
+      keeper.push(...current());
+    },
+    push(seed, last = "") {
+      seed = String(seed).trim();
+      if (hold || !/^\d+$/.test(seed)) return;
+      if (seed === own && last === ownLast && !pending) return;
+      clearTimeout(timer);
+      pending = [seed, last];
+      say("Saving…", "busy");
+      timer = setTimeout(() => send(seed, last), 600);
+    },
+  };
+  return keeper;
+}
+
 function setIconForm(host, img, form) {
   const uid = host.dataset.uid;
   while (form > 0 && missingIcons.has(`${uid}/${form}`)) form -= 1;
@@ -149,9 +280,9 @@ if (picker) {
   // chips and the panel's × drive them, and post() ships them as future_targets.
   const futureTargets = new Set();
 
-  // ---- Persist the form to localStorage (no accounts, so this is the only
-  // memory of seed/catfood/tickets/options between visits). Targets and banner
-  // selection are NOT persisted; the collection persists server-side.
+  // ---- Persist the form to localStorage: catfood/tickets/options between visits.
+  // The seed is your profile's (seedKeeper, below); targets and banner selection are
+  // NOT persisted; the collection persists server-side.
   const STORE_KEY = "nekoPlanner";
   const seedEl = document.getElementById("id_seed");
   const ticketsEl = document.getElementById("id_tickets");
@@ -207,7 +338,6 @@ if (picker) {
     localStorage.setItem(
       STORE_KEY,
       JSON.stringify({
-        seed: seedEl.value,
         tickets: ticketsEl.value,
         catfood: catfoodEl.value,
         useWishlist: wishlistEl.checked,
@@ -543,7 +673,15 @@ if (picker) {
   // overrides only the seed here (its view controls are applied further down); the
   // budget/options still come from your saved form, since a link reopens a view, not
   // a whole plan.
-  if (stored.seed != null && stored.seed !== "") seedEl.value = stored.seed;
+  // The server renders your stored seed into the field. A seed this browser kept from
+  // before seeds were stored on the server is the newest one it knows: it wins once,
+  // gets uploaded (seedKeeper.migrate, below) and leaves local storage for good.
+  const legacySeed = stored.seed ? String(stored.seed) : "";
+  if (legacySeed) {
+    seedEl.value = legacySeed;
+    delete stored.seed;
+    localStorage.setItem(STORE_KEY, JSON.stringify(stored));
+  }
   if (stored.tickets != null) ticketsEl.value = stored.tickets;
   if (stored.catfood != null) catfoodEl.value = stored.catfood;
   wishlistEl.checked = !!stored.useWishlist;
@@ -728,26 +866,6 @@ if (picker) {
   // "Copy link" beside Find plan: copy the permalink straight to the clipboard, and
   // drop it in the address bar too (so it's still shareable if the clipboard API is
   // blocked - e.g. over plain HTTP).
-  const copyToClipboard = async (text) => {
-    try {
-      await navigator.clipboard.writeText(text);
-      return true;
-    } catch {
-      const ta = document.createElement("textarea");
-      ta.value = text;
-      ta.style.cssText = "position:fixed;top:0;left:0;opacity:0";
-      document.body.appendChild(ta);
-      ta.select();
-      let ok = false;
-      try {
-        ok = document.execCommand("copy");
-      } catch {
-        ok = false;
-      }
-      ta.remove();
-      return ok;
-    }
-  };
   const shareLink = document.getElementById("shareLink");
   let shareTimer;
   shareLink.addEventListener("click", async () => {
@@ -837,7 +955,6 @@ if (picker) {
     const results = btn.closest("#planResults");
     const body = new URLSearchParams({ csrfmiddlewaretoken: token });
     (btn.dataset.cats ? btn.dataset.cats.split("|") : []).forEach((n) => body.append("cats", n));
-    if (btn.dataset.seedAfter) body.append("seed_after", btn.dataset.seedAfter);
     const resp = await fetch(results.dataset.applyUrl, {
       method: "POST",
       headers: { "X-CSRFToken": token },
@@ -862,6 +979,7 @@ if (picker) {
     // solution stays on screen (its steps still need doing in game), and the Rolls
     // track re-rolls from the new seed so it shows what comes next.
     if (btn.dataset.seedAfter) {
+      seedKeep.adopt(); // you rolled it, so it's your seed - even on a shared link
       setSeed(btn.dataset.seedAfter, btn.dataset.lastCat || "");
       browseTrack.hidden = false;
       refreshTracks();
@@ -956,6 +1074,7 @@ if (picker) {
     applyLastCat(seedEl.value.trim(), "");
     syncBack();
     save();
+    keepSeed();
     scheduleTracks();
     syncUrlIfLinked();
   });
@@ -1079,6 +1198,16 @@ if (picker) {
     }
     lastCatEl.value = cat || recallCat(seed);
   }
+  const seedKeep = seedKeeper(document.querySelector("#plannerForm .seed-keep"), {
+    current: () => [seedEl.value.trim(), lastCatEl.value],
+    onRestore: (seed, last) => {
+      setSeed(seed, last);
+      requestTracks();
+      syncUrlIfLinked();
+    },
+    linkFor: permalink,
+  });
+  const keepSeed = () => seedKeep.push(seedEl.value.trim(), lastCatEl.value);
   function syncUndo() {
     seedUndo.hidden = undoStack.length === 0;
     if (undoStack.length) seedUndo.title = `Back to seed ${undoStack[undoStack.length - 1]}`;
@@ -1094,6 +1223,7 @@ if (picker) {
     applyLastCat(value, cat || "");
     syncUndo();
     save();
+    keepSeed();
   }
   seedUndo.addEventListener("click", () => {
     if (!undoStack.length) return;
@@ -1102,6 +1232,7 @@ if (picker) {
     applyLastCat(seedEl.value, "");
     syncUndo();
     save();
+    keepSeed();
     requestTracks();
   });
   // Seed dice (browsing or inside a solution). Two kinds share the handler, each
@@ -1211,8 +1342,12 @@ if (picker) {
   // its remembered pull and browses its rolls straight away. Banners are whatever's
   // live today. A link can also carry the pull that landed on its seed (the Seed
   // Finder's "open at your position" does): record it as the dupe memory.
+  if (legacySeed) seedKeep.migrate(legacySeed, recallCat(legacySeed));
+  if (fromLink) seedKeep.viewing(seedEl.value.trim());
   if (seedEl.value.trim()) {
-    applyLastCat(seedEl.value.trim(), (fromLink && linkParams.get("last")) || "");
+    const [ownSeed, ownLast] = seedKeep.own();
+    const linked = fromLink && linkParams.get("last");
+    applyLastCat(seedEl.value.trim(), linked || (seedEl.value.trim() === ownSeed && ownLast) || "");
     requestTracks();
   }
 }

@@ -1,0 +1,36 @@
+{% extends "planner/guide.html" %}
+
+{% block guide %}
+  <p>The Normal Cat Capsule doesn't use your rare gacha seed. It runs on a
+    <strong>seed of its own</strong>, and every normal-side machine reads that same seed: the
+    plain capsule, the Catfruit and Catseye event capsules and the Lucky Ticket machines. So
+    one table on the <a href="{% url 'normal_capsules' %}">Normal Capsules</a> page predicts all
+    of them, including which pulls land a Dark Catseye.</p>
+
+  <h2>1. Find your normal seed</h2>
+  <ol>
+    <li>Roll the plain Normal Capsules 8 to 12 times and note what you get, in order. They
+      cost XP, so this is the cheap way to do it.</li>
+    <li>Set <strong>Superfeline unlocked</strong> to match your save. Once Superfeline joins
+      your capsule pool it never leaves, and it changes every roll, so get this right first.</li>
+    <li>Open <strong>Find my normal seed</strong>, enter the items oldest first, and search.</li>
+    <li>Press the result's button to use it. The seed is then saved to your profile.</li>
+  </ol>
+  <p>The pulls have to be one unbroken run: a roll on any normal-side machine in between
+    breaks the chain. If nothing matches, check the Superfeline toggle first, then the order.</p>
+
+  <h2>2. Read the machines</h2>
+  <p>Tick the machines you can roll right now. Each shows its own columns over the shared
+    seed, with tracks A and B like the rare planner. The dice on a cell means "I rolled this":
+    the table moves on and your seed is saved.</p>
+
+  <h2>3. Plan a path</h2>
+  <p>Open <strong>Plan a path</strong>, enter your Normal Cat Tickets and lucky tickets, and pick
+    a target such as Dark Catseyes. The planner walks the seed with normal-ticket rolls and uses
+    the odd lucky ticket to switch tracks, collecting as many as it can while spending as few
+    lucky tickets as possible.</p>
+
+  <p>Your normal seed is kept separately from your rare one. Back both up:
+    <a href="{% url 'guide' 'keep-your-seed' %}">never lose your seed</a>.</p>
+  <p class="guide-cta"><a href="{% url 'normal_capsules' %}">Open Normal Capsules &rarr;</a></p>
+{% endblock %}

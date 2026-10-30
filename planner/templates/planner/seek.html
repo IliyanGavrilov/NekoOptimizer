@@ -27,6 +27,8 @@
         each copy in the list one by one.</li>
       <li>You only need to find your seed once &mdash; from then on the planner tracks
         it as you roll.</li>
+      <li>New to this? The <a href="{% url 'guide' 'find-your-seed' %}">step-by-step
+        guide</a> walks through it.</li>
       <li>Looking for your <strong>Normal Capsule</strong> seed? That's a separate seed
         &mdash; use the finder on the <a href="{% url 'normal_capsules' %}">Normal
         Capsules</a> page instead.</li>
@@ -38,6 +40,7 @@
         data-start-url="{% url 'seek_start' %}"
         data-wasm-url="{% static 'planner/neko.wasm' %}" data-worker-url="{% static 'planner/seek-worker.js' %}"
         data-planner-url="{% url 'planner' %}"
+        data-save-url="{% url 'save_seed' %}"
         data-min-rolls="{{ min_rolls }}"
         data-max-rolls="{{ max_rolls }}">
     {% csrf_token %}
@@ -78,12 +81,19 @@
 
     <div id="seekEntry" hidden>
       <p class="muted hint">Your pulls, oldest first &mdash; search each cat you got:</p>
+      <ul class="seek-checklist muted">
+        <li>The banner above is the one you actually rolled on.</li>
+        <li>Pulls are in the order you got them, oldest first.</li>
+        <li>No guaranteed Uber in the list (the bonus one from an 11-draw).</li>
+        <li>Nothing else was rolled in between &mdash; not even on another banner.</li>
+      </ul>
       <ol id="seekRolls" class="seek-rolls"></ol>
       <div class="seek-actions">
         <button type="button" id="seekAddRow" class="seek-add">+ one more roll</button>
         <button type="submit" id="seekGo">Find my seed</button>
       </div>
     </div>
+    <div id="seekCheck" class="seek-check" hidden aria-live="polite"></div>
     <p class="field-error" id="seekError" aria-live="polite"></p>
   </form>
 
