@@ -2,8 +2,9 @@ import json
 import re
 
 import pytest
+from django.utils.html import escape
 
-from planner.seo import ld_json
+from planner.seo import GUIDES, ld_json
 
 SITE = "https://neko.example"
 
@@ -102,3 +103,37 @@ def test_the_sitemap_leaves_out_noindex_pages(client, tiers):
 
 def test_robots_points_crawlers_at_the_sitemap(client):
     assert f"Sitemap: {SITE}/sitemap.xml" in client.get("/robots.txt").content.decode()
+
+
+def test_every_guide_is_in_the_sitemap(client, tiers):
+    body = client.get("/sitemap.xml").content.decode()
+    assert all(f"<loc>{SITE}/guides/{slug}/</loc>" in body for slug in GUIDES)
+
+
+@pytest.mark.parametrize("slug", list(GUIDES))
+def test_a_guide_page_carries_its_own_listing(client, slug):
+    content = client.get(f"/guides/{slug}/").content.decode()
+    assert f"<title>{escape(GUIDES[slug].title)}</title>" in content
+
+
+def test_an_unknown_guide_is_not_found(client):
+    assert client.get("/guides/nope/").status_code == 404
+
+
+def test_a_versions_page_is_filed_under_its_own_url_and_names_its_siblings(client, db):
+    content = client.get("/jp/collection/").content.decode()
+    assert f'<link rel="canonical" href="{SITE}/jp/collection/">' in content
+    assert f'hreflang="ja" href="{SITE}/jp/collection/"' in content
+    assert f'hreflang="x-default" href="{SITE}/collection/"' in content
+
+
+def test_a_shared_page_is_filed_under_the_english_url(client, db):
+    content = client.get("/jp/about/").content.decode()
+    assert f'<link rel="canonical" href="{SITE}/about/">' in content
+    assert "hreflang" not in content
+
+
+def test_the_sitemap_lists_every_versions_tools(client, tiers):
+    body = client.get("/sitemap.xml").content.decode()
+    assert all(f"<loc>{SITE}{prefix}collection/</loc>" in body for prefix in ("/", "/jp/", "/kr/"))
+    assert f"<loc>{SITE}/jp/about/</loc>" not in body

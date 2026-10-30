@@ -1,0 +1,18 @@
+{% extends "planner/base.html" %}
+
+{% block content %}
+  <article class="guide">
+    <p class="guide-crumb"><a href="{% url 'guides' %}">&larr; All guides</a></p>
+    <h1>{{ heading }}</h1>
+    {% block guide %}{% endblock %}
+  </article>
+
+  <nav class="guide-more" aria-label="More guides">
+    <h2>More guides</h2>
+    <ul class="about-list">
+      {% for slug, name, summary in others %}
+        <li><a href="{% url 'guide' slug %}">{{ name }}</a></li>
+      {% endfor %}
+    </ul>
+  </nav>
+{% endblock %}

@@ -4,13 +4,15 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>{{ page_meta.title }}</title>
+  <title>{% if region_label %}{{ region_label }} version &middot; {% endif %}{{ page_meta.title }}</title>
   <meta name="description" content="{{ page_meta.description }}">
   {% if page_meta.noindex %}<meta name="robots" content="noindex">{% endif %}
   <link rel="canonical" href="{{ canonical_url }}">
+  {% for hreflang, path in alternates %}<link rel="alternate" hreflang="{{ hreflang }}" href="{{ site_url }}{{ path }}">
+  {% endfor %}
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="Neko Optimizer">
-  <meta property="og:title" content="{{ page_meta.title }}">
+  <meta property="og:title" content="{% if region_label %}{{ region_label }} version &middot; {% endif %}{{ page_meta.title }}">
   <meta property="og:description" content="{{ page_meta.description }}">
   <meta property="og:url" content="{{ canonical_url }}">
   <meta property="og:image" content="{{ site_url }}{% static 'planner/og-image.png' %}">
@@ -55,6 +57,7 @@
         <a href="{% url 'resources' %}">Resources</a>
         <a href="{% url 'tier_list' %}">Tier List</a>
         <a href="{% url 'seed_finder' %}">Seed Finder</a>
+        <a href="{% url 'guides' %}">Guides</a>
         <a href="{% url 'about' %}">About</a>
       </nav>
       {# Brand left, nav centred, the controls together at the right edge. #}

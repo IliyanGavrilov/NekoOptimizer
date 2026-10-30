@@ -1,0 +1,17 @@
+{% extends "planner/base.html" %}
+
+{% block content %}
+  <h1>Guides</h1>
+  <p class="muted">Short, step-by-step guides to the Battle Cats gacha: what your seed is,
+    how to find it, how to read what's coming, and how to spend your tickets and catfood
+    on the cats you actually want.</p>
+
+  <ul class="guide-list">
+    {% for slug, name, summary in guides %}
+      <li>
+        <a href="{% url 'guide' slug %}">{{ name }}</a>
+        <p class="muted">{{ summary }}</p>
+      </li>
+    {% endfor %}
+  </ul>
+{% endblock %}

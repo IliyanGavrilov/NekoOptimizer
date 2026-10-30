@@ -1,0 +1,57 @@
+{% extends "planner/guide.html" %}
+
+{% block guide %}
+  <p>Every rare gacha roll in The Battle Cats comes from one number, your <strong>seed</strong>.
+    The game steps it forward with each pull, so once you know it, every roll you will ever
+    make can be read off ahead of time. You can't see the seed in the game, but you can work
+    it out from a handful of cats you have just rolled. That's what the
+    <a href="{% url 'seed_finder' %}">Seed Finder</a> does: it checks all 4.3 billion possible
+    seeds, right in your browser, for the one that deals exactly your cats.</p>
+
+  <h2>1. Roll a few times on one banner</h2>
+  <p>Use any rare gacha event that's running &mdash; rare tickets and catfood work the same.
+    Roll <strong>7 to 10 times</strong> if you can (the minimum is 5) and note each cat you
+    get, in order. Singles are easiest to record. An 11-draw works too: its results come in
+    the order they were rolled.</p>
+  <p>Avoid events whose pool holds the same cat twice (some Busters events and collabs):
+    the two copies look identical in the results, so the finder can't tell which slot you hit.</p>
+
+  <h2>2. Leave the guaranteed Uber out</h2>
+  <p>This is the mistake that breaks most searches. On a guaranteed event, an 11-draw gives
+    10 normal rolls <em>plus</em> a bonus Uber that doesn't come from the normal roll sequence.
+    <strong>Enter only the 10 rolls before it</strong>, and nothing rolled after it. The same
+    goes for the last roll of a step-up. The finder warns you when your 11th or 15th pull is an
+    Uber, just in case.</p>
+
+  <h2>3. Nothing in between</h2>
+  <p>All rare banners share the one seed, so a roll on <em>any</em> other rare banner in the
+    middle of your list breaks the chain. Record one unbroken run of pulls.</p>
+
+  <h2>4. Enter them and search</h2>
+  <ol>
+    <li>Open the <a href="{% url 'seed_finder' %}">Seed Finder</a> and pick the exact banner
+      you rolled on (search it by name).</li>
+    <li>Fill in each pull, oldest first. Every box has a search: type a few letters of the cat.</li>
+    <li>Press <strong>Find my seed</strong>. It takes a few seconds on most devices.</li>
+  </ol>
+  <p>A quick check runs before the search. It flags the common slips &mdash; a likely
+    guaranteed Uber, or the same Rare twice in a row (the game never deals that; it rerolls
+    the repeat) &mdash; and lets you fix them or search anyway.</p>
+
+  <h2>Several seeds match?</h2>
+  <p>Your pulls fit more than one seed. Roll one or two more cats, add them to the end, and
+    search again. Each extra pull cuts the candidates down fast, usually to one.</p>
+
+  <h2>No seed matches?</h2>
+  <p>Something in the list doesn't match what the game rolled. In rough order of how often
+    it happens: a guaranteed Uber was included, the order is off, another banner was rolled in
+    between, the wrong banner or run was picked, or a cat with a similar name was picked by
+    mistake.</p>
+
+  <h2>Once it's found</h2>
+  <p>A single match is saved as your seed straight away, and the planner opens on it from then
+    on. You only do this once: after that, the planner follows your seed as you roll. It's still
+    worth a ten-second backup &mdash; see <a href="{% url 'guide' 'keep-your-seed' %}">never
+    lose your seed</a>.</p>
+  <p class="guide-cta"><a href="{% url 'seed_finder' %}">Open the Seed Finder &rarr;</a></p>
+{% endblock %}

@@ -67,6 +67,14 @@ def test_seed_is_kept_per_region():
 
 
 @pytest.mark.django_db
+def test_rare_and_normal_seeds_are_kept_apart():
+    profile = Profile.objects.create()
+    Seed.store(profile, 1)
+    Seed.store(profile, 2, Seed.NORMAL)
+    assert (Seed.saved(profile).value, Seed.saved(profile, Seed.NORMAL).value) == (1, 2)
+
+
+@pytest.mark.django_db
 def test_seed_is_kept_per_profile():
     Seed.store(Profile.objects.create(), 1)
     Seed.store(Profile.objects.create(), 2)

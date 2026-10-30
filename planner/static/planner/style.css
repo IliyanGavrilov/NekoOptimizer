@@ -2581,3 +2581,59 @@ button, .chip, .entry, .banner-group, .banner-include, .step-card, .site-header 
     scroll-behavior: auto !important;
   }
 }
+
+/* Where the seed is kept: a quiet status line under the seed field, and the held note a
+   shared link opens with. */
+.seed-status { font-size: 0.78rem; margin: 0.3rem 0 0; }
+.seed-state:not(:empty) { font-weight: 600; margin-right: 0.25rem; }
+.seed-state[data-state="ok"] { color: var(--accent); }
+.seed-state[data-state="error"] { color: var(--r-legend); }
+.link-btn {
+  background: none;
+  border: 0;
+  padding: 0;
+  margin: 0;
+  color: var(--accent);
+  font: inherit;
+  text-decoration: underline;
+  cursor: pointer;
+}
+.link-btn:hover { filter: none; }
+.seed-held {
+  border: 1px solid var(--warn);
+  border-radius: var(--radius);
+  padding: 0.5rem 0.7rem;
+  margin: 0.5rem 0 0;
+  font-size: 0.85rem;
+}
+.seed-held p { margin: 0 0 0.4rem; }
+.seed-held button { font-size: 0.82rem; padding: 0.3rem 0.6rem; }
+
+/* Seed Finder: the before-you-search checklist, the pre-search warnings and the saved note. */
+.seek-checklist { font-size: 0.82rem; margin: 0 0 0.6rem; padding-left: 1.2rem; }
+.seek-checklist li::marker { content: "\2713  "; color: var(--accent); }
+.seek-check {
+  border: 1px solid var(--warn);
+  border-radius: var(--radius);
+  padding: 0.5rem 0.8rem;
+  margin: 0.6rem 0 0;
+  font-size: 0.85rem;
+}
+.seek-check p { margin: 0.2rem 0; }
+.seek-none ul { margin: 0.3rem 0 0; padding-left: 1.2rem; }
+.seek-none li { margin: 0.25rem 0; }
+.seek-kept { margin: 0.4rem 0 0; font-size: 0.85rem; }
+
+/* Guides: readable prose width, numbered steps, the "more guides" foot. */
+.guide { max-width: 44rem; }
+.guide-crumb { font-size: 0.85rem; margin: 0 0 0.5rem; }
+.guide h2 { margin: 1.6rem 0 0.5rem; }
+.guide p, .guide li { line-height: 1.6; }
+.guide ol, .guide ul { padding-left: 1.3rem; }
+.guide li { margin: 0.35rem 0; }
+.guide .guide-cta { font-weight: 600; }
+.guide-more { max-width: 44rem; margin: 2rem 0 0; border-top: 1px solid var(--line); padding-top: 1rem; }
+.guide-list { list-style: none; padding: 0; max-width: 44rem; }
+.guide-list li { margin: 0 0 1rem; }
+.guide-list a { font-weight: 600; font-size: 1.05rem; }
+.guide-list p { margin: 0.2rem 0 0; }

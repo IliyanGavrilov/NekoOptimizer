@@ -1,0 +1,17 @@
+{% comment %}Where the page's seed is kept. app.js's seedKeeper posts every change to
+save_seed, so the seed lives on the profile rather than in one browser's storage; the
+held note shows when a shared link opened on someone else's seed.{% endcomment %}
+<div class="seed-keep" data-url="{% url 'save_seed' %}" data-kind="{{ kind }}"
+     data-saved="{{ saved.value|default_if_none:'' }}" data-saved-last="{{ saved.last }}">
+  <p class="seed-status muted">
+    <span class="seed-state" aria-live="polite"></span>
+    {% if user.is_authenticated %}Kept on your account, on every device.{% else %}Kept for this browser only &mdash; <a href="{% url 'signup' %}?next={{ request.path|urlencode }}">sign up</a> (free, no email) to keep it on every device.{% endif %}
+    Back it up too: write the number down, or <button type="button" class="link-btn seed-copy">copy a link to it</button>.
+  </p>
+  <div class="seed-held" hidden>
+    <p>You're looking at a shared seed (<strong class="seed-held-link"></strong>). Your own
+      seed (<strong class="seed-held-own"></strong>) stays as it is until you choose.</p>
+    <button type="button" class="seed-adopt">Make this my seed</button>
+    <button type="button" class="seed-return">Back to my seed</button>
+  </div>
+</div>

@@ -4,6 +4,7 @@ import pytest
 
 from neko.normal_plan import plan_normal
 from planner.forms import MIN_SEEK_ROLLS
+from planner.models import Seed
 
 # Every request reads the persisted region row (planner.middleware.region_scope).
 pytestmark = [pytest.mark.django_db, pytest.mark.urls("planner.reference_urls")]
@@ -14,6 +15,13 @@ pytestmark = [pytest.mark.django_db, pytest.mark.urls("planner.reference_urls")]
 SEED = 1515525936
 
 EIGHT_ROLLS = ["0:0", "0:1", "0:2", "0:3", "0:4", "0:5", "0:6", "0:7"]
+
+
+def test_normal_page_opens_on_the_stored_normal_seed(client, profile):
+    Seed.store(profile, SEED, Seed.NORMAL, last="Fish Cat")
+    Seed.store(profile, 7)
+    content = client.get("/normal/").content.decode()
+    assert f'data-saved="{SEED}" data-saved-last="Fish Cat"' in content
 
 
 def test_normal_page_offers_machines_finder_and_planner(client):

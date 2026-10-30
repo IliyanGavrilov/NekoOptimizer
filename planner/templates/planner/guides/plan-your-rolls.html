@@ -1,0 +1,46 @@
+{% extends "planner/guide.html" %}
+
+{% block guide %}
+  <p>Knowing your seed tells you what every pull gives. The <a href="{% url 'planner' %}">planner</a>
+    goes one step further: tell it which cats you want and what you have to spend, and it
+    finds the <strong>cheapest order of pulls</strong> across the banners that are running to
+    get them.</p>
+
+  <h2>1. Your seed</h2>
+  <p>Enter it at the top, or <a href="{% url 'guide' 'find-your-seed' %}">find it</a> if you
+    don't know it. It's saved to your profile as you go.</p>
+
+  <h2>2. Your targets</h2>
+  <p>Pick the cats you want from the target list, grouped by the banners they're on. If you
+    keep a wishlist in your <a href="{% url 'collection' %}">collection</a>, tick
+    <strong>also search my wishlist</strong> to go after all of it at once. Cats you already own
+    are left out of wishlist searches.</p>
+
+  <h2>3. Banners and budget</h2>
+  <p>The banners live today are picked for you; add or drop any. Then enter your rare tickets
+    and catfood. One pull is 150 catfood, and the planner spends tickets first. If rare tickets
+    are precious to you, raise their value in the advanced options and the planner will spend
+    catfood to save them.</p>
+  <p>Not sure what you can afford? Turn on <strong>explore mode</strong>: the planner ignores
+    your budget and finds the cheapest way to your targets within the rolls it looks ahead.</p>
+
+  <h2>4. Find plan, then follow it</h2>
+  <p>Press <strong>Find plan</strong>. You get the steps in order &mdash; which banner, single or
+    11-draw, and what each gives &mdash; walked along the Rolls table so you can see them. Do them
+    in the game exactly as listed.</p>
+
+  <h2>5. Apply it</h2>
+  <p>Once you've rolled, press <strong>Apply</strong> on the plan. The cats it got are marked
+    owned, your tickets and catfood go down by what it spent, and your seed moves to just after
+    the last pull. The next plan starts from the right place.</p>
+
+  <h2>Tips</h2>
+  <ul>
+    <li>Rare tickets are singles only &mdash; an 11-draw is always catfood.</li>
+    <li>If something you rolled doesn't match the plan, your seed is off. Re-find it rather than
+      guessing.</li>
+    <li><strong>Copy link</strong> shares your seed and Rolls view with a friend. Opening it
+      doesn't change their own saved seed unless they choose to.</li>
+  </ul>
+  <p class="guide-cta"><a href="{% url 'planner' %}">Open the planner &rarr;</a></p>
+{% endblock %}

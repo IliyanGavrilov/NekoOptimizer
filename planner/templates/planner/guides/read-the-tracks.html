@@ -1,0 +1,44 @@
+{% extends "planner/guide.html" %}
+
+{% block guide %}
+  <p>The <a href="{% url 'planner' %}">planner</a>'s Rolls table shows what every upcoming
+    rare gacha pull gives you, from your seed. It reads like any Battle Cats seed tracker: two
+    columns, <strong>track A</strong> and <strong>track B</strong>, numbered from your next
+    pull downwards.</p>
+
+  <h2>Where you are</h2>
+  <p>Your next pull is cell <strong>1A</strong>. Each pull moves you one row down the same
+    track: 1A, 2A, 3A&hellip; The table shows every banner you've picked side by side, because
+    all rare banners read the same seed &mdash; a pull on any of them moves you along the
+    same rows.</p>
+
+  <h2>Duplicate rerolls switch tracks</h2>
+  <p>If a pull would give you the same Rare cat you got on the pull just before it, the game
+    rerolls it to a different cat, and that reroll moves you to the <em>other</em> track. The
+    table marks those cells and shows where the reroll lands you. This is how you change
+    tracks on purpose: steer onto a duplicate and you jump across to the cats on the other side.</p>
+
+  <h2>Guaranteed 11-draws</h2>
+  <p>On a guaranteed event, an 11-draw gives the next 10 cells and then a bonus Uber. The
+    table can show what that guaranteed Uber would be from any cell, so you can pick the row
+    to start your 11-draw from.</p>
+
+  <h2>Moving your seed along</h2>
+  <ul>
+    <li><strong>The dice</strong> on a cell: "I rolled this". The table re-anchors so the cell
+      after it is your next pull, and your saved seed moves with it.</li>
+    <li><strong>&#9665; back</strong> beside the seed steps back one roll; <strong>undo</strong>
+      walks back through seed changes the app made for you.</li>
+    <li>Typing a seed by hand always works too.</li>
+  </ul>
+
+  <h2>Display options</h2>
+  <p>Show cat names, icons or both, choose which form to show, how many rolls to list, and
+    turn on <strong>Details</strong> to see each cell's rarity and slot seed if you want to
+    cross-check by hand.</p>
+
+  <p>Don't know your seed yet? <a href="{% url 'guide' 'find-your-seed' %}">Find it first</a>.
+    Want the app to work out the cheapest way to your target cats?
+    <a href="{% url 'guide' 'plan-your-rolls' %}">Plan your rolls</a>.</p>
+  <p class="guide-cta"><a href="{% url 'planner' %}">Open the planner &rarr;</a></p>
+{% endblock %}

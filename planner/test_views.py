@@ -8,6 +8,7 @@ from neko.rng import backtrack
 from neko.roller import DEFAULT_COUNT, RollResult
 from neko.search import Multi
 from planner.forms import MAX_FUTURE_UBERS, MAX_TRACK_LENGTH
+from planner.middleware import PROFILE_COOKIE
 from planner.models import Banner, Cat, Profile, Seed, Unit
 
 R = Rarity.RARE
@@ -71,16 +72,6 @@ def test_post_renders_plan(client, monkeypatch):
         "/reference/plan/", {"seed": 7, "tickets": 1, "catfood": 0, "targets": [cat.pk]}
     )
     assert b"Bahamut" in response.content
-
-
-@pytest.mark.django_db
-def test_post_persists_seed(client, monkeypatch):
-    cat = Cat.objects.create(name="Bahamut")
-    monkeypatch.setattr(
-        "planner.views.fetch_banners", fixed_banners(TrackPull(1, "A", "Bahamut", U))
-    )
-    client.post("/reference/plan/", {"seed": 7, "tickets": 1, "catfood": 0, "targets": [cat.pk]})
-    assert Seed.objects.get().value == 7
 
 
 @pytest.mark.django_db
@@ -316,9 +307,46 @@ def test_owned_cats_are_still_targetable(client, profile):
 
 
 @pytest.mark.django_db
-def test_seed_field_starts_empty(client, profile):
-    Seed.store(profile, 42)
+def test_planner_opens_on_the_stored_seed(client, profile):
+    Seed.store(profile, 42, last="Bahamut")
+    content = client.get("/").content
+    assert b'name="seed" value="42"' in content
+    assert b'data-saved="42" data-saved-last="Bahamut"' in content
+
+
+@pytest.mark.django_db
+def test_planner_ignores_the_normal_seed(client, profile):
+    Seed.store(profile, 42, Seed.NORMAL)
     assert b'name="seed" value="42"' not in client.get("/").content
+
+
+@pytest.mark.django_db
+def test_save_seed_stores_each_kind_apart(client, profile):
+    client.post("/seed/save/", {"kind": "rare", "seed": 7, "last": "Bahamut"})
+    client.post("/seed/save/", {"kind": "normal", "seed": 9})
+    stored = {seed.kind: (seed.value, seed.last) for seed in Seed.objects.all()}
+    assert stored == {"rare": (7, "Bahamut"), "normal": (9, "")}
+
+
+@pytest.mark.django_db
+def test_save_seed_gives_a_first_time_visitor_a_profile(client):
+    client.post("/seed/save/", {"kind": "rare", "seed": 7})
+    assert Seed.objects.get().profile.key == client.cookies[PROFILE_COOKIE].value
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize(
+    "post",
+    [
+        {"kind": "rare", "seed": "abc"},
+        {"kind": "rare", "seed": -1},
+        {"kind": "rare", "seed": 2**32},
+        {"kind": "epic", "seed": 7},
+    ],
+)
+def test_save_seed_rejects_what_is_not_a_seed(client, profile, post):
+    assert client.post("/seed/save/", post).status_code == 400
+    assert not Seed.objects.exists()
 
 
 @pytest.mark.django_db
@@ -327,20 +355,6 @@ def test_apply_plan_owns_cats_and_keeps_the_wishlist_mark(client, profile):
     client.post("/apply/", {"cats": ["Bahamut"]})
     # Getting a cat doesn't un-want it: owned wins, but the wishlist star is left intact.
     assert profile.marks() == ({cat.unit_id}, {cat.unit_id})
-
-
-@pytest.mark.django_db
-def test_apply_plan_advances_the_stored_seed(client, profile):
-    Seed.store(profile, 7)
-    client.post("/apply/", {"cats": ["Bahamut"], "seed_after": 12345})
-    assert Seed.objects.get().value == 12345
-
-
-@pytest.mark.django_db
-def test_apply_plan_without_a_seed_after_keeps_the_stored_seed(client, profile):
-    Seed.store(profile, 7)
-    client.post("/apply/", {"cats": ["Bahamut"]})
-    assert Seed.objects.get().value == 7
 
 
 @pytest.mark.django_db
