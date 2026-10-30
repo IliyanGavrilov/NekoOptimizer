@@ -1231,9 +1231,9 @@ class Login(LoginView):
         return super().form_valid(form)
 
 
-def _posted_from(request) -> str:
-    """The page a post was made from, as a URL this site generated for itself - without
-    its version prefix, for the caller to put the version of its choosing on.
+def _posted_from(request, code: str) -> str:
+    """The page a post was made from, at ``code``'s version of it, as a URL this site
+    generated for itself.
 
     The Referer header is attacker-controllable, so it never becomes the redirect target:
     it only picks one of our own routes. Off-site or wrong-scheme referers are rejected,
@@ -1241,7 +1241,7 @@ def _posted_from(request) -> str:
     output for the view that matched - so the destination is ours by construction, not by
     inspection. Only the query string rides along, which cannot change where it points.
     Anything that doesn't resolve lands on the planner."""
-    home = split_region(reverse("planner"))[1]
+    home = region_path(reverse("planner"), code)
     back = request.META.get("HTTP_REFERER", "")
     if not url_has_allowed_host_and_scheme(
         back, allowed_hosts={request.get_host()}, require_https=request.is_secure()
@@ -1254,7 +1254,7 @@ def _posted_from(request) -> str:
     except Resolver404:
         return home
 
-    here = split_region(reverse(match.view_name, args=match.args, kwargs=match.kwargs))[1]
+    here = region_path(reverse(match.view_name, args=match.args, kwargs=match.kwargs), code)
 
     return f"{here}?{parts.query}" if parts.query else here
 
@@ -1272,7 +1272,7 @@ def set_region(request):
     profile.region = code
     profile.save(update_fields=["region"])
 
-    return redirect(region_path(_posted_from(request), code))
+    return redirect(_posted_from(request, code))
 
 
 @require_POST
