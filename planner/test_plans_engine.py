@@ -43,12 +43,17 @@ def _capsules():
     raise AssertionError("no live capsule pair")
 
 
-def _targets(seed, runs, count, rarity=None, rows=100):
-    """Cats that really roll within ``rows`` on these banners, as picker Cats."""
+def _targets(seed, runs, count, rarity=None, rows=100, track=None):
+    """Cats that really roll within ``rows`` on these banners, as picker Cats. ``track``
+    keeps only that track's plain pulls - on "A", cats a few singles straight down
+    reach, whatever banners the sample drew."""
     rolled = roll_selected(seed, runs, count=rows)
     names = []
     for rolls in rolled.banners.values():
-        for p in rolls.pulls + rolls.guaranteed:
+        pulls = rolls.pulls + rolls.guaranteed if track is None else rolls.pulls
+        for p in pulls:
+            if track is not None and p.track != track:
+                continue
             if p.cat and p.cat not in names and (rarity is None or p.rarity == rarity):
                 names.append(p.cat)
     picked = RNG.sample(names, min(count, len(names)))
@@ -94,8 +99,11 @@ def _compare(client, engine, data, row=None):
 
 
 def test_plans_match_on_a_budget(client, engine, catalogue):  # noqa: F811
+    # Targets within the first rows of track A, so the budget always reaches them: the
+    # banners are sampled from the live schedule, which every data refresh grows.
     seed, runs = GOLDEN_SEED, _runs(3)
-    html = _compare(client, engine, _form(seed, runs, _targets(seed, runs, 3)))
+    targets = _targets(seed, runs, 3, rows=10, track="A")
+    html = _compare(client, engine, _form(seed, runs, targets))
     assert "apply-plan" in html
 
 
