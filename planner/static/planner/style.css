@@ -2679,9 +2679,7 @@ button, .chip, .entry, .banner-group, .banner-include, .step-card, .site-header 
   cursor: pointer;
 }
 .welcome-close:hover { color: var(--ink); filter: none; }
-.page-intro p { margin: 0 0 0.4rem; }
-.quick-steps { margin: 0 0 0.4rem; padding-left: 1.3rem; }
-.quick-steps li { margin: 0.15rem 0; }
+.page-intro { font-size: 0.85rem; margin: 0 0 1rem; }
 .changelog { max-width: 44rem; }
 .changelog h2 { font-size: 1rem; margin: 1.4rem 0 0.4rem; }
 .changelog ul { padding-left: 1.2rem; }

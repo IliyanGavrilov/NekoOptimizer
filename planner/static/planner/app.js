@@ -1831,7 +1831,9 @@ if (welcome) {
     seen = false;
   }
   welcome.hidden = seen;
-  welcome.querySelector(".welcome-close").addEventListener("click", () => {
+  // Closing it or following its link both count as read.
+  welcome.addEventListener("click", (e) => {
+    if (!e.target.closest(".welcome-close, a")) return;
     welcome.hidden = true;
     try {
       localStorage.setItem(WELCOME_KEY, "1");

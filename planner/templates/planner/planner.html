@@ -3,15 +3,10 @@
 
 {% block content %}
   <h1>Neko Optimizer</h1>
-  <div class="page-intro muted">
-    <p>{% translate "See every rare gacha roll your seed will give, and the cheapest way to the cats you want." %}</p>
-    <ol class="quick-steps">
-      <li>{% url 'seed_finder' as finder_url %}{% blocktranslate trimmed %}Enter your seed &mdash; or <a href="{{ finder_url }}">find it</a> if you don't know it.{% endblocktranslate %}</li>
-      <li>{% translate "Pick the cats you want." %}</li>
-      <li>{% translate "Press Find plan, then roll in the game in that order." %}</li>
-    </ol>
-    <p>{% url 'guide' 'read-the-tracks' as tracks_url %}{% url 'guide' 'plan-your-rolls' as plan_url %}{% blocktranslate trimmed %}New here? <a href="{{ tracks_url }}">How to read the rolls</a> &middot; <a href="{{ plan_url }}">How to plan</a>{% endblocktranslate %}</p>
-  </div>
+  <p class="page-intro muted">
+    {% translate "See every rare gacha roll your seed will give, and the cheapest way to the cats you want." %}
+    {% url 'guide' 'read-the-tracks' as tracks_url %}{% url 'guide' 'plan-your-rolls' as plan_url %}{% blocktranslate trimmed %}New here? <a href="{{ tracks_url }}">How to read the rolls</a> &middot; <a href="{{ plan_url }}">How to plan</a>{% endblocktranslate %}
+  </p>
 
   <form method="post" id="plannerForm" novalidate>
     {% csrf_token %}

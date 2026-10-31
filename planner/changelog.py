@@ -16,7 +16,7 @@ CHANGES = (
             _("Each game version has its own pages: /jp/, /tw/ and /kr/."),
             _("Fest and set names use each game version's own names, taken from the game's data."),
             _(
-                "A short welcome for first visits, plain how-it-works steps on the Planner, "
+                "A short welcome for first visits, guide links on the pages that need them, "
                 "and a page of game words explained."
             ),
         ),

@@ -15,4 +15,5 @@
       </li>
     {% endfor %}
   </ul>
+  <p class="muted">{% url 'whats_new' as news_url %}{% blocktranslate trimmed %}See what's changed lately on the <a href="{{ news_url }}">What's new</a> page.{% endblocktranslate %}</p>
 {% endblock %}

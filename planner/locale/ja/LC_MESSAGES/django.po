@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-31 12:10+0200\n"
+"POT-Creation-Date: 2026-10-31 12:23+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -32,9 +32,12 @@ msgid ""
 msgstr "祭やセットの名前は、ゲームデータにある各バージョンの正式名称で表示されます。"
 
 #: .\changelog.py:19
+#| msgid ""
+#| "A short welcome for first visits, plain how-it-works steps on the "
+#| "Planner, and a page of game words explained."
 msgid ""
-"A short welcome for first visits, plain how-it-works steps on the Planner, and a page of game words explained."
-msgstr "初めての方向けの短い案内、プランナーのかんたんな使い方、ゲーム用語の説明ページを追加しました。"
+"A short welcome for first visits, guide links on the pages that need them, and a page of game words explained."
+msgstr "初めての方向けの短い案内、必要なページへのガイドのリンク、ゲーム用語の説明ページを追加しました。"
 
 #: .\changelog.py:28
 msgid ""
@@ -145,7 +148,7 @@ msgstr "ここで%(name)sを引いた?その引き直しの直後へシード値
 
 #: .\engine_text.py:31 .\templates\planner\_tracks.html:47
 #: .\templates\planner\_tracks.html:69 .\templates\planner\_tracks.html:71
-#: .\templates\planner\planner.html:147
+#: .\templates\planner\planner.html:142
 msgid "Guaranteed"
 msgstr "確定"
 
@@ -219,7 +222,7 @@ msgid "Stop searching for this future uber"
 msgstr "この未実装超激の検索をやめる"
 
 #: .\engine_text.py:62 .\templates\planner\_tracks.html:8
-#: .\templates\planner\collection.html:70 .\templates\planner\planner.html:29
+#: .\templates\planner\collection.html:70 .\templates\planner\planner.html:24
 msgid "Targets"
 msgstr "ターゲット"
 
@@ -1499,7 +1502,7 @@ msgstr "Y年n月j日"
 msgid "M j"
 msgstr "n月j日"
 
-#: .\services.py:1494 .\templates\planner\planner.html:63
+#: .\services.py:1494 .\templates\planner\planner.html:58
 msgid "Past"
 msgstr "終了"
 
@@ -1994,9 +1997,7 @@ msgid "Welcome"
 msgstr "ようこそ"
 
 #: .\templates\planner\base.html:117
-#| msgid ""
-#| "New here? <a href=\"%(guide_url)s\">The Normal Capsules guide</a> takes "
-#| "two minutes."
+#, python-format
 msgid ""
 "New here? <a href=\"%(guides_url)s\">The short guides</a> explain how it all works."
 msgstr "はじめて?<a href=\"%(guides_url)s\">短いガイド</a>で使い方がわかります。"
@@ -2054,47 +2055,47 @@ msgid "Show each cat as its name, its form icon, or both"
 msgstr "キャラを名前・形態アイコン・両方のどれで表示するか"
 
 #: .\templates\planner\collection.html:17 .\templates\planner\normal.html:152
-#: .\templates\planner\planner.html:136 .\templates\planner\resources.html:21
+#: .\templates\planner\planner.html:131 .\templates\planner\resources.html:21
 msgid "Names"
 msgstr "名前"
 
 #: .\templates\planner\collection.html:18 .\templates\planner\normal.html:153
-#: .\templates\planner\planner.html:137 .\templates\planner\resources.html:22
+#: .\templates\planner\planner.html:132 .\templates\planner\resources.html:22
 msgid "Icons"
 msgstr "アイコン"
 
 #: .\templates\planner\collection.html:19 .\templates\planner\normal.html:154
-#: .\templates\planner\planner.html:138 .\templates\planner\resources.html:23
+#: .\templates\planner\planner.html:133 .\templates\planner\resources.html:23
 msgid "Both"
 msgstr "両方"
 
 #: .\templates\planner\collection.html:21 .\templates\planner\normal.html:156
-#: .\templates\planner\planner.html:140 .\templates\planner\resources.html:25
+#: .\templates\planner\planner.html:135 .\templates\planner\resources.html:25
 #: .\templates\planner\tiers.html:29
 msgid ""
 "Show each cat as this form - name and icon; a unit without that form shows the last one it has"
 msgstr "各キャラをこの形態で表示(名前とアイコン)。その形態がないキャラは最後の形態を表示します"
 
 #: .\templates\planner\collection.html:22 .\templates\planner\normal.html:157
-#: .\templates\planner\planner.html:141 .\templates\planner\resources.html:26
+#: .\templates\planner\planner.html:136 .\templates\planner\resources.html:26
 #: .\templates\planner\tiers.html:30
 msgid "Base"
 msgstr "第1形態"
 
 #: .\templates\planner\collection.html:23 .\templates\planner\normal.html:158
-#: .\templates\planner\planner.html:142 .\templates\planner\resources.html:27
+#: .\templates\planner\planner.html:137 .\templates\planner\resources.html:27
 #: .\templates\planner\tiers.html:31
 msgid "Evolved"
 msgstr "第2形態"
 
 #: .\templates\planner\collection.html:24 .\templates\planner\normal.html:159
-#: .\templates\planner\planner.html:143 .\templates\planner\resources.html:28
+#: .\templates\planner\planner.html:138 .\templates\planner\resources.html:28
 #: .\templates\planner\tiers.html:32
 msgid "True"
 msgstr "第3形態"
 
 #: .\templates\planner\collection.html:25 .\templates\planner\normal.html:160
-#: .\templates\planner\planner.html:144 .\templates\planner\resources.html:29
+#: .\templates\planner\planner.html:139 .\templates\planner\resources.html:29
 #: .\templates\planner\tiers.html:33
 msgid "Ultra"
 msgstr "第4形態"
@@ -2235,6 +2236,12 @@ msgid ""
 "Short, step-by-step guides to the Battle Cats gacha: what your seed is, how to find it, how to read what's coming, and how to spend your tickets and catfood on the cats you actually want."
 msgstr ""
 "にゃんこ大戦争のガチャをステップごとに解説する短いガイド:シード値とは何か、その調べ方、この先の結果の読み方、そしてほしいキャラのためのチケットとネコカンの使い方。"
+
+#: .\templates\planner\guides.html:18
+#, python-format
+msgid ""
+"See what's changed lately on the <a href=\"%(news_url)s\">What's new</a> page."
+msgstr "最近の変更は<a href=\"%(news_url)s\">更新情報</a>で見られます。"
 
 #: .\templates\planner\normal.html:7
 msgid ""
@@ -2379,19 +2386,19 @@ msgid ""
 msgstr ""
 "上ににゃんこガチャのシード値を入力してください &mdash; または<strong>にゃんこガチャのシード値を調べる</strong>を開き、実際に数回引いた結果から割り出しましょう。"
 
-#: .\templates\planner\normal.html:148 .\templates\planner\planner.html:132
+#: .\templates\planner\normal.html:148 .\templates\planner\planner.html:127
 msgid "Rolls"
 msgstr "ガチャテーブル"
 
-#: .\templates\planner\normal.html:150 .\templates\planner\planner.html:134
+#: .\templates\planner\normal.html:150 .\templates\planner\planner.html:129
 msgid "Show"
 msgstr "表示"
 
-#: .\templates\planner\normal.html:150 .\templates\planner\planner.html:134
+#: .\templates\planner\normal.html:150 .\templates\planner\planner.html:129
 msgid "How many rolls the table shows (up to 999)"
 msgstr "表に表示する回数(最大999)"
 
-#: .\templates\planner\normal.html:150 .\templates\planner\planner.html:134
+#: .\templates\planner\normal.html:150 .\templates\planner\planner.html:129
 msgid "rolls"
 msgstr "回"
 
@@ -2400,150 +2407,136 @@ msgid ""
 "See every rare gacha roll your seed will give, and the cheapest way to the cats you want."
 msgstr "シード値から出るレアガチャの結果をすべて表示し、ほしいキャラへのいちばん安い引き方を見つけます。"
 
-#: .\templates\planner\planner.html:9
-#, python-format
-msgid ""
-"Enter your seed &mdash; or <a href=\"%(finder_url)s\">find it</a> if you don't know it."
-msgstr "シード値を入力 &mdash; わからなければ<a href=\"%(finder_url)s\">調べられます</a>。"
-
-#: .\templates\planner\planner.html:10
-msgid "Pick the cats you want."
-msgstr "ほしいキャラを選ぶ。"
-
-#: .\templates\planner\planner.html:11
-msgid "Press Find plan, then roll in the game in that order."
-msgstr "「プランを探す」を押して、その順番でゲーム内で引く。"
-
-#: .\templates\planner\planner.html:13
+#: .\templates\planner\planner.html:8
 #, python-format
 msgid ""
 "New here? <a href=\"%(tracks_url)s\">How to read the rolls</a> &middot; <a href=\"%(plan_url)s\">How to plan</a>"
 msgstr ""
 "はじめて?<a href=\"%(tracks_url)s\">ガチャテーブルの見方</a> &middot; <a href=\"%(plan_url)s\">計画の立て方</a>"
 
-#: .\templates\planner\planner.html:23
+#: .\templates\planner\planner.html:18
 msgid "required"
 msgstr "必須"
 
-#: .\templates\planner\planner.html:23
+#: .\templates\planner\planner.html:18
 msgid "Step the seed back one roll"
 msgstr "シード値を1回分戻す"
 
-#: .\templates\planner\planner.html:23
+#: .\templates\planner\planner.html:18
 msgid "back"
 msgstr "戻る"
 
-#: .\templates\planner\planner.html:23
+#: .\templates\planner\planner.html:18
 msgid "undo"
 msgstr "元に戻す"
 
-#: .\templates\planner\planner.html:29
+#: .\templates\planner\planner.html:24
 msgid "pick a target, or tick “search my wishlist”"
 msgstr "ターゲットを選ぶか、「ほしいものリストも検索」にチェック"
 
-#: .\templates\planner\planner.html:31
+#: .\templates\planner\planner.html:26
 msgid ""
 "Tap <span class=\"key\">&plus;</span> to roll a banner. Click a banner's name to see its cats."
 msgstr "<span class=\"key\">&plus;</span>でそのガチャを回します。ガチャ名をクリックするとキャラが見られます。"
 
-#: .\templates\planner\planner.html:31
+#: .\templates\planner\planner.html:26
 msgid "Show me the selected banners"
 msgstr "選んだガチャを表示"
 
-#: .\templates\planner\planner.html:40
+#: .\templates\planner\planner.html:35
 msgid "Search cats & banners…"
 msgstr "キャラ&ガチャを検索…"
 
-#: .\templates\planner\planner.html:41
+#: .\templates\planner\planner.html:36
 msgid "Clear search and browse banners"
 msgstr "検索をクリアしてガチャ一覧へ"
 
-#: .\templates\planner\planner.html:42
+#: .\templates\planner\planner.html:37
 msgid "Matching banners (every run) and cats · clear to browse"
 msgstr "一致するガチャ(全開催回)とキャラ · クリアで一覧へ"
 
-#: .\templates\planner\planner.html:64
+#: .\templates\planner\planner.html:59
 msgid "Loading…"
 msgstr "読み込み中…"
 
-#: .\templates\planner\planner.html:75
+#: .\templates\planner\planner.html:70
 #, python-format
 msgid "No cats yet &mdash; <a href=\"%(collection_url)s\">add some</a>."
 msgstr "まだキャラがいません &mdash; <a href=\"%(collection_url)s\">追加しましょう</a>。"
 
-#: .\templates\planner\planner.html:89
+#: .\templates\planner\planner.html:84
 msgid "Your resources"
 msgstr "手持ちの資源"
 
-#: .\templates\planner\planner.html:97
+#: .\templates\planner\planner.html:92
 msgid ""
 "Platinum and Legend Capsules use their own tickets. Enter how many you have (0 to skip them)."
 msgstr "プラチナガチャとレジェンドガチャは専用のチケットを使います。持っている枚数を入れてください(0でスキップ)。"
 
-#: .\templates\planner\planner.html:105
+#: .\templates\planner\planner.html:100
 msgid "Advanced"
 msgstr "詳細設定"
 
-#: .\templates\planner\planner.html:111
+#: .\templates\planner\planner.html:106
 #, python-format
 msgid "1 rare ticket is worth %(field)s catfood"
 msgstr "レアチケット1枚 = ネコカン%(field)s個"
 
-#: .\templates\planner\planner.html:112
+#: .\templates\planner\planner.html:107
 msgid ""
 "One draw is 150 catfood, and the planner spends tickets first. Raise the ticket value above 150 if rare tickets are precious to you &mdash; the planner will then spend catfood to save them."
 msgstr ""
 "1回はネコカン150個で、プランナーはチケットを先に使います。レアチケットを温存したいなら価値を150より上げてください &mdash; プランナーがネコカンを使ってチケットを残すようになります。"
 
-#: .\templates\planner\planner.html:117
+#: .\templates\planner\planner.html:112
 msgid "Find plan"
 msgstr "プランを探す"
 
-#: .\templates\planner\planner.html:118
+#: .\templates\planner\planner.html:113
 msgid ""
 "Copy a link that reopens this seed and Rolls view (rolls shown, names/icons, form, details)"
 msgstr "このシード値とガチャテーブルの表示(回数・名前/アイコン・形態・詳細)を開き直すリンクをコピー"
 
-#: .\templates\planner\planner.html:118
+#: .\templates\planner\planner.html:113
 msgid "Copy link"
 msgstr "リンクをコピー"
 
-#: .\templates\planner\planner.html:124
+#: .\templates\planner\planner.html:119
 msgid "Finding your plan…"
 msgstr "プランを探しています…"
 
-#: .\templates\planner\planner.html:135
+#: .\templates\planner\planner.html:130
 msgid "Show each roll cell as the cat's name, its form icon, or both"
 msgstr "各セルをキャラ名・形態アイコン・両方のどれで表示するか"
 
-#: .\templates\planner\planner.html:146
+#: .\templates\planner\planner.html:141
 msgid ""
 "Reveal each cell's rarity and slot seed, for cross-checking against godfat"
 msgstr "godfatと照合できるよう、各セルのレアリティとスロットのシード値を表示"
 
-#: .\templates\planner\planner.html:146
+#: .\templates\planner\planner.html:141
 msgid "Details"
 msgstr "詳細"
 
-#: .\templates\planner\planner.html:147
+#: .\templates\planner\planner.html:142
 msgid ""
 "Force a guaranteed multi of this size onto every banner, to preview the uber each cell's guaranteed draw would give"
 msgstr "すべてのガチャにこの回数の確定ガチャを適用し、各セルから確定で何の超激が出るかを確認"
 
-#: .\templates\planner\planner.html:149
+#: .\templates\planner\planner.html:144
 msgid "None"
 msgstr "なし"
 
-#: .\templates\planner\planner.html:156
+#: .\templates\planner\planner.html:151
 msgid ""
 "When a guaranteed multi is in play, ignore the guaranteed column when finding cats - so Find next lists only normal-roll positions"
 msgstr "確定ガチャがある時、キャラ検索で確定列を無視します - 「次を検索」が通常の回の位置だけを表示します"
 
-#: .\templates\planner\planner.html:156
+#: .\templates\planner\planner.html:151
 msgid "Skip guaranteed in Find"
 msgstr "検索で確定を除く"
 
-#: .\templates\planner\planner.html:163
+#: .\templates\planner\planner.html:158
 msgid "Back to rolls"
 msgstr "ガチャテーブルに戻る"
 
