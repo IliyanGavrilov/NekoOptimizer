@@ -18,6 +18,8 @@ const BEAM: usize = 200;
 const MAX_ROLLS: i64 = 500;
 const CHEAP: &str = "Normal Cat Ticket";
 const CURRENCIES: [&str; 3] = [CHEAP, "Lucky Ticket", "Lucky Ticket G"];
+/// Most pulls in one plan step, so a long run on one machine reads as 10-pull steps.
+const STEP_PULLS: usize = 10;
 const DICE: &str = "<svg width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" aria-hidden=\"true\"><use href=\"#dice-icon\"/></svg>\n";
 
 #[derive(Deserialize)]
@@ -466,7 +468,8 @@ pub fn normal_plan(req: &Request, args: &NormalArgs, plan_args: &PlanArgs) -> St
     let seed_after = if found { best.seed } else { req.seed };
     let last_item = if found { best.last } else { last };
 
-    // Legs (runs of pulls on one machine) and the track marks, numbered together.
+    // Legs (runs of up to STEP_PULLS pulls on one machine) and the track marks,
+    // numbered together.
     struct Leg {
         n: usize,
         machine: usize,
@@ -476,7 +479,7 @@ pub fn normal_plan(req: &Request, args: &NormalArgs, plan_args: &PlanArgs) -> St
     let mut marks: Marks = HashMap::new();
     for step in &best.steps {
         let n = match legs.last() {
-            Some(leg) if leg.machine == step.machine => leg.n,
+            Some(leg) if leg.machine == step.machine && leg.pulls.len() < STEP_PULLS => leg.n,
             _ => {
                 legs.push(Leg {
                     n: legs.len() + 1,

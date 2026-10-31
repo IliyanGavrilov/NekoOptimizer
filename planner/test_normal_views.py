@@ -5,6 +5,7 @@ import pytest
 from neko.normal_plan import plan_normal
 from planner.forms import MIN_SEEK_ROLLS
 from planner.models import Seed
+from planner.services import build_normal_plan
 
 # Every request reads the persisted region row (planner.middleware.region_scope).
 pytestmark = [pytest.mark.django_db, pytest.mark.urls("planner.reference_urls")]
@@ -121,6 +122,19 @@ def test_normal_plan_lights_a_path(client):
     assert "I rolled it" in content  # the apply button carries the end state
     assert f'data-seed="{expected.seed_after}"' in content
     assert 'class="item dark-catseye got"' in content  # the collected dark is gilded
+
+
+def test_normal_plan_splits_a_long_run_into_ten_pull_steps():
+    plan = build_normal_plan(PLAN_SEED, ["ce"], {"normal": 30}, "dark", 20)
+    pulls = len(plan_normal(PLAN_SEED, [(30, ("ce",))], frozenset({"Dark Catseye"})).steps)
+    assert pulls == 15  # one machine all the way: a single run before splitting
+
+    assert [len(leg["pulls"]) for leg in plan["legs"]] == [10, 5]
+    assert [leg["n"] for leg in plan["legs"]] == [1, 2]
+    assert [leg["cost_text"] for leg in plan["legs"]] == [
+        "10 Normal Cat Tickets",
+        "5 Normal Cat Tickets",
+    ]
 
 
 @pytest.mark.django_db
