@@ -90,7 +90,7 @@ NORMAL_BANNERS = (
     NormalBanner("n", "Normal Capsules", (NormalPool(_BASE, NORMAL_CATS + UPGRADES, True),)),
     NormalBanner(
         "np",
-        "Normal Capsules+",
+        "Normal+ Capsules (w/ Superfeline)",
         (NormalPool(_BASE, NORMAL_CATS + ("Superfeline",) + UPGRADES, True),),
     ),
     NormalBanner(

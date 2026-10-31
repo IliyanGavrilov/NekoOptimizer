@@ -523,8 +523,8 @@ msgid ""
 msgstr "抽到%(cell)s?將種子碼推進到它之後(一般抽;重複的分支有自己的骰子)"
 
 #: .\engine_text.py:160 .\templates\planner\_normal_plan.html:14
-msgid "You rolled this plan: the seed jumps to just after its final pull"
-msgstr "已抽完這個計畫:將種子碼推進到最後一抽之後"
+msgid "You rolled this plan: the seed jumps to just after its final pull and its tickets come off your stash"
+msgstr "已抽完這個計畫:將種子碼推進到最後一抽之後,並從持有量扣掉用掉的券"
 
 #: .\engine_text.py:161 .\templates\planner\_normal_tracks.html:11
 msgid "a planned pull"
@@ -2269,9 +2269,9 @@ msgstr ""
 
 #: .\templates\planner\normal.html:23
 msgid ""
-"The finder searches the pool your <strong>Superfeline unlocked</strong> toggle (next to the machine picks below) says you have &mdash; the pools differ, so if the search finds nothing, check that toggle first."
+"The finder searches the capsule you pick below: <strong>Normal Capsules</strong>, or <strong>Normal+ Capsules (w/ Superfeline)</strong> once Superfeline is in your pool &mdash; the pools differ, so if the search finds nothing, check that pick first."
 msgstr ""
-"搜尋的轉蛋池取決於<strong>已解放貓咪超人</strong>開關(在下方轉蛋機選項旁)&mdash; 兩種池不同,若找不到結果,請先檢查這個開關。"
+"搜尋的是下方選的轉蛋:<strong>貓咪轉蛋</strong>,貓咪超人已在池中時則是<strong>Normal+ Capsules (w/ Superfeline)</strong> &mdash; 兩種池不同,若找不到結果,請先檢查這個選擇。"
 
 #: .\templates\planner\normal.html:26
 msgid ""
@@ -2307,8 +2307,8 @@ msgstr "沒有任何種子碼能完全符合這些結果。原因幾乎都是下
 
 #: .\templates\planner\normal.html:55
 msgid ""
-"<strong>Superfeline is set wrong.</strong> Once Superfeline is in your capsule pool every roll changes - tick \"Superfeline unlocked\" only if it is."
-msgstr "<strong>貓咪超人設定錯誤。</strong>貓咪超人一旦進入轉蛋池,每一抽都會改變 - 只有真的解放時才勾選「已解放貓咪超人」。"
+"<strong>Superfeline is set wrong.</strong> Once Superfeline is in your capsule pool every roll changes - pick \"Normal+ Capsules (w/ Superfeline)\" only if it is."
+msgstr "<strong>貓咪超人設定錯誤。</strong>貓咪超人一旦進入轉蛋池,每一抽都會改變 - 只有它已在池中時才選「Normal+ Capsules (w/ Superfeline)」。"
 
 #: .\templates\planner\normal.html:57
 msgid ""
@@ -2727,3 +2727,24 @@ msgstr "請為至少一台顯示中的轉蛋機輸入券數"
 #: .\views.py:993 .\views.py:1014
 msgid "unknown target"
 msgstr "未知的目標"
+
+msgid "Game version, language and theme"
+msgstr "遊戲版本、語言與主題"
+
+msgid "Settings"
+msgstr "設定"
+
+msgid "Change avatar"
+msgstr "更換頭像"
+
+msgid "Avatar"
+msgstr "頭像"
+
+msgid "Pick any cat, in any of its forms, for the picture next to your name."
+msgstr "選一隻角色、任一型態,當作名字旁的頭像。"
+
+msgid "Your avatar now"
+msgstr "目前的頭像"
+
+msgid "Search cats…"
+msgstr "搜尋角色…"

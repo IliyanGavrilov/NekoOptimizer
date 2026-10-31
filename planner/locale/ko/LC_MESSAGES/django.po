@@ -524,8 +524,8 @@ msgid ""
 msgstr "%(cell)s을(를) 뽑았나요? 바로 다음으로 시드를 옮깁니다(중복 없는 일반 뽑기. 중복 분기에는 전용 주사위가 있습니다)"
 
 #: .\engine_text.py:160 .\templates\planner\_normal_plan.html:14
-msgid "You rolled this plan: the seed jumps to just after its final pull"
-msgstr "이 플랜대로 뽑았음: 마지막 뽑기 직후로 시드를 옮깁니다"
+msgid "You rolled this plan: the seed jumps to just after its final pull and its tickets come off your stash"
+msgstr "이 플랜대로 뽑았음: 마지막 뽑기 직후로 시드를 옮기고, 쓴 티켓을 보유량에서 뺍니다"
 
 #: .\engine_text.py:161 .\templates\planner\_normal_tracks.html:11
 msgid "a planned pull"
@@ -2282,9 +2282,9 @@ msgstr ""
 
 #: .\templates\planner\normal.html:23
 msgid ""
-"The finder searches the pool your <strong>Superfeline unlocked</strong> toggle (next to the machine picks below) says you have &mdash; the pools differ, so if the search finds nothing, check that toggle first."
+"The finder searches the capsule you pick below: <strong>Normal Capsules</strong>, or <strong>Normal+ Capsules (w/ Superfeline)</strong> once Superfeline is in your pool &mdash; the pools differ, so if the search finds nothing, check that pick first."
 msgstr ""
-"검색하는 풀은 <strong>고양이 초인 해방됨</strong> 토글(아래 뽑기 선택 옆)로 정해집니다 &mdash; 풀이 다르므로 아무것도 찾지 못하면 먼저 그 토글을 확인하세요."
+"아래에서 고른 뽑기를 검색합니다: <strong>냥코 뽑기</strong>, 또는 고양이 초인이 풀에 있다면 <strong>Normal+ Capsules (w/ Superfeline)</strong> &mdash; 풀이 다르므로 아무것도 찾지 못하면 먼저 그 선택을 확인하세요."
 
 #: .\templates\planner\normal.html:26
 msgid ""
@@ -2320,9 +2320,9 @@ msgstr "그 결과와 정확히 일치하는 시드가 없습니다. 원인은 �
 
 #: .\templates\planner\normal.html:55
 msgid ""
-"<strong>Superfeline is set wrong.</strong> Once Superfeline is in your capsule pool every roll changes - tick \"Superfeline unlocked\" only if it is."
+"<strong>Superfeline is set wrong.</strong> Once Superfeline is in your capsule pool every roll changes - pick \"Normal+ Capsules (w/ Superfeline)\" only if it is."
 msgstr ""
-"<strong>고양이 초인 설정이 틀렸습니다.</strong> 고양이 초인이 뽑기 풀에 들어가면 모든 결과가 바뀝니다 - 해방했을 때만 「고양이 초인 해방됨」을 체크하세요."
+"<strong>고양이 초인 설정이 틀렸습니다.</strong> 고양이 초인이 뽑기 풀에 들어가면 모든 결과가 바뀝니다 - 풀에 있을 때만 「Normal+ Capsules (w/ Superfeline)」를 고르세요."
 
 #: .\templates\planner\normal.html:57
 msgid ""
@@ -2753,3 +2753,24 @@ msgstr "표시된 뽑기 중 하나 이상에 티켓을 넣으세요"
 #: .\views.py:993 .\views.py:1014
 msgid "unknown target"
 msgstr "알 수 없는 목표"
+
+msgid "Game version, language and theme"
+msgstr "게임 버전·언어·테마"
+
+msgid "Settings"
+msgstr "설정"
+
+msgid "Change avatar"
+msgstr "아바타 변경"
+
+msgid "Avatar"
+msgstr "아바타"
+
+msgid "Pick any cat, in any of its forms, for the picture next to your name."
+msgstr "이름 옆에 표시할 캐릭터를 원하는 형태로 고르세요."
+
+msgid "Your avatar now"
+msgstr "현재 아바타"
+
+msgid "Search cats…"
+msgstr "캐릭터 검색…"

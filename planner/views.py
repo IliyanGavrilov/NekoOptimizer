@@ -4,6 +4,7 @@ from urllib.parse import urlsplit
 
 from django.conf import settings
 from django.contrib.auth import login
+from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.views import LoginView, RedirectURLMixin
 from django.http import Http404, HttpResponse, HttpResponseBadRequest, JsonResponse
@@ -1266,6 +1267,32 @@ class Login(LoginView):
         adopt_guest(self.request, form.get_user())
 
         return super().form_valid(form)
+
+
+@login_required
+def avatar(request):
+    """Pick the header's picture: any cat, in any of its forms. The catalogue rides in the
+    page for its search; a pick posts "<unit id>/<form>"."""
+    profile = owner(request)
+    if request.method == "POST":
+        unit_id, _, form = request.POST.get("avatar", "").partition("/")
+        unit = Unit.objects.filter(unit_id=unit_id).first() if unit_id.isdigit() else None
+        if unit is None or not form.isdigit() or int(form) >= max(len(unit.forms), 1):
+            return HttpResponseBadRequest("Pick a cat and one of its forms.")
+
+        profile.avatar_unit, profile.avatar_form = unit.unit_id, int(form)
+        profile.save(update_fields=["avatar_unit", "avatar_form"])
+        return redirect("avatar")
+
+    cats = [
+        {"id": unit_id, "name": name, "forms": forms}
+        for unit_id, name, forms in Unit.objects.named()
+        .order_by("name")
+        .values_list("unit_id", "name", "forms")
+    ]
+    owned = list(profile.units("owned").values_list("unit_id", flat=True))
+
+    return render(request, "planner/avatar.html", {"cats": cats, "owned": owned})
 
 
 def _posted_from(request, code: str) -> str:

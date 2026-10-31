@@ -18,6 +18,8 @@ const BEAM: usize = 200;
 const MAX_ROLLS: i64 = 500;
 const CHEAP: &str = "Normal Cat Ticket";
 const CURRENCIES: [&str; 3] = [CHEAP, "Lucky Ticket", "Lucky Ticket G"];
+/// The page's budget field for each of CURRENCIES.
+const BUDGETS: [&str; 3] = ["normal", "lucky", "luckyg"];
 /// Most pulls in one plan step, so a long run on one machine reads as 10-pull steps.
 const STEP_PULLS: usize = 10;
 const DICE: &str = "<svg width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" aria-hidden=\"true\"><use href=\"#dice-icon\"/></svg>\n";
@@ -504,15 +506,15 @@ pub fn normal_plan(req: &Request, args: &NormalArgs, plan_args: &PlanArgs) -> St
 
     let mut out = String::from("\n<div class=\"normal-plan\">\n");
     if best.hits > 0 {
-        let mut spent: Vec<(&str, usize)> = Vec::new();
-        for currency in CURRENCIES {
+        let mut spent: Vec<(&str, &str, usize)> = Vec::new();
+        for (currency, budget) in CURRENCIES.into_iter().zip(BUDGETS) {
             let n = best
                 .steps
                 .iter()
                 .filter(|s| req.banners[s.machine].currency == currency)
                 .count();
             if n > 0 {
-                spent.push((currency, n));
+                spent.push((currency, budget, n));
             }
         }
         let _ = write!(
@@ -522,7 +524,7 @@ pub fn normal_plan(req: &Request, args: &NormalArgs, plan_args: &PlanArgs) -> St
             esc(&plan_args.label),
             req.t("for")
         );
-        for (i, (name, n)) in spent.iter().enumerate() {
+        for (i, (name, _, n)) in spent.iter().enumerate() {
             if i > 0 {
                 out.push_str(" + ");
             }
@@ -530,10 +532,17 @@ pub fn normal_plan(req: &Request, args: &NormalArgs, plan_args: &PlanArgs) -> St
         }
         let _ = write!(
             out,
-            ".\n<button type=\"button\" class=\"seek-use plan-apply\" data-seed=\"{seed_after}\" data-item=\"{}\" title=\"{}\">{}</button>\n</p>\n",
-            esc(req.name(last_item)),
-            req.t("You rolled this plan: the seed jumps to just after its final pull"),
-            req.t("I rolled it &mdash; advance my seed")
+            ".\n<button type=\"button\" class=\"seek-use plan-apply\" data-seed=\"{seed_after}\" data-item=\"{}\"",
+            esc(req.name(last_item))
+        );
+        for (_, budget, n) in &spent {
+            let _ = write!(out, " data-{budget}=\"{n}\"");
+        }
+        let _ = write!(
+            out,
+            " title=\"{}\">{}</button>\n</p>\n",
+            req.t("You rolled this plan: the seed jumps to just after its final pull and its tickets come off your stash"),
+            req.t("Apply this plan")
         );
         let _ = write!(
             out,

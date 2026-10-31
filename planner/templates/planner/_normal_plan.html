@@ -9,8 +9,8 @@ screens.{% endcomment %}{% load i18n %}
       {% translate "for" %}
       {% for s in plan.spent %}{% if not forloop.first %} + {% endif %}{{ s.text }}{% endfor %}.
       <button type="button" class="seek-use plan-apply" data-seed="{{ plan.seed_after }}"
-              data-item="{{ plan.last_item }}"
-              title="{% translate "You rolled this plan: the seed jumps to just after its final pull" %}">{% translate "I rolled it &mdash; advance my seed" %}</button>
+              data-item="{{ plan.last_item }}"{% for s in plan.spent %} data-{{ s.kind }}="{{ s.rolls }}"{% endfor %}
+              title="{% translate "You rolled this plan: the seed jumps to just after its final pull and its tickets come off your stash" %}">{% translate "Apply this plan" %}</button>
     </p>
     <div class="plan-follow">
       <div class="plan-steps">

@@ -30,7 +30,10 @@ def test_normal_page_offers_machines_finder_and_planner(client):
 
     assert "Normal Capsules" in content
     assert "Catseye Capsules" in content
-    assert "Superfeline unlocked" in content  # the profile toggle, not a machine choice
+    # The plain capsule's two flavors are machine picks of their own (normal.js keeps
+    # them exclusive), with no separate Superfeline toggle.
+    assert 'value="n"' in content and 'value="np"' in content
+    assert "Superfeline unlocked" not in content
     assert "normalPools" in content
     assert "normalPlanPanel" in content
     assert "Normal Cat Tickets" in content  # one stash feeds normal/catfruit/catseye
@@ -119,8 +122,11 @@ def test_normal_plan_lights_a_path(client):
     content = response.content.decode()
 
     assert f"<strong>{expected.hits}</strong> Dark Catseyes" in content
-    assert "I rolled it" in content  # the apply button carries the end state
+    assert "Apply this plan" in content  # the apply button carries the end state
     assert f'data-seed="{expected.seed_after}"' in content
+    # ...and what it spends, keyed by the budget field it comes off.
+    assert f'data-normal="{len(expected.steps)}"' in content
+    assert "data-lucky=" not in content
     assert 'class="item dark-catseye got"' in content  # the collected dark is gilded
 
 

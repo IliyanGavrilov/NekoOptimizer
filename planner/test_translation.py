@@ -112,7 +112,7 @@ def test_the_normal_capsules_render_alike_in_every_language(client, engine, cata
     _compare_normal(client, engine, "tracks", _tracks(DARK_SEED, ["n", "ce", "lt"]))
     plan = _plan(DARK_SEED, ["ce", "n", "lt", "ltg"], "dark", {"normal": 20, "lucky": 3})
     html = _compare_normal(client, engine, "plan", plan)
-    assert "I rolled it" not in html
+    assert "Apply this plan" not in html
 
 
 def test_normal_items_take_each_versions_own_names():

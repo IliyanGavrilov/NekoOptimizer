@@ -690,7 +690,7 @@ if (picker) {
   if (stored.ticketValue != null) ticketValueEl.value = stored.ticketValue;
   if (stored.platCap != null) platCapEl.value = stored.platCap;
   if (stored.legendCap != null) legendCapEl.value = stored.legendCap;
-  if (stored.explore != null) exploreEl.checked = stored.explore; // else keep server default (on)
+  if (stored.explore != null) exploreEl.checked = stored.explore; // else keep server default (off)
   if (stored.horizon != null) horizonEl.value = stored.horizon;
   if (fromLink) seedEl.value = linkParams.get("seed");
   // The Rolls display controls (rolls-to-show / details) keep their HTML defaults
@@ -1925,15 +1925,60 @@ document.querySelectorAll("select[data-autosubmit]").forEach((select) => {
   applyTheme();
 }
 
-// ---- Account menu: folds away on a click anywhere else, or Escape ------
-const accountMenu = document.querySelector(".account-menu");
-if (accountMenu) {
-  document.addEventListener("click", (e) => {
-    if (!accountMenu.contains(e.target)) accountMenu.open = false;
-  });
-  document.addEventListener("keydown", (e) => {
-    if (e.key === "Escape") accountMenu.open = false;
-  });
+// ---- Header menus (settings, account): fold away on a click elsewhere, or Escape --
+const headerMenus = [...document.querySelectorAll(".header-menu")];
+document.addEventListener("click", (e) => {
+  for (const menu of headerMenus) if (!menu.contains(e.target)) menu.open = false;
+});
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape") for (const menu of headerMenus) menu.open = false;
+});
+
+// ---- Avatar picker: search every cat, pick one of its forms ------------------
+// An empty search lists your own cats (or the game's own order when you own none); a
+// search matches any form's name. Each form is a submit button posting "<unit id>/<form>".
+const avatarPicker = document.getElementById("avatarPicker");
+if (avatarPicker) {
+  const AVATAR_LIMIT = 60;
+  const cats = JSON.parse(document.getElementById("avatarCats").textContent);
+  const owned = new Set(JSON.parse(document.getElementById("avatarOwned").textContent));
+  const searchEl = document.getElementById("avatarSearch");
+  const grid = document.getElementById("avatarGrid");
+  const hintEl = document.getElementById("avatarHint");
+  const esc = (text) => text.replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
+  const formsOf = (cat) => (cat.forms.length ? cat.forms : [cat.name]);
+  const card = (cat) =>
+    `<div class="avatar-cat"><span class="avatar-name">${esc(cat.name)}</span><span class="avatar-forms">` +
+    formsOf(cat)
+      .map(
+        (form, i) =>
+          `<button type="submit" name="avatar" value="${cat.id}/${i}" class="avatar-pick" title="${esc(form)}">` +
+          `<img src="${ICON_BASE}/${cat.id}/${i}.png" alt="${esc(form)}" loading="lazy" width="104" height="79"></button>`,
+      )
+      .join("") +
+    "</span></div>";
+  const render = () => {
+    const query = searchEl.value.trim().toLowerCase();
+    let shown = query
+      ? cats.filter((cat) => formsOf(cat).concat(cat.name).some((n) => n.toLowerCase().includes(query)))
+      : cats.filter((cat) => owned.has(cat.id));
+    if (!query && !shown.length) shown = [...cats].sort((a, b) => a.id - b.id);
+    const more = shown.length - AVATAR_LIMIT;
+    grid.innerHTML = shown.slice(0, AVATAR_LIMIT).map(card).join("");
+    hintEl.textContent = !shown.length
+      ? gettext("No cats match.")
+      : more > 0
+        ? interpolate(gettext("%(more)s more - search to narrow it down."), { more }, true)
+        : query
+          ? ""
+          : owned.size
+            ? gettext("Your cats - search for any other.")
+            : "";
+  };
+  // A form with no icon (not released yet) has nothing to pick: hide its button.
+  grid.addEventListener("error", (e) => e.target.closest(".avatar-pick")?.remove(), true);
+  searchEl.addEventListener("input", render);
+  render();
 }
 
 // ---- Cat popup: a unit's forms (icons), stats + a link to its wiki page ------

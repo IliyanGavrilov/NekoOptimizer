@@ -64,3 +64,30 @@ def test_an_accounts_first_change_is_saved_to_the_account(client):
     client.login(username="neko", password=PASSWORD)
     client.post("/region/", {"region": "jp"})
     assert Profile.objects.get().user.username == "neko"
+
+
+@pytest.fixture
+def logged_in(client):
+    User.objects.create_user("neko", password=PASSWORD)
+    client.login(username="neko", password=PASSWORD)
+    return client
+
+
+def test_an_avatar_pick_shows_that_form_in_the_header(logged_in, settings):
+    Unit.objects.create(unit_id=2, name="Axe Cat", forms=["Axe Cat", "Brave Cat", "Sexy Legs"])
+    logged_in.post("/accounts/avatar/", {"avatar": "2/2"})
+    page = logged_in.get("/").content.decode()
+    assert f"{settings.ICON_BASE}/2/2.png" in page
+
+
+def test_an_avatar_pick_must_name_a_form_the_cat_has(logged_in):
+    Unit.objects.create(unit_id=2, name="Axe Cat", forms=["Axe Cat", "Brave Cat"])
+    assert logged_in.post("/accounts/avatar/", {"avatar": "2/2"}).status_code == 400
+    assert logged_in.post("/accounts/avatar/", {"avatar": "999/0"}).status_code == 400
+    assert Profile.objects.get().avatar_unit is None
+
+
+def test_a_guest_is_sent_to_log_in_before_picking_an_avatar(client):
+    response = client.get("/accounts/avatar/")
+    assert response.status_code == 302
+    assert response["Location"].startswith("/accounts/login/")
