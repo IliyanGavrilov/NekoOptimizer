@@ -468,9 +468,3 @@ msgstr "まだ完全一致なし — 最初の1回が引き直しだった場合
 #: static/planner/app.js
 msgid "See it in the tier list"
 msgstr "ティア表で見る"
-
-msgid "%(more)s more - search to narrow it down."
-msgstr "ほか%(more)s体 - 検索で絞り込めます。"
-
-msgid "Your cats - search for any other."
-msgstr "持っているキャラです。ほかのキャラは検索してください。"

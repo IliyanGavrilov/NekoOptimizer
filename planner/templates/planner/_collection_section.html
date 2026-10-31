@@ -1,4 +1,4 @@
-{% load i18n %}{# One collection card: a rarity bin or a gacha set, with bulk own/wishlist buttons. #}
+{% load i18n %}{# One collection card: a rarity bin, a gacha set or the A-Z list (one row with no rarity), with bulk own/wishlist buttons. #}
 <section class="collection-section" data-label="{{ label }}">
   <h3>
     <button type="button" class="section-toggle" aria-expanded="true" title="{% translate "Collapse / expand" %}" aria-label="{% translate "Collapse or expand this section" %}">&#9662;</button>
@@ -16,7 +16,7 @@
   {% if note %}<p class="muted section-note">{% translate note %}</p>{% endif %}
   {% for rarity, units in rarities %}
     <div class="rarity-row" data-rarity="{{ rarity }}">
-      {% if not is_rarity %}<span class="rarity" data-rarity="{{ rarity }}">{% translate rarity %}</span>{% endif %}
+      {% if not is_rarity and rarity %}<span class="rarity" data-rarity="{{ rarity }}">{% translate rarity %}</span>{% endif %}
       <div class="chips">
         {% for unit in units %}{{ unit.chip }}{% endfor %}
       </div>

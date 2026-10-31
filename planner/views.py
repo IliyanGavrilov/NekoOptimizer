@@ -49,6 +49,7 @@ from planner.seo import (
     tier_set_meta,
 )
 from planner.services import (
+    ALPHA_LABEL,
     CANNON_ADDONS,
     GUIDE_PAGE_CELLS,
     NORMAL_DEFAULT_KEYS,
@@ -1109,18 +1110,31 @@ def collection(request):
         # All views share the section partial, so a rarity bin becomes a one-row section.
         "dict_sections": [(r, "", [(r, bin)]) for r, bin in dictionary_sections(units, guide)],
         "rarity_sections": [(r, "", [(r, bin)]) for r, bin in collection_sections(units)],
+        "set_sections": [
+            (label, notes.get(label, ""), rarities) for label, rarities in set_sections(units)
+        ],
+        # One row with no rarity; app.js re-sorts it by the form the picker shows.
+        "alpha_sections": [(ALPHA_LABEL, "", [("", sorted(units, key=lambda unit: unit.name))])]
+        if units
+        else [],
+        **_cat_filters(units),
+    }
+
+    return render(request, "planner/collection.html", context)
+
+
+def _cat_filters(units) -> dict:
+    """The context _cat_filters.html renders: the rarities present, the facet pills and
+    the per-unit facet data they test."""
+    return {
+        "filter_rarities": [rarity for rarity, _ in collection_sections(units)],
         "facets": collection_facets(),
         "filter_targets": TARGET_LABELS,
         "filter_attack": ATTACK_LABELS,
         "filter_abilities": ABILITY_LABELS,
         "filter_immune": IMMUNITY_LABELS,
         "combo_groups": combo_filter_groups(),
-        "set_sections": [
-            (label, notes.get(label, ""), rarities) for label, rarities in set_sections(units)
-        ],
     }
-
-    return render(request, "planner/collection.html", context)
 
 
 def tier_list(request, category="", name=""):
@@ -1286,7 +1300,7 @@ class Login(LoginView):
 @login_required
 def avatar(request):
     """Pick the header's picture: any cat, in any of its forms. The catalogue rides in the
-    page for its search; a pick posts "<unit id>/<form>"."""
+    page, A-Z, for its search and the Collection's filters; a pick posts "<unit id>/<form>"."""
     profile = owner(request)
     if request.method == "POST":
         unit_id, _, form = request.POST.get("avatar", "").partition("/")
@@ -1298,15 +1312,21 @@ def avatar(request):
         profile.save(update_fields=["avatar_unit", "avatar_form"])
         return redirect("avatar")
 
+    units = list(Unit.objects.named().order_by("name"))
+    owned, wanted = profile.marks()
     cats = [
-        {"id": unit_id, "name": name, "forms": forms}
-        for unit_id, name, forms in Unit.objects.named()
-        .order_by("name")
-        .values_list("unit_id", "name", "forms")
+        {
+            "id": unit.unit_id,
+            "name": unit.name,
+            "forms": unit.forms,
+            "rarity": unit.rarity or "Unknown",
+            "owned": unit.pk in owned,
+            "wanted": unit.pk in wanted,
+        }
+        for unit in units
     ]
-    owned = list(profile.units("owned").values_list("unit_id", flat=True))
 
-    return render(request, "planner/avatar.html", {"cats": cats, "owned": owned})
+    return render(request, "planner/avatar.html", {"cats": cats, **_cat_filters(units)})
 
 
 def _posted_from(request, code: str) -> str:

@@ -11,6 +11,7 @@
       <button type="button" class="view-btn is-active" data-view="dictionary" aria-selected="true" title="{% translate "The in-game Cat Guide arrangement" %}">{% translate "Dictionary" %}</button>
       <button type="button" class="view-btn" data-view="rarity" aria-selected="false">{% translate "By rarity" %}</button>
       <button type="button" class="view-btn" data-view="sets" aria-selected="false">{% translate "By gacha set" %}</button>
+      <button type="button" class="view-btn" data-view="alpha" aria-selected="false" title="{% translate "Every cat in alphabetical order of the form shown" %}">{% translate "A–Z" %}</button>
     </div>
     <input type="search" id="collectionSearch" placeholder="{% translate "Search cats & sets…" %}">
     <label class="ctrl" title="{% translate "Show each cat as its name, its form icon, or both" %}"><select id="collectionDisplay">
@@ -35,60 +36,7 @@
     </span>
   </div>
   <p id="collectionIoMsg" class="io-msg" role="status" aria-live="polite" hidden></p>
-  <div class="status-filter" id="statusFilter" role="group" aria-label="{% translate "Filter by ownership" %}">
-    <button type="button" data-status="" aria-pressed="true">{% translate "All" %}</button>
-    <button type="button" data-status="owned" aria-pressed="false">{% translate "Owned" %}</button>
-    <button type="button" data-status="wishlist" aria-pressed="false">{% translate "Wishlisted" %}</button>
-  </div>
-  <div class="rarity-filter" id="rarityFilter" role="group" aria-label="{% translate "Filter by rarity" %}">
-    <button type="button" data-rarity="" aria-pressed="true">{% translate "All" %}</button>
-    {% for label, note, rarities in rarity_sections %}
-      <button type="button" data-rarity="{{ label }}" aria-pressed="false">{% translate label %}</button>
-    {% endfor %}
-  </div>
-
-  <details class="facet-panel" id="facetPanel">
-    <summary>{% translate "Filters" %} <span id="facetCount" class="muted"></span></summary>
-    <div class="facet-controls">
-      <div class="view-toggle" id="facetMode" role="group" aria-label="{% translate "Combine selected filters with" %}">
-        <button type="button" class="view-btn is-active" data-mode="and" title="{% translate "Show cats matching every selected filter" %}">{% translate "Match all" %}</button>
-        <button type="button" class="view-btn" data-mode="or" title="{% translate "Show cats matching any selected filter" %}">{% translate "Match any" %}</button>
-      </div>
-      <label class="ctrl">{% translate "In a combo of:" %}
-        <select id="comboFilter">
-          <option value="">&mdash;</option>
-          {% for group, effects in combo_groups %}
-            <optgroup label="{{ group }}">
-              {% for eid, name in effects %}<option value="{{ eid }}">{{ name }}</option>{% endfor %}
-            </optgroup>
-          {% endfor %}
-        </select>
-      </label>
-      <button type="button" class="io-btn" id="facetClear">{% translate "Clear" %}</button>
-    </div>
-    <div class="facet-filter" data-group="t" role="group" aria-label="{% translate "Filter by targeted trait" %}">
-      <span class="facet-label">{% translate "Targets" %}</span>
-      {% for label in filter_targets %}<button type="button" data-value="{{ label }}" aria-pressed="false">{% translate label %}</button>{% endfor %}
-    </div>
-    <div class="facet-filter" data-group="a" role="group" aria-label="{% translate "Filter by attack type" %}">
-      <span class="facet-label">{% translate "Attack" %}</span>
-      {% for key, label in filter_attack %}<button type="button" data-value="{{ key }}" aria-pressed="false">{% translate label %}</button>{% endfor %}
-    </div>
-    <div class="facet-filter" data-group="a" role="group" aria-label="{% translate "Filter by ability" %}">
-      <span class="facet-label">{% translate "Abilities" %}</span>
-      {% for key, label in filter_abilities %}<button type="button" data-value="{{ key }}" aria-pressed="false">{% translate label %}</button>{% endfor %}
-    </div>
-    <div class="facet-filter" data-group="i" role="group" aria-label="{% translate "Filter by immunity" %}">
-      <span class="facet-label">{% translate "Immune to" %}</span>
-      {% for label in filter_immune %}<button type="button" data-value="{{ label }}" aria-pressed="false">{% translate label %}</button>{% endfor %}
-    </div>
-    <div class="facet-filter" data-group="k" role="group" aria-label="{% translate "Filter by talents" %}">
-      <span class="facet-label">{% translate "Talents" %}</span>
-      <button type="button" data-value="n" aria-pressed="false">{% translate "Has Talents" %}</button>
-      <button type="button" data-value="u" aria-pressed="false">{% translate "Has Ultra Talents" %}</button>
-    </div>
-  </details>
-  {{ facets|json_script:"catFacets" }}
+  {% include "planner/_cat_filters.html" %}
 
   <div class="cat-browser" id="collectionBrowser"
        data-toggle-url="{% url 'collection_toggle' %}" data-bulk-url="{% url 'collection_bulk' %}"
@@ -107,6 +55,11 @@
     </div>
     <div class="collection-view" data-view="sets" hidden>
       {% for label, note, rarities in set_sections %}
+        {% include "planner/_collection_section.html" with is_rarity=False %}
+      {% endfor %}
+    </div>
+    <div class="collection-view" data-view="alpha" hidden>
+      {% for label, note, rarities in alpha_sections %}
         {% include "planner/_collection_section.html" with is_rarity=False %}
       {% endfor %}
     </div>

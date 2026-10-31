@@ -505,6 +505,10 @@ def _by_rarity(cats: Iterable[Cat], reverse: bool = False) -> list[tuple[str, li
     return ordered
 
 
+# The Collection's alphabetical view: one section of every cat.
+ALPHA_LABEL = gettext_noop("A–Z")
+
+
 def collection_sections(units: Iterable[Unit]) -> list[tuple[str, list[Unit]]]:
     """Units binned by rarity in game order (Normal first, Legend Rare last), keeping
     the given order within each bin; blank rarities fall under 'Unknown', always last."""

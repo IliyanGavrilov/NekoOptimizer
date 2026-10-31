@@ -466,9 +466,3 @@ msgstr "還沒有完全符合 — 正在檢查第一抽是否為重抽(第3/3步
 #: static/planner/app.js
 msgid "See it in the tier list"
 msgstr "在強度排行中查看"
-
-msgid "%(more)s more - search to narrow it down."
-msgstr "還有 %(more)s 隻 - 搜尋來縮小範圍。"
-
-msgid "Your cats - search for any other."
-msgstr "你擁有的角色 - 其他角色請用搜尋。"

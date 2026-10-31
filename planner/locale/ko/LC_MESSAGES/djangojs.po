@@ -469,9 +469,3 @@ msgstr "아직 정확히 일치하는 것 없음 — 첫 뽑기가 재추첨이�
 #: static/planner/app.js
 msgid "See it in the tier list"
 msgstr "티어표에서 보기"
-
-msgid "%(more)s more - search to narrow it down."
-msgstr "외 %(more)s마리 - 검색으로 좁혀 보세요."
-
-msgid "Your cats - search for any other."
-msgstr "보유한 캐릭터입니다. 다른 캐릭터는 검색하세요."
