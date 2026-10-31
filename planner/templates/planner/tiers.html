@@ -1,33 +1,36 @@
 {% extends "planner/base.html" %}
+{% load i18n %}
 
 {% block content %}
-  <h1>{% if label %}{{ label }}{% else %}Uber &amp; Legend{% endif %} Tier List</h1>
+  <h1>{% if label %}{% blocktranslate %}{{ label }} Tier List{% endblocktranslate %}{% else %}{% translate "Uber & Legend Tier List" %}{% endif %}</h1>
   <p class="muted">
-    {% if label %}The {{ label }} ranking{% else %}The cumulative Uber &amp; Legend Rare ranking{% endif %} from
+    {% if label %}{% blocktranslate trimmed %}The {{ label }} ranking from
     <a href="{{ source }}" target="_blank" rel="noopener">The Battle Cats Tier List</a>,
-    matched to the catalogue (fetched {{ fetched }}).
-    {% if not label %}Collab and limited units are left out; it ranks the standard permanent pool.{% endif %}
-    <strong>UF</strong> ranks a unit's Ultra Form,
+    matched to the catalogue (fetched {{ fetched }}).{% endblocktranslate %}{% else %}{% blocktranslate trimmed %}The cumulative Uber &amp; Legend Rare ranking from
+    <a href="{{ source }}" target="_blank" rel="noopener">The Battle Cats Tier List</a>,
+    matched to the catalogue (fetched {{ fetched }}).{% endblocktranslate %}
+    {% translate "Collab and limited units are left out; it ranks the standard permanent pool." %}{% endif %}
+    {% blocktranslate trimmed %}<strong>UF</strong> ranks a unit's Ultra Form,
     <strong>UT</strong> its Ultra Talents; a dimmed cat ranks higher up through one of those.
-    Click a cat for its forms and wiki page.
+    Click a cat for its forms and wiki page.{% endblocktranslate %}
   </p>
 
   <div class="tier-controls">
-    <label class="ctrl" title="Pick which of the site's tier lists to show"><select id="tierList" data-base="{% url 'tier_list' %}">
-        <option value=""{% if not slug %} selected{% endif %}>Cumulative &mdash; Uber &amp; Legend</option>
+    <label class="ctrl" title="{% translate "Pick which of the site's tier lists to show" %}"><select id="tierList" data-base="{% url 'tier_list' %}">
+        <option value=""{% if not slug %} selected{% endif %}>{% translate "Cumulative — Uber & Legend" %}</option>
         {% for category, entries in index %}
-          <optgroup label="{{ category }}">
+          <optgroup label="{% translate category %}">
             {% for entry in entries %}
               <option value="{{ entry.slug }}"{% if entry.slug == slug %} selected{% endif %}>{{ entry.label }}</option>
             {% endfor %}
           </optgroup>
         {% endfor %}
       </select></label>
-    <label class="ctrl" title="Show each cat as this form - name and icon; a unit without that form shows the last one it has"><select id="tierForm">
-        <option value="0">Base</option>
-        <option value="1">Evolved</option>
-        <option value="2">True</option>
-        <option value="3">Ultra</option>
+    <label class="ctrl" title="{% translate "Show each cat as this form - name and icon; a unit without that form shows the last one it has" %}"><select id="tierForm">
+        <option value="0">{% translate "Base" %}</option>
+        <option value="1">{% translate "Evolved" %}</option>
+        <option value="2">{% translate "True" %}</option>
+        <option value="3">{% translate "Ultra" %}</option>
       </select></label>
   </div>
 
@@ -53,19 +56,19 @@
 
   {% if not label %}
     <p class="muted tier-more">
-      Want the collab and limited units too?
+      {% translate "Want the collab and limited units too?" %}
       <a href="https://drive.google.com/drive/folders/12Iu_dv8AZWfU3ekRoA_km0dbJA9klNdC"
-         target="_blank" rel="noopener">Full Uber &amp; Legend reference, with collabs and limiteds &#8599;</a>
+         target="_blank" rel="noopener">{% translate "Full Uber & Legend reference, with collabs and limiteds" %} &#8599;</a>
     </p>
   {% endif %}
 
-  <nav class="tier-index" aria-label="Every tier list">
-    <h2>Every tier list</h2>
+  <nav class="tier-index" aria-label="{% translate "Every tier list" %}">
+    <h2>{% translate "Every tier list" %}</h2>
     <ul class="tier-index-links">
-      <li><a href="{% url 'tier_list' %}"{% if not slug %} aria-current="page"{% endif %}>Cumulative &mdash; Uber &amp; Legend</a></li>
+      <li><a href="{% url 'tier_list' %}"{% if not slug %} aria-current="page"{% endif %}>{% translate "Cumulative — Uber & Legend" %}</a></li>
     </ul>
     {% for category, entries in index %}
-      <h3 class="about-group">{{ category }}</h3>
+      <h3 class="about-group">{% translate category %}</h3>
       <ul class="tier-index-links">
         {% for entry in entries %}
           <li><a href="{% url 'tier_list' %}{{ entry.slug }}/"{% if entry.slug == slug %} aria-current="page"{% endif %}>{{ entry.label }}</a></li>

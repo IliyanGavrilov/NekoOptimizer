@@ -1,0 +1,464 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-10-31 00:16+0200\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+
+#: .\static\planner\app.js:87 .\static\planner\app.js:119
+msgid "Saved ✓"
+msgstr "已儲存 ✓"
+
+#: .\static\planner\app.js:91
+msgid "Not saved yet - retrying…"
+msgstr "尚未儲存 - 重試中…"
+
+#: .\static\planner\app.js:104
+msgid "link copied ✓ - paste it somewhere safe"
+msgstr "已複製連結 ✓ - 請貼到安全的地方"
+
+#: .\static\planner\app.js:147
+msgid "Saving…"
+msgstr "儲存中…"
+
+#: .\static\planner\app.js:246
+msgid "you are here"
+msgstr "目前位置"
+
+#: .\static\planner\app.js:438
+msgid "Couldn't load past banners - close and reopen to retry."
+msgstr "無法載入過去的轉蛋 - 關閉後重新打開即可重試。"
+
+#: .\static\planner\app.js:473
+#, javascript-format
+msgid "Rolling %s banner."
+msgid_plural "Rolling %s banners."
+msgstr[0] "抽%s個轉蛋。"
+
+#: .\static\planner\app.js:474
+msgid "No banners selected."
+msgstr "尚未選擇轉蛋。"
+
+#: .\static\planner\app.js:582
+msgid ""
+"That Platinum/Legend Capsules run wasn't live during the selected banners' time. Pick the run that overlaps them, or clear the selection first."
+msgstr "那個白金/傳說轉蛋的期次不在所選轉蛋的期間內。請選擇期間重疊的那一期,或先清除選擇。"
+
+#: .\static\planner\app.js:877
+msgid "Link copied ✓"
+msgstr "已複製連結 ✓"
+
+#: .\static\planner\app.js:877
+msgid "Link is in the address bar"
+msgstr "連結在網址列中"
+
+#: .\static\planner\app.js:879
+msgid "Copy link"
+msgstr "複製連結"
+
+#: .\static\planner\app.js:940
+msgid "Couldn't work this plan out."
+msgstr "無法算出這個計畫。"
+
+#: .\static\planner\app.js:945
+msgid "No plan for these cats within your resources."
+msgstr "以目前資源,這些角色沒有可行的計畫。"
+
+#: .\static\planner\app.js:991
+msgid "Applied ✓"
+msgstr "已套用 ✓"
+
+#: .\static\planner\app.js:1217
+#, javascript-format
+msgid "Back to seed %s"
+msgstr "回到種子碼%s"
+
+#: .\static\planner\app.js:1307
+msgid "Enter a seed to roll."
+msgstr "請輸入種子碼。"
+
+#: .\static\planner\app.js:1309
+msgid "Select at least one banner to roll."
+msgstr "請至少選擇一個轉蛋。"
+
+#: .\static\planner\app.js:1314
+msgid "Pick a target cat, or tick \"search my wishlist\"."
+msgstr "請選擇目標角色,或勾選「同時搜尋願望清單」。"
+
+#: .\static\planner\app.js:1337
+msgid "Check the form and try again."
+msgstr "請檢查表單後再試一次。"
+
+#: .\static\planner\app.js:1545 .\static\planner\app.js:1552
+msgid "%(owned)s / %(total)s owned"
+msgstr "已擁有 %(owned)s / %(total)s"
+
+#: .\static\planner\app.js:1554
+#, javascript-format
+msgid "%s wishlisted"
+msgstr "願望清單%s"
+
+#: .\static\planner\app.js:1641
+msgid ""
+"Replace your collection with this file? Your current owned and wishlist marks will be overwritten."
+msgstr "要用這個檔案取代你的收藏嗎?目前的擁有與願望清單標記會被覆蓋。"
+
+#: .\static\planner\app.js:1652
+msgid "Import failed — that isn't a Neko collection file."
+msgstr "匯入失敗 — 這不是Neko Optimizer的收藏檔案。"
+
+#: .\static\planner\app.js:1654
+msgid "Imported %(owned)s owned, %(wanted)s wishlisted"
+msgstr "已匯入擁有%(owned)s隻、願望清單%(wanted)s隻"
+
+#: .\static\planner\app.js:1656
+#, javascript-format
+msgid ", %s not in the catalogue"
+msgstr ",%s隻不在角色資料中"
+
+#: .\static\planner\app.js:1658
+msgid "Reloading…"
+msgstr "重新載入中…"
+
+#: .\static\planner\app.js:1937
+msgid "HP"
+msgstr "體力"
+
+#: .\static\planner\app.js:1938
+msgid "Attack"
+msgstr "攻擊"
+
+#: .\static\planner\app.js:1939
+msgid "DPS"
+msgstr "DPS"
+
+#: .\static\planner\app.js:1940
+msgid "Attack rate"
+msgstr "攻擊頻率"
+
+#: .\static\planner\app.js:1941
+msgid "Range"
+msgstr "射程"
+
+#: .\static\planner\app.js:1942
+msgid "Attack type"
+msgstr "攻擊類型"
+
+#: .\static\planner\app.js:1942
+msgid "Area"
+msgstr "範圍攻擊"
+
+#: .\static\planner\app.js:1942
+msgid "Single"
+msgstr "單體攻擊"
+
+#: .\static\planner\app.js:1943
+msgid "Recharge"
+msgstr "再生產"
+
+#: .\static\planner\app.js:1944
+msgid "Speed"
+msgstr "移動速度"
+
+#: .\static\planner\app.js:1945
+msgid "Knockbacks"
+msgstr "擊退數"
+
+#: .\static\planner\app.js:1946
+msgid "Cost"
+msgstr "生產費用"
+
+#: .\static\planner\app.js:1952
+#, javascript-format
+msgid "Immune: %s"
+msgstr "無效:%s"
+
+#: .\static\planner\app.js:1954
+#, javascript-format
+msgid "Lv %s stats with max treasures; cost in chapter 2."
+msgstr "Lv%s、寶物全滿時的能力值;生產費用為第2章的數值。"
+
+#: .\static\planner\app.js:1970 .\static\planner\app.js:1971
+#, javascript-format
+msgid "Tier %s"
+msgstr "等級 %s"
+
+#: .\static\planner\app.js:2089
+msgid "Already on your list"
+msgstr "已在清單中"
+
+#: .\static\planner\guideimport.js:21
+msgid "Not imported:"
+msgstr "未匯入:"
+
+#: .\static\planner\guideimport.js:75
+msgid "None of these shows a full Cat Guide page - is it the right screen?"
+msgstr "沒有任何一張是完整的貓咪圖鑑頁面 - 是正確的畫面嗎?"
+
+#: .\static\planner\guideimport.js:77
+msgid "Take every screenshot on the same device, in the same orientation."
+msgstr "請在同一台裝置、同一方向拍下所有截圖。"
+
+#: .\static\planner\guideimport.js:98
+#, javascript-format
+msgid "Reading %s screenshot…"
+msgid_plural "Reading %s screenshots…"
+msgstr[0] "正在讀取%s張截圖…"
+
+#: .\static\planner\guideimport.js:99
+msgid "Couldn't open those images."
+msgstr "無法開啟這些圖片。"
+
+#: .\static\planner\guideimport.js:103
+msgid "Those screenshots couldn't be read."
+msgstr "無法讀取這些截圖。"
+
+#: .\static\planner\guideimport.js:109
+msgid ""
+"The Cat Guide shows %(owned)s of %(total)s cats owned. Mark exactly those as owned? Your wishlist stays as it is."
+msgstr "貓咪圖鑑顯示%(total)s隻中擁有%(owned)s隻。要把剛好這些標記為已擁有嗎?願望清單不會改變。"
+
+#: .\static\planner\guideimport.js:114
+msgid "Import cancelled - nothing changed."
+msgstr "已取消匯入 - 沒有任何變更。"
+
+#: .\static\planner\guideimport.js:118
+#, javascript-format
+msgid "Marked %s cats owned from your Cat Guide. Reloading…"
+msgstr "已從貓咪圖鑑標記%s隻為已擁有。重新載入中…"
+
+#: .\static\planner\normal.js:138
+msgid "Couldn't load the tracks - is the server still running?"
+msgstr "無法載入序列 - 伺服器還在運作嗎?"
+
+#: .\static\planner\normal.js:310
+msgid "No items match."
+msgstr "沒有符合的道具。"
+
+#: .\static\planner\normal.js:423 .\static\planner\seek.js:209
+msgid "Searching the seed space…"
+msgstr "正在搜尋種子碼…"
+
+#: .\static\planner\normal.js:424 .\static\planner\seek.js:210
+msgid ""
+"No clean match — retrying your first pull as a dupe reroll (below the shadow slot)…"
+msgstr "沒有完全符合 — 把第一抽當作重複重抽再試一次(在影子位置之下)…"
+
+#: .\static\planner\normal.js:425 .\static\planner\seek.js:211
+msgid ""
+"No clean match — retrying your first pull as a dupe reroll (at or above the shadow slot)…"
+msgstr "沒有完全符合 — 把第一抽當作重複重抽再試一次(在影子位置或之上)…"
+
+#: .\static\planner\normal.js:429
+#, javascript-format
+msgid "Your normal seed is now %s"
+msgstr "你的貓咪轉蛋種子碼現在是%s"
+
+#: .\static\planner\normal.js:431
+msgid "Show my upcoming rolls"
+msgstr "顯示我接下來的抽卡結果"
+
+#: .\static\planner\normal.js:436
+msgid ""
+"your first entered pull arrived as a dupe reroll, so the replay shows it as its cell's branch value"
+msgstr "你輸入的第一抽是重複重抽,所以重播會把它顯示為該格的分支結果"
+
+#: .\static\planner\normal.js:447 .\static\planner\seek.js:278
+#, javascript-format
+msgid "Search failed: %s"
+msgstr "搜尋失敗:%s"
+
+#: .\static\planner\normal.js:463
+#, javascript-format
+msgid ""
+"%s seeds match. Roll a few more items, add them, and search again to narrow it down."
+msgstr "有%s組種子碼相符。再抽幾次、加入道具,然後重新搜尋來縮小範圍。"
+
+#: .\static\planner\seek.js:80
+msgid "Couldn't load that banner's cats - is the server still running?"
+msgstr "無法載入那個轉蛋的角色 - 伺服器還在運作嗎?"
+
+#: .\static\planner\seek.js:101
+msgid "No cats match."
+msgstr "沒有符合的角色。"
+
+#: .\static\planner\seek.js:220
+msgid ""
+"your first entered pull arrived as a dupe reroll, so the replay shows it in the R column"
+msgstr "你輸入的第一抽是稀有重複重抽,所以重播會把它顯示在R欄"
+
+#: .\static\planner\seek.js:222
+#, javascript-format
+msgid "Seed before those pulls: %s"
+msgstr "這些抽之前的種子碼:%s"
+
+#: .\static\planner\seek.js:224
+#, javascript-format
+msgid "Your seed is now %s"
+msgstr "你的種子碼現在是%s"
+
+#: .\static\planner\seek.js:225
+msgid "Open the planner at your position"
+msgstr "在目前位置打開規劃工具"
+
+#: .\static\planner\seek.js:255
+msgid ""
+"Saved as your seed ✓ - the planner opens on it from now on. Back it up too: write down %(seed)s, or %(copy)s."
+msgstr "已存為你的種子碼 ✓ - 之後規劃工具都會從這裡打開。也請備份:記下%(seed)s,或%(copy)s。"
+
+#: .\static\planner\seek.js:260
+msgid ""
+"Couldn't save it automatically - write down %(seed)s and open the planner with the link above; it saves from there."
+msgstr "無法自動儲存 - 請記下%(seed)s,並用上方連結打開規劃工具;會在那裡儲存。"
+
+#: .\static\planner\seek.js:269
+msgid "link copied ✓"
+msgstr "已複製連結 ✓"
+
+#: .\static\planner\seek.js:294
+#, javascript-format
+msgid ""
+"%s seeds match. Roll a few more cats, add them, and search again to narrow it down."
+msgstr "有%s組種子碼相符。再抽幾隻、加入角色,然後重新搜尋來縮小範圍。"
+
+#: .\static\planner\seek.js:339
+msgid ""
+"Pull %(n)s is %(cat)s. If that was the <strong>guaranteed Uber</strong> of an 11-draw or a step-up, remove it and everything after it - it isn't part of the normal roll sequence."
+msgstr ""
+"第%(n)s抽是%(cat)s。如果那是11連抽或分階段連抽的<strong>確定超激</strong>,請刪掉它以及它之後的所有抽數 - 它不屬於一般序列。"
+
+#: .\static\planner\seek.js:340
+msgid ""
+"Pull %(n)s is %(cat)s. If that was the <strong>guaranteed Uber</strong> of an 11-draw, remove it and everything after it - it isn't part of the normal roll sequence."
+msgstr ""
+"第%(n)s抽是%(cat)s。如果那是11連抽的<strong>確定超激</strong>,請刪掉它以及它之後的所有抽數 - 它不屬於一般序列。"
+
+#: .\static\planner\seek.js:348
+msgid ""
+"Pulls %(a)s and %(b)s are both %(cat)s. The game never deals the same Rare cat twice in a row (it rerolls the repeat), so one of them is probably mis-picked or out of order."
+msgstr "第%(a)s抽與第%(b)s抽都是%(cat)s。遊戲不會連續給同一隻稀有角色(重複會重抽),所以其中一個很可能選錯或順序不對。"
+
+#: .\static\planner\seek.js:366
+msgid "Quick check before searching:"
+msgstr "搜尋前快速檢查:"
+
+#: .\static\planner\seek.js:369
+msgid "Search anyway"
+msgstr "仍要搜尋"
+
+#: .\static\planner\seek.js:373
+msgid "Find my seed"
+msgstr "找出我的種子碼"
+
+#: .\static\planner\seek.js:380
+msgid "Fill your pulls in order, top to bottom - no gaps."
+msgstr "請從上到下依序填入,不要留空。"
+
+#: .\static\planner\seek.js:384
+#, javascript-format
+msgid "Enter at least %s pulls (around 10 works best)."
+msgstr "請至少輸入%s抽(10抽左右最好)。"
+
+#: static/planner/normal.js
+#, javascript-format
+msgid "Enter (or find) your normal seed first."
+msgstr "請先輸入(或找出)你的貓咪轉蛋種子碼。"
+
+#: static/planner/normal.js
+#, javascript-format
+msgid "Enter at least one ticket stash."
+msgstr "請至少輸入一種券的數量。"
+
+#: static/planner/normal.js
+#, javascript-format
+msgid "Searching…"
+msgstr "搜尋中…"
+
+#: static/planner/normal.js
+#, javascript-format
+msgid "Find a path"
+msgstr "找出路線"
+
+#: static/planner/normal.js
+#, javascript-format
+msgid "Lost the server - try again."
+msgstr "與伺服器失去連線 - 請再試一次。"
+
+#: static/planner/normal.js
+#, javascript-format
+msgid "Couldn't work out a path - try again."
+msgstr "無法算出路線 - 請再試一次。"
+
+#: static/planner/normal.js
+#, javascript-format
+msgid "Search items…"
+msgstr "搜尋道具…"
+
+#: static/planner/normal.js
+#, javascript-format
+msgid "Pick an item…"
+msgstr "選擇道具…"
+
+#: static/planner/normal.js
+#, javascript-format
+msgid "replay them"
+msgstr "重播"
+
+#: static/planner/normal.js
+#, javascript-format
+msgid "Far too many seeds match - this window is too short to pin yours down. Add a few more rolls and search again; only the first %s are shown."
+msgstr "相符的種子碼太多了 - 這段抽數太短,無法確定是哪一組。請再加幾抽後重新搜尋;只顯示前%s組。"
+
+#: static/planner/normal.js
+#, javascript-format
+msgid "Enter at least %s pulls (8-12 works best)."
+msgstr "請至少輸入%s抽(8到12抽最好)。"
+
+#: static/planner/seek.js
+#, javascript-format
+msgid "Search cats…"
+msgstr "搜尋角色…"
+
+#: static/planner/seek.js
+#, javascript-format
+msgid "Pick a cat…"
+msgstr "選擇角色…"
+
+#: static/planner/seek.js
+#, javascript-format
+msgid "copy a link to it"
+msgstr "複製連結"
+
+#: static/planner/seek.js
+#, javascript-format
+msgid "Saving it as your seed…"
+msgstr "正在存為你的種子碼…"
+
+#: static/planner/seek.js
+#, javascript-format
+msgid "Fix it above, or search anyway if it's right."
+msgstr "請在上方修正,或確定沒錯就直接搜尋。"
+
+#: static/planner/seek.js static/planner/normal.js
+msgid "Checking every possible seed (step 1 of 3)…"
+msgstr "正在檢查所有可能的種子碼(第1/3步)…"
+
+#: static/planner/seek.js static/planner/normal.js
+msgid "No exact match yet — checking if your first pull was a reroll (step 2 of 3)…"
+msgstr "還沒有完全符合 — 正在檢查第一抽是否為重抽(第2/3步)…"
+
+#: static/planner/seek.js static/planner/normal.js
+msgid "No exact match yet — checking if your first pull was a reroll (step 3 of 3)…"
+msgstr "還沒有完全符合 — 正在檢查第一抽是否為重抽(第3/3步)…"

@@ -10,6 +10,14 @@ from typing import NamedTuple
 from urllib.parse import quote
 
 from django.db import transaction
+from django.utils.formats import date_format
+from django.utils.translation import (
+    gettext,
+    gettext_noop,
+    ngettext,
+    ngettext_lazy,
+    pgettext_lazy,
+)
 
 from neko.bcdata import load_records
 from neko.catalogue import match_names, name_index
@@ -71,6 +79,7 @@ from neko.search import astar, beam_search, obtainable
 from neko.statsdata import load_stats
 from neko.subsets import SubsetPlan, solve_subsets
 from neko.tierdata import TIER_ORDER, load_tiers
+from planner.engine_text import engine_text
 from planner.forms import MAX_TRACK_LENGTH
 from planner.models import Banner, CannonPlan, Cat, Profile, TalentPlan, Unit, UnitPlan
 
@@ -126,7 +135,11 @@ def wiki_unit_url(unit_id: int, name: str, rarity: str = "") -> str:
 
 _TIER_RANK = {tier: rank for rank, tier in enumerate(TIER_ORDER)}
 
-_BOOST_LABEL = {"UF": "Ultra Form", "UT": "Ultra Talents", "T": "True Form"}
+_BOOST_LABEL = {
+    "UF": gettext_noop("Ultra Form"),
+    "UT": gettext_noop("Ultra Talents"),
+    "T": gettext_noop("True Form"),
+}
 
 
 def tier_badges(doc=None) -> dict[int, dict]:
@@ -154,7 +167,10 @@ def tier_badges(doc=None) -> dict[int, dict]:
         up = boosted.get(unit_id)
         if up is not None and _TIER_RANK[up[0]] < _TIER_RANK[tier]:
             badge["up"] = up[0]
-            badge["up_note"] = f"{up[0]} with {_BOOST_LABEL[up[1]]}"
+            badge["up_note"] = gettext("%(tier)s with %(boost)s") % {
+                "tier": up[0],
+                "boost": gettext(_BOOST_LABEL[up[1]]),
+            }
         badges[unit_id] = badge
 
     return badges
@@ -197,7 +213,7 @@ def tier_list_index(doc=None) -> list[tuple[str, list[dict]]]:
     for entry in doc.get("lists", ()):
         slug = entry["path"].removeprefix("/tier-lists/")
         grouped.setdefault(entry["category"], []).append(
-            {"label": entry["label"], "slug": slug, "fetched": entry["fetched"]}
+            {"label": tier_set_label(entry), "slug": slug, "fetched": entry["fetched"]}
         )
 
     return list(grouped.items())
@@ -316,7 +332,11 @@ def seek_run_choices(events=None, today=None) -> list:
         if cutoff <= end < today
     ]
 
-    return [("Available now", live), ("Upcoming", upcoming), ("Recently ended", past)]
+    return [
+        (gettext_noop("Available now"), live),
+        (gettext_noop("Upcoming"), upcoming),
+        (gettext_noop("Recently ended"), past),
+    ]
 
 
 def seek_banner(selection: str, events=None, pools=None, units=None):
@@ -339,6 +359,7 @@ def seek_pool_groups(banner) -> list[dict]:
     return [
         {
             "rarity": str(rarity),
+            "label": gettext(str(rarity)),
             "options": [
                 {"value": f"{index}:{slot}", "label": name}
                 for slot, name in enumerate(banner.pool(rarity))
@@ -539,7 +560,13 @@ def collection_facets() -> dict[int, dict]:
 
 
 # Display labels for the game's combo-effect filter groups, in NyancomboFilter order.
-_COMBO_GROUP_LABELS = ("Units", "Abilities", "Cannon & Base", "Money & Workers", "Rewards")
+_COMBO_GROUP_LABELS = (
+    gettext_noop("Units"),
+    gettext_noop("Abilities"),
+    gettext_noop("Cannon & Base"),
+    gettext_noop("Money & Workers"),
+    gettext_noop("Rewards"),
+)
 
 
 def combo_filter_groups(doc: Mapping | None = None) -> list[tuple[str, list[tuple[int, str]]]]:
@@ -549,13 +576,17 @@ def combo_filter_groups(doc: Mapping | None = None) -> list[tuple[str, list[tupl
     effects = doc["effects"]
     groups, listed = [], set()
     for index, ids in enumerate(doc["categories"]):
-        label = _COMBO_GROUP_LABELS[index] if index < len(_COMBO_GROUP_LABELS) else "Other"
+        label = (
+            _COMBO_GROUP_LABELS[index]
+            if index < len(_COMBO_GROUP_LABELS)
+            else gettext_noop("Other")
+        )
         groups.append((label, [(i, effects[i]) for i in ids if i < len(effects)]))
         listed.update(ids)
 
     unlisted = [(i, name) for i, name in enumerate(effects) if i not in listed and name]
     if unlisted:
-        groups.append(("Other", unlisted))
+        groups.append((gettext_noop("Other"), unlisted))
 
     return groups
 
@@ -591,22 +622,30 @@ def plannable_form(cost: Mapping, key: str) -> dict | None:
 # a seed and a catfruit, the five colours have a Behemoth Stone and Gem on top, and the
 # odd ones out just leave that cell empty - Epic never got a Gem, and Elder, Aku and Gold
 # stop at the fruit.
-EVOLVE_KINDS = ("Seed", "Catfruit", "B. Stone", "B. Gem")
+EVOLVE_KINDS = (
+    pgettext_lazy("evolution material", "Seed"),
+    pgettext_lazy("evolution material", "Catfruit"),
+    pgettext_lazy("evolution material", "B. Stone"),
+    pgettext_lazy("evolution material", "B. Gem"),
+)
 EVOLVE_FAMILIES = (
-    ("Purple", (30, 35, 167, 179)),
-    ("Red", (31, 36, 168, 180)),
-    ("Blue", (32, 37, 169, 181)),
-    ("Green", (33, 38, 170, 182)),
-    ("Yellow", (34, 39, 171, 183)),
-    ("Epic", (43, 40, 184, None)),
-    ("Elder", (41, 42, None, None)),
-    ("Aku", (160, 161, None, None)),
-    ("Gold", (164, 44, None, None)),
+    (pgettext_lazy("material colour", "Purple"), (30, 35, 167, 179)),
+    (pgettext_lazy("material colour", "Red"), (31, 36, 168, 180)),
+    (pgettext_lazy("material colour", "Blue"), (32, 37, 169, 181)),
+    (pgettext_lazy("material colour", "Green"), (33, 38, 170, 182)),
+    (pgettext_lazy("material colour", "Yellow"), (34, 39, 171, 183)),
+    (pgettext_lazy("material colour", "Epic"), (43, 40, 184, None)),
+    (pgettext_lazy("material colour", "Elder"), (41, 42, None, None)),
+    (pgettext_lazy("material colour", "Aku"), (160, 161, None, None)),
+    (pgettext_lazy("material colour", "Gold"), (164, 44, None, None)),
 )
 
 # The base materials pair up the same way: a regular grade for the cannons, a Z grade for
 # the foundations and styles. Both sit in castle-recipe column order, so they zip.
-BUILD_KINDS = ("Material", "Z Material")
+BUILD_KINDS = (
+    pgettext_lazy("base material", "Material"),
+    pgettext_lazy("base material", "Z Material"),
+)
 
 # Display rank per item id. The grids above read down their columns, so a cost list
 # sorted by this groups every seed, then every catfruit, and so on - and a card's list
@@ -673,7 +712,11 @@ def _build_families() -> list[tuple[str, tuple[int, int]]]:
 
 
 # The cannon comes with the development; the other two are opt-in add-ons.
-CANNON_PARTS = (("cannon", "Cannon"), ("base", "Foundation"), ("deco", "Style"))
+CANNON_PARTS = (
+    ("cannon", gettext_noop("Cannon")),
+    ("base", gettext_noop("Foundation")),
+    ("deco", gettext_noop("Style")),
+)
 CANNON_ADDONS = ("base", "deco")
 
 
@@ -711,7 +754,10 @@ def _cat_card(plan: UnitPlan, evolve: Mapping, talents: Mapping, wanted: set[int
     cost = evolve.get(key, {})
     spend: Counter = Counter()
     forms, xp = [], 0
-    for checked, form_key, label in ((plan.tf, "tf", "True Form"), (plan.uf, "uf", "Ultra Form")):
+    for checked, form_key, label in (
+        (plan.tf, "tf", gettext_noop("True Form")),
+        (plan.uf, "uf", gettext_noop("Ultra Form")),
+    ):
         form = plannable_form(cost, form_key)
         if form is None:
             continue
@@ -916,8 +962,8 @@ def dictionary_sections(
 # every capsule banner offers, not exclusive to any set.
 _REGULAR_SERIES_LIMIT = 3
 
-REGULARS_LABEL = "Rare Capsule Regulars"
-ADDONS_LABEL = "Rare Capsule Add-ons"
+REGULARS_LABEL = gettext_noop("Rare Capsule Regulars")
+ADDONS_LABEL = gettext_noop("Rare Capsule Add-ons")
 
 # True regulars ride along on at least this share of all scheduled series; the rest of
 # the shared crowd are add-ons (Grandon Mining Corps, the Neneko gang, Reinforcement,
@@ -941,16 +987,75 @@ def _display(set_name: str) -> str:
 # run's marketing text names them; where the guide DOES name one (UBERFEST, EPICFEST,
 # RoyalFest), the label here matches its displayed name so both name the same section.
 FEST_SERIES = {
-    19: "UBERFEST",
-    27: "EPICFEST",
-    35: "Best of the Best",
-    39: "Neo Best of the Best",
-    42: "SUPERFEST",
-    47: "Dynasty Fest",
-    50: "RoyalFest",
-    59: "Busterfest",
-    70: "Best of the Best: Milestone Editions",
+    19: gettext_noop("UBERFEST"),
+    27: gettext_noop("EPICFEST"),
+    35: gettext_noop("Best of the Best"),
+    39: gettext_noop("Neo Best of the Best"),
+    42: gettext_noop("SUPERFEST"),
+    47: gettext_noop("Dynasty Fest"),
+    50: gettext_noop("RoyalFest"),
+    59: gettext_noop("Busterfest"),
+    70: gettext_noop("Best of the Best: Milestone Editions"),
 }
+# The fests the Cat Guide also names as a set (by its English name). Each version calls
+# such a fest by that set's name in its own data, so the fest's extras merge into the
+# set's section there too.
+_FEST_GUIDE_SETS = {19: "UBER FEST", 27: "EPICFEST", 50: "Royalfest"}
+
+
+@cache
+def _local_set_names(region: str) -> dict[str, str]:
+    """{English Cat Guide set name: the version's own}, matched through the units."""
+    if region == DEFAULT_REGION:
+        return {}
+
+    local = {record["id"]: record["set"] for record in load_records(region) if record["set"]}
+    names: dict[str, str] = {}
+    for record in load_records(DEFAULT_REGION):
+        if record["set"] and record["id"] in local:
+            names.setdefault(record["set"], local[record["id"]])
+
+    return names
+
+
+def fest_label(sid: int) -> str:
+    """A fest's section label in the active version: the Cat Guide set it shares a name
+    with, as the version names it, else its English label (translated where shown)."""
+    local = _local_set_names(active_region()).get(_FEST_GUIDE_SETS.get(sid, ""))
+
+    return _display(local) if local else FEST_SERIES[sid]
+
+
+def section_notes() -> dict[str, str]:
+    """SECTION_NOTES under the labels the active version's sections carry."""
+    return SECTION_NOTES | {
+        fest_label(sid): SECTION_NOTES[FEST_SERIES[sid]]
+        for sid in _FEST_GUIDE_SETS
+        if FEST_SERIES[sid] in SECTION_NOTES
+    }
+
+
+def tier_set_label(entry: Mapping) -> str:
+    """A per-set tier list's label in the active version: the Cat Guide set most of its
+    ranked units belong to, as the version names it; the tier site's own label otherwise."""
+    if active_region() == DEFAULT_REGION:
+        return entry["label"]
+
+    sets = {record["id"]: record["set"] for record in load_records() if record["set"]}
+    found = Counter(
+        sets[unit["unit_id"]]
+        for row in entry["tiers"]
+        for unit in row["entries"]
+        if unit["unit_id"] in sets
+    )
+    ranked = sum(len(row["entries"]) for row in entry["tiers"])
+    if found:
+        name, count = found.most_common(1)[0]
+        if count * 2 >= ranked:
+            return name
+
+    return entry["label"]
+
 
 # A fest carrying at least this share of a set (or of the standard legends) features it.
 _FEST_COVER = 0.6
@@ -959,17 +1064,25 @@ _FEST_COVER = 0.6
 _FEST_SET_CAP = 2
 
 # One-line section explainers for the collection's by-set view.
-_FEST_NOTE = "Fest exclusives; every standard-set Uber also drops here."
-_BOTB_NOTE = "Anniversary capsules: a rotating best-of selection plus these exclusives."
-_LEGEND_NOTE = "Boosted Legend Rare rates; every standard Legend drops here."
+_FEST_NOTE = gettext_noop("Fest exclusives; every standard-set Uber also drops here.")
+_BOTB_NOTE = gettext_noop(
+    "Anniversary capsules: a rotating best-of selection plus these exclusives."
+)
+_LEGEND_NOTE = gettext_noop("Boosted Legend Rare rates; every standard Legend drops here.")
 SECTION_NOTES = {
-    REGULARS_LABEL: "The shared Rare/Super pool; these drop on every Rare Capsule banner.",
-    ADDONS_LABEL: "Extra regulars many banners add to the shared pool; fests skip them.",
+    REGULARS_LABEL: gettext_noop(
+        "The shared Rare/Super pool; these drop on every Rare Capsule banner."
+    ),
+    ADDONS_LABEL: gettext_noop(
+        "Extra regulars many banners add to the shared pool; fests skip them."
+    ),
     "UBERFEST": _FEST_NOTE,
     "EPICFEST": _FEST_NOTE,
-    "SUPERFEST": "Uberfest and Epicfest exclusives combined; every standard-set Uber drops too.",
-    "Dynasty Fest": "Every seasonal set in one capsule.",
-    "Busterfest": "Every Buster unit in one capsule.",
+    "SUPERFEST": gettext_noop(
+        "Uberfest and Epicfest exclusives combined; every standard-set Uber drops too."
+    ),
+    "Dynasty Fest": gettext_noop("Every seasonal set in one capsule."),
+    "Busterfest": gettext_noop("Every Buster unit in one capsule."),
     "RoyalFest": _LEGEND_NOTE,
     "Best of the Best: Milestone Editions": _LEGEND_NOTE,
     "Best of the Best": _BOTB_NOTE,
@@ -1036,7 +1149,7 @@ def series_names(units, events=None, pools=None, series=None, tickets=None) -> d
 
     for sid in latest:
         if sid in FEST_SERIES:
-            names.setdefault(sid, FEST_SERIES[sid])
+            names.setdefault(sid, gettext(fest_label(sid)))
 
     for sid, event in latest.items():
         ticket = tickets.get(event.pool_id)
@@ -1180,7 +1293,7 @@ def set_sections(
     # that set's banner, so merging by label folds the extras into the named section.
     for sid, extras in fests.items():
         if extras:
-            named.setdefault(FEST_SERIES[sid], {}).update(extras)
+            named.setdefault(fest_label(sid), {}).update(extras)
 
     sections = [
         (label, cats)
@@ -1241,20 +1354,24 @@ class Run(NamedTuple):
         years when it crosses New Year ("Dec 29 - Jan 1, 2026" would misread), else
         the year once."""
         if self.end.year >= 2030:
-            return f"Since {_day(self.start)}"
+            return gettext("Since %(date)s") % {"date": _day(self.start)}
         if self.start.year != self.end.year:
-            return f"{_day(self.start)} – {_day(self.end)}"
+            start = _day(self.start)
+        else:
+            start = _day(self.start, year=False)
 
-        return f"{_day(self.start, year=False)} – {_day(self.end)}"
-
-
-_MONTHS = ("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec")
+        return gettext("%(start)s – %(end)s") % {"start": start, "end": _day(self.end)}
 
 
 def _day(day: date, year: bool = True) -> str:
-    """ "Oct 15, 2026" (or "Oct 15"): the |date:"M j, Y" format without its locale lookup."""
-    text = f"{_MONTHS[day.month - 1]} {day.day}"
-    return f"{text}, {day.year}" if year else text
+    """ "Oct 15, 2026" (or "Oct 15") in English; each language words the date its own way,
+    so the format itself is translated (Django date-format characters)."""
+    # Translators: Django date format for a day with its year, e.g. "Oct 15, 2026".
+    with_year = gettext("M j, Y")
+    # Translators: Django date format for a day in the current year, e.g. "Oct 15".
+    without_year = gettext("M j")
+
+    return date_format(day, with_year if year else without_year)
 
 
 class PickerRow(NamedTuple):
@@ -1266,6 +1383,11 @@ class PickerRow(NamedTuple):
     dates: Run | None
     rarities: list
     new: Sequence[str] = ()
+
+
+def _future_number(name: str) -> str:
+    """The number in a future uber's label ("Future Uber 3 @ ..." -> "3")."""
+    return future_uber_label(name).removeprefix("Future Uber ")
 
 
 def cat_banner_names() -> dict[int, list[str]]:
@@ -1362,13 +1484,15 @@ def picker_groups(
     dated = scheduled | {name for name, banner in banners.items() if banner.end}
     leftovers = [row(name, None) for name in sorted(by_name) if name not in dated]
     if other:
-        leftovers.append(PickerRow("Other", "Other", None, _by_rarity(other, reverse=True)))
+        leftovers.append(
+            PickerRow("Other", gettext("Other"), None, _by_rarity(other, reverse=True))
+        )
 
     groups = [
-        ("Available now", now),
-        ("Upcoming", upcoming),
-        ("Past", past),
-        ("Other", leftovers),
+        (gettext_noop("Available now"), now),
+        (gettext_noop("Upcoming"), upcoming),
+        (gettext_noop("Past"), past),
+        (gettext_noop("Other"), leftovers),
     ]
 
     return [group for group in groups if group[1]]
@@ -1415,6 +1539,7 @@ def engine_request(op: str, seed: int, prepared: Mapping, count: int, last_cat: 
         "count": count,
         "last_cat": last_cat,
         "banners": banners,
+        "text": engine_text(),
     }
 
 
@@ -1553,6 +1678,19 @@ TRACK_ROW_CAP = 100  # A/B rows rendered by default, before a plan extends the w
 _VALUABLE_RARITIES = {Rarity.UBER_SUPER_RARE.value, Rarity.LEGEND_RARE.value}
 
 
+_MULTI_KIND = re.compile(r"(\d+)-roll( \(guaranteed\))?")
+
+
+def _kind_label(kind: str) -> str:
+    """A plan step's kind ("Single pull", "11-roll (guaranteed)") in the interface language."""
+    multi = _MULTI_KIND.fullmatch(kind)
+    if multi is None:
+        return gettext(kind)
+
+    message = "%(n)s-roll (guaranteed)" if multi.group(2) else "%(n)s-roll"
+    return gettext(message) % {"n": multi.group(1)}
+
+
 def cost_label(tickets, catfood, platinum=0, legend=0):
     """Spell out a plan's price across every currency; pulls are ticket-funded first, and
     Platinum/Legend Capsules spend their own scarce tickets, so a plan can be any mix of
@@ -1560,15 +1698,19 @@ def cost_label(tickets, catfood, platinum=0, legend=0):
     parts = []
 
     if tickets:
-        parts.append(f"{tickets} ticket{'s' if tickets != 1 else ''}")
+        parts.append(ngettext("%(n)s ticket", "%(n)s tickets", tickets) % {"n": tickets})
     if platinum:
-        parts.append(f"{platinum} platinum ticket{'s' if platinum != 1 else ''}")
+        parts.append(
+            ngettext("%(n)s platinum ticket", "%(n)s platinum tickets", platinum) % {"n": platinum}
+        )
     if legend:
-        parts.append(f"{legend} legend ticket{'s' if legend != 1 else ''}")
+        parts.append(
+            ngettext("%(n)s legend ticket", "%(n)s legend tickets", legend) % {"n": legend}
+        )
     if catfood:
-        parts.append(f"{catfood} catfood")
+        parts.append(gettext("%(n)s catfood") % {"n": catfood})
 
-    return " + ".join(parts) or "free"
+    return " + ".join(parts) or gettext("free")
 
 
 def _collection_marks(cat, rarity, owned, wanted, debuts=()):
@@ -1815,7 +1957,7 @@ def build_tracks(
             # A future-uber cell shows the short "Future Uber n" (the column already names the
             # banner); real cells display ``cat`` as-is, so they carry no separate label.
             if cell_marks["future"]:
-                entry["future_label"] = future_uber_label(tp.cat)
+                entry["future_n"] = _future_number(tp.cat)
             cells.append(entry)
 
         return cells
@@ -1869,7 +2011,7 @@ def build_tracks(
                 **cell_marks,
             }
             if cell_marks["future"]:
-                entry["future_label"] = future_uber_label(tp.cat)
+                entry["future_n"] = _future_number(tp.cat)
 
             # The guaranteed column's "if dupe" line: when this cell (the multi's first
             # roll) arrives as a dupe, the reroll jumps the chain, so the multi ends on a
@@ -1893,7 +2035,7 @@ def build_tracks(
                         or dupe.cat in target_names,
                     }
                     if dupe_marks["future"]:
-                        alt["future_label"] = future_uber_label(dupe.cat)
+                        alt["future_n"] = _future_number(dupe.cat)
                     entry["alt"] = alt
                     entry["lit"] = entry["target"] or alt["target"]
 
@@ -1934,8 +2076,7 @@ def build_tracks(
             count = max((future.get(name, 0) for name in group["names"]), default=0)
             entry["future"] = count
             entry["future_chips"] = [
-                {"name": f"Future Uber {n} @ {group['rep']}", "label": f"Future Uber {n}"}
-                for n in range(1, count + 1)
+                {"name": f"Future Uber {n} @ {group['rep']}", "n": n} for n in range(1, count + 1)
             ]
 
     return {
@@ -2042,7 +2183,7 @@ def find_cats(
             "wanted": name in wishlisted,
             "pk": pks.get(name),
             "future": is_future_uber(name),
-            "future_label": future_uber_label(name),
+            "future_n": _future_number(name),
             "banner": future_uber_banner(name),
         }
 
@@ -2488,6 +2629,7 @@ def plan_summary(plans, equivalents, owned=None, wanted=None, titles=None):
                     "names": _titled(equivalents.get(leg.banner_id, [leg.banner_id]), titles),
                     "new_banner": leg.banner_id != last_banner,
                     "kind": leg.kind,
+                    "kind_label": _kind_label(leg.kind),
                     "cost": leg.cost,
                     "tickets": tickets,
                     "currency": leg.currency,
@@ -2970,14 +3112,19 @@ def read_guide(shots: list[dict], pages: list[tuple[str, list[Unit]]]) -> GuideR
     labels = []
     for index, (rarity, _) in enumerate(pages):
         same = [i for i, (r, _) in enumerate(pages) if r == rarity]
-        labels.append(f"{rarity} page {same.index(index) + 1} of {len(same)}")
+        labels.append(
+            gettext("%(rarity)s page %(n)s of %(total)s")
+            % {"rarity": gettext(rarity), "n": same.index(index) + 1, "total": len(same)}
+        )
 
     errors: list[str] = []
     taken = [shot["taken"] for shot in shots]
     if taken and max(taken) - min(taken) > _GUIDE_SESSION_MS:
         errors.append(
-            "Take every screenshot in one go - these were taken more than a day apart, and "
-            "a game update in between would shuffle the guide."
+            gettext(
+                "Take every screenshot in one go - these were taken more than a day apart, and "
+                "a game update in between would shuffle the guide."
+            )
         )
 
     seen: dict[int, tuple[str, str]] = {}
@@ -2985,15 +3132,21 @@ def read_guide(shots: list[dict], pages: list[tuple[str, list[Unit]]]) -> GuideR
     for shot in shots:
         name, position, marks = shot["name"], shot["position"], shot["marks"]
         if position is None or marks is None:
-            errors.append(f"{name}: not a Cat Guide page (no page bar or cell grid found).")
+            errors.append(
+                gettext("%(name)s: not a Cat Guide page (no page bar or cell grid found).")
+                % {"name": name}
+            )
             continue
 
         spot = position * last
         index = round(spot)
         if abs(spot - index) > _GUIDE_SNAP:
             errors.append(
-                f"{name}: sits between our pages - your Cat Guide has a different number of "
-                f"pages than ours ({len(pages)}), so the game is on another version."
+                gettext(
+                    "%(name)s: sits between our pages - your Cat Guide has a different number "
+                    "of pages than ours (%(pages)s), so the game is on another version."
+                )
+                % {"name": name, "pages": len(pages)}
             )
             continue
 
@@ -3001,18 +3154,27 @@ def read_guide(shots: list[dict], pages: list[tuple[str, list[Unit]]]) -> GuideR
         cells = len(marks.rstrip("."))
         if cells != size or "." in marks[:size]:
             errors.append(
-                f"{name} ({labels[index]}): shows {cells} cells where ours has {size} - the "
-                "game is on another version, or a filter is on."
+                gettext(
+                    "%(name)s (%(page)s): shows %(cells)s cells where ours has %(size)s - the "
+                    "game is on another version, or a filter is on."
+                )
+                % {"name": name, "page": labels[index], "cells": cells, "size": size}
             )
             continue
 
         if index in seen and seen[index][1] != marks:
-            errors.append(f"{seen[index][0]} and {name} are both {labels[index]} but differ.")
+            errors.append(
+                gettext("%(first)s and %(second)s are both %(page)s but differ.")
+                % {"first": seen[index][0], "second": name, "page": labels[index]}
+            )
         seen.setdefault(index, (name, marks))
 
     missing = [labels[i] for i in range(len(pages)) if i not in seen]
     if missing:
-        errors.append(f"Missing {len(missing)} of {len(pages)} pages: {', '.join(missing)}.")
+        errors.append(
+            gettext("Missing %(count)s of %(total)s pages: %(pages)s.")
+            % {"count": len(missing), "total": len(pages), "pages": ", ".join(missing)}
+        )
     if errors:
         return GuideRead(errors=errors)
 
@@ -3143,15 +3305,96 @@ def import_cats(
 NORMAL_DEFAULT_KEYS = ("np", "ce")
 
 
+# The normal-side items by the game's own item id (items.json), so each version names
+# them in its own language; the basic cats and Superfeline go through the catalogue.
+_NORMAL_ITEM_IDS = {
+    "Speed Up": 0,
+    "Treasure Radar": 1,
+    "Rich Cat": 2,
+    "Cat CPU": 3,
+    "Cat Jobs": 4,
+    "Sniper the Cat": 5,
+    "5K XP": 10,
+    "10K XP": 11,
+    "30K XP": 12,
+    "50K XP": 13,
+    "100K XP": 14,
+    "200K XP": 15,
+    "500K XP": 16,
+    "1M XP": 17,
+    "Purple Catfruit Seed": 30,
+    "Red Catfruit Seed": 31,
+    "Blue Catfruit Seed": 32,
+    "Green Catfruit Seed": 33,
+    "Yellow Catfruit Seed": 34,
+    "Purple Catfruit": 35,
+    "Red Catfruit": 36,
+    "Blue Catfruit": 37,
+    "Green Catfruit": 38,
+    "Yellow Catfruit": 39,
+    "Epic Catfruit": 40,
+    "Special Catseye": 50,
+    "Rare Catseye": 51,
+    "Super Rare Catseye": 52,
+    "Uber Rare Catseye": 53,
+    "Catamin A": 55,
+    "Catamin B": 56,
+    "Catamin C": 57,
+    "Dark Catseye": 58,
+    "Cat Cannon Attack": 60,
+    "Cat Cannon Charge": 62,
+    "Worker Cat Rate": 63,
+    "Worker Cat Wallet": 64,
+    "Base Defense": 65,
+    "Research": 66,
+    "Accounting": 67,
+    "Study": 68,
+    "Cat Energy": 69,
+}
+
+
+@cache
+def _normal_names(region: str) -> dict[str, str]:
+    if region == DEFAULT_REGION:
+        return {}
+
+    items = load_items(region)["items"]
+    names = {
+        item: items[str(item_id)]
+        for item, item_id in _NORMAL_ITEM_IDS.items()
+        if items.get(str(item_id))
+    }
+    if "100K XP" in names:
+        names["100K XP (β)"] = f"{names['100K XP']} (β)"
+
+    english = {record["name"]: record["id"] for record in load_records(DEFAULT_REGION)}
+    local = {record["id"]: record["name"] for record in load_records(region)}
+    for cat in (*NORMAL_CATS, *LIL_CATS, "Superfeline"):
+        name = local.get(english.get(cat))
+        if name:
+            names[cat] = name
+
+    return names
+
+
+def normal_names() -> dict[str, str]:
+    """The normal-side items' names in the active version, keyed by the English names the
+    pools spell them in - English itself keeps those."""
+    return _normal_names(active_region())
+
+
 def normal_banner_choices() -> list[dict]:
     """The normal-side banners, for the page's column toggles."""
-    return [{"key": banner.key, "name": banner.name} for banner in NORMAL_BANNERS]
+    return [
+        {"key": banner.key, "name": banner.name, "label": gettext(banner.name)}
+        for banner in NORMAL_BANNERS
+    ]
 
 
 # What tells the two seekable capsules apart: whether Superfeline can drop yet.
 _SEEK_NOTES = {
-    "n": "Superfeline NOT unlocked",
-    "np": "with Superfeline in the pool",
+    "n": gettext_noop("Superfeline NOT unlocked"),
+    "np": gettext_noop("with Superfeline in the pool"),
 }
 
 
@@ -3160,7 +3403,7 @@ def normal_seek_pools() -> dict[str, dict]:
     inlined into the page - the pools are a handful of constants, no fetch needed.
     Each group is labelled with its band's drop chance, and each banner carries the
     Superfeline note that tells the two capsules apart."""
-    pools = {}
+    pools, names = {}, normal_names()
     for key in SEEKABLE_KEYS:
         banner = BANNERS_BY_KEY[key]
         groups = []
@@ -3170,15 +3413,20 @@ def normal_seek_pools() -> dict[str, dict]:
 
             groups.append(
                 {
-                    "label": f"{pool.rate / 100:g}% band",
+                    "label": gettext("%(rate)s%% band") % {"rate": f"{pool.rate / 100:g}"},
                     "options": [
-                        {"value": f"{index}:{slot}", "label": item}
+                        {"value": f"{index}:{slot}", "label": names.get(item, item)}
                         for slot, item in enumerate(pool.items)
                     ],
                 }
             )
 
-        pools[key] = {"name": banner.name, "note": _SEEK_NOTES.get(key, ""), "groups": groups}
+        note = _SEEK_NOTES.get(key)
+        pools[key] = {
+            "name": gettext(banner.name),
+            "note": gettext(note) if note else "",
+            "groups": groups,
+        }
 
     return pools
 
@@ -3210,11 +3458,14 @@ def build_normal_tracks(
 
     marks = marks or {}
     # Cat items get their catalogue id and form names, so the page's form/icon picker
-    # reaches them exactly like the rare tracks' cells.
-    units = {
+    # reaches them exactly like the rare tracks' cells. Items show by the version's own
+    # names; the English ones stay the item's identity (the dupe memory posts them).
+    names = normal_names()
+    catalogue = {
         name: (uid, forms)
         for name, uid, forms in Unit.objects.values_list("name", "unit_id", "forms")
     }
+    units = {item: catalogue[label] for item, label in _normal_labels(names) if label in catalogue}
     columns = []
     for tag, banner in enumerate(banners, start=1):
         rolls = roll_normal(seed, banner, count, last_item=last_item)
@@ -3222,7 +3473,7 @@ def build_normal_tracks(
             {
                 "tag": tag,
                 "key": banner.key,
-                "name": banner.name,
+                "name": gettext(banner.name),
                 "pulls": {(p.position, p.track): p for p in rolls.pulls},
                 "rerolls": {(p.position, p.track): p for p in rolls.rerolls if p.realized},
             }
@@ -3240,6 +3491,7 @@ def build_normal_tracks(
                 unit = units.get(reroll.item)
                 alt = {
                     "item": reroll.item,
+                    "label": names.get(reroll.item, reroll.item),
                     "seed": reroll.seed,
                     "to": f"{to_pos}{to_track}",
                     "unit": unit is not None,
@@ -3253,6 +3505,7 @@ def build_normal_tracks(
                 {
                     "tag": column["tag"],
                     "item": pull.item,
+                    "label": names.get(pull.item, pull.item),
                     "pool": pull.pool,
                     "upgrade": pull.item in UPGRADES,
                     "dark": pull.item == "Dark Catseye",
@@ -3294,6 +3547,30 @@ def build_normal_tracks(
 
 _NORMAL_CURRENCY = {"lt": "Lucky Ticket", "ltg": "Lucky Ticket G"}
 
+# How many of a normal-side currency, worded per currency (it reads "3 Lucky Tickets").
+_NORMAL_COUNTS = {
+    "Normal Cat Ticket": ngettext_lazy("%(n)s Normal Cat Ticket", "%(n)s Normal Cat Tickets", "n"),
+    "Lucky Ticket": ngettext_lazy("%(n)s Lucky Ticket", "%(n)s Lucky Tickets", "n"),
+    "Lucky Ticket G": ngettext_lazy("%(n)s Lucky Ticket G", "%(n)s Lucky Ticket Gs", "n"),
+}
+
+
+def _normal_count(currency: str, n: int) -> str:
+    return _NORMAL_COUNTS[currency] % {"n": n}
+
+
+def _normal_labels(names: Mapping[str, str]) -> list[tuple[str, str]]:
+    """Every normal-side item as (its English name, the name this version shows)."""
+    items = {item for banner in NORMAL_BANNERS for pool in banner.pools for item in pool.items}
+    return [(item, names.get(item, item)) for item in items]
+
+
+def normal_target_label(label: str) -> str:
+    """A plan target's label as the page shows it: a preset's in the interface language,
+    one item's by the version's name for it."""
+    names = normal_names()
+    return names[label] if label in names else gettext(label)
+
 
 def normal_request(
     op: str,
@@ -3319,10 +3596,11 @@ def normal_request(
         "seed": seed,
         "count": count,
         "last_cat": last_item,
+        "text": engine_text(),
         "banners": [
             {
                 "key": banner.key,
-                "name": banner.name,
+                "name": gettext(banner.name),
                 "rates": [pool.rate for pool in banner.pools],
                 "pools": [table.ids(pool.items) for pool in banner.pools],
                 "reroll": [pool.reroll for pool in banner.pools],
@@ -3335,7 +3613,7 @@ def normal_request(
     plan = None
     if op == "normal_plan":
         plan = {
-            "label": label,
+            "label": normal_target_label(label),
             "targets": table.ids(sorted(targets)),
             "budgets": [
                 [count, [index[key] for key in fed if key in index]] for count, fed in budgets
@@ -3343,12 +3621,15 @@ def normal_request(
         }
     # Cat items get their catalogue id and form names, so the page's form/icon picker
     # reaches them exactly like the rare tracks' cells.
+    names = normal_names()
     units = {
         name: (uid, "|".join(forms))
         for name, uid, forms in Unit.objects.values_list("name", "unit_id", "forms")
     }
+    labels = [names.get(name, name) for name in table.names]
     request["normal"] = {
-        "units": [units.get(name) for name in table.names],
+        "units": [units.get(label) for label in labels],
+        "labels": labels,
         "upgrades": [table.index[name] for name in UPGRADES if name in table.index],
         "plan": plan,
     }
@@ -3377,10 +3658,10 @@ def normal_budgets(machines: Iterable[str], tickets: Mapping[str, int]) -> list:
 # the classic farming goals (upgrades merge 5-into-a-rare-ticket, cat dupes sell
 # for NP/XP). A "item:<name>" value chases one specific item instead.
 NORMAL_TARGET_PRESETS = {
-    "dark": ("Dark Catseyes", frozenset({"Dark Catseye"})),
-    "upgrades": ("Upgrades (5 merge into a Rare Ticket)", frozenset(UPGRADES)),
-    "cats": ("Basic cats (NP/XP fodder)", frozenset(NORMAL_CATS) | {"Superfeline"}),
-    "lil": ("Li'l cats", frozenset(LIL_CATS)),
+    "dark": (gettext_noop("Dark Catseyes"), frozenset({"Dark Catseye"})),
+    "upgrades": (gettext_noop("Upgrades (5 merge into a Rare Ticket)"), frozenset(UPGRADES)),
+    "cats": (gettext_noop("Basic cats (NP/XP fodder)"), frozenset(NORMAL_CATS) | {"Superfeline"}),
+    "lil": (gettext_noop("Li'l cats"), frozenset(LIL_CATS)),
 }
 
 
@@ -3400,11 +3681,13 @@ def normal_plan_targets(value: str) -> tuple[str, frozenset[str]] | None:
     return None
 
 
-def normal_item_options() -> list[str]:
-    """Every distinct item the machines deal, for the plan's specific-item picker."""
+def normal_item_options() -> list[tuple[str, str]]:
+    """Every distinct item the machines deal, for the plan's specific-item picker: the
+    item's own name (what a plan post names) and the name this version shows."""
     items = {item for banner in NORMAL_BANNERS for pool in banner.pools for item in pool.items}
+    names = normal_names()
 
-    return sorted(items)
+    return sorted(((item, names.get(item, item)) for item in items), key=lambda pair: pair[1])
 
 
 def build_normal_plan(
@@ -3437,6 +3720,7 @@ def build_normal_plan(
     # One pass builds the merged legs (consecutive pulls on one machine) and the track
     # marks together, so each lit cell carries the step (leg) number it belongs to and
     # the step list and track can be walked in lockstep.
+    names = normal_names()
     marks: dict[tuple[int, str], dict[str, dict]] = {}
     legs = []
     for step in plan.steps:
@@ -3448,7 +3732,7 @@ def build_normal_plan(
                 {
                     "n": n,
                     "key": step.machine,
-                    "name": BANNERS_BY_KEY[step.machine].name,
+                    "name": gettext(BANNERS_BY_KEY[step.machine].name),
                     "cheap": step.machine in CHEAP_KEYS,
                     "currency": (
                         "Normal Cat Ticket"
@@ -3468,6 +3752,7 @@ def build_normal_plan(
         legs[-1]["pulls"].append(
             {
                 "item": step.item,
+                "label": names.get(step.item, step.item),
                 "cell": f"{step.position}{step.track}",
                 "dupe": step.dupe,
                 "target": step.target,
@@ -3477,6 +3762,9 @@ def build_normal_plan(
 
     for leg in legs:
         leg["targets"] = [pull for pull in leg["pulls"] if pull["target"]]
+        pulls = len(leg["pulls"])
+        leg["kind_text"] = ngettext("%(n)s&times; pull", "%(n)s&times; pulls", pulls) % {"n": pulls}
+        leg["cost_text"] = _normal_count(leg["currency"], pulls)
 
     # The table shows the live machines, reaching at least the plan's furthest cell.
     keys = [banner.key for banner in NORMAL_BANNERS if banner.key in live]
@@ -3490,10 +3778,12 @@ def build_normal_plan(
         ("Lucky Ticket", plan.spent.get("lt", 0)),
         ("Lucky Ticket G", plan.spent.get("ltg", 0)),
     ]
-    spent = [{"name": name, "rolls": n} for name, n in currencies if n]
+    spent = [
+        {"name": name, "rolls": n, "text": _normal_count(name, n)} for name, n in currencies if n
+    ]
 
     return {
-        "label": label,
+        "label": normal_target_label(label),
         "hits": plan.hits,
         "legs": legs,
         "spent": spent,

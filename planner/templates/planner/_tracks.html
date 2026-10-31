@@ -1,74 +1,74 @@
-{% if track.rows %}
+{% load i18n %}{% if track.rows %}
   {% if track.found_cats %}
     {# The unified targets panel: every cat you're searching for - picks, wishlist and #}
     {# toggled future ubers - with the picker's rarity / owned ✓ / wishlisted ★ marks and #}
     {# its next position (or a ⚠ when no selected banner carries it). Browse view only - #}
     {# plan-solution tracks don't set found_cats, so no panel there. #}
     <div class="found-cats">
-      <span class="found-label" title="Every cat you're searching for - the targets you picked, your wishlist (when that search is on), and any future ubers you've toggled - with its next spot in these rolls. Click a position to jump to its cell.">Targets</span>
-      <span class="found-count" title="{{ track.found_hits }} of them turn up in these rolls">{{ track.found_cats|length }}</span>
+      <span class="found-label" title="{% translate "Every cat you're searching for - the targets you picked, your wishlist (when that search is on), and any future ubers you've toggled - with its next spot in these rolls. Click a position to jump to its cell." %}">{% translate "Targets" %}</span>
+      <span class="found-count" title="{% blocktranslate with hits=track.found_hits %}{{ hits }} of them turn up in these rolls{% endblocktranslate %}">{{ track.found_cats|length }}</span>
       <ul class="found-list">
         {% for f in track.found_cats %}
           <li class="found-item{% if f.unreachable %} is-unreachable{% elif not f.found %} is-out{% endif %}{% if f.owned %} owned{% endif %}{% if f.wanted %} wanted{% endif %}">
-            {% if f.rarity %}<span class="rarity" data-rarity="{{ f.rarity }}">{{ f.rarity }}</span>{% endif %}
+            {% if f.rarity %}<span class="rarity" data-rarity="{{ f.rarity }}">{% translate f.rarity %}</span>{% endif %}
             {% if f.future %}
-              <span class="found-cat future" title="An uber not released yet - a stand-in for whatever joins this banner's pool next"><span class="catname">{{ f.future_label }}</span></span>{% if f.banner %} <span class="found-banner" title="{{ f.banner }}">{{ f.banner }}</span>{% endif %}
+              <span class="found-cat future" title="{% translate "An uber not released yet - a stand-in for whatever joins this banner's pool next" %}"><span class="catname">{% blocktranslate with n=f.future_n %}Future Uber {{ n }}{% endblocktranslate %}</span></span>{% if f.banner %} <span class="found-banner" title="{{ f.banner }}">{{ f.banner }}</span>{% endif %}
             {% else %}
               <button type="button" class="catlink found-cat" data-name="{{ f.name }}"><span class="catname">{{ f.name }}</span></button>
             {% endif %}
             {% if f.found %}
-              <button type="button" class="find-pos" data-idx="{{ f.index }}"{% if f.guaranteed %} data-guaranteed="1"{% endif %} title="Jump to {{ f.pos }} in the track">{{ f.pos }}</button>
+              <button type="button" class="find-pos" data-idx="{{ f.index }}"{% if f.guaranteed %} data-guaranteed="1"{% endif %} title="{% blocktranslate with pos=f.pos %}Jump to {{ pos }} in the track{% endblocktranslate %}">{{ f.pos }}</button>
             {% elif f.unreachable %}
-              <span class="find-warn" role="img" aria-label="Won't drop on the selected banners" title="Won't drop on the selected banners: {{ track.selected_titles }}. Add a banner that carries it, or remove it.">&#9888;</span>
+              <span class="find-warn" role="img" aria-label="{% translate "Won't drop on the selected banners" %}" title="{% blocktranslate with banners=track.selected_titles %}Won't drop on the selected banners: {{ banners }}. Add a banner that carries it, or remove it.{% endblocktranslate %}">&#9888;</span>
             {% else %}
-              <span class="find-out" title="Doesn't turn up in the first {{ f.pos|cut:'+' }} rolls">{{ f.pos }}</span>
+              <span class="find-out" title="{% blocktranslate with rolls=f.pos|cut:'+' %}Doesn't turn up in the first {{ rolls }} rolls{% endblocktranslate %}">{{ f.pos }}</span>
             {% endif %}
-            {% if f.pk %}<button type="button" class="found-remove" data-pk="{{ f.pk }}" title="Remove {{ f.name }} from your targets" aria-label="Remove target">&times;</button>{% elif f.future %}<button type="button" class="found-remove" data-future-name="{{ f.name }}" title="Stop searching for this future uber" aria-label="Remove target">&times;</button>{% endif %}
+            {% if f.pk %}<button type="button" class="found-remove" data-pk="{{ f.pk }}" title="{% blocktranslate with name=f.name %}Remove {{ name }} from your targets{% endblocktranslate %}" aria-label="{% translate "Remove target" %}">&times;</button>{% elif f.future %}<button type="button" class="found-remove" data-future-name="{{ f.name }}" title="{% translate "Stop searching for this future uber" %}" aria-label="{% translate "Remove target" %}">&times;</button>{% endif %}
           </li>
         {% endfor %}
       </ul>
     </div>
   {% endif %}
   <details class="track-guide">
-    <summary>Legend</summary>
+    <summary>{% translate "Legend" %}</summary>
     {# Each sample reuses the track cells' own classes, so the guide always looks #}
     {# exactly like the rows below it. #}
     <ul class="symbol-legend">
-      <li><span class="sym">A / B</span> alternate timelines; a dupe rerolls and switches track</li>
-      <li><span class="sym dice-sym">{% include "planner/_dice_icon.html" %}</span> &ldquo;I rolled this cell&rdquo; &mdash; jumps the seed to just after it</li>
-      <li><span class="arrow sample">&#8627; if dupe</span> the reroll branch (its own dice &amp; landing)</li>
-      <li><span class="entry on-path sample">path</span> click a cell's name-free space: the rolls up to it light like a plan</li>
-      <li><span class="entry next sample">striped</span> you land here next &mdash; the first cat one more roll would give after the lit draws</li>
-      <li><span class="entry new sample"><span class="catlink">green name</span></span> Uber/Legend not in your collection</li>
-      <li><span class="entry owned sample"><span class="catlink"></span></span> owned <span class="sep">&middot;</span> <span class="entry wanted sample"><span class="catlink"><span class="catname">cat</span></span></span> wishlisted</li>
-      <li><span class="entry target sample"><span class="catlink target"><span class="catname">cat</span></span></span> a target you picked &mdash; gold here, and its next spot shows in <em>Targets</em> above</li>
-      <li><span class="debut">new</span> Uber debuting with this banner (its first event anywhere)</li>
-      {% if track.padded %}<li><span class="entry new sample"><span class="catlink future">Future Uber 1</span></span> an expected-but-unreleased Uber padding the pool</li>{% endif %}
-      {% if track.has_guaranteed %}<li><span class="sym">Guaranteed</span> the Uber a guaranteed multi awards if started on that cell</li>{% endif %}
-      {% if track.has_shared %}<li><span class="entry shared sample">dashed</span> another banner this plan step can roll on instead</li>{% endif %}
-      {% if track.has_currency %}<li><span class="capsule-tag platinum">platinum</span> / <span class="capsule-tag legend">legend</span> a capsule banner &mdash; its pulls spend that scarce ticket, not rare tickets or catfood</li>{% endif %}
+      <li><span class="sym">A / B</span> {% translate "alternate timelines; a dupe rerolls and switches track" %}</li>
+      <li><span class="sym dice-sym">{% include "planner/_dice_icon.html" %}</span> {% translate "&ldquo;I rolled this cell&rdquo; &mdash; jumps the seed to just after it" %}</li>
+      <li><span class="arrow sample">&#8627; {% translate "if dupe" %}</span> {% translate "the reroll branch (its own dice &amp; landing)" %}</li>
+      <li><span class="entry on-path sample">{% translate "path" %}</span> {% translate "click a cell's name-free space: the rolls up to it light like a plan" %}</li>
+      <li><span class="entry next sample">{% translate "striped" %}</span> {% translate "you land here next &mdash; the first cat one more roll would give after the lit draws" %}</li>
+      <li><span class="entry new sample"><span class="catlink">{% translate "green name" %}</span></span> {% translate "Uber/Legend not in your collection" %}</li>
+      <li><span class="entry owned sample"><span class="catlink"></span></span> {% translate "owned" %} <span class="sep">&middot;</span> <span class="entry wanted sample"><span class="catlink"><span class="catname">{% translate "cat" %}</span></span></span> {% translate "wishlisted" %}</li>
+      <li><span class="entry target sample"><span class="catlink target"><span class="catname">{% translate "cat" %}</span></span></span> {% translate "a target you picked &mdash; gold here, and its next spot shows in <em>Targets</em> above" %}</li>
+      <li><span class="debut">{% translate "new" %}</span> {% translate "Uber debuting with this banner (its first event anywhere)" %}</li>
+      {% if track.padded %}<li><span class="entry new sample"><span class="catlink future">{% blocktranslate with n=1 %}Future Uber {{ n }}{% endblocktranslate %}</span></span> {% translate "an expected-but-unreleased Uber padding the pool" %}</li>{% endif %}
+      {% if track.has_guaranteed %}<li><span class="sym">{% translate "Guaranteed" %}</span> {% translate "the Uber a guaranteed multi awards if started on that cell" %}</li>{% endif %}
+      {% if track.has_shared %}<li><span class="entry shared sample">{% translate "dashed" %}</span> {% translate "another banner this plan step can roll on instead" %}</li>{% endif %}
+      {% if track.has_currency %}<li><span class="capsule-tag platinum">{% translate "platinum" %}</span> / <span class="capsule-tag legend">{% translate "legend" %}</span> {% translate "a capsule banner &mdash; its pulls spend that scarce ticket, not rare tickets or catfood" %}</li>{% endif %}
     </ul>
     <div class="rarity-legend">
-      <span class="rarity" data-rarity="Rare">Rare</span>
-      <span class="rarity" data-rarity="Super Rare">Super Rare</span>
-      <span class="rarity" data-rarity="Uber Super Rare">Uber Super Rare</span>
-      <span class="rarity" data-rarity="Legend Rare">Legend Rare</span>
+      <span class="rarity" data-rarity="Rare">{% translate "Rare" %}</span>
+      <span class="rarity" data-rarity="Super Rare">{% translate "Super Rare" %}</span>
+      <span class="rarity" data-rarity="Uber Super Rare">{% translate "Uber Super Rare" %}</span>
+      <span class="rarity" data-rarity="Legend Rare">{% translate "Legend Rare" %}</span>
     </div>
   </details>
   {% if track.legend|length > 1 or track.show_future or track.has_currency %}
     <ul class="track-legend">
       {% for b in track.legend %}
-        <li><span class="tag">{{ b.tag }}</span> {{ b.names|join:" · " }}{% if b.currency %} <span class="capsule-tag {{ b.currency }}">{{ b.currency }}</span>{% endif %}{% if track.show_future %} <label class="future-ctl" title="Pad this banner's uber pool with expected-but-unreleased ubers (godfat's Count of future ubers) - its uber cells land as if those units were already in the pool; drag the box up/down to adjust">Add future ubers <input type="number" class="future-ubers" value="{{ b.future }}" min="0" max="99" data-names="{{ b.keys }}"></label>{% if b.future_chips %} <span class="future-targets" title="Toggle a future uber to search for it - it joins your Targets above and glows on this banner's cells">{% for fc in b.future_chips %}<button type="button" class="future-target" aria-pressed="false" data-future-name="{{ fc.name }}" title="Search for {{ fc.label }} on {{ b.names|join:' · ' }}">{{ fc.label }}</button>{% endfor %}</span>{% endif %}{% endif %}</li>
+        <li><span class="tag">{{ b.tag }}</span> {{ b.names|join:" · " }}{% if b.currency %} <span class="capsule-tag {{ b.currency }}">{% translate b.currency %}</span>{% endif %}{% if track.show_future %} <label class="future-ctl" title="{% translate "Pad this banner's uber pool with expected-but-unreleased ubers (godfat's Count of future ubers) - its uber cells land as if those units were already in the pool; drag the box up/down to adjust" %}">{% translate "Add future ubers" %} <input type="number" class="future-ubers" value="{{ b.future }}" min="0" max="99" data-names="{{ b.keys }}"></label>{% if b.future_chips %} <span class="future-targets" title="{% translate "Toggle a future uber to search for it - it joins your Targets above and glows on this banner's cells" %}">{% for fc in b.future_chips %}{% blocktranslate asvar label with n=fc.n %}Future Uber {{ n }}{% endblocktranslate %}<button type="button" class="future-target" aria-pressed="false" data-future-name="{{ fc.name }}" title="{% blocktranslate with banners=b.names|join:' · ' %}Search for {{ label }} on {{ banners }}{% endblocktranslate %}">{{ label }}</button>{% endfor %}</span>{% endif %}{% endif %}</li>
       {% endfor %}
     </ul>
   {% endif %}
   <table class="track">
     <thead><tr>
       <th class="pos">#</th>
-      <th>Track A</th>
-      {% if track.has_guaranteed %}<th class="guaranteed-col">Guaranteed</th>{% endif %}
-      <th>Track B</th>
-      {% if track.has_guaranteed %}<th class="guaranteed-col">Guaranteed</th>{% endif %}
+      <th>{% translate "Track A" %}</th>
+      {% if track.has_guaranteed %}<th class="guaranteed-col">{% translate "Guaranteed" %}</th>{% endif %}
+      <th>{% translate "Track B" %}</th>
+      {% if track.has_guaranteed %}<th class="guaranteed-col">{% translate "Guaranteed" %}</th>{% endif %}
     </tr></thead>
     <tbody>
       {% for row in track.rows %}
@@ -83,5 +83,5 @@
     </tbody>
   </table>
 {% else %}
-  <p class="muted">No rolls for this seed and banner selection.</p>
+  <p class="muted">{% translate "No rolls for this seed and banner selection." %}</p>
 {% endif %}

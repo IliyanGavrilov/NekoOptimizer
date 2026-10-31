@@ -1,0 +1,73 @@
+{% extends "planner/base.html" %}
+
+{% block content %}
+  <h1>このサイトについて</h1>
+
+  <section class="about-section">
+    <h2>ツールについて</h2>
+    <p class="muted">
+      <strong>Neko Optimizer</strong>は<em>にゃんこ大戦争</em>のガチャ計画ツールです。
+      ほしいキャラとチケット・ネコカンの予算を伝えると、
+      <strong>どこで・いつ・どの順番で引けば、もっとも少ない資源で済むか</strong>を計算します。
+    </p>
+    <p class="muted">
+      すべてのガチャは1つの共通のXOR-shift乱数(シード値)で動いているので、シード値がわかれば
+      この先の結果はすべて決まっています。Neko Optimizerは独自のエンジンでその流れをローカルに計算し、
+      引く回を状態のグラフとして扱い、A*探索とビームサーチでほしいものリストを集めるいちばん安い経路を探します。
+    </p>
+  </section>
+
+  <section class="about-section">
+    <h2>作った人</h2>
+    <p class="muted">
+      <strong>Iliyan Gavrilov</strong>の個人プロジェクトです &mdash; 経路探索、決定論的な乱数、そして
+      Djangoアプリ全体を一から作ってみる口実として作りました。ソースコードは
+      <a href="https://github.com/IliyanGavrilov/NekoOptimizer" target="_blank" rel="noopener">GitHub &#8599;</a>で公開しています。
+    </p>
+  </section>
+
+  <section class="about-section">
+    <h2>使っている技術</h2>
+    <ul class="about-list muted">
+      <li>ブラウザで動くエンジンは<strong>Rust</strong>を<strong>WebAssembly</strong>にコンパイルしたもの &mdash; ガチャ計算、A*/ビーム探索、2<sup>32</sup>通りすべてを調べるシード値検索、にゃんこ図鑑のスクリーンショット読み取りを、すべてWeb Workerで実行します。</li>
+      <li>参照用エンジン(乱数、ガチャ計算、グラフ構築、探索)とゲームデータの処理は<strong>Python 3.14</strong>。</li>
+      <li>Webアプリ・アカウント・ORM・フォーム・テンプレートは<strong>Django 6.1</strong>。ページ側は素のJavaScriptです。</li>
+      <li>本番は<strong>Vercel</strong>上の<strong>PostgreSQL</strong>、ローカルはSQLite。ゲームデータはJSONとしてリポジトリに含めています。</li>
+      <li>テストとリントは<strong>pytest</strong>と<strong>ruff</strong>で、GitHub ActionsでCodeQLやセキュリティスキャンと一緒に実行しています。</li>
+    </ul>
+  </section>
+
+  <section class="about-section">
+    <h2>コミュニティのツール</h2>
+    <p class="muted">
+      Neko Optimizerはガチャの計画に特化していて、ステータス計算やステージ情報のサイトになるつもりはありません。
+      別のタブで開いておくと便利なツールはこちらです。
+    </p>
+    {% for group, links in tool_directory %}
+      <h3 class="about-group">{{ group }}</h3>
+      <ul class="about-list muted">
+        {% for link in links %}
+          <li>
+            <a href="{{ link.url }}" target="_blank" rel="noopener">{{ link.label }} &#8599;</a>
+            &mdash; {{ link.note }}
+          </li>
+        {% endfor %}
+      </ul>
+    {% endfor %}
+  </section>
+
+  <section class="about-section">
+    <h2>クレジット</h2>
+    <p class="muted">
+      解析されたガチャの仕組み &mdash; XOR-shift乱数とガチャ計算の内部(レア被りの引き直し、バウンス、確定ガチャ、
+      列の切り替わり) &mdash; は<a href="https://bc.godfat.org/" target="_blank" rel="noopener">godfatのにゃんこ大戦争シード値トラッカー &#8599;</a>
+      (Apache-2.0)によるものです。Neko OptimizerはそれをPythonに移植し、ゴールデンテストでgodfatの出力と1バイト単位まで
+      一致することを検証しています。その上の計画部分は独自のものです。
+    </p>
+    <p class="muted">
+      キャラのデータとアイコンは<a href="https://battlecatsinfo.github.io/" target="_blank" rel="noopener">battlecatsinfo &#8599;</a>、
+      ティアのランキングは<a href="https://www.battlecatstierlist.com/" target="_blank" rel="noopener">battlecatstierlist.com &#8599;</a>のものです。
+      Neko Optimizerはファンが作ったツールで、PONOSとは関係ありません。
+    </p>
+  </section>
+{% endblock %}

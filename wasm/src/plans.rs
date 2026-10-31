@@ -197,32 +197,67 @@ fn plan_landing(plan: &Path, graphs: &[Graph]) -> Option<usize> {
     walked_outcome(graph, last.position, last.cat, before).map(|o| o.next)
 }
 
-fn plural(n: i64) -> &'static str {
-    if n == 1 {
-        ""
+fn tickets(req: &Request, n: i64) -> String {
+    req.trn("%(n)s ticket", "%(n)s tickets", n, &[("n", &n.to_string())])
+}
+
+fn platinum_tickets(req: &Request, n: i64) -> String {
+    let count = n.to_string();
+    req.trn(
+        "%(n)s platinum ticket",
+        "%(n)s platinum tickets",
+        n,
+        &[("n", &count)],
+    )
+}
+
+fn legend_tickets(req: &Request, n: i64) -> String {
+    req.trn(
+        "%(n)s legend ticket",
+        "%(n)s legend tickets",
+        n,
+        &[("n", &n.to_string())],
+    )
+}
+
+fn catfood(req: &Request, n: i64) -> String {
+    req.tr("%(n)s catfood", &[("n", &n.to_string())])
+}
+
+/// services.cost_label.
+fn cost_label(req: &Request, tickets_n: i64, food: i64, platinum: i64, legend: i64) -> String {
+    let mut parts = Vec::new();
+    if tickets_n != 0 {
+        parts.push(tickets(req, tickets_n));
+    }
+    if platinum != 0 {
+        parts.push(platinum_tickets(req, platinum));
+    }
+    if legend != 0 {
+        parts.push(legend_tickets(req, legend));
+    }
+    if food != 0 {
+        parts.push(catfood(req, food));
+    }
+    if parts.is_empty() {
+        req.t("free").to_owned()
     } else {
-        "s"
+        parts.join(" + ")
     }
 }
 
-fn cost_label(tickets: i64, catfood: i64, platinum: i64, legend: i64) -> String {
-    let mut parts = Vec::new();
-    if tickets != 0 {
-        parts.push(format!("{tickets} ticket{}", plural(tickets)));
-    }
-    if platinum != 0 {
-        parts.push(format!("{platinum} platinum ticket{}", plural(platinum)));
-    }
-    if legend != 0 {
-        parts.push(format!("{legend} legend ticket{}", plural(legend)));
-    }
-    if catfood != 0 {
-        parts.push(format!("{catfood} catfood"));
-    }
-    if parts.is_empty() {
-        "free".to_owned()
-    } else {
-        parts.join(" + ")
+/// A multi's step label, "11-roll (guaranteed)", in the interface language.
+fn kind_text(req: &Request, kind: &Kind) -> String {
+    match kind {
+        Kind::Single => req.t("Single pull").to_owned(),
+        Kind::Multi { rolls, guaranteed } => req.tr(
+            if *guaranteed {
+                "%(n)s-roll (guaranteed)"
+            } else {
+                "%(n)s-roll"
+            },
+            &[("n", &rolls.to_string())],
+        ),
     }
 }
 
@@ -358,6 +393,7 @@ impl Ctx<'_> {
     fn body(&self, out: &mut String, targets: &[u32], plan: &Path) {
         let wanted: HashSet<u32> = targets.iter().copied().collect();
         let label = cost_label(
+            self.req,
             plan.tickets_used,
             plan.cost(),
             plan.platinum_used,
@@ -381,7 +417,12 @@ impl Ctx<'_> {
                 esc(last)
             );
         }
-        let _ = write!(out, ">Apply this plan <span class=\"apply-cost\">{}</span></button>\n</div>\n<div class=\"plan-follow\">\n", esc(&label));
+        let _ = write!(
+            out,
+            ">{} <span class=\"apply-cost\">{}</span></button>\n</div>\n<div class=\"plan-follow\">\n",
+            self.req.t("Apply this plan"),
+            esc(&label)
+        );
         self.steps(out, plan, &wanted, &label);
         out.push_str("<div class=\"plan-track\">");
         out.push_str(&self.track(plan, &wanted));
@@ -390,7 +431,15 @@ impl Ctx<'_> {
 
     /// _steps.html.
     fn steps(&self, out: &mut String, plan: &Path, targets: &HashSet<u32>, total: &str) {
-        out.push_str("\n<div class=\"plan-steps\">\n<div class=\"steps-head\">\n<span class=\"steps-title\">Steps</span>\n<div class=\"step-nav\" role=\"group\" aria-label=\"Walk the plan step by step\">\n<button type=\"button\" class=\"step-nav-btn step-prev\" aria-label=\"Previous step\">&#8249;</button>\n<span class=\"step-count\" aria-live=\"polite\"></span>\n<button type=\"button\" class=\"step-nav-btn step-next\" aria-label=\"Next step\">&#8250;</button>\n</div>\n</div>\n<div class=\"step-list\">\n");
+        let req = self.req;
+        let _ = write!(
+            out,
+            "\n<div class=\"plan-steps\">\n<div class=\"steps-head\">\n<span class=\"steps-title\">{}</span>\n<div class=\"step-nav\" role=\"group\" aria-label=\"{}\">\n<button type=\"button\" class=\"step-nav-btn step-prev\" aria-label=\"{}\">&#8249;</button>\n<span class=\"step-count\" aria-live=\"polite\"></span>\n<button type=\"button\" class=\"step-nav-btn step-next\" aria-label=\"{}\">&#8250;</button>\n</div>\n</div>\n<div class=\"step-list\">\n",
+            req.t("Steps"),
+            req.t("Walk the plan step by step"),
+            req.t("Previous step"),
+            req.t("Next step")
+        );
         for (n, leg) in plan.legs().iter().enumerate() {
             let n = n + 1;
             let rolls = leg.pulls.len() as i64;
@@ -423,49 +472,64 @@ impl Ctx<'_> {
                 .join(" · ");
             let _ = write!(out, "\" data-step=\"{n}\">\n<span class=\"step-card-head\">\n<span class=\"step-dot\">{n}</span>\n<span class=\"step-banner\">{names}");
             if titles.len() > 1 {
-                out.push_str(" <span class=\"equiv-note\">same rolls</span>");
+                let _ = write!(
+                    out,
+                    " <span class=\"equiv-note\">{}</span>",
+                    req.t("same rolls")
+                );
             }
             if !currency.is_empty() {
                 let _ = write!(
                     out,
-                    " <span class=\"capsule-tag {currency}\">{currency}</span>"
+                    " <span class=\"capsule-tag {currency}\">{}</span>",
+                    req.t(currency)
                 );
             }
             out.push_str(
                 "</span>\n</span>\n<span class=\"step-meta\">\n<span class=\"step-kind\">",
             );
             if leg.kind == Kind::Single {
-                let _ = write!(out, "{rolls}&times; single pull{}", plural(rolls));
+                let count = rolls.to_string();
+                out.push_str(&req.trn(
+                    "%(n)s&times; single pull",
+                    "%(n)s&times; single pulls",
+                    rolls,
+                    &[("n", &count)],
+                ));
             } else {
-                out.push_str(&esc(&leg.kind.label()));
+                out.push_str(&esc(&kind_text(req, &leg.kind)));
             }
             out.push_str("</span>\n<span class=\"step-cost\">");
             if tickets != 0 {
                 let _ = write!(
                     out,
-                    "<span class=\"cost-part\">{tickets} ticket{}</span>",
-                    plural(tickets)
+                    "<span class=\"cost-part\">{}</span>",
+                    self::tickets(req, tickets)
                 );
             }
             if platinum != 0 {
                 let _ = write!(
                     out,
-                    "<span class=\"cost-part platinum\">{platinum} platinum ticket{}</span>",
-                    plural(platinum)
+                    "<span class=\"cost-part platinum\">{}</span>",
+                    platinum_tickets(req, platinum)
                 );
             }
             if legend != 0 {
                 let _ = write!(
                     out,
-                    "<span class=\"cost-part legend\">{legend} legend ticket{}</span>",
-                    plural(legend)
+                    "<span class=\"cost-part legend\">{}</span>",
+                    legend_tickets(req, legend)
                 );
             }
             if leg.cost != 0 {
-                let _ = write!(out, "<span class=\"cost-part\">{} catfood</span>", leg.cost);
+                let _ = write!(
+                    out,
+                    "<span class=\"cost-part\">{}</span>",
+                    catfood(req, leg.cost)
+                );
             }
             if tickets == 0 && platinum == 0 && legend == 0 && leg.cost == 0 {
-                out.push_str("free");
+                out.push_str(req.t("free"));
             }
             out.push_str("</span>\n</span>\n");
             let gets: Vec<u32> = leg
@@ -475,7 +539,7 @@ impl Ctx<'_> {
                 .filter(|c| targets.contains(c))
                 .collect();
             if !gets.is_empty() {
-                out.push_str("<span class=\"step-gets\">gets ");
+                let _ = write!(out, "<span class=\"step-gets\">{} ", req.t("gets"));
                 for (i, &c) in gets.iter().enumerate() {
                     if i > 0 {
                         out.push_str(", ");
@@ -490,8 +554,8 @@ impl Ctx<'_> {
         if !total.is_empty() {
             let _ = writeln!(
                 out,
-                "<p class=\"steps-total\">Total &middot; {}</p>",
-                esc(total)
+                "<p class=\"steps-total\">{}</p>",
+                req.tr("Total &middot; %(total)s", &[("total", &esc(total))])
             );
         }
         out.push_str("</div>\n");
@@ -504,20 +568,35 @@ impl Ctx<'_> {
         if open && row.found.is_some() {
             out.push_str(" open");
         }
+        let req = self.req;
         let size = row.targets.len();
+        let gets = req.trn(
+            "This plan gets %(size)s of the %(total)s cat you searched for",
+            "This plan gets %(size)s of the %(total)s cats you searched for",
+            total as i64,
+            &[("size", &size.to_string()), ("total", &total.to_string())],
+        );
         let _ = write!(
             out,
-            ">\n<summary>\n<span class=\"sol-cats\">{}</span>\n<span class=\"sol-count\" title=\"This plan gets {size} of the {total} cat{} you searched for\">{size}/{total}</span>\n",
-            self.joined(&row.targets, ", "),
-            plural(total as i64)
+            ">\n<summary>\n<span class=\"sol-cats\">{}</span>\n<span class=\"sol-count\" title=\"{gets}\">{size}/{total}</span>\n",
+            self.joined(&row.targets, ", ")
         );
         match &row.found {
             Some(solved) => {
                 if !solved.exact {
-                    let _ = writeln!(out, "<span class=\"sol-approx\" title=\"Best plan found, not a proven cheapest one. Past {SUBSET_TARGET_LIMIT} cats the search for the whole set is bounded - an exact one would take 2^N searches - so a cheaper plan may exist. Every smaller row here IS exact.\">best found</span>");
+                    let _ = writeln!(
+                        out,
+                        "<span class=\"sol-approx\" title=\"{}\">{}</span>",
+                        req.tr(
+                            "Best plan found, not a proven cheapest one. Past %(limit)s cats the search for the whole set is bounded - an exact one would take 2^N searches - so a cheaper plan may exist. Every smaller row here IS exact.",
+                            &[("limit", &SUBSET_TARGET_LIMIT.to_string())]
+                        ),
+                        req.t("best found")
+                    );
                 }
                 let plan = &solved.plan;
                 let label = cost_label(
+                    req,
                     plan.tickets_used,
                     plan.cost(),
                     plan.platinum_used,
@@ -532,12 +611,20 @@ impl Ctx<'_> {
                     out.push_str(">\n");
                     self.body(out, &row.targets, plan);
                 } else {
-                    let _ = write!(out, " data-subset=\"{targets}\">\n<p class=\"muted plan-loading\">Working out this plan&hellip;</p>\n");
+                    let _ = write!(
+                        out,
+                        " data-subset=\"{targets}\">\n<p class=\"muted plan-loading\">{}</p>\n",
+                        req.t("Working out this plan&hellip;")
+                    );
                 }
                 out.push_str("</div>\n");
             }
             None => {
-                out.push_str("<span class=\"sol-cost not-found\">Not found</span>\n</summary>\n")
+                let _ = write!(
+                    out,
+                    "<span class=\"sol-cost not-found\">{}</span>\n</summary>\n",
+                    req.t("Not found")
+                );
             }
         }
         out.push_str("</details>\n");
@@ -714,17 +801,29 @@ pub fn solutions(req: &Request, view: &crate::tracks::View, args: &PlanArgs) -> 
     let ctx = context(req, view, args, &rolls);
     let rows = ctx.rows();
     if rows.is_empty() {
-        return "\n<p class=\"muted\">No reachable plan with given resources.</p>\n".to_owned();
+        return format!(
+            "\n<p class=\"muted\">{}</p>\n",
+            req.t("No reachable plan with given resources.")
+        );
     }
     let total = ctx.by_name(args.targets.clone()).len();
     let mut out = String::new();
     if rows.len() > PLAN_FILTER_ROWS {
-        out.push_str("\n<div class=\"plan-filter\" id=\"planFilter\">\n<span class=\"plan-filter-label\">Only plans with</span>\n<span class=\"plan-filter-cats\">\n");
+        let _ = write!(
+            out,
+            "\n<div class=\"plan-filter\" id=\"planFilter\">\n<span class=\"plan-filter-label\">{}</span>\n<span class=\"plan-filter-cats\">\n",
+            req.t("Only plans with")
+        );
         for cat in ctx.by_name(args.targets.clone()) {
             let name = esc(ctx.name(cat));
             let _ = write!(out, "<button type=\"button\" class=\"filter-cat\" aria-pressed=\"false\" data-cat=\"{name}\">{name}</button>");
         }
-        let _ = write!(out, "\n</span>\n<button type=\"button\" class=\"plan-filter-clear\" hidden>Clear</button>\n<span class=\"plan-filter-count\" aria-live=\"polite\">{} plans</span>\n</div>\n", rows.len());
+        let _ = write!(
+            out,
+            "\n</span>\n<button type=\"button\" class=\"plan-filter-clear\" hidden>{}</button>\n<span class=\"plan-filter-count\" aria-live=\"polite\">{}</span>\n</div>\n",
+            req.t("Clear"),
+            req.tr("%(n)s plans", &[("n", &rows.len().to_string())])
+        );
     }
     let _ = write!(
         out,

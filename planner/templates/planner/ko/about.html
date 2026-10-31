@@ -1,0 +1,73 @@
+{% extends "planner/base.html" %}
+
+{% block content %}
+  <h1>소개</h1>
+
+  <section class="about-section">
+    <h2>이 도구</h2>
+    <p class="muted">
+      <strong>Neko Optimizer</strong>는 <em>냥코 대전쟁</em>의 뽑기 계획 도구입니다.
+      원하는 캐릭터와 티켓·고양이 통조림 예산을 알려 주면
+      <strong>어디서, 언제, 어떤 순서로 뽑아야 자원이 가장 적게 드는지</strong>를 계산합니다.
+    </p>
+    <p class="muted">
+      모든 뽑기는 하나의 공통 XOR-shift 난수 시드로 돌아가므로, 시드를 알면 앞으로의 뽑기 흐름은 모두 정해져 있습니다.
+      Neko Optimizer는 자체 엔진으로 그 흐름을 로컬에서 계산하고, 뽑기를 상태 그래프로 다루며,
+      A*와 빔 탐색으로 위시리스트를 모으는 가장 싼 경로를 찾습니다.
+    </p>
+  </section>
+
+  <section class="about-section">
+    <h2>만든 사람</h2>
+    <p class="muted">
+      <strong>Iliyan Gavrilov</strong>의 개인 프로젝트입니다 &mdash; 경로 탐색, 결정론적 난수, 그리고 Django 앱 전체를
+      처음부터 끝까지 만들어 보려는 핑계로 시작했습니다. 소스 코드는
+      <a href="https://github.com/IliyanGavrilov/NekoOptimizer" target="_blank" rel="noopener">GitHub &#8599;</a>에 있습니다.
+    </p>
+  </section>
+
+  <section class="about-section">
+    <h2>사용한 기술</h2>
+    <ul class="about-list muted">
+      <li>브라우저에서 돌아가는 엔진은 <strong>Rust</strong>를 <strong>WebAssembly</strong>로 컴파일한 것입니다 &mdash; 뽑기 계산, A*/빔 탐색, 2<sup>32</sup>개 시드를 전부 훑는 시드 찾기, 냥코 도감 스크린샷 읽기를 모두 Web Worker에서 실행합니다.</li>
+      <li>참조용 엔진(난수, 뽑기 엔진, 그래프 생성, 탐색)과 게임 데이터 처리는 <strong>Python 3.14</strong>.</li>
+      <li>웹 앱, 계정, ORM, 폼, 템플릿은 <strong>Django 6.1</strong>. 페이지 쪽은 순수 JavaScript입니다.</li>
+      <li>운영 환경은 <strong>Vercel</strong>의 <strong>PostgreSQL</strong>, 로컬은 SQLite이며, 게임 데이터는 JSON으로 저장소에 포함되어 있습니다.</li>
+      <li>테스트와 린트는 <strong>pytest</strong>와 <strong>ruff</strong>로, GitHub Actions에서 CodeQL·보안 검사와 함께 실행합니다.</li>
+    </ul>
+  </section>
+
+  <section class="about-section">
+    <h2>커뮤니티 도구</h2>
+    <p class="muted">
+      Neko Optimizer는 뽑기 계획에 집중하며, 스탯 계산기나 스테이지 데이터베이스가 되려 하지 않습니다.
+      다른 탭에 열어 두면 좋은 도구들은 다음과 같습니다.
+    </p>
+    {% for group, links in tool_directory %}
+      <h3 class="about-group">{{ group }}</h3>
+      <ul class="about-list muted">
+        {% for link in links %}
+          <li>
+            <a href="{{ link.url }}" target="_blank" rel="noopener">{{ link.label }} &#8599;</a>
+            &mdash; {{ link.note }}
+          </li>
+        {% endfor %}
+      </ul>
+    {% endfor %}
+  </section>
+
+  <section class="about-section">
+    <h2>크레딧</h2>
+    <p class="muted">
+      역분석된 뽑기 메커니즘 &mdash; XOR-shift 난수와 뽑기 엔진 내부(레어 중복 재추첨, 바운스, 확정 뽑기, 열 전환) &mdash;
+      은 <a href="https://bc.godfat.org/" target="_blank" rel="noopener">godfat의 냥코 대전쟁 시드 트래커 &#8599;</a>
+      (Apache-2.0)에서 왔습니다. Neko Optimizer는 이를 Python으로 옮기고, 골든 테스트로 godfat의 출력과 바이트 단위까지
+      일치하는지 검증합니다. 그 위의 계획 기능은 직접 만든 것입니다.
+    </p>
+    <p class="muted">
+      캐릭터 데이터와 아이콘은 <a href="https://battlecatsinfo.github.io/" target="_blank" rel="noopener">battlecatsinfo &#8599;</a>,
+      티어 순위는 <a href="https://www.battlecatstierlist.com/" target="_blank" rel="noopener">battlecatstierlist.com &#8599;</a>에서 가져왔습니다.
+      Neko Optimizer는 팬이 만든 도구이며 PONOS와 관련이 없습니다.
+    </p>
+  </section>
+{% endblock %}

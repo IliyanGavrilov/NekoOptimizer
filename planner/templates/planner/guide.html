@@ -1,14 +1,15 @@
 {% extends "planner/base.html" %}
+{% load i18n %}
 
 {% block content %}
   <article class="guide">
-    <p class="guide-crumb"><a href="{% url 'guides' %}">&larr; All guides</a></p>
+    <p class="guide-crumb"><a href="{% url 'guides' %}">&larr; {% translate "All guides" %}</a></p>
     <h1>{{ heading }}</h1>
     {% block guide %}{% endblock %}
   </article>
 
-  <nav class="guide-more" aria-label="More guides">
-    <h2>More guides</h2>
+  <nav class="guide-more" aria-label="{% translate "More guides" %}">
+    <h2>{% translate "More guides" %}</h2>
     <ul class="about-list">
       {% for slug, name, summary in others %}
         <li><a href="{% url 'guide' slug %}">{{ name }}</a></li>

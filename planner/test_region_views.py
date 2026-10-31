@@ -105,3 +105,31 @@ def test_links_on_a_versions_page_stay_in_that_version(client, profile):
     content = client.get("/jp/collection/").content.decode()
     assert 'action="/jp/region/"' in content
     assert 'href="/static/planner/style.css"' in content
+
+
+def test_a_versions_page_speaks_its_language(client, profile):
+    content = client.get("/jp/collection/").content.decode()
+    assert '<html lang="ja">' in content
+    assert "コレクション" in content
+
+
+def test_a_picked_language_wins_over_the_versions(client, profile):
+    client.cookies["neko_lang"] = "en"
+    assert '<html lang="en">' in client.get("/jp/collection/").content.decode()
+
+
+def test_picking_a_language_remembers_it_and_comes_back(client, profile):
+    response = client.post(
+        "/jp/language/", {"language": "ko"}, HTTP_REFERER="http://testserver/jp/tiers/"
+    )
+    assert (response["Location"], response.cookies["neko_lang"].value) == ("/jp/tiers/", "ko")
+
+
+def test_picking_the_games_language_forgets_the_pick(client, profile):
+    client.cookies["neko_lang"] = "ko"
+    response = client.post("/jp/language/", {"language": ""})
+    assert response.cookies["neko_lang"].value == ""
+
+
+def test_picking_an_unknown_language_is_rejected(client, profile):
+    assert client.post("/language/", {"language": "de"}).status_code == 400

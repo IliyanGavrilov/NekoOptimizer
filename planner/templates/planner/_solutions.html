@@ -1,19 +1,19 @@
-{% if solutions %}
+{% load i18n %}{% if solutions %}
   {% if filter_cats %}
     {# Hundreds of rows is a list nobody reads: tick the cats a plan must get and the rest #}
     {# fold away. Purely a view over the rows already here - nothing is re-solved. #}
     <div class="plan-filter" id="planFilter">
-      <span class="plan-filter-label">Only plans with</span>
+      <span class="plan-filter-label">{% translate "Only plans with" %}</span>
       <span class="plan-filter-cats">
         {% for cat in filter_cats %}<button type="button" class="filter-cat" aria-pressed="false" data-cat="{{ cat }}">{{ cat }}</button>{% endfor %}
       </span>
-      <button type="button" class="plan-filter-clear" hidden>Clear</button>
-      <span class="plan-filter-count" aria-live="polite">{{ solutions|length }} plans</span>
+      <button type="button" class="plan-filter-clear" hidden>{% translate "Clear" %}</button>
+      <span class="plan-filter-count" aria-live="polite">{% blocktranslate with n=solutions|length %}{{ n }} plans{% endblocktranslate %}</span>
     </div>
   {% endif %}
   <div id="planResults" data-apply-url="{% url 'apply_plan' %}" data-row-url="{% url 'plan_row' %}">
   {% for s in solutions %}{% include "planner/_solution.html" with s=s open=forloop.first %}{% endfor %}
   </div>
 {% else %}
-  <p class="muted">No reachable plan with given resources.</p>
+  <p class="muted">{% translate "No reachable plan with given resources." %}</p>
 {% endif %}

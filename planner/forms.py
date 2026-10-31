@@ -1,6 +1,7 @@
 import json
 
 from django import forms
+from django.utils.translation import gettext_lazy as _
 
 from neko.models import CATFOOD_PER_DRAW, is_future_uber
 from planner.models import Cat
@@ -19,18 +20,19 @@ class PlannerForm(forms.Form):
     # scrubs input[type=number], no hold-and-drag-to-nudge either - the seed is typed, never
     # stepped. inputmode keeps the mobile numeric keypad; it's still validated as an integer.
     seed = forms.IntegerField(
+        label=_("Seed"),
         min_value=0,
         initial=0,
         widget=forms.TextInput(attrs={"inputmode": "numeric", "pattern": "[0-9]*"}),
     )
     # Optional: explore mode hides the budget, and a blank field just means zero.
-    tickets = forms.IntegerField(min_value=0, initial=0, required=False)
-    catfood = forms.IntegerField(min_value=0, initial=0, required=False)
+    tickets = forms.IntegerField(label=_("Tickets"), min_value=0, initial=0, required=False)
+    catfood = forms.IntegerField(label=_("Catfood"), min_value=0, initial=0, required=False)
     targets = forms.ModelMultipleChoiceField(
         queryset=Cat.objects.none(), required=False, widget=forms.CheckboxSelectMultiple
     )
     use_wishlist = forms.BooleanField(
-        required=False, label="Also search my wishlist (unowned cats I marked wanted)"
+        required=False, label=_("Also search my wishlist (unowned cats I marked wanted)")
     )
     # The future-uber placeholders toggled as targets: a JSON list of qualified names posted
     # by the legend chips. Not a real model field (they're pool padding, not catalogue units),
@@ -40,30 +42,30 @@ class PlannerForm(forms.Form):
         min_value=1,
         initial=CATFOOD_PER_DRAW,
         required=False,
-        label="1 rare ticket is worth (catfood)",
+        label=_("1 rare ticket is worth (catfood)"),
     )
     platinum_cap = forms.IntegerField(
         min_value=0,
         initial=1,
         required=False,
-        label="Platinum tickets",
+        label=_("Platinum tickets"),
     )
     legend_cap = forms.IntegerField(
         min_value=0,
         initial=1,
         required=False,
-        label="Legend tickets",
+        label=_("Legend tickets"),
     )
     explore = forms.BooleanField(
         required=False,
         initial=True,
-        label="Explore mode - Plan without a budget",
+        label=_("Explore mode - Plan without a budget"),
     )
     horizon = forms.IntegerField(
         min_value=1,
         initial=EXPLORE_HORIZON,
         required=False,
-        label="Max depth (rolls)",
+        label=_("Max depth (rolls)"),
     )
 
     def clean_tickets(self):
@@ -111,9 +113,13 @@ class PlannerForm(forms.Form):
         # A future uber toggled on its own is a valid search, so it counts as a target here.
         has_target = cleaned.get("targets") or cleaned.get("future_targets")
         if not has_target and not cleaned.get("use_wishlist"):
-            raise forms.ValidationError("Pick at least one target, or tick 'search my wishlist'.")
+            raise forms.ValidationError(
+                _("Pick at least one target, or tick 'search my wishlist'.")
+            )
         has_wishlist = self.profile is not None and self.profile.wishlist().exists()
         if cleaned.get("use_wishlist") and not has_target and not has_wishlist:
-            raise forms.ValidationError("Your wishlist is empty - mark some cats as wanted first.")
+            raise forms.ValidationError(
+                _("Your wishlist is empty - mark some cats as wanted first.")
+            )
 
         return cleaned

@@ -1,10 +1,10 @@
-{% load static %}
+{% load i18n static %}
 <!DOCTYPE html>
-<html lang="en">
+<html lang="{{ LANGUAGE_CODE }}">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>{% if region_label %}{{ region_label }} version &middot; {% endif %}{{ page_meta.title }}</title>
+  <title>{{ page_meta.title }}</title>
   <meta name="description" content="{{ page_meta.description }}">
   {% if page_meta.noindex %}<meta name="robots" content="noindex">{% endif %}
   <link rel="canonical" href="{{ canonical_url }}">
@@ -12,7 +12,7 @@
   {% endfor %}
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="Neko Optimizer">
-  <meta property="og:title" content="{% if region_label %}{{ region_label }} version &middot; {% endif %}{{ page_meta.title }}">
+  <meta property="og:title" content="{{ page_meta.title }}">
   <meta property="og:description" content="{{ page_meta.description }}">
   <meta property="og:url" content="{{ canonical_url }}">
   <meta property="og:image" content="{{ site_url }}{% static 'planner/og-image.png' %}">
@@ -51,58 +51,75 @@
     <div class="bar">
       <a class="brand" href="{% url 'planner' %}">🐾 Neko Optimizer</a>
       <nav>
-        <a href="{% url 'planner' %}">Planner</a>
-        <a href="{% url 'normal_capsules' %}">Normal Capsules</a>
-        <a href="{% url 'collection' %}">Collection</a>
-        <a href="{% url 'resources' %}">Resources</a>
-        <a href="{% url 'tier_list' %}">Tier List</a>
-        <a href="{% url 'seed_finder' %}">Seed Finder</a>
-        <a href="{% url 'guides' %}">Guides</a>
-        <a href="{% url 'about' %}">About</a>
+        <a href="{% url 'planner' %}">{% translate "Planner" %}</a>
+        <a href="{% url 'normal_capsules' %}">{% translate "Normal Capsules" %}</a>
+        <a href="{% url 'collection' %}">{% translate "Collection" %}</a>
+        <a href="{% url 'resources' %}">{% translate "Resources" %}</a>
+        <a href="{% url 'tier_list' %}">{% translate "Tier List" %}</a>
+        <a href="{% url 'seed_finder' %}">{% translate "Seed Finder" %}</a>
+        <a href="{% url 'guides' %}">{% translate "Guides" %}</a>
+        <a href="{% url 'about' %}">{% translate "About" %}</a>
       </nav>
       {# Brand left, nav centred, the controls together at the right edge. #}
       <div class="header-tools">
-        <form class="region-switch" method="post" action="{% url 'set_region' %}" aria-label="Game version">
+        <form class="region-switch" method="post" action="{% url 'set_region' %}" aria-label="{% translate "Game version" %}">
           {% csrf_token %}
-          {% for option in regions %}
-          <button type="submit" name="region" value="{{ option.code }}" title="{{ option.label }} version"
-                  aria-pressed="{% if option.code == region %}true{% else %}false{% endif %}">{{ option.code|upper }}</button>
+          {% for code, label in regions %}
+          <button type="submit" name="region" value="{{ code }}" title="{% blocktranslate %}{{ label }} version{% endblocktranslate %}"
+                  aria-pressed="{% if code == region %}true{% else %}false{% endif %}">{{ code|upper }}</button>
           {% endfor %}
+        </form>
+        <form class="lang-switch" method="post" action="{% url 'set_language' %}">
+          {% csrf_token %}
+          {% get_available_languages as languages %}
+          <select name="language" aria-label="{% translate "Language" %}" data-autosubmit>
+            <option value="">{% translate "Game's language" %}</option>
+            {% for code, name in languages %}
+              <option value="{{ code }}" lang="{{ code }}"{% if code == language_pick %} selected{% endif %}>{{ name }}</option>
+            {% endfor %}
+          </select>
+          <noscript><button type="submit">{% translate "Set" %}</button></noscript>
         </form>
         <div class="account">
           {% if user.is_authenticated %}
           <details class="account-menu">
-            <summary title="Logged in as {{ user.username }}" aria-label="Account">
+            <summary title="{% blocktranslate with name=user.username %}Logged in as {{ name }}{% endblocktranslate %}" aria-label="{% translate "Account" %}">
               <img class="avatar" src="{{ icon_base }}/0/0.png" alt="" width="28" height="28">
             </summary>
             <div class="account-pop">
-              <span class="muted">Logged in as</span>
+              <span class="muted">{% translate "Logged in as" %}</span>
               <strong>{{ user.username }}</strong>
               <form method="post" action="{% url 'logout' %}">
                 {% csrf_token %}
                 <input type="hidden" name="next" value="{{ request.path }}">
-                <button type="submit">Log out</button>
+                <button type="submit">{% translate "Log out" %}</button>
               </form>
             </div>
           </details>
           {% else %}
-          <a href="{% url 'login' %}?next={{ request.path|urlencode }}">Log in</a>
-          <a href="{% url 'signup' %}?next={{ request.path|urlencode }}">Sign up</a>
+          <a href="{% url 'login' %}?next={{ request.path|urlencode }}">{% translate "Log in" %}</a>
+          <a href="{% url 'signup' %}?next={{ request.path|urlencode }}">{% translate "Sign up" %}</a>
           {% endif %}
         </div>
-        <div class="theme-toggle" role="group" aria-label="Theme">
-          <button type="button" data-set-theme="light" title="Light theme" aria-pressed="false"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg></button>
-          <button type="button" data-set-theme="dark" title="Dark theme" aria-pressed="false"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg></button>
-          <button type="button" data-set-theme="system" title="Match my device" aria-pressed="false"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="20" height="14" x="2" y="3" rx="2"/><line x1="8" x2="16" y1="21" y2="21"/><line x1="12" x2="12" y1="17" y2="21"/></svg></button>
+        <div class="theme-toggle" role="group" aria-label="{% translate "Theme" %}">
+          <button type="button" data-set-theme="light" title="{% translate "Light theme" %}" aria-pressed="false"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg></button>
+          <button type="button" data-set-theme="dark" title="{% translate "Dark theme" %}" aria-pressed="false"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg></button>
+          <button type="button" data-set-theme="system" title="{% translate "Match my device" %}" aria-pressed="false"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="20" height="14" x="2" y="3" rx="2"/><line x1="8" x2="16" y1="21" y2="21"/><line x1="12" x2="12" y1="17" y2="21"/></svg></button>
         </div>
       </div>
     </div>
   </header>
+  {% comment %}A first visit's welcome: a strip, not a pop-up, so it never covers the
+  page. app.js shows it until its × is pressed, then remembers that.{% endcomment %}
+  <aside class="welcome" id="welcome" hidden aria-label="{% translate "Welcome" %}">
+    <p>{% url 'guides' as guides_url %}{% blocktranslate trimmed %}New here? <a href="{{ guides_url }}">The short guides</a> explain how it all works.{% endblocktranslate %}</p>
+    <button type="button" class="welcome-close" aria-label="{% translate "Close" %}">&times;</button>
+  </aside>
   <main>
     {% block content %}{% endblock %}
     {% if page_links %}
       <section class="tool-links">
-        <h2>Elsewhere</h2>
+        <h2>{% translate "Elsewhere" %}</h2>
         <ul>
           {% for link in page_links %}
             <li>
@@ -116,16 +133,21 @@
   </main>
   <footer class="site-footer muted">
     <p>
-      Neko Optimizer is a free, fan-made tool for <em>The Battle Cats</em> and is not
-      affiliated with PONOS. &middot; <a href="{% url 'about' %}">About</a>
-      &middot; <a href="https://github.com/IliyanGavrilov/NekoOptimizer" target="_blank" rel="noopener">Source &#8599;</a>
+      {% blocktranslate trimmed %}
+        Neko Optimizer is a free, fan-made tool for <em>The Battle Cats</em> and is not
+        affiliated with PONOS.
+      {% endblocktranslate %}
+      &middot; <a href="{% url 'guides' %}">{% translate "Guides" %}</a>
+      &middot; <a href="{% url 'whats_new' %}">{% translate "What's new" %}</a>
+      &middot; <a href="{% url 'about' %}">{% translate "About" %}</a>
+      &middot; <a href="https://github.com/IliyanGavrilov/NekoOptimizer" target="_blank" rel="noopener">{% translate "Source" %} &#8599;</a>
     </p>
   </footer>
   {% comment %}One shared popup for any cat name: its forms (icons from ICON_BASE), the
   selected form's stats and abilities, and links to the unit's page on the wiki and the
   community stat sites. Filled in by app.js.{% endcomment %}
   <dialog id="catPopup" class="cat-popup">
-    <button type="button" class="cat-popup-close" data-close aria-label="Close">&times;</button>
+    <button type="button" class="cat-popup-close" data-close aria-label="{% translate "Close" %}">&times;</button>
     <div class="cat-popup-head">
       <span class="cat-popup-name"></span>
       <span class="rarity"></span>
@@ -139,6 +161,7 @@
     </div>
     <div class="cat-popup-links"></div>
   </dialog>
+  <script src="{% url 'javascript_catalog' %}?v={{ LANGUAGE_CODE }}"></script>
   <script src="{% static 'planner/engine.js' %}"></script>
   <script src="{% static 'planner/app.js' %}"></script>
   {% block scripts %}{% endblock %}

@@ -24,6 +24,10 @@ const DICE: &str = "<svg width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" aria-h
 pub struct NormalArgs {
     /// Per name: its catalogue unit id and form names joined by "|", for a cat item.
     pub units: Vec<Option<(u32, String)>>,
+    /// Per name: what the page shows for the item - the game version's own name for it.
+    /// The name table keeps the English, the item's identity (the dupe memory posts it).
+    #[serde(default)]
+    pub labels: Vec<String>,
     pub upgrades: Vec<u32>,
     #[serde(default)]
     pub plan: Option<PlanArgs>,
@@ -35,6 +39,24 @@ pub struct PlanArgs {
     pub targets: Vec<u32>,
     /// Each currency's rolls and the banners (request indices) it feeds.
     pub budgets: Vec<(i64, Vec<usize>)>,
+}
+
+impl NormalArgs {
+    fn label<'a>(&'a self, req: &'a Request, id: u32) -> &'a str {
+        self.labels
+            .get(id as usize)
+            .map_or_else(|| req.name(id), String::as_str)
+    }
+}
+
+/// How many of a normal-side currency, in the interface language ("3 Lucky Tickets").
+fn currency_count(req: &Request, currency: &str, n: usize) -> String {
+    let (singular, plural) = match currency {
+        "Lucky Ticket" => ("%(n)s Lucky Ticket", "%(n)s Lucky Tickets"),
+        "Lucky Ticket G" => ("%(n)s Lucky Ticket G", "%(n)s Lucky Ticket Gs"),
+        _ => ("%(n)s Normal Cat Ticket", "%(n)s Normal Cat Tickets"),
+    };
+    req.trn(singular, plural, n as i64, &[("n", &n.to_string())])
 }
 
 /// One pull of a normal banner from ``seed`` holding ``last`` (normal.pull_once): the item,
@@ -249,15 +271,36 @@ fn tracks(
         })
         .collect();
     if columns.is_empty() || rows == 0 {
-        return "\n<p class=\"muted\">Pick at least one capsule machine to roll.</p>\n".to_owned();
+        return format!(
+            "\n<p class=\"muted\">{}</p>\n",
+            req.t("Pick at least one capsule machine to roll.")
+        );
     }
     let upgrades: HashSet<u32> = args.upgrades.iter().copied().collect();
     let dark = req.id("Dark Catseye");
     let unit = |id: u32| args.units.get(id as usize).and_then(Option::as_ref);
 
-    let mut out = String::from("\n<details class=\"track-guide\">\n<summary>Legend</summary>\n<ul class=\"symbol-legend\">\n<li><span class=\"sym\">A / B</span> alternate timelines; a dupe rerolls and switches track</li>\n");
-    let _ = writeln!(out, "<li><span class=\"sym dice-sym\">{DICE}</span> &ldquo;I rolled this cell&rdquo; &mdash; jumps the seed to just after it</li>");
-    out.push_str("<li><span class=\"arrow sample\">&#8627; if dupe</span> the reroll branch (its own dice &amp; landing)</li>\n<li><span class=\"item sample\" data-pool=\"2\">gold</span> <span class=\"sep\">&middot;</span> <span class=\"item sample\" data-pool=\"3\">red</span> <span class=\"sep\">&middot;</span> <span class=\"item sample\" data-pool=\"4\">aqua</span> the machine's rarer rate bands, scarcest last</li>\n<li><span class=\"item upgrade sample\">blue</span> an upgrade (Special Skill), not a cat</li>\n<li><span class=\"item dark-catseye sample\">Dark Catseye</span> the 1% Catseye-event jackpot</li>\n<li><span class=\"entry on-path sample\">path</span> a planned pull <span class=\"sep\">&middot;</span> <span class=\"entry target sample\"><span class=\"item got\">target</span></span> what it collects</li>\n</ul>\n</details>\n");
+    let t = |s| req.t(s);
+    let mut out = format!(
+        "\n<details class=\"track-guide\">\n<summary>{}</summary>\n<ul class=\"symbol-legend\">\n<li><span class=\"sym\">A / B</span> {}</li>\n<li><span class=\"sym dice-sym\">{DICE}</span> {}</li>\n<li><span class=\"arrow sample\">&#8627; {}</span> {}</li>\n<li><span class=\"item sample\" data-pool=\"2\">{}</span> <span class=\"sep\">&middot;</span> <span class=\"item sample\" data-pool=\"3\">{}</span> <span class=\"sep\">&middot;</span> <span class=\"item sample\" data-pool=\"4\">{}</span> {}</li>\n<li><span class=\"item upgrade sample\">{}</span> {}</li>\n<li><span class=\"item dark-catseye sample\">{}</span> {}</li>\n<li><span class=\"entry on-path sample\">{}</span> {} <span class=\"sep\">&middot;</span> <span class=\"entry target sample\"><span class=\"item got\">{}</span></span> {}</li>\n</ul>\n</details>\n",
+        t("Legend"),
+        t("alternate timelines; a dupe rerolls and switches track"),
+        t("&ldquo;I rolled this cell&rdquo; &mdash; jumps the seed to just after it"),
+        t("if dupe"),
+        t("the reroll branch (its own dice &amp; landing)"),
+        t("gold"),
+        t("red"),
+        t("aqua"),
+        t("the machine's rarer rate bands, scarcest last"),
+        t("blue"),
+        t("an upgrade (Special Skill), not a cat"),
+        t("Dark Catseye"),
+        t("the 1% Catseye-event jackpot"),
+        t("path"),
+        t("a planned pull"),
+        t("target"),
+        t("what it collects"),
+    );
     if columns.len() > 1 {
         out.push_str("<ul class=\"track-legend\">\n");
         for c in &columns {
@@ -270,7 +313,12 @@ fn tracks(
         }
         out.push_str("</ul>\n");
     }
-    out.push_str("<table class=\"track normal-track\">\n<thead><tr>\n<th class=\"pos\">#</th>\n<th>Track A</th>\n<th>Track B</th>\n</tr></thead>\n<tbody>\n");
+    let _ = write!(
+        out,
+        "<table class=\"track normal-track\">\n<thead><tr>\n<th class=\"pos\">#</th>\n<th>{}</th>\n<th>{}</th>\n</tr></thead>\n<tbody>\n",
+        req.t("Track A"),
+        req.t("Track B")
+    );
     let none = HashMap::new();
     for position in 1..=rows {
         let _ = write!(
@@ -312,7 +360,7 @@ fn tracks(
                 if columns.len() > 1 {
                     let _ = write!(out, "<span class=\"tag\">{}</span> ", c.tag);
                 }
-                let item = esc(req.name(pull.cat));
+                let item = esc(args.label(req, pull.cat));
                 let pool = pull.rarity;
                 match unit(pull.cat) {
                     Some((uid, forms)) => {
@@ -340,8 +388,13 @@ fn tracks(
                 out.push_str("</span>");
                 if let Some(alt) = alt {
                     let (to_pos, to_track) = landing(position, track, alt.steps as usize);
-                    let alt_item = esc(req.name(alt.cat));
-                    out.push_str("<span class=\"arrow\" title=\"Following the track dupes here: the previous pull obtains this same item, so this cell rerolls into the branch value and jumps tracks\">&#8627; if dupe: ");
+                    let alt_item = esc(args.label(req, alt.cat));
+                    let _ = write!(
+                        out,
+                        "<span class=\"arrow\" title=\"{}\">&#8627; {} ",
+                        req.t("Following the track dupes here: the previous pull obtains this same item, so this cell rerolls into the branch value and jumps tracks"),
+                        req.t("if dupe:")
+                    );
                     if unit(alt.cat).is_some() {
                         let _ = write!(
                             out,
@@ -358,11 +411,15 @@ fn tracks(
                         }
                         let _ = write!(out, "\" data-pool=\"{pool}\">{alt_item}</span>");
                     }
+                    let to = format!("{to_pos}{}", TRACKS[to_track]);
                     let _ = write!(
                         out,
-                        ", jumps to {to_pos}{} <button type=\"button\" class=\"reseed inline\" data-seed=\"{}\" data-item=\"{alt_item}\" title=\"Got {alt_item} here? Jump the seed to just after that reroll\" aria-label=\"Jump the seed to just after {alt_item}\">{DICE}</button></span>",
-                        TRACKS[to_track],
-                        alt.seed
+                        "{} <button type=\"button\" class=\"reseed inline\" data-seed=\"{}\" data-item=\"{}\" title=\"{}\" aria-label=\"{}\">{DICE}</button></span>",
+                        req.tr(", jumps to %(to)s", &[("to", &to)]),
+                        alt.seed,
+                        esc(req.name(alt.cat)),
+                        req.tr("Got %(name)s here? Jump the seed to just after that reroll", &[("name", &alt_item)]),
+                        req.tr("Jump the seed to just after %(name)s", &[("name", &alt_item)])
                     );
                 }
                 out.push_str("</div>");
@@ -381,7 +438,9 @@ fn tracks(
                 let cell = format!("{position}{label}");
                 let _ = write!(
                     out,
-                    "<button type=\"button\" class=\"reseed\" data-seed=\"{seed}\" data-item=\"{item}\" title=\"Rolled {cell}? Jump the seed to just after it (its clean roll; a dupe's branch has its own dice)\" aria-label=\"Jump the seed to just after {cell}\">{DICE}</button>"
+                    "<button type=\"button\" class=\"reseed\" data-seed=\"{seed}\" data-item=\"{item}\" title=\"{}\" aria-label=\"{}\">{DICE}</button>",
+                    req.tr("Rolled %(cell)s? Jump the seed to just after it (its clean roll; a dupe's branch has its own dice)", &[("cell", &cell)]),
+                    req.tr("Jump the seed to just after %(name)s", &[("name", &cell)])
                 );
             }
             out.push_str("</td>\n");
@@ -396,14 +455,6 @@ fn tracks(
 pub fn normal_tracks(req: &Request, args: &NormalArgs) -> String {
     let banners: Vec<usize> = (0..req.banners.len()).collect();
     tracks(req, args, &banners, req.count, &HashMap::new())
-}
-
-fn plural(n: usize) -> &'static str {
-    if n == 1 {
-        ""
-    } else {
-        "s"
-    }
 }
 
 /// The path planner's result (build_normal_plan + _normal_plan.html). ``req.banners``
@@ -463,36 +514,51 @@ pub fn normal_plan(req: &Request, args: &NormalArgs, plan_args: &PlanArgs) -> St
         }
         let _ = write!(
             out,
-            "<p class=\"plan-haul\">\n<strong>{}</strong> {}\nfor\n",
+            "<p class=\"plan-haul\">\n<strong>{}</strong> {}\n{}\n",
             best.hits,
-            esc(&plan_args.label)
+            esc(&plan_args.label),
+            req.t("for")
         );
         for (i, (name, n)) in spent.iter().enumerate() {
             if i > 0 {
                 out.push_str(" + ");
             }
-            let _ = write!(out, "{n} {name}{}", plural(*n));
+            out.push_str(&esc(&currency_count(req, name, *n)));
         }
         let _ = write!(
             out,
-            ".\n<button type=\"button\" class=\"seek-use plan-apply\" data-seed=\"{seed_after}\" data-item=\"{}\" title=\"You rolled this plan: the seed jumps to just after its final pull\">I rolled it &mdash; advance my seed</button>\n</p>\n",
-            esc(req.name(last_item))
+            ".\n<button type=\"button\" class=\"seek-use plan-apply\" data-seed=\"{seed_after}\" data-item=\"{}\" title=\"{}\">{}</button>\n</p>\n",
+            esc(req.name(last_item)),
+            req.t("You rolled this plan: the seed jumps to just after its final pull"),
+            req.t("I rolled it &mdash; advance my seed")
         );
-        out.push_str("<div class=\"plan-follow\">\n<div class=\"plan-steps\">\n<div class=\"steps-head\">\n<span class=\"steps-title\">Steps</span>\n<div class=\"step-nav\" role=\"group\" aria-label=\"Walk the plan step by step\">\n<button type=\"button\" class=\"step-nav-btn step-prev\" aria-label=\"Previous step\">&#8249;</button>\n<span class=\"step-count\" aria-live=\"polite\"></span>\n<button type=\"button\" class=\"step-nav-btn step-next\" aria-label=\"Next step\">&#8250;</button>\n</div>\n</div>\n<div class=\"step-list\">\n");
+        let _ = write!(
+            out,
+            "<div class=\"plan-follow\">\n<div class=\"plan-steps\">\n<div class=\"steps-head\">\n<span class=\"steps-title\">{}</span>\n<div class=\"step-nav\" role=\"group\" aria-label=\"{}\">\n<button type=\"button\" class=\"step-nav-btn step-prev\" aria-label=\"{}\">&#8249;</button>\n<span class=\"step-count\" aria-live=\"polite\"></span>\n<button type=\"button\" class=\"step-nav-btn step-next\" aria-label=\"{}\">&#8250;</button>\n</div>\n</div>\n<div class=\"step-list\">\n",
+            req.t("Steps"),
+            req.t("Walk the plan step by step"),
+            req.t("Previous step"),
+            req.t("Next step")
+        );
         for leg in &legs {
             let b = &req.banners[leg.machine];
             let count = leg.pulls.len();
+            let kind = req.trn(
+                "%(n)s&times; pull",
+                "%(n)s&times; pulls",
+                count as i64,
+                &[("n", &count.to_string())],
+            );
             let _ = write!(
                 out,
-                "<button type=\"button\" class=\"step-card\" data-step=\"{0}\">\n<span class=\"step-card-head\">\n<span class=\"step-dot\">{0}</span>\n<span class=\"step-banner\">{1}</span>\n</span>\n<span class=\"step-meta\">\n<span class=\"step-kind\">{count}&times; pull{2}</span>\n<span class=\"step-cost\">{count} {3}{2}</span>\n</span>\n",
+                "<button type=\"button\" class=\"step-card\" data-step=\"{0}\">\n<span class=\"step-card-head\">\n<span class=\"step-dot\">{0}</span>\n<span class=\"step-banner\">{1}</span>\n</span>\n<span class=\"step-meta\">\n<span class=\"step-kind\">{kind}</span>\n<span class=\"step-cost\">{2}</span>\n</span>\n",
                 leg.n,
                 esc(&b.name),
-                plural(count),
-                esc(&b.currency)
+                esc(&currency_count(req, &b.currency, count))
             );
             let gets: Vec<&Step> = leg.pulls.iter().filter(|p| p.target).collect();
             if !gets.is_empty() {
-                out.push_str("<span class=\"step-gets\">gets ");
+                let _ = write!(out, "<span class=\"step-gets\">{} ", req.t("gets"));
                 for (i, p) in gets.iter().enumerate() {
                     if i > 0 {
                         out.push_str(", ");
@@ -505,7 +571,7 @@ pub fn normal_plan(req: &Request, args: &NormalArgs, plan_args: &PlanArgs) -> St
                     let _ = write!(
                         out,
                         "<span class=\"step-get{class}\">{}</span>",
-                        esc(req.name(p.item))
+                        esc(args.label(req, p.item))
                     );
                 }
                 out.push_str("</span>\n");
@@ -519,8 +585,11 @@ pub fn normal_plan(req: &Request, args: &NormalArgs, plan_args: &PlanArgs) -> St
     } else {
         let _ = write!(
             out,
-            "<p class=\"seek-none\">No {} reachable with those rolls. Give a machine more\nbudget, or try again after your next real pulls move the seed.</p>\n{track}",
-            esc(&plan_args.label)
+            "<p class=\"seek-none\">{}</p>\n{track}",
+            req.tr(
+                "No %(target)s reachable with those rolls. Give a machine more budget, or try again after your next real pulls move the seed.",
+                &[("target", &esc(&plan_args.label))]
+            )
         );
     }
     out.push_str("</div>\n");
