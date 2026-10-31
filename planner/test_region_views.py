@@ -133,3 +133,24 @@ def test_picking_the_games_language_forgets_the_pick(client, profile):
 
 def test_picking_an_unknown_language_is_rejected(client, profile):
     assert client.post("/language/", {"language": "de"}).status_code == 400
+
+
+@pytest.mark.parametrize(
+    ("header", "where"),
+    [
+        ("ja,en;q=0.8", "/jp/collection/"),
+        ("zh-TW", "/tw/collection/"),
+        ("ko-KR", "/kr/collection/"),
+    ],
+)
+def test_a_first_visit_opens_the_browser_languages_version(client, header, where):
+    response = client.get("/collection/", HTTP_ACCEPT_LANGUAGE=header)
+    assert (response.status_code, response["Location"]) == (302, where)
+
+
+def test_a_first_visit_in_another_language_stays_english(client):
+    assert client.get("/collection/", HTTP_ACCEPT_LANGUAGE="de-DE").status_code == 200
+
+
+def test_a_returning_visitor_keeps_their_version_whatever_the_browser_says(client, profile):
+    assert client.get("/collection/", HTTP_ACCEPT_LANGUAGE="ja").status_code == 200

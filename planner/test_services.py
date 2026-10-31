@@ -1793,17 +1793,22 @@ def _tier_doc(*rows):
 
 def test_tier_badges_carry_the_units_base_placement():
     badges = tier_badges(_tier_doc(("S", [(5, None)])))
-    assert badges[5] == {"tier": "S", "up": None, "up_note": ""}
+    assert badges[5] == {"tier": "S", "up": None, "up_note": "", "uid": 5}
 
 
 def test_tier_badges_note_a_higher_boosted_placement():
     doc = _tier_doc(("B", [(5, None)]), ("SS", [(5, "UF")]))
-    assert tier_badges(doc)[5] == {"tier": "B", "up": "SS", "up_note": "SS with Ultra Form"}
+    assert tier_badges(doc)[5] == {
+        "tier": "B",
+        "up": "SS",
+        "up_note": "SS with Ultra Form",
+        "uid": 5,
+    }
 
 
 def test_tier_badges_ignore_a_boost_that_does_not_rank_higher():
     doc = _tier_doc(("S", [(5, None)]), ("A", [(5, "UT")]))
-    assert tier_badges(doc)[5] == {"tier": "S", "up": None, "up_note": ""}
+    assert tier_badges(doc)[5] == {"tier": "S", "up": None, "up_note": "", "uid": 5}
 
 
 def test_tier_badges_skip_unresolved_entries():

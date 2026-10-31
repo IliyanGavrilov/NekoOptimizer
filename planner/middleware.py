@@ -2,6 +2,7 @@ from django.conf import settings
 from django.shortcuts import redirect
 from django.urls import Resolver404, get_script_prefix, resolve, set_script_prefix
 from django.utils import translation
+from django.utils.cache import patch_vary_headers
 
 from neko.region import CODES, DEFAULT_REGION, using
 from planner.models import Profile
@@ -12,6 +13,7 @@ _COOKIE_AGE = 2 * 365 * 24 * 60 * 60
 
 # The interface language each game version opens in: the language its players' game is in.
 REGION_LANGUAGES = {"en": "en", "jp": "ja", "tw": "zh-hant", "kr": "ko"}
+LANGUAGE_REGIONS = {language: region for region, language in REGION_LANGUAGES.items()}
 
 
 def current_profile(request) -> Profile:
@@ -70,6 +72,13 @@ def ui_language(request) -> str:
     return picked if picked in dict(settings.LANGUAGES) else REGION_LANGUAGES[request.region]
 
 
+def browser_region(request) -> str:
+    """The game version a browser's own language points to (Accept-Language), English for
+    any other: a Japanese browser plays the Japanese version, and so on. The language,
+    not the visitor's location - a player abroad keeps the version they read."""
+    return LANGUAGE_REGIONS.get(translation.get_language_from_request(request), DEFAULT_REGION)
+
+
 def _is_page(request, path: str) -> bool:
     """Whether a request opens one of the pages each version has its own copy of."""
     if request.method != "GET":
@@ -90,17 +99,22 @@ def profile_scope(get_response):
     before routing and set as the script prefix, so every reverse() and {% url %} stays
     inside the version. Opening a version's page makes it the profile's; an unprefixed
     page for someone whose profile is on another version sends them there, so the bare
-    address always comes back to your own version. The page speaks the version's
+    address always comes back to your own version. A first visit to a bare page goes
+    where the browser's language points (browser_region). The page speaks the version's
     language too, unless the visitor picked another (ui_language)."""
 
     def middleware(request):
         url_region, request.path_info = split_region(request.path_info)
         request.profile = profile = current_profile(request)
-        if _is_page(request, request.path_info) and profile.region != (
-            url_region or DEFAULT_REGION
-        ):
+        page = _is_page(request, request.path_info)
+        first_visit = profile.pk is None and settings.LANGUAGE_COOKIE_NAME not in request.COOKIES
+        if page and url_region is None and first_visit:
+            profile.region = browser_region(request)
+        if page and profile.region != (url_region or DEFAULT_REGION):
             if url_region is None:
-                return redirect(region_path(request.get_full_path(), profile.region))
+                response = redirect(region_path(request.get_full_path(), profile.region))
+                patch_vary_headers(response, ("Accept-Language",))
+                return response
             profile.region = url_region
             if profile.pk:
                 profile.save(update_fields=["region"])
@@ -116,6 +130,8 @@ def profile_scope(get_response):
         finally:
             set_script_prefix(base)
         response.headers.setdefault("Content-Language", request.LANGUAGE_CODE)
+        if page and url_region is None:
+            patch_vary_headers(response, ("Accept-Language",))
         if (
             profile.pk
             and not profile.user_id

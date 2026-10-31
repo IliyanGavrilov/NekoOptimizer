@@ -14,6 +14,11 @@ CHANGES = (
                 "version opens in its own language; pick another in the header."
             ),
             _("Each game version has its own pages: /jp/, /tw/ and /kr/."),
+            _(
+                "Your first visit opens the version your browser's language points to: "
+                "Japanese, Traditional Chinese or Korean, else English."
+            ),
+            _("The Seed Finder's checks now show as you pick each cat."),
             _("Fest and set names use each game version's own names, taken from the game's data."),
             _(
                 "A short welcome for first visits, guide links on the pages that need them, "

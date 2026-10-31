@@ -465,3 +465,7 @@ msgstr "아직 정확히 일치하는 것 없음 — 첫 뽑기가 재추첨이�
 #: static/planner/seek.js static/planner/normal.js
 msgid "No exact match yet — checking if your first pull was a reroll (step 3 of 3)…"
 msgstr "아직 정확히 일치하는 것 없음 — 첫 뽑기가 재추첨이었는지 확인 중(3단계 중 3)…"
+
+#: static/planner/app.js
+msgid "See it in the tier list"
+msgstr "티어표에서 보기"

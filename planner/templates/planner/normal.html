@@ -12,7 +12,7 @@
       during a Catseye Capsules event.
     {% endblocktranslate %}
   </p>
-  <p class="muted">{% url 'guide' 'normal-capsules' as guide_url %}{% blocktranslate trimmed %}New here? <a href="{{ guide_url }}">The Normal Capsules guide</a> takes two minutes.{% endblocktranslate %}</p>
+  <p class="muted new-here" hidden>{% url 'guide' 'normal-capsules' as guide_url %}{% blocktranslate trimmed %}New here? <a href="{{ guide_url }}">The Normal Capsules guide</a> takes two minutes.{% endblocktranslate %}</p>
 
   <details class="advanced seek-howto" id="normalFinder">
     <summary>{% translate "Find my normal seed" %}</summary>

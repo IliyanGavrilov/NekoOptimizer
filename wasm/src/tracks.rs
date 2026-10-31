@@ -22,6 +22,9 @@ pub struct Badge {
     pub tier: String,
     pub up: Option<String>,
     pub up_note: String,
+    /// The ranked unit, so a click on the badge can open its spot in the tier list.
+    #[serde(default)]
+    pub uid: Option<u32>,
 }
 
 #[derive(Deserialize)]
@@ -589,15 +592,22 @@ fn guaranteed_entries<'a>(
     cells
 }
 
-fn badge(out: &mut String, badge: Option<&Badge>) {
+fn badge(out: &mut String, req: &Request, badge: Option<&Badge>) {
     let Some(b) = badge else { return };
     let band: String = b.tier.chars().take(1).collect();
     let _ = write!(
         out,
-        "<span class=\"tier-badge\" data-band=\"{}\">{}",
-        esc(&band),
-        esc(&b.tier)
+        "<span class=\"tier-badge\" data-band=\"{}\"",
+        esc(&band)
     );
+    if let Some(uid) = b.uid {
+        let _ = write!(
+            out,
+            " data-uid=\"{uid}\" title=\"{}\"",
+            req.t("See it in the tier list")
+        );
+    }
+    let _ = write!(out, ">{}", esc(&b.tier));
     if let Some(up) = b.up.as_deref().filter(|u| !u.is_empty()) {
         let _ = write!(
             out,
@@ -694,7 +704,7 @@ fn cell(
                 req.t_keyed(&format!("short rarity:{short}"), short)
             }
         );
-        badge(out, ctx.tier(e.cat));
+        badge(out, ctx.req, ctx.tier(e.cat));
         out.push_str("</span><span class=\"entry-dice\">");
         if e.seed != 0 {
             let title = req.t(if cell_class.is_empty() {

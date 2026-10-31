@@ -462,3 +462,7 @@ msgstr "還沒有完全符合 — 正在檢查第一抽是否為重抽(第2/3步
 #: static/planner/seek.js static/planner/normal.js
 msgid "No exact match yet — checking if your first pull was a reroll (step 3 of 3)…"
 msgstr "還沒有完全符合 — 正在檢查第一抽是否為重抽(第3/3步)…"
+
+#: static/planner/app.js
+msgid "See it in the tier list"
+msgstr "在強度排行中查看"

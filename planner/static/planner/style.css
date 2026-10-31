@@ -333,14 +333,31 @@ main {
   margin: 0 auto;
   padding: 1.75rem 1.25rem 4rem;
 }
+/* The footer: the disclaimer and the links on one line where it fits, the links wrapping
+   below as a group where it doesn't. A touch wider than the text column, since it's page
+   chrome rather than reading matter. */
 .site-footer {
-  max-width: 760px;
+  max-width: 960px;
   margin: 0 auto;
   padding: 1rem 1.25rem 2rem;
   border-top: 1px solid var(--line);
-  font-size: 0.85rem;
+  font-size: 0.82rem;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0.4rem 1.5rem;
 }
 .site-footer p { margin: 0; }
+.footer-links { white-space: nowrap; }
+/* A page with a wide board (the Rolls tables, Resources) widens its tail to match, so the
+   Elsewhere links and the footer line up under it instead of sitting in a thin column. */
+main:has(.results-region) > .tool-links {
+  position: relative;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(1500px, calc(100vw - 2rem));
+}
+body:has(.results-region) .site-footer { max-width: min(1500px, calc(100vw - 2rem)); }
 
 h1 { color: var(--accent); margin: 0.25rem 0 0.5rem; font-size: 1.9rem; }
 h2 { margin: 1.75rem 0 0.5rem; font-size: 1.3rem; }
@@ -2686,3 +2703,28 @@ button, .chip, .entry, .banner-group, .banner-include, .step-card, .site-header 
 .changelog li { margin: 0.3rem 0; line-height: 1.55; }
 .terms dt { font-weight: 700; margin: 1rem 0 0.2rem; }
 .terms dd { margin: 0; line-height: 1.6; }
+
+/* A tier badge opens the tier list at its cat; that list marks the cat it opened on. */
+.tier-badge[data-uid] { cursor: pointer; }
+.tier-badge[data-uid]:hover { filter: brightness(1.2); }
+.tier-unit.is-focused { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* The cat popup's trait chips in the colours the game gives each trait. A tint behind
+   ordinary text, so they read in both themes. */
+.cat-chip.target[data-trait] {
+  color: var(--ink);
+  border-color: var(--trait);
+  background: color-mix(in srgb, var(--trait) 22%, transparent);
+}
+.cat-chip[data-trait="Red"] { --trait: #e5484d; }
+.cat-chip[data-trait="Floating"] { --trait: #3fb27f; }
+.cat-chip[data-trait="Black"] { --trait: #6b6b6b; }
+.cat-chip[data-trait="Metal"] { --trait: #a9b4c2; }
+.cat-chip[data-trait="Angel"] { --trait: #f2c94c; }
+.cat-chip[data-trait="Alien"] { --trait: #3fa9f5; }
+.cat-chip[data-trait="Zombie"] { --trait: #9b59b6; }
+.cat-chip[data-trait="Relic"] { --trait: #5a7d2a; }
+.cat-chip[data-trait="Aku"] { --trait: #2d4a8a; }
+.cat-chip[data-trait="Traitless"] { --trait: #d8d8d8; }
+.cat-chip[data-trait="Witch"] { --trait: #d65db1; }
+.cat-chip[data-trait="Eva Angel"] { --trait: #f2994a; }
