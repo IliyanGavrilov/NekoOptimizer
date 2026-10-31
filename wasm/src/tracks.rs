@@ -1094,9 +1094,15 @@ pub(crate) fn table(
     }
     out.push_str("</div>\n</details>\n");
 
+    // The banner legend is the thead's first row, so the two stick as one block.
     let show_future = view.future.is_some();
+    let mut legend = String::new();
     if groups.len() > 1 || show_future || has_currency {
-        out.push_str("<ul class=\"track-legend\">\n");
+        let _ = writeln!(
+            legend,
+            "<tr class=\"legend-row\"><th colspan=\"{}\"><ul class=\"track-legend\">",
+            if has_guaranteed { 5 } else { 3 }
+        );
         for (g, group) in groups.iter().enumerate() {
             let mut titles: Vec<&str> = group
                 .keys
@@ -1110,11 +1116,15 @@ pub(crate) fn table(
                 .map(|t| esc(t))
                 .collect::<Vec<_>>()
                 .join(" · ");
-            let _ = write!(out, "<li><span class=\"tag\">{}</span> {names}", group.tag);
+            let _ = write!(
+                legend,
+                "<li><span class=\"tag\">{}</span> {names}",
+                group.tag
+            );
             if !currencies[g].is_empty() {
                 let currency = currencies[g];
                 let _ = write!(
-                    out,
+                    legend,
                     " <span class=\"capsule-tag {currency}\">{}</span>",
                     req.t(currency)
                 );
@@ -1127,7 +1137,7 @@ pub(crate) fn table(
                     .map(|&k| req.banners[k].key.as_str())
                     .collect();
                 let _ = write!(
-                    out,
+                    legend,
                     " <label class=\"future-ctl\" title=\"{}\">{} <input type=\"number\" class=\"future-ubers\" value=\"{count}\" min=\"0\" max=\"99\" data-names=\"{}\"></label>",
                     req.t("Pad this banner's uber pool with expected-but-unreleased ubers (godfat's Count of future ubers) - its uber cells land as if those units were already in the pool; drag the box up/down to adjust"),
                     req.t("Add future ubers"),
@@ -1136,25 +1146,25 @@ pub(crate) fn table(
                 if count > 0 {
                     let rep = req.banners[group.keys[0]].key.as_str();
                     let _ = write!(
-                        out,
+                        legend,
                         " <span class=\"future-targets\" title=\"{}\">",
                         req.t("Toggle a future uber to search for it - it joins your Targets above and glows on this banner's cells")
                     );
                     for n in 1..=count {
                         let label = req.tr("Future Uber %(n)s", &[("n", &n.to_string())]);
                         let _ = write!(
-                            out,
+                            legend,
                             "<button type=\"button\" class=\"future-target\" aria-pressed=\"false\" data-future-name=\"{}\" title=\"{}\">{label}</button>",
                             esc(&format!("Future Uber {n} @ {rep}")),
                             req.tr("Search for %(label)s on %(banners)s", &[("label", &label), ("banners", &names)])
                         );
                     }
-                    out.push_str("</span>");
+                    legend.push_str("</span>");
                 }
             }
-            out.push_str("</li>\n");
+            legend.push_str("</li>\n");
         }
-        out.push_str("</ul>\n");
+        legend.push_str("</ul></th></tr>\n");
     }
 
     let guaranteed = format!(
@@ -1163,7 +1173,7 @@ pub(crate) fn table(
     );
     let _ = write!(
         out,
-        "<table class=\"track\">\n<thead><tr>\n<th class=\"pos\">#</th>\n<th>{}</th>\n",
+        "<table class=\"track\">\n<thead>\n{legend}<tr>\n<th class=\"pos\">#</th>\n<th>{}</th>\n",
         req.t("Track A")
     );
     if has_guaranteed {

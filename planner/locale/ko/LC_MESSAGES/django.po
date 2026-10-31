@@ -2367,9 +2367,9 @@ msgstr "경로 계획 — 가진 횟수로 캣츠아이【다크】 최대로"
 
 #: .\templates\planner\normal.html:103
 msgid ""
-"Enter how many tickets you have and pick what you want: you get the order to roll in. <strong>Normal Cat Tickets</strong> work on the plain, Catfruit and Catseye machines. Lucky Tickets are separate, and the plan uses as few as it can."
+"Enter how many tickets you have and pick what you want: you get the order to roll in. <strong>Normal Cat Tickets</strong> work on the plain, Catfruit and Catseye machines. Lucky Tickets are separate and never roll a Catseye; once you enter some, the plan can use their machine even while its column is hidden."
 msgstr ""
-"가진 티켓 수를 입력하고 원하는 것을 고르면 뽑는 순서가 나옵니다. <strong>냥코 티켓</strong>은 일반·개다래 열매·캣츠아이 뽑기에 쓰입니다. 럭키 티켓은 따로이며, 플랜은 최대한 적게 씁니다."
+"가진 티켓 수를 입력하고 원하는 것을 고르면 뽑는 순서가 나옵니다. <strong>냥코 티켓</strong>은 일반·개다래 열매·캣츠아이 뽑기에 쓰입니다. 럭키 티켓은 따로이며 캣츠아이가 나오지 않습니다. 수를 입력하면 열을 숨겨도 플랜이 그 뽑기를 쓸 수 있습니다."
 
 #: .\templates\planner\normal.html:107
 msgid "Normal Cat Tickets"
@@ -2774,3 +2774,15 @@ msgstr "현재 아바타"
 
 msgid "Search cats…"
 msgstr "캐릭터 검색…"
+
+msgid "Which tickets pay for the pulls that only walk the track on to the next target"
+msgstr "다음 목표까지 트랙만 진행하는 뽑기에 어떤 티켓을 쓸지"
+
+msgid "Pulls in between"
+msgstr "중간 뽑기"
+
+msgid "Lucky Tickets first"
+msgstr "럭키 티켓 먼저"
+
+msgid "Normal Cat Tickets first"
+msgstr "냥코 티켓 먼저"

@@ -21,6 +21,7 @@ if (normalForm) {
   const flavorEls = machineEls.filter((el) => el.value === "n" || el.value === "np");
   const hint = document.getElementById("normalHint");
   const tracksHost = document.getElementById("normalTracks");
+  const backToRolls = document.getElementById("normalBackToRolls");
   // The Rolls display controls, the rare planner's verbatim and on its saved picks:
   // names / icons / both and which form, applied to the cat items the pools drop.
   const rollsRegion = document.getElementById("normalRolls");
@@ -142,8 +143,8 @@ if (normalForm) {
     const failed = `<p class="field-error">${gettext("Couldn't load the tracks - is the server still running?")}</p>`;
     tracksHost.innerHTML =
       resp && resp.ok ? await runTables(await resp.text()).catch(() => failed) : failed;
+    backToRolls.hidden = true;
     applyDisplay();
-    watchLegends();
   };
 
   // ---- Live reload: the seed field (typed or scrubbed), machines, roll count --
@@ -193,7 +194,7 @@ if (normalForm) {
     });
   }
 
-  // A cell's dice: "I rolled this" - jump to just after it, remembering what it
+  // A line's dice: "I rolled this" - jump to just after it, remembering what it
   // gave (the next view's first cell can dupe it).
   tracksHost.addEventListener("click", (e) => {
     const btn = e.target.closest(".reseed");
@@ -207,6 +208,7 @@ if (normalForm) {
   const planGo = document.getElementById("normalPlanGo");
   const planError = document.getElementById("normalPlanError");
   const targetSel = document.getElementById("normalTarget");
+  const movesSel = document.getElementById("normalMoves");
   const budgetEls = [...planPanel.querySelectorAll(".plan-budget")];
 
   // Your ticket stashes persist in this browser, like the planner's resources.
@@ -218,6 +220,12 @@ if (normalForm) {
     for (const el of budgetEls) el.value = stored.tickets[el.dataset.kind] ?? el.value;
   }
   for (const el of budgetEls) el.addEventListener("input", saveBudgets);
+  // Which stash walks the track between targets, remembered like the stashes.
+  if (stored.moves) movesSel.value = stored.moves;
+  movesSel.addEventListener("change", () => {
+    stored.moves = movesSel.value;
+    save();
+  });
 
   // First open with nothing saved: seed the stashes with something sensible - normal
   // tickets are the abundant currency, the lucky kinds precious - so "Find a path"
@@ -251,6 +259,9 @@ if (normalForm) {
     btn.textContent = gettext("Applied ✓");
   });
 
+  // Drop the plan and browse the plain table again, without a page reload.
+  backToRolls.addEventListener("click", fetchTracks);
+
   planGo.addEventListener("click", async () => {
     planError.textContent = "";
     const seed = seedEl.value.trim();
@@ -274,6 +285,7 @@ if (normalForm) {
       seed,
       tickets: JSON.stringify(tickets),
       target: targetSel.value,
+      moves: movesSel.value,
       track_length: countEl.value,
       last_item: stored.last || "",
       csrfmiddlewaretoken: token,
@@ -301,8 +313,8 @@ if (normalForm) {
       planError.textContent = gettext("Couldn't work out a path - try again.");
       return;
     }
+    backToRolls.hidden = false;
     applyDisplay();
-    watchLegends();
     wireFollowAlong(tracksHost); // step list + track walk together (defined in app.js)
     tracksHost.scrollIntoView({ behavior: "smooth", block: "start" });
   });

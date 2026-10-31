@@ -41,8 +41,12 @@ pub struct NormalArgs {
 pub struct PlanArgs {
     pub label: String,
     pub targets: Vec<u32>,
-    /// Each currency's rolls and the banners (request indices) it feeds.
+    /// Each currency's rolls and the banners (request indices) it feeds, dearest first.
     pub budgets: Vec<(i64, Vec<usize>)>,
+    /// Banners the table shows only when the plan pulls them (a lucky machine your stash
+    /// brought in).
+    #[serde(default)]
+    pub optional: Vec<usize>,
 }
 
 impl NormalArgs {
@@ -121,19 +125,25 @@ struct Node {
     last: u32,
     budgets: Vec<i64>,
     hits: i64,
-    premium: i64,
-    cheap: i64,
+    forced: i64,
     steps: Vec<Step>,
 }
 
 impl Node {
-    fn rank(&self) -> (i64, i64, i64) {
-        (-self.hits, self.premium, self.cheap)
+    /// More hits first, then the fewest forced track changes (the longest runs on one
+    /// machine), then the most left of each budget in turn (the page sends at most
+    /// three), then the fewest rolls.
+    fn rank(&self) -> (i64, i64, [i64; 3], usize) {
+        let mut kept = [0; 3];
+        for (slot, count) in kept.iter_mut().zip(&self.budgets) {
+            *slot = -count;
+        }
+        (-self.hits, self.forced, kept, self.steps.len())
     }
 }
 
 /// The pull sequence from ``seed`` collecting the most targets (normal_plan.plan_normal):
-/// a beam over the shared stream, one machine per pull, hoarding the lucky tickets.
+/// a beam over the shared stream, one machine per pull, keeping the dearest budgets.
 fn plan(req: &Request, seed: u32, last: u32, args: &PlanArgs) -> Node {
     let targets: HashSet<u32> = args.targets.iter().copied().collect();
     let groups: Vec<(i64, &Vec<usize>)> = args
@@ -149,8 +159,7 @@ fn plan(req: &Request, seed: u32, last: u32, args: &PlanArgs) -> Node {
         last,
         budgets: groups.iter().map(|(count, _)| *count).collect(),
         hits: 0,
-        premium: 0,
-        cheap: 0,
+        forced: 0,
         steps: Vec::new(),
     };
     if groups.is_empty() || targets.is_empty() {
@@ -168,7 +177,7 @@ fn plan(req: &Request, seed: u32, last: u32, args: &PlanArgs) -> Node {
     for _ in 0..depth {
         // Python's dict: a better child for a seen state takes that state's first slot.
         let mut order: Vec<Node> = Vec::new();
-        let mut at: HashMap<(u32, u32, Vec<i64>), usize> = HashMap::new();
+        let mut at: HashMap<(u32, u32, Vec<i64>, usize), usize> = HashMap::new();
         for node in &nodes {
             for &(index, key) in &choices {
                 if node.budgets[index] == 0 {
@@ -177,6 +186,11 @@ fn plan(req: &Request, seed: u32, last: u32, args: &PlanArgs) -> Node {
                 let (item, after, extra) = pull_once(req, key, node.seed, node.last);
                 let dupe = extra > 0;
                 let hit = targets.contains(&item);
+                // A dupe only this machine deals, where the one before it would roll on.
+                let previous = node.steps.last().map_or(key, |s| s.machine);
+                let forced = dupe
+                    && previous != key
+                    && pull_once(req, previous, node.seed, node.last).2 == 0;
                 let step = Step {
                     machine: key,
                     item,
@@ -192,7 +206,6 @@ fn plan(req: &Request, seed: u32, last: u32, args: &PlanArgs) -> Node {
                 };
                 let mut budgets = node.budgets.clone();
                 budgets[index] -= 1;
-                let cheap = req.banners[key].currency == CHEAP;
                 let mut steps = node.steps.clone();
                 steps.push(step);
                 let child = Node {
@@ -202,14 +215,14 @@ fn plan(req: &Request, seed: u32, last: u32, args: &PlanArgs) -> Node {
                     last: item,
                     budgets,
                     hits: node.hits + i64::from(hit),
-                    premium: node.premium + i64::from(!cheap),
-                    cheap: node.cheap + i64::from(cheap),
+                    forced: node.forced + i64::from(forced),
                     steps,
                 };
                 if hit && child.rank() < best.rank() {
                     best = child.clone();
                 }
-                let state = (child.seed, child.last, child.budgets.clone());
+                // The machine you're on joins the state: it decides which dupes are forced.
+                let state = (child.seed, child.last, child.budgets.clone(), key);
                 match at.get(&state) {
                     Some(&i) => {
                         if child.rank() < order[i].rank() {
@@ -305,8 +318,10 @@ fn tracks(
         t("target"),
         t("what it collects"),
     );
+    // The banner legend is the thead's first row, so the two stick as one block.
+    out.push_str("<table class=\"track normal-track\">\n<thead>\n");
     if columns.len() > 1 {
-        out.push_str("<ul class=\"track-legend\">\n");
+        out.push_str("<tr class=\"legend-row\"><th colspan=\"3\"><ul class=\"track-legend\">\n");
         for c in &columns {
             let _ = writeln!(
                 out,
@@ -315,11 +330,11 @@ fn tracks(
                 esc(&req.banners[c.banner].name)
             );
         }
-        out.push_str("</ul>\n");
+        out.push_str("</ul></th></tr>\n");
     }
     let _ = write!(
         out,
-        "<table class=\"track normal-track\">\n<thead><tr>\n<th class=\"pos\">#</th>\n<th>{}</th>\n<th>{}</th>\n</tr></thead>\n<tbody>\n",
+        "<tr>\n<th class=\"pos\">#</th>\n<th>{}</th>\n<th>{}</th>\n</tr></thead>\n<tbody>\n",
         req.t("Track A"),
         req.t("Track B")
     );
@@ -329,7 +344,7 @@ fn tracks(
             out,
             "<tr>\n<th scope=\"row\" class=\"pos\">{position}</th>\n"
         );
-        for (track, label) in TRACKS.iter().enumerate() {
+        for track in 0..TRACKS.len() {
             let cell_marks = marks.get(&(position, track)).unwrap_or(&none);
             out.push_str("\n<td class=\"cell\">");
             for c in &columns {
@@ -389,6 +404,17 @@ fn tracks(
                         let _ = write!(out, "\" data-pool=\"{pool}\">{item}</span>");
                     }
                 }
+                out.push_str("</span><span class=\"entry-dice\">");
+                if pull.seed != 0 {
+                    let _ = write!(
+                        out,
+                        "<button type=\"button\" class=\"reseed inline\" data-seed=\"{}\" data-item=\"{}\" title=\"{}\" aria-label=\"{}\">{DICE}</button>",
+                        pull.seed,
+                        esc(req.name(pull.cat)),
+                        req.t("Rolled this? Jump the seed to just after this clean pull (a dupe's branch has its own dice)"),
+                        req.tr("Jump the seed to just after %(name)s", &[("name", &item)])
+                    );
+                }
                 out.push_str("</span>");
                 if let Some(alt) = alt {
                     let (to_pos, to_track) = landing(position, track, alt.steps as usize);
@@ -427,25 +453,6 @@ fn tracks(
                     );
                 }
                 out.push_str("</div>");
-            }
-            let seed = columns[0].pull(position, track).seed;
-            if seed != 0 {
-                let items: HashSet<u32> = columns
-                    .iter()
-                    .map(|c| c.pull(position, track).cat)
-                    .collect();
-                let item = if items.len() == 1 {
-                    esc(req.name(*items.iter().next().unwrap_or(&NONE)))
-                } else {
-                    String::new()
-                };
-                let cell = format!("{position}{label}");
-                let _ = write!(
-                    out,
-                    "<button type=\"button\" class=\"reseed\" data-seed=\"{seed}\" data-item=\"{item}\" title=\"{}\" aria-label=\"{}\">{DICE}</button>",
-                    req.tr("Rolled %(cell)s? Jump the seed to just after it (its clean roll; a dupe's branch has its own dice)", &[("cell", &cell)]),
-                    req.tr("Jump the seed to just after %(name)s", &[("name", &cell)])
-                );
             }
             out.push_str("</td>\n");
         }
@@ -500,7 +507,9 @@ pub fn normal_plan(req: &Request, args: &NormalArgs, plan_args: &PlanArgs) -> St
         }
     }
     let rows = best.steps.iter().map(|s| s.position).max().unwrap_or(0);
-    let banners: Vec<usize> = (0..req.banners.len()).collect();
+    let banners: Vec<usize> = (0..req.banners.len())
+        .filter(|b| !plan_args.optional.contains(b) || best.steps.iter().any(|s| s.machine == *b))
+        .collect();
     let track = tracks(req, args, &banners, req.count.max(rows + 2), &marks);
     let dark = req.id("Dark Catseye");
 

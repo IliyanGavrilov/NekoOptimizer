@@ -92,7 +92,8 @@
       <summary>{% translate "Plan a path — most Dark Catseyes for your rolls" %}</summary>
       <p class="muted hint">{% blocktranslate trimmed %}Enter how many tickets you have and pick what you want: you get the
         order to roll in. <strong>Normal Cat Tickets</strong> work on the plain, Catfruit and
-        Catseye machines. Lucky Tickets are separate, and the plan uses as few as it can.{% endblocktranslate %}</p>
+        Catseye machines. Lucky Tickets are separate and never roll a Catseye; once you enter
+        some, the plan can use their machine even while its column is hidden.{% endblocktranslate %}</p>
       <div class="plan-budgets">
         <label class="opt">{% translate "Normal Cat Tickets" %}
           <input type="number" class="plan-budget" data-kind="normal"
@@ -118,6 +119,12 @@
                 <option value="item:{{ item }}">{{ label }}</option>
               {% endfor %}
             </optgroup>
+          </select>
+        </label>
+        <label class="opt" title="{% translate "Which tickets pay for the pulls that only walk the track on to the next target" %}">{% translate "Pulls in between" %}
+          <select id="normalMoves">
+            <option value="lucky">{% translate "Lucky Tickets first" %}</option>
+            <option value="normal">{% translate "Normal Cat Tickets first" %}</option>
           </select>
         </label>
         <button type="button" id="normalPlanGo">{% translate "Find a path" %}</button>
@@ -150,6 +157,8 @@
           </select></label>
       </div>
     </div>
+    {# Shown only while a plan is on screen, like the planner's: back to the plain table. #}
+    <button type="button" id="normalBackToRolls" class="back-to-rolls" hidden>&larr; {% translate "Back to rolls" %}</button>
     <div id="normalTracks" aria-live="polite"></div>
   </div>
 

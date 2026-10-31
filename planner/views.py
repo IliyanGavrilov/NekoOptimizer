@@ -52,6 +52,7 @@ from planner.services import (
     CANNON_ADDONS,
     GUIDE_PAGE_CELLS,
     NORMAL_DEFAULT_KEYS,
+    NORMAL_MOVES,
     NORMAL_TARGET_PRESETS,
     PLAN_FILTER_ROWS,
     RARITY_ORDER,
@@ -967,6 +968,12 @@ def _normal_tickets(request):
     return tickets
 
 
+def _normal_moves(request):
+    """The posted stash the plan's walking pulls come out of (NORMAL_MOVES)."""
+    moves = request.POST.get("moves", "")
+    return moves if moves in NORMAL_MOVES else "lucky"
+
+
 @require_POST
 def normal_plan(request):
     """Run the normal-side path planner: from the current seed, the pull sequence
@@ -989,6 +996,7 @@ def normal_plan(request):
         request.POST.get("target", "dark"),
         _track_length(request),
         last_item=request.POST.get("last_item", "").strip(),
+        moves=_normal_moves(request),
     )
     if plan is None:
         return HttpResponseBadRequest(gettext("unknown target"))
@@ -1015,9 +1023,14 @@ def normal_plan_engine(request):
         return HttpResponseBadRequest(gettext("unknown target"))
 
     label, targets = resolved
-    # The table shows the live machines in the page's fixed order; the search tries them in
-    # the order posted, as the server's planner did.
-    columns = [banner.key for banner in NORMAL_BANNERS if banner.key in machines]
+    # The table shows the live machines in the page's fixed order, plus any lucky one your
+    # stash brings in once the plan pulls it; the search tries them in the order posted, as
+    # the server's planner did.
+    budgets = normal_budgets(machines, tickets, _normal_moves(request))
+    fed = {key for _, keys in budgets for key in keys}
+    columns = [
+        banner.key for banner in NORMAL_BANNERS if banner.key in machines or banner.key in fed
+    ]
     return JsonResponse(
         normal_request(
             "normal_plan",
@@ -1027,7 +1040,8 @@ def normal_plan_engine(request):
             request.POST.get("last_item", "").strip(),
             label=label,
             targets=targets,
-            budgets=normal_budgets(machines, tickets),
+            budgets=budgets,
+            optional=[key for key in columns if key not in machines],
         )
     )
 

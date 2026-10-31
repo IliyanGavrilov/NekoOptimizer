@@ -2,6 +2,8 @@
 # on the real machines, respect its budgets, and never trail pulls past its last
 # target - and choosing between machines can only ever help.
 
+from itertools import product
+
 import pytest
 
 from neko.normal import BANNERS_BY_KEY, UPGRADES, landing, play, pull_once
@@ -78,6 +80,60 @@ def test_a_second_machine_never_hurts():
 
     assert steered.hits >= baseline.hits
     assert sum(steered.spent.values()) <= 42
+
+
+def test_walking_pulls_spare_the_dearest_budget():
+    """Budgets come dearest first: the plan collects the same darks either way, but
+    the pulls that only walk the track come out of the stash listed later."""
+    catseye, lucky = (30, ("ce",)), (30, ("lt",))
+    keep_normal = plan_normal(SEED, [catseye, lucky], DARK)
+    keep_lucky = plan_normal(SEED, [lucky, catseye], DARK)
+
+    assert keep_normal.hits == keep_lucky.hits > 0
+    assert keep_normal.spent["ce"] < keep_lucky.spent["ce"]
+    assert keep_normal.spent["lt"] > keep_lucky.spent["lt"]
+
+
+def _best_by_brute_force(seed, budgets, targets):
+    """The best rank over every machine sequence the budgets allow, ending on a target:
+    most hits, then fewest forced track changes, then most of each budget left, then
+    fewest pulls."""
+    machines = [key for _, keys in budgets for key in keys]
+    best = None
+    for length in range(1, sum(count for count, _ in budgets) + 1):
+        for sequence in product(machines, repeat=length):
+            left = [count - sum(key in keys for key in sequence) for count, keys in budgets]
+            if min(left) < 0:
+                continue
+
+            state, last, previous, hits, forced = seed, "", None, 0, 0
+            for key in sequence:
+                item, after, extra = pull_once(state, BANNERS_BY_KEY[key], last)
+                if extra and previous not in (None, key):
+                    forced += not pull_once(state, BANNERS_BY_KEY[previous], last)[2]
+                hits += item in targets
+                state, last, previous = after, item, key
+            if item in targets:
+                rank = (-hits, forced, tuple(-n for n in left), length)
+                best = rank if best is None else min(best, rank)
+
+    return best
+
+
+@pytest.mark.parametrize("seed", range(1, 41))
+def test_small_plans_are_the_exact_optimum(seed):
+    """On budgets small enough to try every sequence, the beam finds the best one: no
+    forced track change it could avoid, and the walking pulls on the spare stash."""
+    budgets = [(4, ("ce",)), (4, ("lt",))]
+    targets = frozenset({"10K XP", "Speed Up"})
+
+    plan = plan_normal(seed, budgets, targets)
+
+    left = tuple(-(count - sum(plan.spent.get(key, 0) for key in keys)) for count, keys in budgets)
+    forced = sum(step.forced for step in plan.steps)
+    assert (-plan.hits, forced, left, len(plan.steps)) == _best_by_brute_force(
+        seed, budgets, targets
+    )
 
 
 def test_plan_chases_other_targets():

@@ -65,11 +65,12 @@ def test_an_empty_normal_table_says_so(client, engine, catalogue):  # noqa: F811
     _compare(client, engine, "tracks", _tracks(1, []))
 
 
-def _plan(seed, machines, target, tickets, last=""):
+def _plan(seed, machines, target, tickets, last="", moves="lucky"):
     return {
         **_tracks(seed, machines, "100", last),
         "target": target,
         "tickets": json.dumps(tickets),
+        "moves": moves,
     }
 
 
@@ -86,6 +87,12 @@ def _plan(seed, machines, target, tickets, last=""):
 )
 def test_normal_plans_match(client, engine, catalogue, target, tickets):  # noqa: F811
     _compare(client, engine, "plan", _plan(DARK_SEED, ["ce", "n", "lt", "ltg"], target, tickets))
+
+
+@pytest.mark.parametrize("moves", ["lucky", "normal"])
+def test_normal_plans_on_a_hidden_lucky_machine_match(client, engine, catalogue, moves):  # noqa: F811
+    tickets = {"normal": 30, "lucky": 30, "luckyg": 5}
+    _compare(client, engine, "plan", _plan(DARK_SEED, ["ce"], "dark", tickets, moves=moves))
 
 
 def test_a_normal_plan_that_finds_nothing_matches(client, engine, catalogue):  # noqa: F811

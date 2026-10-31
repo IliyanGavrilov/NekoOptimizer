@@ -1307,11 +1307,11 @@ td.cell.flash-locate {
   max-height: calc(100vh - var(--header-h, 56px) - 1.5rem);
   overflow: auto;
 }
-/* Inside the pane, "under the site header" means under the pane's own top edge: the banner
-   legend and the header row below it are measured against --header-h, so zero it for them
-   (not for .plan-track itself, whose max-height still needs the real height). Without this
-   both pin a site-header's height down INTO the pane and overlap the first rows. */
-.plan-track .track-legend, .plan-track table.track { --header-h: 0px; }
+/* Inside the pane, "under the site header" means under the pane's own top edge: the
+   sticky thead is measured against --header-h, so zero it there (not for .plan-track
+   itself, whose max-height still needs the real height). Without this it pins a
+   site-header's height down INTO the pane and overlaps the first rows. */
+.plan-track table.track { --header-h: 0px; }
 @media (max-width: 760px) {
   .plan-follow { flex-direction: column; }
   .plan-steps { flex-basis: auto; width: 100%; position: static; max-height: none; }
@@ -1415,12 +1415,15 @@ td.cell.flash-locate {
   gap: 0.25rem;
   font-size: 0.8rem;
   color: var(--muted);
-  /* Sticks under the site header so you can see which banner is 1/2/3 while the rows
-     scroll; the thead sits just below it (--legend-h is measured by app.js). */
-  position: sticky;
-  top: var(--header-h, 52px);
-  z-index: 3;
+}
+/* The legend is the thead's first row (so you can see which banner is 1/2/3 while the
+   rows scroll), shed of the column headers' cell styling. */
+table.track .legend-row th {
+  padding: 0;
+  border: 0;
   background: var(--bg);
+  color: inherit;
+  font: inherit;
 }
 /* Each banner's future-ubers stepper, right-aligned so they line up in a column
    whatever the name lengths: a compact number box drag-scrubbed up/down like the
@@ -1486,12 +1489,15 @@ table.track th, table.track td {
   text-align: left;
   vertical-align: top;
 }
-/* The header row rides along under the site header while the 100 rows scroll
-   (--header-h is measured by app.js - the site header wraps taller on phones). */
-table.track thead th {
+/* The legend and header rows ride along under the site header while the 100 rows
+   scroll, as one block so nothing shows between them (--header-h is measured by app.js
+   - the site header wraps taller on phones). */
+table.track thead {
   position: sticky;
-  top: calc(var(--header-h, 52px) + var(--legend-h, 0px));
+  top: var(--header-h, 52px);
   z-index: 2;
+}
+table.track thead th {
   background: var(--panel);
   color: var(--muted);
   font-family: var(--head-font);
@@ -1522,6 +1528,8 @@ table.track .entry {
 table.track:not(.normal-track) .entry {
   grid-template-columns: minmax(min-content, 1fr) 4.5rem 2.8rem 1.5rem;
 }
+/* Items carry no rarity or tier: just the name and the same dice track. */
+table.track.normal-track .entry { grid-template-columns: minmax(min-content, 1fr) 1.5rem; }
 table.track .entry > .arrow { grid-column: 1 / -1; }
 table.track .entry-rarity, table.track .entry-tier { justify-self: start; }
 table.track .entry-dice { justify-self: end; }
@@ -1629,20 +1637,17 @@ table.track .entry.is-done { opacity: 0.5; }
 .cat-pill.owned::after { content: " \2713"; color: var(--accent); font-weight: 700; }
 .entry.wanted .catlink::after,
 .cat-pill.wanted::after { content: " \2605"; color: var(--r-super); }
-/* "Roll to here": one dice per track cell (the anchor seed is banner-independent),
-   a small fixed-size button docked right and vertically centred, à la ubercarry.
-   Kept dim so a whole track of them doesn't shout; hovering lights it up. */
-table.track td.cell { position: relative; }
-table.track td.cell:has(> .reseed) { padding-right: 2.2rem; }
+/* "I rolled this": a dice per line, in the entry's own dice track - "jump to just after
+   obtaining THIS cat/item". One per branch on dual-outcome cells (a dupe's reroll lands on
+   a different seed and position than the clean roll) and one per guaranteed award. Small
+   and dim so the line still reads as text first and a whole track of them doesn't shout;
+   hovering lights it up. */
 table.track .reseed {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  right: 3px;
-  margin: auto 0;
-  width: 1.9rem;
-  height: min(1.9rem, 100%);
-  display: flex;
+  display: inline-flex;
+  width: 1.35rem;
+  height: 1.2rem;
+  vertical-align: middle;
+  margin-left: 0.05rem;
   align-items: center;
   justify-content: center;
   background: none;
@@ -1653,26 +1658,13 @@ table.track .reseed {
   opacity: 0.55;
   transition: color 0.2s, background-color 0.2s, opacity 0.2s;
 }
-table.track .reseed svg { display: block; }
+table.track .reseed svg { display: block; width: 13px; height: 13px; }
 table.track .reseed:hover, table.track .reseed:focus-visible {
   opacity: 1;
   color: var(--accent);
   background: color-mix(in srgb, var(--accent) 12%, transparent);
   filter: none;
 }
-/* Branch dice: "jump to just after obtaining THIS cat/multi", inline beside its name.
-   One per branch on dual-outcome cells (a dupe's reroll lands on a different seed and
-   position than the clean roll) and one per guaranteed award. Smaller than the docked
-   roll-to-here dice so the line still reads as text first. */
-table.track .reseed.inline {
-  position: static;
-  display: inline-flex;
-  width: 1.35rem;
-  height: 1.2rem;
-  vertical-align: middle;
-  margin-left: 0.05rem;
-}
-table.track .reseed.inline svg { width: 13px; height: 13px; }
 
 /* Details view: each cell's raw RNG seeds (the rarity seed it rolled from and the
    slot seed that indexes the pool). Off by default; the "Show seeds" toggle adds

@@ -945,7 +945,6 @@ if (picker) {
         html || `<p class="muted">${gettext("No plan for these cats within your resources.")}</p>`;
       syncRollDisplay(); // this track carries icons too
       wireFollowAlong(body); // step list + track walk together
-      watchLegends();
     },
     true,
   );
@@ -1022,7 +1021,6 @@ if (picker) {
     trackHost.querySelectorAll(".future-ubers").forEach(scrubNumberInput);
     syncFutureTargets(); // restore the toggle chips' pressed state; prune any now gone
     syncRollDisplay(); // re-inject icons if the fresh cells need them
-    watchLegends();
     // "Skip guaranteed in Find" only makes sense when the track has guaranteed columns.
     if (findGuaranteedCtl) findGuaranteedCtl.hidden = !trackHost.querySelector(".guaranteed-col");
     // A Find-position click that had to grow the table scrolls once the rows are here.
@@ -1327,7 +1325,6 @@ if (picker) {
         resultsRegion.hidden = !solutions.firstElementChild;
         syncRollDisplay(); // the solution tracks carry icons too
         wireFollowAlong(solutions); // step list + track walk together
-        watchLegends();
       } else {
         const { errors = {} } = await resp.json().catch(() => ({}));
         const field = Object.keys(errors).find((k) => k in fieldSlot);
@@ -1802,22 +1799,6 @@ new ResizeObserver(([entry]) => {
   const height = entry.borderBoxSize[0].blockSize;
   document.documentElement.style.setProperty("--header-h", `${height}px`);
 }).observe(document.querySelector(".site-header"));
-
-// The banner legend sticks under the site header and the thead just below it, so the
-// visible legend's height is observed into --legend-h the same way: a one-off read rounded
-// to whole pixels and missed later reflows, leaving a strip of rows showing between the
-// two. Legends arrive with each rendered track, so the renderers call watchLegends().
-const legendObserver = new ResizeObserver(() => {
-  const legend = [...document.querySelectorAll(".track-legend")].find((el) => el.offsetParent);
-  const height = legend ? legend.getBoundingClientRect().height : 0;
-  document.documentElement.style.setProperty("--legend-h", `${height}px`);
-});
-function watchLegends() {
-  legendObserver.disconnect();
-  const legends = document.querySelectorAll(".track-legend");
-  legends.forEach((legend) => legendObserver.observe(legend));
-  if (!legends.length) document.documentElement.style.setProperty("--legend-h", "0px");
-}
 
 // The first visit's welcome strip, until it's dismissed. Storage can be off (private
 // mode); then it simply shows again next time.

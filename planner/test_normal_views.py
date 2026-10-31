@@ -143,6 +143,21 @@ def test_normal_plan_splits_a_long_run_into_ten_pull_steps():
     ]
 
 
+def test_a_lucky_stash_walks_the_track_on_its_hidden_machine():
+    """Lucky tickets never roll a Catseye, so by default they pay for the walking pulls -
+    on their machine even with its column off, which the plan's table then shows."""
+    tickets = {"normal": 30, "lucky": 30}
+    plan = build_normal_plan(PLAN_SEED, ["ce"], tickets, "dark", 20)
+    spent = {s["kind"]: s["rolls"] for s in plan["spent"]}
+
+    assert spent["lucky"] > spent["normal"]
+    assert [b["name"] for b in plan["track"]["legend"]] == ["Catseye Capsules", "Lucky Ticket"]
+
+    keep_lucky = build_normal_plan(PLAN_SEED, ["ce"], tickets, "dark", 20, moves="normal")
+    assert keep_lucky["hits"] == plan["hits"]
+    assert {s["kind"]: s["rolls"] for s in keep_lucky["spent"]}["normal"] > spent["normal"]
+
+
 @pytest.mark.django_db
 def test_normal_plan_reports_an_unreachable_target(client):
     # One catseye roll from a cell that isn't a dark: nothing to collect.
