@@ -31,7 +31,7 @@ class Command(BaseCommand):
             data=json.dumps(body).encode(),
             headers={"Content-Type": "application/json; charset=utf-8"},
         )
-        with urlopen(request, timeout=30) as response:
+        with urlopen(request, timeout=30) as response:  # nosec B310
             self.stdout.write(
                 self.style.SUCCESS(f"IndexNow answered {response.status} for {len(urls)} URLs.")
             )
