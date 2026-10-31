@@ -39,6 +39,7 @@
   <link rel="preload" href="{% static 'planner/fonts/source-sans-3-latin.woff2' %}" as="font" type="font/woff2" crossorigin>
   <link rel="preload" href="{% static 'planner/fonts/jetbrains-mono-latin.woff2' %}" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="{% static 'planner/style.css' %}">
+  {% if vercel_analytics %}<script defer src="/_vercel/insights/script.js"></script>{% endif %}
 </head>
 <body data-unit-info-url="{% url 'unit_info' %}" data-unit-forms-url="{% url 'unit_forms' %}"
       data-icon-base="{{ icon_base }}">

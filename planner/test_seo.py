@@ -105,6 +105,16 @@ def test_robots_points_crawlers_at_the_sitemap(client):
     assert f"Sitemap: {SITE}/sitemap.xml" in client.get("/robots.txt").content.decode()
 
 
+def test_a_vercel_deployment_loads_web_analytics(client, settings):
+    settings.VERCEL_ANALYTICS = True
+    assert b"/_vercel/insights/script.js" in client.get("/about/").content
+
+
+def test_a_local_run_leaves_web_analytics_out(client, settings):
+    settings.VERCEL_ANALYTICS = False
+    assert b"/_vercel/insights/" not in client.get("/about/").content
+
+
 def test_the_indexnow_key_file_serves_the_key(client, settings):
     settings.INDEXNOW_KEY = "abc123key"
     assert client.get("/abc123key.txt").content == b"abc123key"

@@ -58,4 +58,5 @@ def seo(request) -> dict:
         else "",
         "google_verification": settings.GOOGLE_SITE_VERIFICATION,
         "bing_verification": settings.BING_SITE_VERIFICATION,
+        "vercel_analytics": settings.VERCEL_ANALYTICS,
     }
