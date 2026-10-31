@@ -7,6 +7,7 @@ from planner.views import (
     Signup,
     about,
     apply_plan,
+    avatar,
     collection,
     collection_auto_wishlist,
     collection_bulk,
@@ -87,4 +88,5 @@ urlpatterns = [
     path("accounts/signup/", Signup.as_view(), name="signup"),
     path("accounts/login/", Login.as_view(), name="login"),
     path("accounts/logout/", LogoutView.as_view(), name="logout"),
+    path("accounts/avatar/", avatar, name="avatar"),
 ]

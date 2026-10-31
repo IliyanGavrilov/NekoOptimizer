@@ -3391,11 +3391,9 @@ def normal_banner_choices() -> list[dict]:
     ]
 
 
-# What tells the two seekable capsules apart: whether Superfeline can drop yet.
-_SEEK_NOTES = {
-    "n": gettext_noop("Superfeline NOT unlocked"),
-    "np": gettext_noop("with Superfeline in the pool"),
-}
+# What tells the two seekable capsules apart: whether Superfeline can drop yet (the
+# Superfeline capsule's own name already says it).
+_SEEK_NOTES = {"n": gettext_noop("Superfeline NOT unlocked")}
 
 
 def normal_seek_pools() -> dict[str, dict]:
@@ -3777,14 +3775,20 @@ def build_normal_plan(
     track = build_normal_tracks(seed, keys, max(count, rows + 2), last_item, marks=marks)
 
     # The haul line talks currencies, not machines: one Normal Cat Ticket pool
-    # covers however many machines it fed.
+    # covers however many machines it fed. ``kind`` is the page's budget field for it.
     currencies = [
-        ("Normal Cat Ticket", sum(n for key, n in plan.spent.items() if key in CHEAP_KEYS)),
-        ("Lucky Ticket", plan.spent.get("lt", 0)),
-        ("Lucky Ticket G", plan.spent.get("ltg", 0)),
+        (
+            "normal",
+            "Normal Cat Ticket",
+            sum(n for key, n in plan.spent.items() if key in CHEAP_KEYS),
+        ),
+        ("lucky", "Lucky Ticket", plan.spent.get("lt", 0)),
+        ("luckyg", "Lucky Ticket G", plan.spent.get("ltg", 0)),
     ]
     spent = [
-        {"name": name, "rolls": n, "text": _normal_count(name, n)} for name, n in currencies if n
+        {"kind": kind, "name": name, "rolls": n, "text": _normal_count(name, n)}
+        for kind, name, n in currencies
+        if n
     ]
 
     return {

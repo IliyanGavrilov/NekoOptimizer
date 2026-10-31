@@ -23,8 +23,18 @@ def region(request) -> dict:
 
 
 def icons(request) -> dict:
-    """Where cat and material icons are served from, for the templates and app.js alike."""
-    return {"icon_base": settings.ICON_BASE, "item_base": settings.ITEM_BASE}
+    """Where cat and material icons are served from, for the templates and app.js alike,
+    and the header avatar's icon: the cat the player picked, else the Cat."""
+    profile = getattr(request, "profile", None)
+    unit, form = (0, 0)
+    if profile is not None and profile.avatar_unit is not None:
+        unit, form = profile.avatar_unit, profile.avatar_form
+
+    return {
+        "icon_base": settings.ICON_BASE,
+        "item_base": settings.ITEM_BASE,
+        "avatar_icon": f"{settings.ICON_BASE}/{unit}/{form}.png",
+    }
 
 
 def tools(request) -> dict:

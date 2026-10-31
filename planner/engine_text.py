@@ -147,7 +147,6 @@ ENGINE_TEXT = (
         "Following the track dupes here: the previous pull obtains this same item, so this "
         "cell rerolls into the branch value and jumps tracks"
     ),
-    gettext_noop("I rolled it &mdash; advance my seed"),
     gettext_noop(
         "No %(target)s reachable with those rolls. Give a machine more budget, or try again "
         "after your next real pulls move the seed."
@@ -157,7 +156,10 @@ ENGINE_TEXT = (
         "Rolled %(cell)s? Jump the seed to just after it (its clean roll; a dupe's branch has "
         "its own dice)"
     ),
-    gettext_noop("You rolled this plan: the seed jumps to just after its final pull"),
+    gettext_noop(
+        "You rolled this plan: the seed jumps to just after its final pull and its tickets "
+        "come off your stash"
+    ),
     gettext_noop("a planned pull"),
     gettext_noop("an upgrade (Special Skill), not a cat"),
     gettext_noop("aqua"),

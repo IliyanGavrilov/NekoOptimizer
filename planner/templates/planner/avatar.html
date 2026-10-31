@@ -1,0 +1,22 @@
+{% extends "planner/base.html" %}
+{% load i18n %}
+
+{% block content %}
+  <h1>{% translate "Avatar" %}</h1>
+  <p class="muted">{% translate "Pick any cat, in any of its forms, for the picture next to your name." %}</p>
+  <div class="avatar-now">
+    <span class="avatar avatar-large" style="background-image: url('{{ avatar_icon }}')"></span>
+    <span class="muted">{% translate "Your avatar now" %}</span>
+  </div>
+  {% comment %}app.js lists the cats matching the search (your own cats while it's empty),
+  each with a button per form; a button posts "<unit id>/<form>".{% endcomment %}
+  <form method="post" id="avatarPicker" class="avatar-picker">
+    {% csrf_token %}
+    <input type="search" id="avatarSearch" placeholder="{% translate "Search cats…" %}"
+           aria-label="{% translate "Search cats…" %}" autocomplete="off">
+    <p class="muted hint" id="avatarHint"></p>
+    <div id="avatarGrid" class="avatar-grid"></div>
+  </form>
+  {{ cats|json_script:"avatarCats" }}
+  {{ owned|json_script:"avatarOwned" }}
+{% endblock %}

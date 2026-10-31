@@ -150,6 +150,9 @@ class Profile(models.Model):
     owned = models.ManyToManyField(Unit, related_name="owned_by", blank=True)
     wanted = models.ManyToManyField(Unit, related_name="wanted_by", blank=True)
     auto_wishlist = models.BooleanField(default=False)  # star gacha cats new to the catalogue
+    # The header's picture: any cat (by unit id) in any of its forms; unset is the Cat.
+    avatar_unit = models.PositiveIntegerField(null=True, blank=True)
+    avatar_form = models.PositiveSmallIntegerField(default=0)
     created = models.DateTimeField(auto_now_add=True)
 
     def __str__(self) -> str:

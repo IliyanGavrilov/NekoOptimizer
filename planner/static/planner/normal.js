@@ -14,13 +14,11 @@ if (normalForm) {
   const token = normalForm.querySelector("[name=csrfmiddlewaretoken]").value;
   const seedEl = document.getElementById("normalSeed");
   const countEl = document.getElementById("normalCount");
-  // The plain capsule is one column with a profile fact attached: once Superfeline
-  // joins your pool it never leaves, so "which normal machine" isn't a choice -
-  // the toggle records which pool YOUR save rolls, and everything (columns, the
-  // finder, the planner) reads it.
-  const normalToggle = document.getElementById("machineNormal");
-  const superfeline = document.getElementById("superfeline");
+  // The plain capsule comes in two flavors and a save rolls exactly one: once
+  // Superfeline joins your pool it never leaves. So Normal and Normal+ are exclusive
+  // picks, and the last one picked is the pool the finder searches.
   const machineEls = [...normalForm.querySelectorAll(".machine-toggle input[value]")];
+  const flavorEls = machineEls.filter((el) => el.value === "n" || el.value === "np");
   const hint = document.getElementById("normalHint");
   const tracksHost = document.getElementById("normalTracks");
   // The Rolls display controls, the rare planner's verbatim and on its saved picks:
@@ -36,7 +34,12 @@ if (normalForm) {
     syncCatDisplay(rollsRegion, displayEl.value, form);
   };
 
-  const normalKey = () => (superfeline.checked ? "np" : "n");
+  const normalKey = () => (stored.superfeline === false ? "n" : "np");
+  // Tick one flavor (the other drops) and remember it as this save's pool.
+  const pickFlavor = (key) => {
+    for (const el of flavorEls) el.checked = el.value === key;
+    stored.superfeline = key === "np";
+  };
 
   const esc = (text) => text.replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
 
@@ -85,18 +88,15 @@ if (normalForm) {
   if (linkParams.has("seed") || linkParams.has("m")) save();
   if (stored.machines) {
     for (const el of machineEls) el.checked = stored.machines.includes(el.value);
-    normalToggle.checked = stored.machines.includes("n") || stored.machines.includes("np");
     // The machine list carries which capsule flavor this save has (a link shares
-    // it too); when the normal column is off, fall back to the remembered flag.
-    if (normalToggle.checked) stored.superfeline = stored.machines.includes("np");
+    // it too); with neither column on, the remembered flag stands.
+    const shown = flavorEls.filter((el) => el.checked).map((el) => el.value);
+    if (shown.length === 1) stored.superfeline = shown[0] === "np";
+    else if (shown.length) pickFlavor(normalKey());
   }
-  if (stored.superfeline !== undefined) superfeline.checked = stored.superfeline;
   seedEl.value = stored.seed || "0"; // a first visit starts the tracks from seed 0
 
-  const checkedMachines = () => {
-    const keys = normalToggle.checked ? [normalKey()] : [];
-    return keys.concat(machineEls.filter((el) => el.checked).map((el) => el.value));
-  };
+  const checkedMachines = () => machineEls.filter((el) => el.checked).map((el) => el.value);
 
   // Keep the address bar shareable: the current seed, dupe memory and machines.
   const syncLink = () => {
@@ -113,7 +113,6 @@ if (normalForm) {
     const seed = seedEl.value.trim();
     const machines = checkedMachines();
     stored.machines = machines;
-    stored.superfeline = superfeline.checked;
     save();
     syncLink();
     if (!/^\d+$/.test(seed)) {
@@ -154,13 +153,15 @@ if (normalForm) {
     trackTimer = setTimeout(fetchTracks, 400);
   };
 
-  const setSeed = (seed, lastItem) => {
+  // ``reload`` false keeps what's on screen (an applied plan's steps still need doing).
+  const setSeed = (seed, lastItem, reload = true) => {
     stored.seed = String(seed);
     stored.last = lastItem || "";
     save();
     seedEl.value = stored.seed;
     keeper.push(stored.seed, stored.last);
-    fetchTracks();
+    if (reload) fetchTracks();
+    else syncLink();
   };
 
   seedEl.addEventListener("input", () => {
@@ -180,20 +181,23 @@ if (normalForm) {
     localStorage.setItem(FORM_KEY, rollFormEl.value);
     applyDisplay();
   });
-  for (const el of machineEls) el.addEventListener("change", fetchTracks);
-  normalToggle.addEventListener("change", fetchTracks);
-  superfeline.addEventListener("change", () => {
-    fetchTracks();
-    syncFinderPool(); // the finder searches the flavor's pool - rebuild its pickers
-  });
+  for (const el of machineEls) {
+    el.addEventListener("change", () => {
+      if (flavorEls.includes(el) && el.checked) {
+        const flavor = normalKey();
+        pickFlavor(el.value);
+        // The finder searches the flavor's pool - rebuild its pickers on a switch.
+        if (normalKey() !== flavor) syncFinderPool();
+      }
+      fetchTracks();
+    });
+  }
 
   // A cell's dice: "I rolled this" - jump to just after it, remembering what it
   // gave (the next view's first cell can dupe it).
   tracksHost.addEventListener("click", (e) => {
     const btn = e.target.closest(".reseed");
     if (btn) setSeed(btn.dataset.seed, btn.dataset.item || "");
-    const apply = e.target.closest(".plan-apply");
-    if (apply) setSeed(apply.dataset.seed, apply.dataset.item || "");
   });
 
   fetchTracks();
@@ -205,11 +209,21 @@ if (normalForm) {
   const targetSel = document.getElementById("normalTarget");
   const budgetEls = [...planPanel.querySelectorAll(".plan-budget")];
 
-  // First open: seed the stashes with something sensible - normal tickets are
-  // the abundant currency, the lucky kinds precious - so "Find a path" works out
-  // of the box.
+  // Your ticket stashes persist in this browser, like the planner's resources.
+  const saveBudgets = () => {
+    stored.tickets = Object.fromEntries(budgetEls.map((el) => [el.dataset.kind, el.value]));
+    save();
+  };
+  if (stored.tickets) {
+    for (const el of budgetEls) el.value = stored.tickets[el.dataset.kind] ?? el.value;
+  }
+  for (const el of budgetEls) el.addEventListener("input", saveBudgets);
+
+  // First open with nothing saved: seed the stashes with something sensible - normal
+  // tickets are the abundant currency, the lucky kinds precious - so "Find a path"
+  // works out of the box.
   planPanel.addEventListener("toggle", () => {
-    if (!planPanel.open || budgetEls.some((el) => Number(el.value) > 0)) return;
+    if (!planPanel.open || stored.tickets) return;
     const machines = checkedMachines();
     for (const el of budgetEls) {
       if (el.dataset.kind === "normal") {
@@ -218,6 +232,23 @@ if (normalForm) {
         el.value = machines.includes(el.dataset.kind === "lucky" ? "lt" : "ltg") ? 10 : 0;
       }
     }
+    saveBudgets();
+  });
+
+  // "Apply this plan": you rolled it, so its tickets come off your stashes and the
+  // seed moves to just after its final pull. The plan stays on screen - its steps
+  // still need doing in game.
+  tracksHost.addEventListener("click", (e) => {
+    const btn = e.target.closest(".plan-apply");
+    if (!btn || btn.disabled) return;
+    for (const el of budgetEls) {
+      const spent = Number(btn.dataset[el.dataset.kind]) || 0;
+      el.value = Math.max(0, (Number(el.value) || 0) - spent);
+    }
+    saveBudgets();
+    setSeed(btn.dataset.seed, btn.dataset.item || "", false);
+    btn.disabled = true;
+    btn.textContent = gettext("Applied ✓");
   });
 
   planGo.addEventListener("click", async () => {
@@ -413,7 +444,7 @@ if (normalForm) {
   };
   const syncFinderPool = () => {
     const pool = pools[normalKey()];
-    poolLabel.textContent = pool.name + " (" + pool.note + ")";
+    poolLabel.textContent = pool.note ? `${pool.name} (${pool.note})` : pool.name;
     resetRows();
   };
   syncFinderPool();
@@ -478,8 +509,7 @@ if (normalForm) {
   results.addEventListener("click", (e) => {
     const btn = e.target.closest(".seek-use");
     if (!btn) return;
-    normalToggle.checked = true; // the sought pool is always the plain capsule
-    superfeline.checked = btn.dataset.machine === "np";
+    pickFlavor(btn.dataset.machine); // the sought pool is always a plain capsule
     setSeed(btn.dataset.seed, btn.dataset.item || "");
     document.getElementById("normalFinder").open = false;
     tracksHost.scrollIntoView({ behavior: "smooth", block: "start" });

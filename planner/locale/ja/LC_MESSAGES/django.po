@@ -523,8 +523,8 @@ msgid ""
 msgstr "%(cell)sを引いた?その直後へシード値を進めます(被りのない通常の1回。被りの分岐には専用のサイコロがあります)"
 
 #: .\engine_text.py:160 .\templates\planner\_normal_plan.html:14
-msgid "You rolled this plan: the seed jumps to just after its final pull"
-msgstr "このプランを引いた:最後の1回の直後へシード値を進めます"
+msgid "You rolled this plan: the seed jumps to just after its final pull and its tickets come off your stash"
+msgstr "このプランを引いた:最後の1回の直後へシード値を進め、使ったチケットを手持ちから引きます"
 
 #: .\engine_text.py:161 .\templates\planner\_normal_tracks.html:11
 msgid "a planned pull"
@@ -2281,9 +2281,9 @@ msgstr ""
 
 #: .\templates\planner\normal.html:23
 msgid ""
-"The finder searches the pool your <strong>Superfeline unlocked</strong> toggle (next to the machine picks below) says you have &mdash; the pools differ, so if the search finds nothing, check that toggle first."
+"The finder searches the capsule you pick below: <strong>Normal Capsules</strong>, or <strong>Normal+ Capsules (w/ Superfeline)</strong> once Superfeline is in your pool &mdash; the pools differ, so if the search finds nothing, check that pick first."
 msgstr ""
-"検索するプールは<strong>ネコ超人 解放済み</strong>の切り替え(下のガチャ選択の横)で決まります &mdash; プールが違うので、何も見つからない時はまずそこを確認してください。"
+"検索するのは下で選んだガチャです:<strong>にゃんこガチャ</strong>、またはネコ超人がプールにいるなら<strong>Normal+ Capsules (w/ Superfeline)</strong> &mdash; プールが違うので、何も見つからない時はまずその選択を確認してください。"
 
 #: .\templates\planner\normal.html:26
 msgid ""
@@ -2319,9 +2319,9 @@ msgstr "その結果と完全に一致するシード値はありません。原
 
 #: .\templates\planner\normal.html:55
 msgid ""
-"<strong>Superfeline is set wrong.</strong> Once Superfeline is in your capsule pool every roll changes - tick \"Superfeline unlocked\" only if it is."
+"<strong>Superfeline is set wrong.</strong> Once Superfeline is in your capsule pool every roll changes - pick \"Normal+ Capsules (w/ Superfeline)\" only if it is."
 msgstr ""
-"<strong>ネコ超人の設定が違う。</strong>ネコ超人がガチャのプールに入るとすべての結果が変わります - 解放済みの時だけ「ネコ超人 解放済み」にチェックしてください。"
+"<strong>ネコ超人の設定が違う。</strong>ネコ超人がガチャのプールに入るとすべての結果が変わります - プールにいる時だけ「Normal+ Capsules (w/ Superfeline)」を選んでください。"
 
 #: .\templates\planner\normal.html:57
 msgid ""
@@ -2749,3 +2749,24 @@ msgstr "表示中のガチャのどれかにチケットを入れてください
 #: .\views.py:993 .\views.py:1014
 msgid "unknown target"
 msgstr "不明なターゲットです"
+
+msgid "Game version, language and theme"
+msgstr "ゲームのバージョン・言語・テーマ"
+
+msgid "Settings"
+msgstr "設定"
+
+msgid "Change avatar"
+msgstr "アイコンを変更"
+
+msgid "Avatar"
+msgstr "アイコン"
+
+msgid "Pick any cat, in any of its forms, for the picture next to your name."
+msgstr "名前の横に表示するキャラを、好きな形態で選べます。"
+
+msgid "Your avatar now"
+msgstr "現在のアイコン"
+
+msgid "Search cats…"
+msgstr "キャラを検索…"

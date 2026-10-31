@@ -20,9 +20,9 @@
       <li>{% blocktranslate trimmed %}Roll the plain Normal Capsules several times &mdash; 8 to 12 works best &mdash;
         and record what you get, in order. They cost pocket XP, so this is the cheap way
         (the event machines would burn 12+ tickets for the same answer).{% endblocktranslate %}</li>
-      <li>{% blocktranslate trimmed %}The finder searches the pool your <strong>Superfeline unlocked</strong>
-        toggle (next to the machine picks below) says you have &mdash; the pools
-        differ, so if the search finds nothing, check that toggle first.{% endblocktranslate %}</li>
+      <li>{% blocktranslate trimmed %}The finder searches the capsule you pick below: <strong>Normal Capsules</strong>,
+        or <strong>Normal+ Capsules (w/ Superfeline)</strong> once Superfeline is in your pool
+        &mdash; the pools differ, so if the search finds nothing, check that pick first.{% endblocktranslate %}</li>
       <li>{% blocktranslate trimmed %}The pulls must be consecutive: nothing rolled in between on any normal-side
         machine.{% endblocktranslate %}</li>
       <li>{% blocktranslate trimmed %}You only need this once &mdash; from then on the tracker follows your seed as
@@ -53,7 +53,7 @@
         <p>{% translate "No seed deals exactly those pulls. Almost always one of these:" %}</p>
         <ul>
           <li>{% blocktranslate trimmed %}<strong>Superfeline is set wrong.</strong> Once Superfeline is in your capsule
-            pool every roll changes - tick "Superfeline unlocked" only if it is.{% endblocktranslate %}</li>
+            pool every roll changes - pick "Normal+ Capsules (w/ Superfeline)" only if it is.{% endblocktranslate %}</li>
           <li>{% blocktranslate trimmed %}<strong>The order is off.</strong> Enter the items exactly in the order you
             got them, oldest first.{% endblocktranslate %}</li>
           <li>{% blocktranslate trimmed %}<strong>Something was rolled in between.</strong> The Catfruit, Catseye and
@@ -76,23 +76,13 @@
                placeholder="{% translate "e.g. 1515525936" %}">
       </label>
       <span class="normal-machines" role="group" aria-label="{% translate "Capsule machines" %}">
-        <label class="machine-toggle">
-          <input type="checkbox" id="machineNormal" checked>
-          {% translate "Normal Capsules" %}
-        </label>
-        <label class="machine-toggle superfeline-toggle"
-               title="{% translate "Once Superfeline joins your capsule pool it never leaves - this is about your save, not a viewing choice. It changes every roll, so get it right." %}">
-          <input type="checkbox" id="superfeline" checked>
-          {% translate "Superfeline unlocked" %}
-        </label>
         {% for banner in banners %}
-          {% if banner.key != "n" and banner.key != "np" %}
-            <label class="machine-toggle">
-              <input type="checkbox" value="{{ banner.key }}"
-                     {% if banner.key in default_keys %}checked{% endif %}>
-              {{ banner.label }}
-            </label>
-          {% endif %}
+          <label class="machine-toggle"{% if banner.key == "np" %}
+                 title="{% translate "Once Superfeline joins your capsule pool it never leaves - this is about your save, not a viewing choice. It changes every roll, so get it right." %}"{% endif %}>
+            <input type="checkbox" value="{{ banner.key }}"
+                   {% if banner.key in default_keys %}checked{% endif %}>
+            {{ banner.label }}
+          </label>
         {% endfor %}
       </span>
     </div>
