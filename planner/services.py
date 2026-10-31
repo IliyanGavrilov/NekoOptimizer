@@ -3547,6 +3547,10 @@ def build_normal_tracks(
 
 _NORMAL_CURRENCY = {"lt": "Lucky Ticket", "ltg": "Lucky Ticket G"}
 
+# A plan step holds at most this many pulls, so a long run on one machine reads as
+# trackable 10-pull steps (88 pulls: eight of 10, then one of 8).
+_NORMAL_STEP_PULLS = 10
+
 # How many of a normal-side currency, worded per currency (it reads "3 Lucky Tickets").
 _NORMAL_COUNTS = {
     "Normal Cat Ticket": ngettext_lazy("%(n)s Normal Cat Ticket", "%(n)s Normal Cat Tickets", "n"),
@@ -3717,14 +3721,15 @@ def build_normal_plan(
     label, targets = resolved
     plan = plan_normal(seed, budgets, targets, last_item=last_item)
 
-    # One pass builds the merged legs (consecutive pulls on one machine) and the track
-    # marks together, so each lit cell carries the step (leg) number it belongs to and
-    # the step list and track can be walked in lockstep.
+    # One pass builds the merged legs (consecutive pulls on one machine, up to
+    # _NORMAL_STEP_PULLS each) and the track marks together, so each lit cell carries
+    # the step (leg) number it belongs to and the step list and track can be walked in
+    # lockstep.
     names = normal_names()
     marks: dict[tuple[int, str], dict[str, dict]] = {}
     legs = []
     for step in plan.steps:
-        if legs and legs[-1]["key"] == step.machine:
+        if legs and legs[-1]["key"] == step.machine and len(legs[-1]["pulls"]) < _NORMAL_STEP_PULLS:
             n = legs[-1]["n"]
         else:
             n = len(legs) + 1
