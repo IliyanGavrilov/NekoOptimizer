@@ -1,0 +1,2727 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-10-31 12:10+0200\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+
+#: .\changelog.py:13
+msgid ""
+"The site now speaks Japanese, Traditional Chinese and Korean. Each game version opens in its own language; pick another in the header."
+msgstr "網站現在支援日文、繁體中文與韓文。每個遊戲版本會用它自己的語言開啟;也可以在頁首選擇其他語言。"
+
+#: .\changelog.py:16
+msgid "Each game version has its own pages: /jp/, /tw/ and /kr/."
+msgstr "每個遊戲版本都有自己的頁面:/jp/、/tw/ 與 /kr/。"
+
+#: .\changelog.py:17
+msgid ""
+"Fest and set names use each game version's own names, taken from the game's data."
+msgstr "祭典與系列名稱改用遊戲資料中各版本自己的名稱。"
+
+#: .\changelog.py:19
+msgid ""
+"A short welcome for first visits, plain how-it-works steps on the Planner, and a page of game words explained."
+msgstr "新增首次造訪的簡短歡迎、規劃工具的簡單使用步驟,以及遊戲用語說明頁。"
+
+#: .\changelog.py:28
+msgid ""
+"Your seeds are saved to your profile. A new device or a cleared browser no longer loses them, and a line under the seed shows when it's saved."
+msgstr "你的種子碼現在會存到個人資料中。換裝置或清除瀏覽器都不會再遺失,種子碼下方也會顯示是否已儲存。"
+
+#: .\changelog.py:32
+msgid ""
+"The Seed Finder checks your entry for the usual mistakes before it searches, and saves the seed it finds."
+msgstr "種子碼查詢會在搜尋前檢查常見錯誤,並儲存找到的種子碼。"
+
+#: .\changelog.py:35
+msgid ""
+"Opening someone else's link no longer replaces your own seed until you choose to."
+msgstr "打開別人的連結時,除非你自己選擇,否則不會取代你的種子碼。"
+
+#: .\changelog.py:36
+msgid "New step-by-step guides."
+msgstr "新增逐步教學攻略。"
+
+#: .\changelog.py:42
+msgid "Import your collection from screenshots of the in-game Cat Guide."
+msgstr "可從遊戲內貓咪圖鑑的截圖匯入收藏。"
+
+#: .\changelog.py:43
+msgid ""
+"The seed search and the rolls run in your browser, so they're much faster."
+msgstr "種子碼搜尋與抽卡計算改在你的瀏覽器中執行,速度快很多。"
+
+#: .\context_processors.py:10
+msgid "English"
+msgstr "英文版"
+
+#: .\context_processors.py:10
+msgid "Japan"
+msgstr "日本版"
+
+#: .\context_processors.py:10
+msgid "Taiwan"
+msgstr "台灣版"
+
+#: .\context_processors.py:10
+msgid "Korea"
+msgstr "韓國版"
+
+#: .\engine_text.py:10 .\templates\planner\_tracks.html:9
+#, python-format
+msgid "%(hits)s of them turn up in these rolls"
+msgstr "其中%(hits)s隻會出現在這段序列中"
+
+#: .\engine_text.py:11 .\templates\planner\_normal_tracks.html:6
+#: .\templates\planner\_tracks.html:38
+msgid ""
+"&ldquo;I rolled this cell&rdquo; &mdash; jumps the seed to just after it"
+msgstr "「我抽到了這格」 &mdash; 將種子碼推進到這格之後"
+
+#: .\engine_text.py:12 .\templates\planner\_normal_cell.html:11
+#: .\templates\planner\_track_cell.html:6
+#, python-format
+msgid ", jumps to %(to)s"
+msgstr "，跳至%(to)s"
+
+#: .\engine_text.py:13 .\templates\planner\_tracks.html:61
+msgid "Add future ubers"
+msgstr "加入未實裝超激"
+
+#: .\engine_text.py:14 .\templates\planner\_track_cell.html:6
+msgid "An uber not released yet - a stand-in for whatever joins the pool next"
+msgstr "尚未實裝的超激稀有 - 代表之後會加入轉蛋池的角色"
+
+#: .\engine_text.py:16 .\templates\planner\_tracks.html:15
+msgid ""
+"An uber not released yet - a stand-in for whatever joins this banner's pool next"
+msgstr "尚未實裝的超激稀有 - 代表之後會加入此轉蛋池的角色"
+
+#: .\engine_text.py:18 .\templates\planner\_track_cell.html:6
+msgid "Debuts with this banner &mdash; this is its first event anywhere"
+msgstr "在此轉蛋首次登場 &mdash; 這是它在遊戲中的第一個活動"
+
+#: .\engine_text.py:19 .\templates\planner\_tracks.html:24
+#, python-format
+msgid "Doesn't turn up in the first %(rolls)s rolls"
+msgstr "前%(rolls)s抽內不會出現"
+
+#: .\engine_text.py:21 .\templates\planner\_tracks.html:8
+msgid ""
+"Every cat you're searching for - the targets you picked, your wishlist (when that search is on), and any future ubers you've toggled - with its next spot in these rolls. Click a position to jump to its cell."
+msgstr ""
+"你正在找的所有角色 - 你選的目標、願望清單(搜尋開啟時)以及開啟的未實裝超激 - 以及它在這段序列中下一次出現的位置。點擊位置即可跳到該格。"
+
+#: .\engine_text.py:26 .\templates\planner\_track_cell.html:6
+msgid ""
+"Following the track dupes here: the previous pull obtains this same cat, so this cell rerolls into the branch value and jumps tracks"
+msgstr "沿著這條線抽到這裡會稀有重複:前一抽拿到同一隻角色,所以這格會重抽成分支結果並換線"
+
+#: .\engine_text.py:29 .\templates\planner\_track_cell.html:6
+#: .\templates\planner\_tracks.html:15 .\templates\planner\_tracks.html:46
+#: .\templates\planner\_tracks.html:61
+#, python-format
+msgid "Future Uber %(n)s"
+msgstr "未實裝超激 %(n)s"
+
+#: .\engine_text.py:30 .\templates\planner\_normal_cell.html:11
+#: .\templates\planner\_track_cell.html:6
+#, python-format
+msgid "Got %(name)s here? Jump the seed to just after that reroll"
+msgstr "在這裡抽到%(name)s?將種子碼推進到那次重抽之後"
+
+#: .\engine_text.py:31 .\templates\planner\_tracks.html:47
+#: .\templates\planner\_tracks.html:69 .\templates\planner\_tracks.html:71
+#: .\templates\planner\planner.html:147
+msgid "Guaranteed"
+msgstr "確定"
+
+#: .\engine_text.py:33 .\templates\planner\_track_cell.html:6
+msgid ""
+"If this guaranteed multi's first roll comes up as a dupe, it rerolls and the multi ends on a different cell - you get this uber instead"
+msgstr "這次確定連抽的第一抽若是稀有重複會重抽,連抽會在另一格結束 - 改為獲得這隻超激稀有"
+
+#: .\engine_text.py:36 .\templates\planner\_normal_cell.html:11
+#: .\templates\planner\_track_cell.html:6
+#, python-format
+msgid "Jump the seed to just after %(name)s"
+msgstr "將種子碼推進到%(name)s之後"
+
+#: .\engine_text.py:37 .\templates\planner\_tracks.html:20
+#, python-format
+msgid "Jump to %(pos)s in the track"
+msgstr "跳到序列中的%(pos)s"
+
+#: .\engine_text.py:38 .\templates\planner\_normal_tracks.html:3
+#: .\templates\planner\_tracks.html:33
+msgid "Legend"
+msgstr "圖例"
+
+#: .\engine_text.py:39 .\templates\planner\_tracks.html:86
+msgid "No rolls for this seed and banner selection."
+msgstr "這組種子碼與轉蛋沒有任何結果。"
+
+#: .\engine_text.py:41 .\templates\planner\_track_cell.html:6
+msgid ""
+"Only when the arriving pull already holds this cell's cat (a bounce path, or your remembered last pull): it rerolls into the branch value and jumps tracks"
+msgstr "只有抵達的那一抽已經是這格的角色時(反彈路徑或你記住的上一抽):才會重抽成分支結果並換線"
+
+#: .\engine_text.py:45 .\templates\planner\_tracks.html:61
+msgid ""
+"Pad this banner's uber pool with expected-but-unreleased ubers (godfat's Count of future ubers) - its uber cells land as if those units were already in the pool; drag the box up/down to adjust"
+msgstr ""
+"在此轉蛋的超激池加入尚未實裝的超激(同godfat的「Count of future ubers」) - 超激格會當作這些角色已在池中來計算;上下拖曳方框即可調整"
+
+#: .\engine_text.py:49 .\templates\planner\_tracks.html:26
+#, python-format
+msgid "Remove %(name)s from your targets"
+msgstr "將%(name)s從目標移除"
+
+#: .\engine_text.py:50 .\templates\planner\_tracks.html:26
+msgid "Remove target"
+msgstr "移除目標"
+
+#: .\engine_text.py:52 .\templates\planner\_track_cell.html:6
+msgid ""
+"Rolled this guaranteed multi (its first roll duped)? Jump the seed to just after its final draw"
+msgstr "抽了這次確定連抽(第一抽稀有重複)?將種子碼推進到最後一抽之後"
+
+#: .\engine_text.py:55 .\templates\planner\_track_cell.html:6
+msgid ""
+"Rolled this guaranteed multi? Jump the seed to just after its final draw"
+msgstr "抽了這次確定連抽?將種子碼推進到最後一抽之後"
+
+#: .\engine_text.py:57 .\templates\planner\_track_cell.html:6
+msgid ""
+"Rolled this? Jump the seed to just after this clean pull (a dupe's branch has its own dice)"
+msgstr "抽到這個?將種子碼推進到這次一般抽之後(稀有重複的分支有自己的骰子)"
+
+#: .\engine_text.py:60 .\templates\planner\_tracks.html:61
+#, python-format
+msgid "Search for %(label)s on %(banners)s"
+msgstr "在%(banners)s搜尋%(label)s"
+
+#: .\engine_text.py:61 .\templates\planner\_tracks.html:26
+msgid "Stop searching for this future uber"
+msgstr "停止搜尋這隻未實裝超激"
+
+#: .\engine_text.py:62 .\templates\planner\_tracks.html:8
+#: .\templates\planner\collection.html:70 .\templates\planner\planner.html:29
+msgid "Targets"
+msgstr "目標"
+
+#: .\engine_text.py:64 .\templates\planner\_track_cell.html:6
+msgid ""
+"This step of the plan can be rolled on this banner instead - you'd get this cat, and the rest of the plan still works"
+msgstr "計畫的這一步也可以改抽這個轉蛋 - 會得到這隻角色,其餘計畫照樣成立"
+
+#: .\engine_text.py:68 .\templates\planner\_tracks.html:61
+msgid ""
+"Toggle a future uber to search for it - it joins your Targets above and glows on this banner's cells"
+msgstr "開啟即搜尋這隻未實裝超激 - 會加入上方目標,並在此轉蛋的格子中發光"
+
+#: .\engine_text.py:71 .\templates\planner\_normal_tracks.html:24
+#: .\templates\planner\_tracks.html:68
+msgid "Track A"
+msgstr "A線"
+
+#: .\engine_text.py:72 .\templates\planner\_normal_tracks.html:25
+#: .\templates\planner\_tracks.html:70
+msgid "Track B"
+msgstr "B線"
+
+#: .\engine_text.py:73 .\templates\planner\_tracks.html:45
+msgid "Uber debuting with this banner (its first event anywhere)"
+msgstr "在此轉蛋首次登場的超激稀有(遊戲中的第一個活動)"
+
+#: .\engine_text.py:74 .\templates\planner\_tracks.html:42
+msgid "Uber/Legend not in your collection"
+msgstr "收藏中沒有的超激/傳說"
+
+#: .\engine_text.py:75 .\templates\planner\_tracks.html:22
+msgid "Won't drop on the selected banners"
+msgstr "選擇的轉蛋中不會出現"
+
+#: .\engine_text.py:77 .\templates\planner\_tracks.html:22
+#, python-format
+msgid ""
+"Won't drop on the selected banners: %(banners)s. Add a banner that carries it, or remove it."
+msgstr "選擇的轉蛋中不會出現:%(banners)s。請加入有這隻角色的轉蛋,或將它移除。"
+
+#: .\engine_text.py:81 .\templates\planner\_track_cell.html:6
+msgid ""
+"You land here next: the first cat another roll on this banner would give after the highlighted draws"
+msgstr "下一抽在這裡:亮起的抽數之後,再抽一次此轉蛋會得到的第一隻角色"
+
+#: .\engine_text.py:85 .\templates\planner\_tracks.html:49
+msgid ""
+"a capsule banner &mdash; its pulls spend that scarce ticket, not rare tickets or catfood"
+msgstr "專用券轉蛋 &mdash; 這裡的抽數使用那種稀少的券,而不是稀有券或貓罐頭"
+
+#: .\engine_text.py:88 .\templates\planner\_tracks.html:44
+msgid ""
+"a target you picked &mdash; gold here, and its next spot shows in <em>Targets</em> above"
+msgstr "你選的目標 &mdash; 這裡顯示為金色,下一個位置會顯示在上方<em>目標</em>中"
+
+#: .\engine_text.py:90 .\templates\planner\_normal_tracks.html:5
+#: .\templates\planner\_tracks.html:37
+msgid "alternate timelines; a dupe rerolls and switches track"
+msgstr "兩條平行的路線;稀有重複會重抽並換線"
+
+#: .\engine_text.py:91 .\templates\planner\_tracks.html:46
+msgid "an expected-but-unreleased Uber padding the pool"
+msgstr "填入轉蛋池的未實裝超激稀有"
+
+#: .\engine_text.py:92 .\templates\planner\_tracks.html:48
+msgid "another banner this plan step can roll on instead"
+msgstr "這一步計畫也可以改抽的另一個轉蛋"
+
+#: .\engine_text.py:93 .\templates\planner\_tracks.html:43
+#: .\templates\planner\_tracks.html:44
+msgid "cat"
+msgstr "角色"
+
+#: .\engine_text.py:94 .\templates\planner\_tracks.html:40
+msgid "click a cell's name-free space: the rolls up to it light like a plan"
+msgstr "點擊格子中名字以外的地方:到那裡為止的抽數會像計畫一樣亮起"
+
+#: .\engine_text.py:95 .\templates\planner\_tracks.html:48
+msgid "dashed"
+msgstr "虛線"
+
+#: .\engine_text.py:96 .\templates\planner\_tracks.html:42
+msgid "green name"
+msgstr "綠色名字"
+
+#: .\engine_text.py:97 .\templates\planner\_normal_tracks.html:7
+#: .\templates\planner\_tracks.html:39
+msgid "if dupe"
+msgstr "若稀有重複"
+
+#: .\engine_text.py:98 .\templates\planner\_normal_cell.html:11
+#: .\templates\planner\_track_cell.html:6
+msgid "if dupe:"
+msgstr "若稀有重複:"
+
+#: .\engine_text.py:99 .\templates\planner\_tracks.html:49
+msgid "legend"
+msgstr "傳說"
+
+#: .\engine_text.py:100 .\templates\planner\_track_cell.html:6
+#: .\templates\planner\_tracks.html:45
+msgid "new"
+msgstr "新"
+
+#: .\engine_text.py:101 .\templates\planner\_tracks.html:43
+msgid "owned"
+msgstr "已擁有"
+
+#: .\engine_text.py:102 .\templates\planner\_normal_tracks.html:11
+#: .\templates\planner\_tracks.html:40
+msgid "path"
+msgstr "路徑"
+
+#: .\engine_text.py:103 .\templates\planner\_tracks.html:49
+msgid "platinum"
+msgstr "白金"
+
+#: .\engine_text.py:104 .\templates\planner\_track_cell.html:6
+#, python-format
+msgid "rarity %(rarity)s &middot; slot %(slot)s"
+msgstr "稀有度 %(rarity)s &middot; 位置 %(slot)s"
+
+#: .\engine_text.py:105 .\templates\planner\_tracks.html:41
+msgid "striped"
+msgstr "斜線"
+
+#: .\engine_text.py:106 .\templates\planner\_tracks.html:47
+msgid "the Uber a guaranteed multi awards if started on that cell"
+msgstr "從該格開始確定連抽時會獲得的超激稀有"
+
+#: .\engine_text.py:107 .\templates\planner\_normal_tracks.html:7
+#: .\templates\planner\_tracks.html:39
+msgid "the reroll branch (its own dice &amp; landing)"
+msgstr "重抽的分支(有自己的骰子與落點)"
+
+#: .\engine_text.py:108 .\templates\planner\_tracks.html:43
+msgid "wishlisted"
+msgstr "願望清單"
+
+#: .\engine_text.py:110 .\templates\planner\_tracks.html:41
+msgid ""
+"you land here next &mdash; the first cat one more roll would give after the lit draws"
+msgstr "下一抽在這裡 &mdash; 亮起的抽數之後再抽一次會得到的第一隻角色"
+
+#: .\engine_text.py:113 .\labels.py:13 .\templates\planner\_tracks.html:52
+msgid "Rare"
+msgstr "稀有"
+
+#: .\engine_text.py:114 .\labels.py:14 .\templates\planner\_tracks.html:53
+msgid "Super Rare"
+msgstr "激稀有"
+
+#: .\engine_text.py:115 .\labels.py:15 .\templates\planner\_tracks.html:54
+msgid "Uber Super Rare"
+msgstr "超激稀有"
+
+#: .\engine_text.py:116 .\labels.py:16 .\templates\planner\_tracks.html:55
+msgid "Legend Rare"
+msgstr "傳說稀有"
+
+#: .\engine_text.py:118 .\services.py:1711 .\templates\planner\_steps.html:24
+#, python-format
+msgid "%(n)s catfood"
+msgstr "貓罐頭%(n)s個"
+
+#: .\engine_text.py:119 .\templates\planner\_solutions.html:11
+#, python-format
+msgid "%(n)s plans"
+msgstr "%(n)s個計畫"
+
+#: .\engine_text.py:120
+#, python-format
+msgid "%(n)s-roll"
+msgstr "%(n)s連抽"
+
+#: .\engine_text.py:121
+#, python-format
+msgid "%(n)s-roll (guaranteed)"
+msgstr "%(n)s連抽(確定)"
+
+#: .\engine_text.py:122 .\templates\planner\_solution_body.html:13
+msgid "Apply this plan"
+msgstr "套用這個計畫"
+
+#: .\engine_text.py:124 .\templates\planner\_solution.html:9
+#, python-format
+msgid ""
+"Best plan found, not a proven cheapest one. Past %(limit)s cats the search for the whole set is bounded - an exact one would take 2^N searches - so a cheaper plan may exist. Every smaller row here IS exact."
+msgstr ""
+"這是找到的最佳計畫,但未證明是最便宜的。目標超過%(limit)s隻時,整體搜尋會受限(精確需要2^N次搜尋),所以可能有更便宜的計畫。比這小的每一列都是精確的。"
+
+#: .\engine_text.py:128 .\templates\planner\_res_board.html:68
+#: .\templates\planner\_solutions.html:10
+#: .\templates\planner\collection.html:67
+msgid "Clear"
+msgstr "清除"
+
+#: .\engine_text.py:129 .\templates\planner\_normal_plan.html:23
+#: .\templates\planner\_steps.html:12
+msgid "Next step"
+msgstr "下一步"
+
+#: .\engine_text.py:130 .\templates\planner\_solutions.html:18
+msgid "No reachable plan with given resources."
+msgstr "以目前資源沒有可達成的計畫。"
+
+#: .\engine_text.py:131 .\templates\planner\_solution.html:10
+msgid "Not found"
+msgstr "找不到"
+
+#: .\engine_text.py:132 .\templates\planner\_solutions.html:6
+msgid "Only plans with"
+msgstr "只看包含以下的計畫"
+
+#: .\engine_text.py:133 .\templates\planner\_normal_plan.html:21
+#: .\templates\planner\_steps.html:10
+msgid "Previous step"
+msgstr "上一步"
+
+#: .\engine_text.py:134
+msgid "Single pull"
+msgstr "單抽"
+
+#: .\engine_text.py:135 .\templates\planner\_normal_plan.html:19
+#: .\templates\planner\_steps.html:8
+msgid "Steps"
+msgstr "步驟"
+
+#: .\engine_text.py:136 .\templates\planner\_steps.html:30
+#, python-format
+msgid "Total &middot; %(total)s"
+msgstr "總計 &middot; %(total)s"
+
+#: .\engine_text.py:137 .\templates\planner\_normal_plan.html:20
+#: .\templates\planner\_steps.html:9
+msgid "Walk the plan step by step"
+msgstr "逐步走完計畫"
+
+#: .\engine_text.py:138 .\templates\planner\_solution.html:17
+msgid "Working out this plan&hellip;"
+msgstr "正在計算計畫&hellip;"
+
+#: .\engine_text.py:139 .\templates\planner\_solution.html:9
+msgid "best found"
+msgstr "最佳結果"
+
+#: .\engine_text.py:140 .\services.py:1713 .\templates\planner\_steps.html:24
+msgid "free"
+msgstr "免費"
+
+#: .\engine_text.py:141 .\templates\planner\_normal_plan.html:37
+#: .\templates\planner\_steps.html:26
+msgid "gets"
+msgstr "取得:"
+
+#: .\engine_text.py:142 .\templates\planner\_steps.html:20
+msgid "same rolls"
+msgstr "相同結果"
+
+#: .\engine_text.py:144 .\templates\planner\_normal_tracks.html:10
+msgid "Dark Catseye"
+msgstr "貓眼石【闇】"
+
+#: .\engine_text.py:146 .\templates\planner\_normal_cell.html:11
+msgid ""
+"Following the track dupes here: the previous pull obtains this same item, so this cell rerolls into the branch value and jumps tracks"
+msgstr "沿著這條線抽到這裡會重複:前一抽拿到同一個道具,所以這格會重抽成分支結果並換線"
+
+#: .\engine_text.py:149 .\templates\planner\_normal_plan.html:14
+msgid "I rolled it &mdash; advance my seed"
+msgstr "已經抽了 &mdash; 推進我的種子碼"
+
+#: .\engine_text.py:151 .\templates\planner\_normal_plan.html:45
+#, python-format
+msgid ""
+"No %(target)s reachable with those rolls. Give a machine more budget, or try again after your next real pulls move the seed."
+msgstr "以這些抽數拿不到%(target)s。請增加某個轉蛋的預算,或等你實際抽完、種子碼前進後再試一次。"
+
+#: .\engine_text.py:154 .\templates\planner\_normal_tracks.html:38
+msgid "Pick at least one capsule machine to roll."
+msgstr "請至少選擇一台轉蛋機。"
+
+#: .\engine_text.py:156 .\templates\planner\_normal_cell.html:11
+#, python-format
+msgid ""
+"Rolled %(cell)s? Jump the seed to just after it (its clean roll; a dupe's branch has its own dice)"
+msgstr "抽到%(cell)s?將種子碼推進到它之後(一般抽;重複的分支有自己的骰子)"
+
+#: .\engine_text.py:159 .\templates\planner\_normal_plan.html:14
+msgid "You rolled this plan: the seed jumps to just after its final pull"
+msgstr "已抽完這個計畫:將種子碼推進到最後一抽之後"
+
+#: .\engine_text.py:160 .\templates\planner\_normal_tracks.html:11
+msgid "a planned pull"
+msgstr "計畫中的一抽"
+
+#: .\engine_text.py:161 .\templates\planner\_normal_tracks.html:9
+msgid "an upgrade (Special Skill), not a cat"
+msgstr "升級道具,不是角色"
+
+#: .\engine_text.py:162 .\templates\planner\_normal_tracks.html:8
+msgid "aqua"
+msgstr "水藍"
+
+#: .\engine_text.py:163 .\templates\planner\_normal_tracks.html:9
+msgid "blue"
+msgstr "藍"
+
+#: .\engine_text.py:164 .\templates\planner\_normal_plan.html:10
+msgid "for"
+msgstr "花費:"
+
+#: .\engine_text.py:165 .\templates\planner\_normal_tracks.html:8
+msgid "gold"
+msgstr "金"
+
+#: .\engine_text.py:166 .\templates\planner\_normal_tracks.html:8
+msgid "red"
+msgstr "紅"
+
+#: .\engine_text.py:167 .\templates\planner\_normal_tracks.html:11
+msgid "target"
+msgstr "目標"
+
+#: .\engine_text.py:168
+msgid "the 1% Catseye-event jackpot"
+msgstr "貓眼石活動1%的大獎"
+
+#: .\engine_text.py:169 .\templates\planner\_normal_tracks.html:8
+msgid "the machine's rarer rate bands, scarcest last"
+msgstr "轉蛋機中較稀有的機率段,越後面越稀少"
+
+#: .\engine_text.py:170 .\templates\planner\_normal_tracks.html:11
+msgid "what it collects"
+msgstr "會得到的東西"
+
+#: .\forms.py:23
+msgid "Seed"
+msgstr "種子碼"
+
+#: .\forms.py:29
+msgid "Tickets"
+msgstr "稀有券"
+
+#: .\forms.py:30
+msgid "Catfood"
+msgstr "貓罐頭"
+
+#: .\forms.py:35
+msgid "Also search my wishlist (unowned cats I marked wanted)"
+msgstr "同時搜尋願望清單(未擁有且標為想要的角色)"
+
+#: .\forms.py:45
+msgid "1 rare ticket is worth (catfood)"
+msgstr "1張稀有券等於多少貓罐頭"
+
+#: .\forms.py:51
+msgid "Platinum tickets"
+msgstr "白金券"
+
+#: .\forms.py:57
+msgid "Legend tickets"
+msgstr "傳說券"
+
+#: .\forms.py:62
+msgid "Explore mode - Plan without a budget"
+msgstr "探索模式 - 不設預算規劃"
+
+#: .\forms.py:68
+msgid "Max depth (rolls)"
+msgstr "最大深度(抽數)"
+
+#: .\forms.py:117
+msgid "Pick at least one target, or tick 'search my wishlist'."
+msgstr "請至少選擇一個目標,或勾選「同時搜尋願望清單」。"
+
+#: .\forms.py:122
+msgid "Your wishlist is empty - mark some cats as wanted first."
+msgstr "願望清單是空的 - 請先把想要的角色標起來。"
+
+#: .\labels.py:11
+msgid "Normal"
+msgstr "基本"
+
+#: .\labels.py:12
+msgid "Special"
+msgstr "EX"
+
+#: .\labels.py:17
+msgid "Unknown"
+msgstr "未知"
+
+#: .\labels.py:23
+msgctxt "short rarity"
+msgid "Rare"
+msgstr "稀有"
+
+#: .\labels.py:24
+msgctxt "short rarity"
+msgid "Super"
+msgstr "激稀有"
+
+#: .\labels.py:25
+msgctxt "short rarity"
+msgid "Uber"
+msgstr "超激"
+
+#: .\labels.py:26
+msgctxt "short rarity"
+msgid "Legend"
+msgstr "傳說"
+
+#: .\labels.py:30
+msgid "Red"
+msgstr "紅色敵人"
+
+#: .\labels.py:31
+msgid "Floating"
+msgstr "飄浮敵人"
+
+#: .\labels.py:32
+msgid "Black"
+msgstr "黑色敵人"
+
+#: .\labels.py:33 .\labels.py:69 .\labels.py:107
+msgid "Metal"
+msgstr "鋼鐵敵人"
+
+#: .\labels.py:34
+msgid "Angel"
+msgstr "天使敵人"
+
+#: .\labels.py:35
+msgid "Alien"
+msgstr "異星戰士"
+
+#: .\labels.py:36
+msgid "Zombie"
+msgstr "不死生物"
+
+#: .\labels.py:37
+msgid "Relic"
+msgstr "古代種"
+
+#: .\labels.py:38
+msgid "Aku"
+msgstr "惡魔"
+
+#: .\labels.py:39
+msgid "Traitless"
+msgstr "無屬性敵人"
+
+#: .\labels.py:40
+msgid "Witch"
+msgstr "魔女"
+
+#: .\labels.py:41
+msgid "Eva Angel"
+msgstr "使徒"
+
+#: .\labels.py:45
+msgid "Waves"
+msgstr "波動"
+
+#: .\labels.py:46 .\labels.py:84
+msgid "Knockback"
+msgstr "打飛敵人"
+
+#: .\labels.py:47 .\labels.py:85
+msgid "Freeze"
+msgstr "使動作停止"
+
+#: .\labels.py:48 .\labels.py:86
+msgid "Slow"
+msgstr "使動作變慢"
+
+#: .\labels.py:49 .\labels.py:87
+msgid "Weaken"
+msgstr "攻擊力下降"
+
+#: .\labels.py:50 .\labels.py:88
+msgid "Curse"
+msgstr "詛咒"
+
+#: .\labels.py:51
+msgid "Toxic"
+msgstr "毒擊"
+
+#: .\labels.py:52
+msgid "Surges"
+msgstr "烈波"
+
+#: .\labels.py:56
+msgid "Single"
+msgstr "單體攻擊"
+
+#: .\labels.py:57
+msgid "Area"
+msgstr "範圍攻擊"
+
+#: .\labels.py:58
+msgid "Long Distance"
+msgstr "遠方攻擊"
+
+#: .\labels.py:59
+msgid "Omni Strike"
+msgstr "全方位攻擊"
+
+#: .\labels.py:63
+msgid "Multi-hit"
+msgstr "連續攻擊"
+
+#: .\labels.py:64 .\labels.py:102
+msgid "Strong"
+msgstr "善於攻擊"
+
+#: .\labels.py:65 .\labels.py:103
+msgid "Resistant"
+msgstr "很耐打"
+
+#: .\labels.py:66
+msgid "Insanely Tough"
+msgstr "超級耐打"
+
+#: .\labels.py:67
+msgid "Massive Damage"
+msgstr "超大傷害"
+
+#: .\labels.py:68
+msgid "Insane Damage"
+msgstr "極大傷害"
+
+#: .\labels.py:70
+msgid "Attacks Only"
+msgstr "只能攻擊"
+
+#: .\labels.py:71 .\labels.py:109
+msgid "Zombie Killer"
+msgstr "終結不死"
+
+#: .\labels.py:72 .\labels.py:110
+msgid "Witch Killer"
+msgstr "終結魔女"
+
+#: .\labels.py:73 .\labels.py:111
+msgid "Eva Angel Killer"
+msgstr "終結使徒"
+
+#: .\labels.py:74 .\labels.py:112
+msgid "Colossus Slayer"
+msgstr "超生命體特效"
+
+#: .\labels.py:75 .\labels.py:113
+msgid "Behemoth Slayer"
+msgstr "超獸特效"
+
+#: .\labels.py:76 .\labels.py:114
+msgid "Sage Slayer"
+msgstr "超賢者特效"
+
+#: .\labels.py:77 .\labels.py:115
+msgid "Soul Strike"
+msgstr "靈魂攻擊"
+
+#: .\labels.py:78 .\labels.py:116
+msgid "Base Destroyer"
+msgstr "善於攻城"
+
+#: .\labels.py:79
+msgid "Extra Money"
+msgstr "得到很多金錢"
+
+#: .\labels.py:80 .\labels.py:118
+msgid "Wave Shield"
+msgstr "波動滅止"
+
+#: .\labels.py:81 .\labels.py:119
+msgid "Counter-surge"
+msgstr "烈波反擊"
+
+#: .\labels.py:82
+msgid "Critical"
+msgstr "會心一擊"
+
+#: .\labels.py:83
+msgid "Savage Blow"
+msgstr "渾身一擊"
+
+#: .\labels.py:89
+msgid "Wave"
+msgstr "波動"
+
+#: .\labels.py:90
+msgid "Mini-wave"
+msgstr "小波動"
+
+#: .\labels.py:91
+msgid "Surge"
+msgstr "烈波"
+
+#: .\labels.py:92
+msgid "Strengthen"
+msgstr "攻擊力上升"
+
+#: .\labels.py:93
+msgid "Survive"
+msgstr "死前存活"
+
+#: .\labels.py:94
+msgid "Barrier Breaker"
+msgstr "破壞護盾"
+
+#: .\labels.py:95
+msgid "Shield Piercer"
+msgstr "破惡魔盾"
+
+#: .\labels.py:96
+msgid "Warp"
+msgstr "傳送"
+
+#: .\labels.py:97
+msgid "Dodge"
+msgstr "攻擊無效"
+
+#: .\labels.py:104
+msgid "Insanely tough"
+msgstr "超級耐打"
+
+#: .\labels.py:105
+msgid "Massive damage"
+msgstr "超大傷害"
+
+#: .\labels.py:106
+msgid "Insane damage"
+msgstr "極大傷害"
+
+#: .\labels.py:108
+msgid "Attacks only targets"
+msgstr "只能攻擊"
+
+#: .\labels.py:117
+msgid "Extra money"
+msgstr "得到很多金錢"
+
+#: .\labels.py:125
+#, python-format
+msgid "%(n)s hits (%(hits)s)"
+msgstr "%(n)s段攻擊(%(hits)s)"
+
+#: .\labels.py:126
+#, python-format
+msgid "Critical hit %(p)s%%"
+msgstr "會心一擊 %(p)s%%"
+
+#: .\labels.py:129
+#, python-format
+msgid "Savage blow %(p)s%% (+%(boost)s%%)"
+msgstr "渾身一擊 %(p)s%%(+%(boost)s%%)"
+
+#: .\labels.py:131
+#, python-format
+msgid "Knockback %(p)s%%"
+msgstr "打飛敵人 %(p)s%%"
+
+#: .\labels.py:132
+#, python-format
+msgid "Freeze %(p)s%% for %(t)ss"
+msgstr "使動作停止 %(p)s%%(%(t)s秒)"
+
+#: .\labels.py:133
+#, python-format
+msgid "Slow %(p)s%% for %(t)ss"
+msgstr "使動作變慢 %(p)s%%(%(t)s秒)"
+
+#: .\labels.py:136
+#, python-format
+msgid "Weaken %(p)s%% to %(to)s%% for %(t)ss"
+msgstr "攻擊力下降 %(p)s%%(降至%(to)s%%・%(t)s秒)"
+
+#: .\labels.py:138
+#, python-format
+msgid "Curse %(p)s%% for %(t)ss"
+msgstr "詛咒 %(p)s%%(%(t)s秒)"
+
+#: .\labels.py:139
+#, python-format
+msgid "Mini-wave %(p)s%% (Lv %(lv)s)"
+msgstr "小波動 %(p)s%%(Lv%(lv)s)"
+
+#: .\labels.py:140
+#, python-format
+msgid "Wave %(p)s%% (Lv %(lv)s)"
+msgstr "波動 %(p)s%%(Lv%(lv)s)"
+
+#: .\labels.py:143
+#, python-format
+msgid "Surge %(p)s%% (Lv %(lv)s, %(range)s)"
+msgstr "烈波 %(p)s%%(Lv%(lv)s・%(range)s)"
+
+#: .\labels.py:145
+#, python-format
+msgid "Attack +%(p)s%% at %(hp)s%% HP"
+msgstr "體力%(hp)s%%時攻擊力+%(p)s%%"
+
+#: .\labels.py:146
+#, python-format
+msgid "Survives a lethal strike %(p)s%%"
+msgstr "死前存活 %(p)s%%"
+
+#: .\labels.py:147
+#, python-format
+msgid "Breaks barriers %(p)s%%"
+msgstr "破壞護盾 %(p)s%%"
+
+#: .\labels.py:148
+#, python-format
+msgid "Pierces shields %(p)s%%"
+msgstr "破惡魔盾 %(p)s%%"
+
+#: .\labels.py:149
+#, python-format
+msgid "Warp %(p)s%%"
+msgstr "傳送 %(p)s%%"
+
+#: .\labels.py:150
+#, python-format
+msgid "Dodge %(p)s%% for %(t)ss"
+msgstr "攻擊無效 %(p)s%%(%(t)s秒)"
+
+#: .\labels.py:151
+#, python-format
+msgid "Omni strike %(range)s"
+msgstr "全方位攻擊 %(range)s"
+
+#: .\labels.py:152
+#, python-format
+msgid "Long distance %(range)s"
+msgstr "遠方攻擊 %(range)s"
+
+#: .\links.py:30
+msgid "The canonical tracker; our roll engine is validated against it."
+msgstr "最標準的種子碼追蹤工具;本站的轉蛋計算以它驗證。"
+
+#: .\links.py:33
+msgid "Normal Cat seed tracking"
+msgstr "貓咪轉蛋種子碼追蹤"
+
+#: .\links.py:35
+msgid "A tracker built around the Normal Capsule pools."
+msgstr "專為貓咪轉蛋池打造的追蹤工具。"
+
+#: .\links.py:40
+msgid "Userscript overlaying godfat with paths to the cats you want."
+msgstr "在godfat上疊加通往想要角色路徑的使用者腳本。"
+
+#: .\links.py:45
+msgid "A hosted grab-bag of Battle Cats utilities."
+msgstr "貓咪大戰爭的各式實用工具合集。"
+
+#: .\links.py:50
+msgid "All-in-one unit database, stage info and calculators."
+msgstr "角色資料庫、關卡資訊與計算工具的綜合網站。"
+
+#: .\links.py:55
+msgid "Every banner's pool and per-unit drop odds."
+msgstr "每個轉蛋的角色池與各角色的掉落機率。"
+
+#: .\links.py:60
+msgid "The picture-book listing, in the game's own order."
+msgstr "與遊戲內相同順序的貓咪圖鑑。"
+
+#: .\links.py:65
+msgid "Line up two cats' stats side by side."
+msgstr "並排比較兩隻角色的能力值。"
+
+#: .\links.py:70
+msgid "Cat Cannon recipes and upgrade costs."
+msgstr "貓咪砲的開發配方與強化成本。"
+
+#: .\links.py:75
+msgid "Which stages drop which evolution materials."
+msgstr "哪些關卡會掉落哪些進化素材。"
+
+#: .\links.py:80
+msgid "Treasure locations and the stat bonuses they carry."
+msgstr "寶物的取得地點與各自的能力加成。"
+
+#: .\links.py:85
+msgid "True-damage and DPS calculators, range graphs, matchups."
+msgstr "實際傷害與DPS計算、射程圖、相剋。"
+
+#: .\links.py:88
+msgid "Stat calculator"
+msgstr "能力值計算器"
+
+#: .\links.py:90
+msgid "Level-by-level stat breakdowns."
+msgstr "各等級的能力值明細。"
+
+#: .\links.py:95
+msgid "The wiki's own filterable stat table, with form and talent toggles."
+msgstr "Wiki自己的可篩選能力值表,可切換型態與本能。"
+
+#: .\links.py:100
+msgid "Where our rankings come from - plus DPS graphs and matchup charts."
+msgstr "本站排名的來源 - 也有DPS圖與相剋表。"
+
+#: .\links.py:103
+msgid "Upcoming events"
+msgstr "即將到來的活動"
+
+#: .\links.py:105
+msgid "Community-maintained schedule of banners still to come."
+msgstr "社群整理的未來轉蛋時程。"
+
+#: .\links.py:110
+msgid "Account and collection manager with an event calendar."
+msgstr "附活動行事曆的帳號與收藏管理工具。"
+
+#: .\links.py:115
+msgid "Tick off the cats you own and browse them as a set."
+msgstr "勾選擁有的角色,並以整組方式瀏覽。"
+
+#: .\links.py:120
+msgid "The Miraheze wiki every other tool links back to."
+msgstr "其他工具都會連回的Miraheze Wiki(英文)。"
+
+#: .\links.py:123
+msgid "Uber & collab art archive"
+msgstr "超激稀有與合作角色圖庫"
+
+#: .\links.py:125
+msgid "Community gallery of every Uber, collabs included."
+msgstr "社群整理的所有超激稀有圖庫,包含合作角色。"
+
+#: .\links.py:143
+msgid "Seed trackers"
+msgstr "種子碼追蹤工具"
+
+#: .\links.py:144
+msgid "Stats, calculators & databases"
+msgstr "能力值、計算工具與資料庫"
+
+#: .\links.py:145
+msgid "Tier lists"
+msgstr "強度排行"
+
+#: .\links.py:146
+msgid "Schedules & collections"
+msgstr "時程與收藏"
+
+#: .\links.py:147
+msgid "Wikis & assets"
+msgstr "Wiki與素材"
+
+#: .\links.py:158
+msgid "Battle Cats Wiki"
+msgstr "貓咪大戰爭 Wiki"
+
+#: .\links.py:158
+msgid "Full page: forms, talents, lore."
+msgstr "完整頁面:型態、本能、背景故事。"
+
+#: .\links.py:163
+msgid "Stats, animations, drop rates."
+msgstr "能力值、動畫、掉落機率。"
+
+#: .\links.py:166
+msgid "DPS and matchup graphs."
+msgstr "DPS與相剋圖。"
+
+#: .\seo.py:36
+msgid ""
+"Free Battle Cats gacha planner: track your seed, see every upcoming roll and get the cheapest path in tickets and catfood to the Ubers you want."
+msgstr "免費的貓咪大戰爭轉蛋規劃工具:追蹤你的種子碼、查看接下來每一抽的結果,並找出用最少稀有券和貓罐頭抽到想要超激的路線。"
+
+#: .\seo.py:43
+msgid "Battle Cats Gacha Planner & Seed Tracker"
+msgstr "貓咪大戰爭 轉蛋規劃與種子碼追蹤"
+
+#: .\seo.py:45
+msgid ""
+"Plan your Battle Cats rare gacha pulls from your seed: every upcoming roll on both tracks, and the cheapest path in tickets and catfood to the Ubers you want."
+msgstr "用種子碼規劃貓咪大戰爭的稀有轉蛋:A線、B線接下來的每一抽,以及用最少稀有券和貓罐頭抽到想要超激的方法。"
+
+#: .\seo.py:50
+msgid "Battle Cats Normal Capsule Seed Tracker"
+msgstr "貓咪大戰爭 貓咪轉蛋 種子碼追蹤"
+
+#: .\seo.py:52
+msgid ""
+"Predict the Battle Cats Normal Cat Capsule from your normal seed: the Catfruit, Catseye and Lucky Ticket machines in one table, with the pulls worth taking."
+msgstr "用貓咪轉蛋的種子碼預測結果:貓薄荷、貓眼石與招福轉蛋整合在同一張表,並標出值得抽的抽數。"
+
+#: .\seo.py:57
+msgid "Battle Cats Cat Guide & Collection Tracker"
+msgstr "貓咪大戰爭 貓咪圖鑑與收藏管理"
+
+#: .\seo.py:59
+msgid ""
+"Track every Battle Cats unit you own and want in Cat Guide order. Import your collection from in-game screenshots and filter by abilities, combos and talents."
+msgstr "依貓咪圖鑑順序管理你擁有與想要的每隻貓咪大戰爭角色。可從遊戲截圖匯入收藏,並依能力、聯組與本能篩選。"
+
+#: .\seo.py:64
+msgid "Battle Cats Evolution, Talent & Cannon Calculator"
+msgstr "貓咪大戰爭 進化、本能與貓咪砲計算器"
+
+#: .\seo.py:66
+msgid ""
+"Total the catfruit, behemoth stones, XP, NP and cannon materials you need to evolve your Battle Cats units, unlock their talents and build your Cat Base cannons."
+msgstr "計算貓咪大戰爭角色進化、解放本能與開發貓咪砲所需的貓薄荷、獸石、XP、NP與素材總量。"
+
+#: .\seo.py:71
+msgid "Battle Cats Uber Tier List: Best Ubers & Legend Rares"
+msgstr "貓咪大戰爭 超激稀有強度排行:最強超激與傳說稀有"
+
+#: .\seo.py:73
+msgid ""
+"Every permanent Battle Cats Uber and Legend Rare ranked tier by tier, with Ultra Form and Ultra Talent placements - plus a tier list for every gacha set."
+msgstr "貓咪大戰爭常駐超激稀有與傳說稀有的分級排名,附第4進化與超本能的評價,還有每個轉蛋系列的排行。"
+
+#: .\seo.py:78
+msgid "Battle Cats Seed Finder: Find Your Gacha Seed"
+msgstr "貓咪大戰爭 種子碼查詢:找出你的轉蛋種子碼"
+
+#: .\seo.py:80
+msgid ""
+"Don't know your Battle Cats seed? Enter the cats from a few rolls and the finder checks all 4.3 billion seeds in your browser for the one that matches."
+msgstr "不知道你的貓咪大戰爭種子碼?輸入幾抽抽到的角色,系統會在瀏覽器中檢查全部約43億組種子碼,找出相符的那組。"
+
+#: .\seo.py:85
+msgid "Battle Cats Gacha Guides: Seeds, Tracks & Planning"
+msgstr "貓咪大戰爭 轉蛋攻略:種子碼、A線B線與規劃"
+
+#: .\seo.py:87
+msgid ""
+"Step-by-step Battle Cats guides: find your gacha seed, read the A/B roll tracks, plan your pulls for the Ubers you want and predict the Normal Capsules."
+msgstr "貓咪大戰爭逐步攻略:找出轉蛋種子碼、看懂A線B線、規劃抽到想要超激的方法,以及預測貓咪轉蛋。"
+
+#: .\seo.py:92
+msgid "What's New in Neko Optimizer"
+msgstr "Neko Optimizer 更新內容"
+
+#: .\seo.py:93
+msgid ""
+"The latest changes to Neko Optimizer, the Battle Cats gacha planner, newest first."
+msgstr "貓咪大戰爭轉蛋規劃工具 Neko Optimizer 的最新變更,由新到舊。"
+
+#: .\seo.py:96 .\templates\planner\base.html:62
+#: .\templates\planner\base.html:144
+msgid "About"
+msgstr "關於本站"
+
+#: .\seo.py:98
+msgid ""
+"Who built Neko Optimizer, the tech behind its Battle Cats gacha planner, and the community tools and data it credits."
+msgstr "Neko Optimizer的作者、這個貓咪大戰爭轉蛋規劃工具背後的技術,以及我們致謝的社群工具與資料。"
+
+#: .\seo.py:102 .\templates\planner\account.html:6
+#: .\templates\planner\account.html:32 .\templates\planner\base.html:102
+msgid "Sign up"
+msgstr "註冊"
+
+#: .\seo.py:103 .\templates\planner\account.html:16
+#: .\templates\planner\account.html:27 .\templates\planner\account.html:30
+#: .\templates\planner\base.html:101
+msgid "Log in"
+msgstr "登入"
+
+#: .\seo.py:109
+msgid "Battle Cats Gacha Words, Explained Simply"
+msgstr "貓咪大戰爭 轉蛋用語簡單說明"
+
+#: .\seo.py:111
+msgid ""
+"What seeds, tracks A and B, rerolls, guaranteed draws and the other Battle Cats gacha words mean, in a sentence or two each."
+msgstr "種子碼、A線與B線、重抽、確定等貓咪大戰爭轉蛋用語,每個用一兩句話說明。"
+
+#: .\seo.py:116
+msgid "How to Find Your Battle Cats Seed (Step by Step)"
+msgstr "如何找出貓咪大戰爭的種子碼(逐步教學)"
+
+#: .\seo.py:118
+msgid ""
+"Find your Battle Cats gacha seed from a few rolls: which banner to use, how to record your cats, the guaranteed-Uber trap, and what to do when several seeds match."
+msgstr "從幾抽結果找出轉蛋種子碼:該用哪個轉蛋、怎麼記錄抽到的角色、確定超激的陷阱,以及多組種子碼相符時怎麼辦。"
+
+#: .\seo.py:123
+msgid "Battle Cats Seed Tracker: How to Read Tracks A and B"
+msgstr "貓咪大戰爭 種子碼追蹤:如何看懂A線與B線"
+
+#: .\seo.py:125
+msgid ""
+"How Battle Cats rare gacha rolls work from your seed: tracks A and B, duplicate rerolls that switch tracks, guaranteed 11-draws and how to step to the cat you want."
+msgstr "種子碼如何決定稀有轉蛋:A線與B線、會換線的稀有重複、確定11連抽,以及如何前進到想要的角色。"
+
+#: .\seo.py:130
+msgid "How to Plan Battle Cats Gacha Rolls for the Ubers You Want"
+msgstr "如何為想要的超激稀有規劃轉蛋"
+
+#: .\seo.py:132
+msgid ""
+"Use your seed to get the Ubers you want for the fewest tickets and catfood: pick targets and banners, set your budget, follow the plan and apply it when you've rolled."
+msgstr "用種子碼以最少的稀有券與貓罐頭抽到想要的超激:選擇目標與轉蛋、設定預算、照計畫抽,抽完後套用。"
+
+#: .\seo.py:137
+msgid "Battle Cats Normal Capsule Seed Guide: Catfruit & Catseyes"
+msgstr "貓咪轉蛋種子碼攻略:貓薄荷與貓眼石"
+
+#: .\seo.py:139
+msgid ""
+"The Battle Cats Normal Capsules run on their own seed. Find it, predict the Catfruit, Catseye and Lucky Ticket machines, and plan your normal tickets."
+msgstr "貓咪轉蛋使用自己的種子碼。找出它、預測貓薄荷、貓眼石與招福轉蛋,並規劃貓咪轉蛋券的用法。"
+
+#: .\seo.py:144
+msgid "Never Lose Your Battle Cats Seed"
+msgstr "永遠不再遺失你的貓咪大戰爭種子碼"
+
+#: .\seo.py:146
+msgid ""
+"Where Neko Optimizer keeps your Battle Cats seeds, how to carry them to another device, and the one-minute backup that makes losing them impossible."
+msgstr "Neko Optimizer把你的種子碼存在哪裡、如何帶到其他裝置,以及讓你絕不遺失的一分鐘備份。"
+
+#: .\seo.py:186
+#, python-format
+msgid "Battle Cats %(label)s Tier List"
+msgstr "貓咪大戰爭 %(label)s 強度排行"
+
+#: .\seo.py:188
+#, python-format
+msgid ""
+"The Battle Cats %(label)s tier list: every unit in the set ranked tier by tier, with Ultra Form and Ultra Talent placements and each cat's forms."
+msgstr "貓咪大戰爭 %(label)s 強度排行:系列中每隻角色的分級排名,附第4進化、超本能評價與各型態。"
+
+#: .\services.py:139 .\services.py:759
+msgid "Ultra Form"
+msgstr "第4進化"
+
+#: .\services.py:140
+msgid "Ultra Talents"
+msgstr "超本能"
+
+#: .\services.py:141 .\services.py:758
+msgid "True Form"
+msgstr "第3進化"
+
+#: .\services.py:170
+#, python-format
+msgid "%(tier)s with %(boost)s"
+msgstr "%(boost)s時為%(tier)s"
+
+#: .\services.py:336 .\services.py:1492
+msgid "Available now"
+msgstr "開放中"
+
+#: .\services.py:337 .\services.py:1493
+msgid "Upcoming"
+msgstr "即將開放"
+
+#: .\services.py:338
+msgid "Recently ended"
+msgstr "最近結束"
+
+#: .\services.py:564
+msgid "Units"
+msgstr "角色"
+
+#: .\services.py:565 .\templates\planner\collection.html:78
+msgid "Abilities"
+msgstr "能力"
+
+#: .\services.py:566
+msgid "Cannon & Base"
+msgstr "貓咪砲與城堡"
+
+#: .\services.py:567
+msgid "Money & Workers"
+msgstr "金錢與工作狂貓"
+
+#: .\services.py:568
+msgid "Rewards"
+msgstr "獎勵"
+
+#: .\services.py:582 .\services.py:589 .\services.py:1488 .\services.py:1495
+msgid "Other"
+msgstr "其他"
+
+#: .\services.py:626
+msgctxt "evolution material"
+msgid "Seed"
+msgstr "種子"
+
+#: .\services.py:627
+msgctxt "evolution material"
+msgid "Catfruit"
+msgstr "貓薄荷"
+
+#: .\services.py:628
+msgctxt "evolution material"
+msgid "B. Stone"
+msgstr "獸石"
+
+#: .\services.py:629
+msgctxt "evolution material"
+msgid "B. Gem"
+msgstr "獸結晶"
+
+#: .\services.py:632
+msgctxt "material colour"
+msgid "Purple"
+msgstr "紫色"
+
+#: .\services.py:633
+msgctxt "material colour"
+msgid "Red"
+msgstr "紅色"
+
+#: .\services.py:634
+msgctxt "material colour"
+msgid "Blue"
+msgstr "藍色"
+
+#: .\services.py:635
+msgctxt "material colour"
+msgid "Green"
+msgstr "綠色"
+
+#: .\services.py:636
+msgctxt "material colour"
+msgid "Yellow"
+msgstr "黃色"
+
+#: .\services.py:637
+msgctxt "material colour"
+msgid "Epic"
+msgstr "彩虹"
+
+#: .\services.py:638
+msgctxt "material colour"
+msgid "Elder"
+msgstr "古代"
+
+#: .\services.py:639
+msgctxt "material colour"
+msgid "Aku"
+msgstr "惡"
+
+#: .\services.py:640
+msgctxt "material colour"
+msgid "Gold"
+msgstr "黃金"
+
+#: .\services.py:646
+msgctxt "base material"
+msgid "Material"
+msgstr "素材"
+
+#: .\services.py:647
+msgctxt "base material"
+msgid "Z Material"
+msgstr "Z素材"
+
+#: .\services.py:716
+msgid "Cannon"
+msgstr "貓咪砲"
+
+#: .\services.py:717
+msgid "Foundation"
+msgstr "基座"
+
+#: .\services.py:718
+msgid "Style"
+msgstr "裝飾"
+
+#: .\services.py:965
+msgid "Rare Capsule Regulars"
+msgstr "稀有轉蛋常駐角色"
+
+#: .\services.py:966
+msgid "Rare Capsule Add-ons"
+msgstr "稀有轉蛋追加角色"
+
+#: .\services.py:990
+msgid "UBERFEST"
+msgstr "超級貓咪祭"
+
+#: .\services.py:991
+msgid "EPICFEST"
+msgstr "特級貓咪祭"
+
+#: .\services.py:992
+msgid "Best of the Best"
+msgstr ""
+
+#: .\services.py:993
+msgid "Neo Best of the Best"
+msgstr ""
+
+#: .\services.py:994
+msgid "SUPERFEST"
+msgstr ""
+
+#: .\services.py:995
+msgid "Dynasty Fest"
+msgstr "超國王祭"
+
+#: .\services.py:996
+msgid "RoyalFest"
+msgstr "女王祭"
+
+#: .\services.py:997
+msgid "Busterfest"
+msgstr "破壞者祭"
+
+#: .\services.py:998
+msgid "Best of the Best: Milestone Editions"
+msgstr ""
+
+#: .\services.py:1067
+msgid "Fest exclusives; every standard-set Uber also drops here."
+msgstr "祭典限定角色;一般系列的超激稀有也都會在這裡出現。"
+
+#: .\services.py:1069
+msgid ""
+"Anniversary capsules: a rotating best-of selection plus these exclusives."
+msgstr "週年紀念轉蛋:輪替的精選角色加上這些限定角色。"
+
+#: .\services.py:1071
+msgid "Boosted Legend Rare rates; every standard Legend drops here."
+msgstr "傳說稀有機率提升;一般的傳說稀有也都會在這裡出現。"
+
+#: .\services.py:1074
+msgid "The shared Rare/Super pool; these drop on every Rare Capsule banner."
+msgstr "共用的稀有/激稀有池;每個稀有轉蛋都會出現。"
+
+#: .\services.py:1077
+msgid "Extra regulars many banners add to the shared pool; fests skip them."
+msgstr "許多轉蛋會加入共用池的追加角色;祭典不會出現。"
+
+#: .\services.py:1082
+msgid ""
+"Uberfest and Epicfest exclusives combined; every standard-set Uber drops too."
+msgstr "超級貓咪祭與特級貓咪祭的限定角色合併;一般系列的超激稀有也會出現。"
+
+#: .\services.py:1084
+msgid "Every seasonal set in one capsule."
+msgstr "所有季節系列都在同一個轉蛋。"
+
+#: .\services.py:1085
+msgid "Every Buster unit in one capsule."
+msgstr "所有破壞者角色都在同一個轉蛋。"
+
+#: .\services.py:1357
+#, python-format
+msgid "Since %(date)s"
+msgstr "%(date)s起"
+
+#: .\services.py:1363
+#, python-format
+msgid "%(start)s – %(end)s"
+msgstr "%(start)s ~ %(end)s"
+
+#. Translators: Django date format for a day with its year, e.g. "Oct 15, 2026".
+#: .\services.py:1370
+msgid "M j, Y"
+msgstr "Y年n月j日"
+
+#. Translators: Django date format for a day in the current year, e.g. "Oct 15".
+#: .\services.py:1372
+msgid "M j"
+msgstr "n月j日"
+
+#: .\services.py:1494 .\templates\planner\planner.html:63
+msgid "Past"
+msgstr "已結束"
+
+#: .\services.py:1701 .\templates\planner\_steps.html:24
+#, python-format
+msgid "%(n)s ticket"
+msgid_plural "%(n)s tickets"
+msgstr[0] "稀有券%(n)s張"
+
+#: .\services.py:1704 .\templates\planner\_steps.html:24
+#, python-format
+msgid "%(n)s platinum ticket"
+msgid_plural "%(n)s platinum tickets"
+msgstr[0] "白金券%(n)s張"
+
+#: .\services.py:1708 .\templates\planner\_steps.html:24
+#, python-format
+msgid "%(n)s legend ticket"
+msgid_plural "%(n)s legend tickets"
+msgstr[0] "傳說券%(n)s張"
+
+#: .\services.py:3116
+#, python-format
+msgid "%(rarity)s page %(n)s of %(total)s"
+msgstr "%(rarity)s 第%(n)s/%(total)s頁"
+
+#: .\services.py:3125
+msgid ""
+"Take every screenshot in one go - these were taken more than a day apart, and a game update in between would shuffle the guide."
+msgstr "請一次拍完所有截圖 - 這些截圖相隔超過一天,期間的遊戲更新可能會改變圖鑑順序。"
+
+#: .\services.py:3136
+#, python-format
+msgid "%(name)s: not a Cat Guide page (no page bar or cell grid found)."
+msgstr "%(name)s:不是貓咪圖鑑的頁面(找不到頁碼列或格子)。"
+
+#: .\services.py:3146
+#, python-format
+msgid ""
+"%(name)s: sits between our pages - your Cat Guide has a different number of pages than ours (%(pages)s), so the game is on another version."
+msgstr "%(name)s:頁碼位置對不上 - 你的圖鑑頁數與本站不同(%(pages)s頁),代表遊戲版本不同。"
+
+#: .\services.py:3158
+#, python-format
+msgid ""
+"%(name)s (%(page)s): shows %(cells)s cells where ours has %(size)s - the game is on another version, or a filter is on."
+msgstr "%(name)s(%(page)s):顯示%(cells)s格,但本站是%(size)s格 - 遊戲版本不同,或開啟了篩選。"
+
+#: .\services.py:3167
+#, python-format
+msgid "%(first)s and %(second)s are both %(page)s but differ."
+msgstr "%(first)s與%(second)s都是%(page)s,但內容不同。"
+
+#: .\services.py:3175
+#, python-format
+msgid "Missing %(count)s of %(total)s pages: %(pages)s."
+msgstr "%(total)s頁中缺少%(count)s頁:%(pages)s。"
+
+#: .\services.py:3396
+msgid "Superfeline NOT unlocked"
+msgstr "貓咪超人 未解放"
+
+#: .\services.py:3397
+msgid "with Superfeline in the pool"
+msgstr "池中有貓咪超人"
+
+#: .\services.py:3416
+#, python-format
+msgid "%(rate)s%% band"
+msgstr "%(rate)s%%區段"
+
+#: .\services.py:3552
+#, python-format
+msgid "%(n)s Normal Cat Ticket"
+msgid_plural "%(n)s Normal Cat Tickets"
+msgstr[0] "貓咪轉蛋券%(n)s張"
+
+#: .\services.py:3553
+#, python-format
+msgid "%(n)s Lucky Ticket"
+msgid_plural "%(n)s Lucky Tickets"
+msgstr[0] "招福轉蛋券%(n)s張"
+
+#: .\services.py:3554
+#, python-format
+msgid "%(n)s Lucky Ticket G"
+msgid_plural "%(n)s Lucky Ticket Gs"
+msgstr[0] "招福轉蛋G券%(n)s張"
+
+#: .\services.py:3661
+msgid "Dark Catseyes"
+msgstr "貓眼石【闇】"
+
+#: .\services.py:3662
+msgid "Upgrades (5 merge into a Rare Ticket)"
+msgstr "升級道具(5個換1張稀有券)"
+
+#: .\services.py:3663
+msgid "Basic cats (NP/XP fodder)"
+msgstr "基本角色(換NP/XP)"
+
+#: .\services.py:3664
+msgid "Li'l cats"
+msgstr "小小角色"
+
+#: .\services.py:3766
+#, python-format
+msgid "%(n)s&times; pull"
+msgid_plural "%(n)s&times; pulls"
+msgstr[0] "%(n)s&times; 抽"
+
+#: .\templates\planner\_banner.html:3
+msgid "Roll this banner's session"
+msgstr "抽這個轉蛋的開放期間"
+
+#: .\templates\planner\_banner.html:3
+msgid "Include banner"
+msgstr "加入轉蛋"
+
+#: .\templates\planner\_banner.html:4
+msgid "First appearance anywhere in the game"
+msgstr "遊戲中首次登場"
+
+#: .\templates\planner\_banner.html:4
+msgid "New:"
+msgstr "首次登場:"
+
+#: .\templates\planner\_collection_chip.html:6
+msgid "Wishlist"
+msgstr "願望清單"
+
+#: .\templates\planner\_collection_chip.html:6
+msgid "Toggle wishlist"
+msgstr "切換願望清單"
+
+#: .\templates\planner\_collection_chip.html:7
+msgid "Forms & wiki"
+msgstr "型態與Wiki"
+
+#: .\templates\planner\_collection_chip.html:7
+msgid "Cat details"
+msgstr "角色詳情"
+
+#: .\templates\planner\_collection_section.html:4
+msgid "Collapse / expand"
+msgstr "收合/展開"
+
+#: .\templates\planner\_collection_section.html:4
+msgid "Collapse or expand this section"
+msgstr "收合或展開這個區塊"
+
+#: .\templates\planner\_collection_section.html:12
+msgid "Own all / clear"
+msgstr "全部擁有/清除"
+
+#: .\templates\planner\_collection_section.html:12
+msgid "Toggle owning every cat here"
+msgstr "切換這裡每隻角色的擁有狀態"
+
+#: .\templates\planner\_collection_section.html:13
+msgid "Wishlist all / clear"
+msgstr "全部加入願望清單/清除"
+
+#: .\templates\planner\_collection_section.html:13
+msgid "Toggle wishlisting every cat here"
+msgstr "切換這裡每隻角色的願望清單狀態"
+
+#: .\templates\planner\_normal_tracks.html:10
+#, python-format
+msgid "the 1%% Catseye-event jackpot"
+msgstr "貓眼石活動1%%的大獎"
+
+#: .\templates\planner\_res_board.html:13
+msgid "Still to grind"
+msgstr "還需要收集"
+
+#: .\templates\planner\_res_board.html:16
+msgid "Evolutions"
+msgstr "進化"
+
+#: .\templates\planner\_res_board.html:28
+#: .\templates\planner\_res_board.html:100
+msgid "Cat Base"
+msgstr "貓咪基地"
+
+#: .\templates\planner\_res_board.html:32
+#, python-format
+msgid "<span class=\"res-counter-n\">%(hours)sh</span> build time"
+msgstr "建造時間 <span class=\"res-counter-n\">%(hours)s小時</span>"
+
+#: .\templates\planner\_res_board.html:34
+#, python-format
+msgid ""
+"<span class=\"res-counter-n\">%(n)s</span> engineers at once <span class=\"res-sub\">&mdash; %(total)s over all the levels</span>"
+msgstr ""
+"同時需要<span class=\"res-counter-n\">%(n)s</span>名助手 <span class=\"res-sub\">&mdash; 所有等級共%(total)s名</span>"
+
+#: .\templates\planner\_res_board.html:42
+msgid ""
+"Nothing on the list yet &mdash; add a cat or a base upgrade below and the totals build up here."
+msgstr "清單還是空的 &mdash; 在下方加入角色或基地升級,總量就會顯示在這裡。"
+
+#: .\templates\planner\_res_board.html:49
+msgid "Your cats"
+msgstr "我的角色"
+
+#: .\templates\planner\_res_board.html:51
+msgid "Add a cat…"
+msgstr "加入角色…"
+
+#: .\templates\planner\_res_board.html:51
+msgid "Add a cat"
+msgstr "加入角色"
+
+#: .\templates\planner\_res_board.html:54
+msgid "Search by any form’s name."
+msgstr "可用任何型態的名字搜尋。"
+
+#: .\templates\planner\_res_board.html:65
+msgid "nothing picked yet"
+msgstr "還沒有選擇任何項目"
+
+#: .\templates\planner\_res_board.html:68
+msgid "Untick everything on this cat"
+msgstr "取消這隻角色的所有勾選"
+
+#: .\templates\planner\_res_board.html:68
+msgid "Tick every evolution and talent this cat has"
+msgstr "勾選這隻角色的所有進化與本能"
+
+#: .\templates\planner\_res_board.html:68
+msgid "Max out"
+msgstr "全部勾選"
+
+#: .\templates\planner\_res_board.html:69
+#, python-format
+msgid "Take %(name)s off the list"
+msgstr "將%(name)s從清單移除"
+
+#: .\templates\planner\_res_board.html:69
+#: .\templates\planner\_res_board.html:122
+#, python-format
+msgid "Remove %(name)s"
+msgstr "移除%(name)s"
+
+#: .\templates\planner\_res_board.html:82
+#, python-format
+msgid "%(name)s talents"
+msgstr "%(name)s的本能"
+
+#: .\templates\planner\_res_board.html:87
+#, python-format
+msgid "Lv %(max)s &middot; %(np)s NP"
+msgstr "Lv%(max)s &middot; %(np)s NP"
+
+#: .\templates\planner\_res_board.html:94
+msgid ""
+"No cats yet. Search above and the cat&rsquo;s evolutions and talents show up here to tick off."
+msgstr "還沒有角色。在上方搜尋後,該角色的進化與本能會顯示在這裡讓你勾選。"
+
+#: .\templates\planner\_res_board.html:101
+msgid ""
+"Pick the developments you&rsquo;re working on. Each brings its <strong>Cannon</strong> &mdash; Materials, up to Lv&nbsp;30 &mdash; and you can switch its matching <strong>Foundation</strong> and <strong>Style</strong> on as add-ons, which spend Z Materials up to Lv&nbsp;20. Enhance Base is the plain cannon: levelling it is what raises your base&rsquo;s HP."
+msgstr ""
+"選擇你正在開發的項目。每個都包含<strong>貓咪砲</strong>(素材,最高Lv&nbsp;30),對應的<strong>基座</strong>與<strong>裝飾</strong>可作為附加項目開啟(Z素材,最高Lv&nbsp;20)。「強化城堡」是一般貓咪砲,升級它會提升城堡體力。"
+
+#: .\templates\planner\_res_board.html:106
+msgid "Cat Base developments"
+msgstr "貓咪基地開發"
+
+#: .\templates\planner\_res_board.html:118
+#: .\templates\planner\_res_board.html:143
+#, python-format
+msgid "%(hours)sh build"
+msgstr "建造%(hours)s小時"
+
+#: .\templates\planner\_res_board.html:119
+#: .\templates\planner\_res_board.html:144
+msgid ""
+"The most any one level needs at the same time, and the total over all of them"
+msgstr "單一等級同時需要的最多人數,以及所有等級的總數"
+
+#: .\templates\planner\_res_board.html:119
+#: .\templates\planner\_res_board.html:144
+#, python-format
+msgid "%(n)s engineers at once &middot; %(total)s total"
+msgstr "同時需要助手%(n)s名 &middot; 共%(total)s名"
+
+#: .\templates\planner\_res_board.html:120
+#: .\templates\planner\_res_board.html:139
+msgid "maxed"
+msgstr "已滿級"
+
+#: .\templates\planner\_res_board.html:122
+#, python-format
+msgid "Stop tracking %(name)s"
+msgstr "停止追蹤%(name)s"
+
+#: .\templates\planner\_res_board.html:136
+#, python-format
+msgid "%(name)s %(part_label)s current level"
+msgstr "%(name)s %(part_label)s目前等級"
+
+#: .\templates\planner\_res_board.html:137
+#, python-format
+msgid "Lv %(lv)s"
+msgstr "Lv%(lv)s"
+
+#: .\templates\planner\_res_board.html:139
+#, python-format
+msgid "%(left)s to Lv %(max)s"
+msgstr "距離Lv%(max)s還差%(left)s"
+
+#: .\templates\planner\_res_board.html:147
+msgid "add-on — switch on to track it"
+msgstr "附加項目 — 開啟後才會追蹤"
+
+#: .\templates\planner\_res_board.html:153
+msgid ""
+"Nothing tracked. Switch a development on above, set each part to the level you&rsquo;re on, and it tells you what&rsquo;s left to max it."
+msgstr "目前沒有追蹤的項目。在上方開啟一項開發,把每個部位設成目前等級,就會告訴你還需要什麼才能升滿。"
+
+#: .\templates\planner\_seed_keep.html:10
+msgid ""
+"This is your <strong>Normal Capsule</strong> seed. Your rare gacha seed is a different number, set in the Planner."
+msgstr "這是你的<strong>貓咪轉蛋</strong>種子碼。稀有轉蛋的種子碼是另一個數字,在規劃頁面設定。"
+
+#: .\templates\planner\_seed_keep.html:10
+msgid ""
+"This is your <strong>rare gacha</strong> seed. Normal Capsules use a different number, on their own page."
+msgstr "這是你的<strong>稀有轉蛋</strong>種子碼。貓咪轉蛋使用另一個數字,在它自己的頁面。"
+
+#: .\templates\planner\_seed_keep.html:11
+#, python-format
+msgid "Don't know it? <a href=\"%(finder)s\" class=\"seed-find\">Find it</a>."
+msgstr "不知道?<a href=\"%(finder)s\" class=\"seed-find\">找出來</a>。"
+
+#: .\templates\planner\_seed_keep.html:14
+msgid "Saved to your account, on every device."
+msgstr "已存到你的帳號,任何裝置都能使用。"
+
+#: .\templates\planner\_seed_keep.html:14
+#, python-format
+msgid ""
+"Saved in this browser only &mdash; <a href=\"%(signup_url)s?next=%(next)s\">sign up</a> (free, no email) to keep it on every device."
+msgstr ""
+"只存在這個瀏覽器中 &mdash; <a href=\"%(signup_url)s?next=%(next)s\">註冊</a>(免費、不需電子郵件)即可在任何裝置使用。"
+
+#: .\templates\planner\_seed_keep.html:15
+msgid ""
+"Keep a backup: <button type=\"button\" class=\"link-btn seed-copy\">copy a link</button> that brings this seed back, and paste it into your notes."
+msgstr ""
+"記得備份:<button type=\"button\" class=\"link-btn seed-copy\">複製一個連結</button>,之後打開就能找回這組種子碼,把它貼到你的筆記裡。"
+
+#: .\templates\planner\_seed_keep.html:18
+msgid ""
+"You're looking at a shared seed (<strong class=\"seed-held-link\"></strong>). Your own seed (<strong class=\"seed-held-own\"></strong>) stays as it is until you choose."
+msgstr ""
+"你正在看別人分享的種子碼(<strong class=\"seed-held-link\"></strong>)。你自己的種子碼(<strong class=\"seed-held-own\"></strong>)在你選擇前都不會變。"
+
+#: .\templates\planner\_seed_keep.html:20
+msgid "Make this my seed"
+msgstr "設為我的種子碼"
+
+#: .\templates\planner\_seed_keep.html:21
+msgid "Back to my seed"
+msgstr "回到我的種子碼"
+
+#: .\templates\planner\_solution.html:8
+#, python-format
+msgid "This plan gets %(size)s of the %(total)s cat you searched for"
+msgid_plural "This plan gets %(size)s of the %(total)s cats you searched for"
+msgstr[0] "這個計畫能拿到你搜尋的%(total)s隻中的%(size)s隻"
+
+#: .\templates\planner\_steps.html:23
+#, python-format
+msgid "%(n)s&times; single pull"
+msgid_plural "%(n)s&times; single pulls"
+msgstr[0] "單抽 %(n)s&times;"
+
+#: .\templates\planner\account.html:8
+msgid ""
+"Your collection, wishlist and plans are already saved in this browser. An account keeps them too, so you can log in from any device &mdash; everything you've marked so far comes along. There's no email, so there's no password reset: pick one you'll remember, and export your collection now and then as a backup."
+msgstr ""
+"你的收藏、願望清單與計畫已經存在這個瀏覽器中。建立帳號後也會一併保存,可從任何裝置登入 &mdash; 目前為止標記的一切都會帶過去。因為不使用電子郵件,所以無法重設密碼:請選一個記得住的密碼,並不時匯出收藏作為備份。"
+
+#: .\templates\planner\account.html:17
+msgid "Pick up your collection, wishlist and plans on this device."
+msgstr "在這個裝置繼續使用你的收藏、願望清單與計畫。"
+
+#: .\templates\planner\account.html:27
+msgid "Create account"
+msgstr "建立帳號"
+
+#: .\templates\planner\account.html:30
+msgid "Already have one?"
+msgstr "已經有帳號了?"
+
+#: .\templates\planner\account.html:32
+msgid "No account yet?"
+msgstr "還沒有帳號?"
+
+#: .\templates\planner\base.html:55
+msgid "Planner"
+msgstr "規劃"
+
+#: .\templates\planner\base.html:56 .\templates\planner\normal.html:5
+#: .\templates\planner\normal.html:81
+msgid "Normal Capsules"
+msgstr "貓咪轉蛋"
+
+#: .\templates\planner\base.html:57 .\templates\planner\collection.html:5
+msgid "Collection"
+msgstr "收藏"
+
+#: .\templates\planner\base.html:58 .\templates\planner\resources.html:5
+msgid "Resources"
+msgstr "資源"
+
+#: .\templates\planner\base.html:59
+msgid "Tier List"
+msgstr "強度排行"
+
+#: .\templates\planner\base.html:60 .\templates\planner\seek.html:5
+msgid "Seed Finder"
+msgstr "種子碼查詢"
+
+#: .\templates\planner\base.html:61 .\templates\planner\base.html:142
+#: .\templates\planner\guides.html:5
+msgid "Guides"
+msgstr "攻略"
+
+#: .\templates\planner\base.html:66
+msgid "Game version"
+msgstr "遊戲版本"
+
+#: .\templates\planner\base.html:69
+#, python-format
+msgid "%(label)s version"
+msgstr "%(label)s"
+
+#: .\templates\planner\base.html:76
+msgid "Language"
+msgstr "語言"
+
+#: .\templates\planner\base.html:77
+msgid "Game's language"
+msgstr "遊戲的語言"
+
+#: .\templates\planner\base.html:82
+msgid "Set"
+msgstr "設定"
+
+#: .\templates\planner\base.html:87
+#, python-format
+msgid "Logged in as %(name)s"
+msgstr "已以%(name)s登入"
+
+#: .\templates\planner\base.html:87
+msgid "Account"
+msgstr "帳號"
+
+#: .\templates\planner\base.html:91
+msgid "Logged in as"
+msgstr "目前登入:"
+
+#: .\templates\planner\base.html:96
+msgid "Log out"
+msgstr "登出"
+
+#: .\templates\planner\base.html:105
+msgid "Theme"
+msgstr "主題"
+
+#: .\templates\planner\base.html:106
+msgid "Light theme"
+msgstr "淺色主題"
+
+#: .\templates\planner\base.html:107
+msgid "Dark theme"
+msgstr "深色主題"
+
+#: .\templates\planner\base.html:108
+msgid "Match my device"
+msgstr "跟隨裝置設定"
+
+#: .\templates\planner\base.html:116
+msgid "Welcome"
+msgstr "歡迎"
+
+#: .\templates\planner\base.html:117
+#| msgid ""
+#| "New here? <a href=\"%(guide_url)s\">The Normal Capsules guide</a> takes "
+#| "two minutes."
+msgid ""
+"New here? <a href=\"%(guides_url)s\">The short guides</a> explain how it all works."
+msgstr "第一次來?<a href=\"%(guides_url)s\">簡短攻略</a>會說明怎麼使用。"
+
+#: .\templates\planner\base.html:118 .\templates\planner\base.html:153
+msgid "Close"
+msgstr "關閉"
+
+#: .\templates\planner\base.html:124
+msgid "Elsewhere"
+msgstr "其他網站"
+
+#: .\templates\planner\base.html:138
+msgid ""
+"Neko Optimizer is a free, fan-made tool for <em>The Battle Cats</em> and is not affiliated with PONOS."
+msgstr "Neko Optimizer是<em>貓咪大戰爭</em>的免費粉絲工具,與PONOS無關。"
+
+#: .\templates\planner\base.html:143 .\templates\planner\whats_new.html:5
+msgid "What's new"
+msgstr "更新內容"
+
+#: .\templates\planner\base.html:145
+msgid "Source"
+msgstr "原始碼"
+
+#: .\templates\planner\collection.html:6
+msgid ""
+"Every cat in the game. Click one to mark it <strong>owned</strong>; tap the star to add it to your <strong>wishlist</strong>. Saved instantly."
+msgstr "遊戲中的所有角色。點擊即標記為<strong>已擁有</strong>;點星星加入<strong>願望清單</strong>。立即儲存。"
+
+#: .\templates\planner\collection.html:11
+msgid "The in-game Cat Guide arrangement"
+msgstr "遊戲內貓咪圖鑑的排列"
+
+#: .\templates\planner\collection.html:11
+msgid "Dictionary"
+msgstr "圖鑑順序"
+
+#: .\templates\planner\collection.html:12
+msgid "By rarity"
+msgstr "依稀有度"
+
+#: .\templates\planner\collection.html:13
+msgid "By gacha set"
+msgstr "依轉蛋系列"
+
+#: .\templates\planner\collection.html:15
+msgid "Search cats & sets…"
+msgstr "搜尋角色與系列…"
+
+#: .\templates\planner\collection.html:16 .\templates\planner\normal.html:151
+#: .\templates\planner\resources.html:20
+msgid "Show each cat as its name, its form icon, or both"
+msgstr "以名字、型態圖示或兩者顯示角色"
+
+#: .\templates\planner\collection.html:17 .\templates\planner\normal.html:152
+#: .\templates\planner\planner.html:136 .\templates\planner\resources.html:21
+msgid "Names"
+msgstr "名字"
+
+#: .\templates\planner\collection.html:18 .\templates\planner\normal.html:153
+#: .\templates\planner\planner.html:137 .\templates\planner\resources.html:22
+msgid "Icons"
+msgstr "圖示"
+
+#: .\templates\planner\collection.html:19 .\templates\planner\normal.html:154
+#: .\templates\planner\planner.html:138 .\templates\planner\resources.html:23
+msgid "Both"
+msgstr "兩者"
+
+#: .\templates\planner\collection.html:21 .\templates\planner\normal.html:156
+#: .\templates\planner\planner.html:140 .\templates\planner\resources.html:25
+#: .\templates\planner\tiers.html:29
+msgid ""
+"Show each cat as this form - name and icon; a unit without that form shows the last one it has"
+msgstr "以這個型態顯示每隻角色(名字與圖示);沒有該型態的角色會顯示它最後的型態"
+
+#: .\templates\planner\collection.html:22 .\templates\planner\normal.html:157
+#: .\templates\planner\planner.html:141 .\templates\planner\resources.html:26
+#: .\templates\planner\tiers.html:30
+msgid "Base"
+msgstr "第1型態"
+
+#: .\templates\planner\collection.html:23 .\templates\planner\normal.html:158
+#: .\templates\planner\planner.html:142 .\templates\planner\resources.html:27
+#: .\templates\planner\tiers.html:31
+msgid "Evolved"
+msgstr "第2型態"
+
+#: .\templates\planner\collection.html:24 .\templates\planner\normal.html:159
+#: .\templates\planner\planner.html:143 .\templates\planner\resources.html:28
+#: .\templates\planner\tiers.html:32
+msgid "True"
+msgstr "第3進化"
+
+#: .\templates\planner\collection.html:25 .\templates\planner\normal.html:160
+#: .\templates\planner\planner.html:144 .\templates\planner\resources.html:29
+#: .\templates\planner\tiers.html:33
+msgid "Ultra"
+msgstr "第4進化"
+
+#: .\templates\planner\collection.html:27
+msgid "Star every new gacha cat for you as soon as it's added to the game"
+msgstr "有新的轉蛋角色加入遊戲時自動加入願望清單"
+
+#: .\templates\planner\collection.html:27
+msgid "Wishlist new cats"
+msgstr "新角色加入願望清單"
+
+#: .\templates\planner\collection.html:30
+msgid "Export"
+msgstr "匯出"
+
+#: .\templates\planner\collection.html:31
+msgid "Import"
+msgstr "匯入"
+
+#: .\templates\planner\collection.html:33
+msgid ""
+"Screenshot every page of the in-game Cat Guide (filter off, first page to last) and pick them all: the cats you have get marked owned, the gray ? ones unmarked"
+msgstr "把遊戲內貓咪圖鑑的每一頁都截圖(關閉篩選、從第一頁到最後一頁)並全部選取:擁有的角色會標為已擁有,灰色的?則取消標記"
+
+#: .\templates\planner\collection.html:33
+msgid "From Cat Guide"
+msgstr "從貓咪圖鑑匯入"
+
+#: .\templates\planner\collection.html:38
+msgid "Filter by ownership"
+msgstr "依擁有狀態篩選"
+
+#: .\templates\planner\collection.html:39
+#: .\templates\planner\collection.html:44
+msgid "All"
+msgstr "全部"
+
+#: .\templates\planner\collection.html:40
+msgid "Owned"
+msgstr "已擁有"
+
+#: .\templates\planner\collection.html:41
+msgid "Wishlisted"
+msgstr "願望清單"
+
+#: .\templates\planner\collection.html:43
+msgid "Filter by rarity"
+msgstr "依稀有度篩選"
+
+#: .\templates\planner\collection.html:51
+msgid "Filters"
+msgstr "篩選"
+
+#: .\templates\planner\collection.html:53
+msgid "Combine selected filters with"
+msgstr "選取條件的組合方式"
+
+#: .\templates\planner\collection.html:54
+msgid "Show cats matching every selected filter"
+msgstr "顯示符合所有選取條件的角色"
+
+#: .\templates\planner\collection.html:54
+msgid "Match all"
+msgstr "全部符合"
+
+#: .\templates\planner\collection.html:55
+msgid "Show cats matching any selected filter"
+msgstr "顯示符合任一選取條件的角色"
+
+#: .\templates\planner\collection.html:55
+msgid "Match any"
+msgstr "任一符合"
+
+#: .\templates\planner\collection.html:57
+msgid "In a combo of:"
+msgstr "貓咪聯組:"
+
+#: .\templates\planner\collection.html:69
+msgid "Filter by targeted trait"
+msgstr "依對象屬性篩選"
+
+#: .\templates\planner\collection.html:73
+msgid "Filter by attack type"
+msgstr "依攻擊類型篩選"
+
+#: .\templates\planner\collection.html:74
+msgid "Attack"
+msgstr "攻擊"
+
+#: .\templates\planner\collection.html:77
+msgid "Filter by ability"
+msgstr "依能力篩選"
+
+#: .\templates\planner\collection.html:81
+msgid "Filter by immunity"
+msgstr "依無效能力篩選"
+
+#: .\templates\planner\collection.html:82
+msgid "Immune to"
+msgstr "無效"
+
+#: .\templates\planner\collection.html:85
+msgid "Filter by talents"
+msgstr "依本能篩選"
+
+#: .\templates\planner\collection.html:86
+msgid "Talents"
+msgstr "本能"
+
+#: .\templates\planner\collection.html:87
+msgid "Has Talents"
+msgstr "有本能"
+
+#: .\templates\planner\collection.html:88
+msgid "Has Ultra Talents"
+msgstr "有超本能"
+
+#: .\templates\planner\collection.html:100
+msgid "The catalogue is empty — run the import first."
+msgstr "角色資料是空的 — 請先執行匯入。"
+
+#: .\templates\planner\collection.html:113
+msgid "No cats match."
+msgstr "沒有符合的角色。"
+
+#: .\templates\planner\guide.html:6
+msgid "All guides"
+msgstr "所有攻略"
+
+#: .\templates\planner\guide.html:11 .\templates\planner\guide.html:12
+msgid "More guides"
+msgstr "更多攻略"
+
+#: .\templates\planner\guides.html:6
+msgid ""
+"Short, step-by-step guides to the Battle Cats gacha: what your seed is, how to find it, how to read what's coming, and how to spend your tickets and catfood on the cats you actually want."
+msgstr "一步步說明貓咪大戰爭轉蛋的簡短攻略:什麼是種子碼、怎麼找出它、怎麼看接下來的結果,以及如何把稀有券與貓罐頭花在真正想要的角色上。"
+
+#: .\templates\planner\normal.html:7
+msgid ""
+"The Normal Cat Capsule runs on its <strong>own seed</strong>, separate from the rare gacha the planner tracks. Every normal-side machine (Catfruit, Catseye, Lucky Tickets&hellip;) reads the same normal seed, so one table predicts them all &mdash; including which pulls land a <span class=\"item dark-catseye\">Dark Catseye</span> during a Catseye Capsules event."
+msgstr ""
+"貓咪轉蛋使用與稀有轉蛋不同的<strong>專屬種子碼</strong>。貓薄荷、貓眼石、招福轉蛋券&hellip;等一般側的轉蛋機都讀取同一組種子碼,所以一張表就能預測全部 &mdash; 包括貓眼石轉蛋中哪幾抽會出<span class=\"item dark-catseye\">貓眼石【闇】</span>。"
+
+#: .\templates\planner\normal.html:15
+#, python-format
+msgid ""
+"New here? <a href=\"%(guide_url)s\">The Normal Capsules guide</a> takes two minutes."
+msgstr "第一次用?<a href=\"%(guide_url)s\">貓咪轉蛋攻略</a>兩分鐘就能讀完。"
+
+#: .\templates\planner\normal.html:18
+msgid "Find my normal seed"
+msgstr "找出我的貓咪轉蛋種子碼"
+
+#: .\templates\planner\normal.html:20
+msgid ""
+"Roll the plain Normal Capsules several times &mdash; 8 to 12 works best &mdash; and record what you get, in order. They cost pocket XP, so this is the cheap way (the event machines would burn 12+ tickets for the same answer)."
+msgstr ""
+"抽幾次一般的貓咪轉蛋 &mdash; 建議8到12次 &mdash; 並依序記錄結果。它用XP抽,所以最便宜(活動轉蛋機要用12張以上的券才能得到同樣的答案)。"
+
+#: .\templates\planner\normal.html:23
+msgid ""
+"The finder searches the pool your <strong>Superfeline unlocked</strong> toggle (next to the machine picks below) says you have &mdash; the pools differ, so if the search finds nothing, check that toggle first."
+msgstr ""
+"搜尋的轉蛋池取決於<strong>已解放貓咪超人</strong>開關(在下方轉蛋機選項旁)&mdash; 兩種池不同,若找不到結果,請先檢查這個開關。"
+
+#: .\templates\planner\normal.html:26
+msgid ""
+"The pulls must be consecutive: nothing rolled in between on any normal-side machine."
+msgstr "這些抽數必須是連續的:中間沒有抽過任何一般側的轉蛋機。"
+
+#: .\templates\planner\normal.html:28
+msgid ""
+"You only need this once &mdash; from then on the tracker follows your seed as you click the dice."
+msgstr "只需要做一次 &mdash; 之後每點一次骰子,追蹤工具就會跟著你的種子碼走。"
+
+#: .\templates\planner\normal.html:37
+msgid ""
+"Searching the <strong id=\"nseekPool\">Normal Capsules</strong> pool. Your pulls, oldest first &mdash; search each item you got:"
+msgstr ""
+"搜尋<strong id=\"nseekPool\">貓咪轉蛋</strong>的轉蛋池。依抽到的順序,從最早的開始 &mdash; 逐一搜尋抽到的道具:"
+
+#: .\templates\planner\normal.html:41 .\templates\planner\seek.html:94
+msgid "one more roll"
+msgstr "再加一抽"
+
+#: .\templates\planner\normal.html:42 .\templates\planner\seek.html:95
+msgid "Find my seed"
+msgstr "找出我的種子碼"
+
+#: .\templates\planner\normal.html:48 .\templates\planner\seek.html:104
+msgid "Searching…"
+msgstr "搜尋中…"
+
+#: .\templates\planner\normal.html:53 .\templates\planner\seek.html:110
+msgid "No seed deals exactly those pulls. Almost always one of these:"
+msgstr "沒有任何種子碼能完全符合這些結果。原因幾乎都是下列之一:"
+
+#: .\templates\planner\normal.html:55
+msgid ""
+"<strong>Superfeline is set wrong.</strong> Once Superfeline is in your capsule pool every roll changes - tick \"Superfeline unlocked\" only if it is."
+msgstr "<strong>貓咪超人設定錯誤。</strong>貓咪超人一旦進入轉蛋池,每一抽都會改變 - 只有真的解放時才勾選「已解放貓咪超人」。"
+
+#: .\templates\planner\normal.html:57
+msgid ""
+"<strong>The order is off.</strong> Enter the items exactly in the order you got them, oldest first."
+msgstr "<strong>順序不對。</strong>請完全依照抽到的順序,從最早的開始輸入道具。"
+
+#: .\templates\planner\normal.html:59
+msgid ""
+"<strong>Something was rolled in between.</strong> The Catfruit, Catseye and Lucky Ticket machines share this seed, so a roll on any of them in the middle breaks the chain."
+msgstr "<strong>中間抽了別的。</strong>貓薄荷、貓眼石與招福轉蛋共用這組種子碼,中間抽了任何一台都會讓序列中斷。"
+
+#: .\templates\planner\normal.html:62
+msgid "<strong>A mis-picked item.</strong> Look-alike names are easy to swap."
+msgstr "<strong>選錯道具。</strong>名字相近的很容易搞混。"
+
+#: .\templates\planner\normal.html:74
+msgid "Normal seed"
+msgstr "貓咪轉蛋種子碼"
+
+#: .\templates\planner\normal.html:76
+msgid "e.g. 1515525936"
+msgstr "例如:1515525936"
+
+#: .\templates\planner\normal.html:78
+msgid "Capsule machines"
+msgstr "轉蛋機"
+
+#: .\templates\planner\normal.html:84
+msgid ""
+"Once Superfeline joins your capsule pool it never leaves - this is about your save, not a viewing choice. It changes every roll, so get it right."
+msgstr "貓咪超人一旦加入轉蛋池就不會離開 - 這是你存檔的狀態,不是顯示選項。它會改變每一抽,請設定正確。"
+
+#: .\templates\planner\normal.html:86
+msgid "Superfeline unlocked"
+msgstr "已解放貓咪超人"
+
+#: .\templates\planner\normal.html:102
+msgid "Plan a path — most Dark Catseyes for your rolls"
+msgstr "規劃路線 — 用你的抽數拿最多貓眼石【闇】"
+
+#: .\templates\planner\normal.html:103
+msgid ""
+"Enter how many tickets you have and pick what you want: you get the order to roll in. <strong>Normal Cat Tickets</strong> work on the plain, Catfruit and Catseye machines. Lucky Tickets are separate, and the plan uses as few as it can."
+msgstr ""
+"輸入你有幾張券並選擇想要的東西,就會得到抽的順序。<strong>貓咪轉蛋券</strong>可用於一般、貓薄荷與貓眼石轉蛋。招福轉蛋券另外計算,計畫會盡量少用。"
+
+#: .\templates\planner\normal.html:107
+msgid "Normal Cat Tickets"
+msgstr "貓咪轉蛋券"
+
+#: .\templates\planner\normal.html:111
+msgid "Lucky Tickets"
+msgstr "招福轉蛋券"
+
+#: .\templates\planner\normal.html:115
+msgid "Lucky Tickets G"
+msgstr "招福轉蛋G券"
+
+#: .\templates\planner\normal.html:121
+msgid "Chasing"
+msgstr "目標"
+
+#: .\templates\planner\normal.html:126
+msgid "A specific item"
+msgstr "指定道具"
+
+#: .\templates\planner\normal.html:133
+msgid "Find a path"
+msgstr "找出路線"
+
+#: .\templates\planner\normal.html:139
+msgid ""
+"Enter your normal seed above &mdash; or open <strong>Find my normal seed</strong> and let the finder recover it from a few real pulls."
+msgstr "請在上方輸入貓咪轉蛋種子碼 &mdash; 或打開<strong>找出我的貓咪轉蛋種子碼</strong>,用幾次實際抽到的結果找出它。"
+
+#: .\templates\planner\normal.html:148 .\templates\planner\planner.html:132
+msgid "Rolls"
+msgstr "轉蛋序列"
+
+#: .\templates\planner\normal.html:150 .\templates\planner\planner.html:134
+msgid "Show"
+msgstr "顯示"
+
+#: .\templates\planner\normal.html:150 .\templates\planner\planner.html:134
+msgid "How many rolls the table shows (up to 999)"
+msgstr "表格顯示的抽數(最多999)"
+
+#: .\templates\planner\normal.html:150 .\templates\planner\planner.html:134
+msgid "rolls"
+msgstr "抽"
+
+#: .\templates\planner\planner.html:7
+msgid ""
+"See every rare gacha roll your seed will give, and the cheapest way to the cats you want."
+msgstr "查看你的種子碼接下來每一抽稀有轉蛋的結果,以及抽到想要角色最便宜的方法。"
+
+#: .\templates\planner\planner.html:9
+#, python-format
+msgid ""
+"Enter your seed &mdash; or <a href=\"%(finder_url)s\">find it</a> if you don't know it."
+msgstr "輸入你的種子碼 &mdash; 不知道的話可以<a href=\"%(finder_url)s\">找出來</a>。"
+
+#: .\templates\planner\planner.html:10
+msgid "Pick the cats you want."
+msgstr "選擇想要的角色。"
+
+#: .\templates\planner\planner.html:11
+msgid "Press Find plan, then roll in the game in that order."
+msgstr "按「找出計畫」,然後在遊戲中照那個順序抽。"
+
+#: .\templates\planner\planner.html:13
+#, python-format
+msgid ""
+"New here? <a href=\"%(tracks_url)s\">How to read the rolls</a> &middot; <a href=\"%(plan_url)s\">How to plan</a>"
+msgstr ""
+"第一次用?<a href=\"%(tracks_url)s\">如何看懂序列</a> &middot; <a href=\"%(plan_url)s\">如何規劃</a>"
+
+#: .\templates\planner\planner.html:23
+msgid "required"
+msgstr "必填"
+
+#: .\templates\planner\planner.html:23
+msgid "Step the seed back one roll"
+msgstr "將種子碼倒退一抽"
+
+#: .\templates\planner\planner.html:23
+msgid "back"
+msgstr "倒退"
+
+#: .\templates\planner\planner.html:23
+msgid "undo"
+msgstr "復原"
+
+#: .\templates\planner\planner.html:29
+msgid "pick a target, or tick “search my wishlist”"
+msgstr "選擇目標,或勾選「同時搜尋願望清單」"
+
+#: .\templates\planner\planner.html:31
+msgid ""
+"Tap <span class=\"key\">&plus;</span> to roll a banner. Click a banner's name to see its cats."
+msgstr "按<span class=\"key\">&plus;</span>即可抽這個轉蛋;點轉蛋名稱可看它的角色。"
+
+#: .\templates\planner\planner.html:31
+msgid "Show me the selected banners"
+msgstr "顯示已選的轉蛋"
+
+#: .\templates\planner\planner.html:40
+msgid "Search cats & banners…"
+msgstr "搜尋角色與轉蛋…"
+
+#: .\templates\planner\planner.html:41
+msgid "Clear search and browse banners"
+msgstr "清除搜尋並瀏覽轉蛋"
+
+#: .\templates\planner\planner.html:42
+msgid "Matching banners (every run) and cats · clear to browse"
+msgstr "符合的轉蛋(所有期次)與角色 · 清除後即可瀏覽"
+
+#: .\templates\planner\planner.html:64
+msgid "Loading…"
+msgstr "載入中…"
+
+#: .\templates\planner\planner.html:75
+#, python-format
+msgid "No cats yet &mdash; <a href=\"%(collection_url)s\">add some</a>."
+msgstr "還沒有角色 &mdash; <a href=\"%(collection_url)s\">去加入一些</a>。"
+
+#: .\templates\planner\planner.html:89
+msgid "Your resources"
+msgstr "你的資源"
+
+#: .\templates\planner\planner.html:97
+msgid ""
+"Platinum and Legend Capsules use their own tickets. Enter how many you have (0 to skip them)."
+msgstr "白金轉蛋與傳說轉蛋使用各自的券。請輸入你有幾張(0表示略過)。"
+
+#: .\templates\planner\planner.html:105
+msgid "Advanced"
+msgstr "進階設定"
+
+#: .\templates\planner\planner.html:111
+#, python-format
+msgid "1 rare ticket is worth %(field)s catfood"
+msgstr "1張稀有券 = 貓罐頭%(field)s個"
+
+#: .\templates\planner\planner.html:112
+msgid ""
+"One draw is 150 catfood, and the planner spends tickets first. Raise the ticket value above 150 if rare tickets are precious to you &mdash; the planner will then spend catfood to save them."
+msgstr "一抽是150個貓罐頭,規劃工具會先用稀有券。若你很珍惜稀有券,就把價值調到150以上 &mdash; 規劃工具會改用貓罐頭來保留它們。"
+
+#: .\templates\planner\planner.html:117
+msgid "Find plan"
+msgstr "找出計畫"
+
+#: .\templates\planner\planner.html:118
+msgid ""
+"Copy a link that reopens this seed and Rolls view (rolls shown, names/icons, form, details)"
+msgstr "複製能重新打開這組種子碼與序列畫面(抽數、名字/圖示、型態、細節)的連結"
+
+#: .\templates\planner\planner.html:118
+msgid "Copy link"
+msgstr "複製連結"
+
+#: .\templates\planner\planner.html:124
+msgid "Finding your plan…"
+msgstr "正在找出計畫…"
+
+#: .\templates\planner\planner.html:135
+msgid "Show each roll cell as the cat's name, its form icon, or both"
+msgstr "每格以角色名字、型態圖示或兩者顯示"
+
+#: .\templates\planner\planner.html:146
+msgid ""
+"Reveal each cell's rarity and slot seed, for cross-checking against godfat"
+msgstr "顯示每格的稀有度與位置種子,方便與godfat比對"
+
+#: .\templates\planner\planner.html:146
+msgid "Details"
+msgstr "細節"
+
+#: .\templates\planner\planner.html:147
+msgid ""
+"Force a guaranteed multi of this size onto every banner, to preview the uber each cell's guaranteed draw would give"
+msgstr "對每個轉蛋套用這個抽數的確定連抽,預覽從各格開始確定抽會給的超激"
+
+#: .\templates\planner\planner.html:149
+msgid "None"
+msgstr "無"
+
+#: .\templates\planner\planner.html:156
+msgid ""
+"When a guaranteed multi is in play, ignore the guaranteed column when finding cats - so Find next lists only normal-roll positions"
+msgstr "有確定連抽時,搜尋角色會忽略確定欄 - 讓「找下一個」只列出一般抽的位置"
+
+#: .\templates\planner\planner.html:156
+msgid "Skip guaranteed in Find"
+msgstr "搜尋時略過確定"
+
+#: .\templates\planner\planner.html:163
+msgid "Back to rolls"
+msgstr "回到序列"
+
+#: .\templates\planner\resources.html:6
+msgid ""
+"Your grind list. Add a cat, tick the evolutions and talents you want, add the base upgrades you&rsquo;re chasing &mdash; the running total alongside is everything you still need. Saved instantly."
+msgstr "你的養成清單。加入角色,勾選想要的進化與本能,再加入你正在追的基地升級 &mdash; 旁邊的總計就是你還需要的一切。立即儲存。"
+
+#: .\templates\planner\seek.html:7
+msgid ""
+"Don't know your seed? Roll the gacha in your game, record what you get, and the finder replays every possible seed until it finds the one that deals exactly those cats."
+msgstr "不知道你的種子碼?在遊戲中抽幾次並記錄結果,查詢工具會試遍所有可能的種子碼,找出剛好抽出這些角色的那組。"
+
+#: .\templates\planner\seek.html:14
+msgid "How to record your rolls"
+msgstr "如何記錄抽到的結果"
+
+#: .\templates\planner\seek.html:16
+msgid ""
+"Pick the gacha event you rolled on (e.g. Ultra Souls or Uberfest). Rare (gold) tickets or cat food &mdash; both work the same."
+msgstr "選擇你抽的轉蛋活動(例如超古代勇者 超級靈魂勇者或超級貓咪祭)。用稀有券或貓罐頭都一樣。"
+
+#: .\templates\planner\seek.html:18
+msgid ""
+"Roll several times &mdash; preferably 7 to 10 &mdash; and record the results. The more rolls, the more certain the answer. Fill them in below in the exact order you rolled them."
+msgstr "抽幾次 &mdash; 最好7到10次 &mdash; 並記錄結果。抽得越多,答案越確定。請在下方依照抽的順序填入。"
+
+#: .\templates\planner\seek.html:21
+msgid ""
+"If you did an 11-roll on a guaranteed event, or a 15-roll (3+5+7) step-up: <strong>don't include the guaranteed uber</strong> &mdash; enter the 10 real rolls before it, and nothing rolled after it."
+msgstr ""
+"如果你在確定活動抽了11連抽,或是15抽(3+5+7)的分階段連抽:<strong>不要輸入確定的超激</strong> &mdash; 只輸入它之前真正的10抽,之後抽的也不要。"
+
+#: .\templates\planner\seek.html:24
+#, python-format
+msgid ""
+"Short on tickets? Enter %(min_rolls)s rolls and search. If several seeds match, roll one more cat, add it, and search again &mdash; repeat until one seed remains."
+msgstr "券不夠?輸入%(min_rolls)s抽後搜尋。若有多組種子碼相符,就再抽一隻、加進去再搜尋 &mdash; 重複到只剩一組。"
+
+#: .\templates\planner\seek.html:27
+msgid ""
+"Avoid events that repeat the same cat in their pool (e.g. Metal Busters or some collabs): the duplicate slots are indistinguishable, so you'd have to try each copy in the list one by one."
+msgstr "避免轉蛋池中有重複角色的活動(例如鋼鐵破壞者或部分合作):重複的位置無法分辨,只能把清單中的每一個都試一次。"
+
+#: .\templates\planner\seek.html:30
+msgid ""
+"You only need to find your seed once &mdash; from then on the planner tracks it as you roll."
+msgstr "種子碼只需要找一次 &mdash; 之後你每抽一次,規劃工具都會跟著追蹤。"
+
+#: .\templates\planner\seek.html:32
+#, python-format
+msgid ""
+"New to this? The <a href=\"%(guide_url)s\">step-by-step guide</a> walks through it."
+msgstr "第一次使用?<a href=\"%(guide_url)s\">逐步教學</a>會帶你走一遍。"
+
+#: .\templates\planner\seek.html:34
+#, python-format
+msgid ""
+"Looking for your <strong>Normal Capsule</strong> seed? That's a separate seed &mdash; use the finder on the <a href=\"%(normal_url)s\">Normal Capsules</a> page instead."
+msgstr ""
+"要找<strong>貓咪轉蛋</strong>的種子碼?那是另一組種子碼 &mdash; 請改用<a href=\"%(normal_url)s\">貓咪轉蛋</a>頁面的查詢。"
+
+#: .\templates\planner\seek.html:50
+msgid "Banner you rolled on"
+msgstr "你抽的轉蛋"
+
+#: .\templates\planner\seek.html:53
+msgid "Search banners…"
+msgstr "搜尋轉蛋…"
+
+#: .\templates\planner\seek.html:77
+msgid "No banners match."
+msgstr "沒有符合的轉蛋。"
+
+#: .\templates\planner\seek.html:81
+msgid ""
+"Pick the banner above &mdash; its cats then appear here for you to fill in, one search box per pull."
+msgstr "請在上方選擇轉蛋 &mdash; 它的角色就會出現在這裡,每一抽一個搜尋框讓你填入。"
+
+#: .\templates\planner\seek.html:85
+msgid "Your pulls, oldest first — search each cat you got:"
+msgstr "依抽到的順序,從最早的開始 — 逐一搜尋抽到的角色:"
+
+#: .\templates\planner\seek.html:87
+msgid "The banner above is the one you actually rolled on."
+msgstr "上方的轉蛋就是你實際抽的那個。"
+
+#: .\templates\planner\seek.html:88
+msgid "Pulls are in the order you got them, oldest first."
+msgstr "依抽到的順序,從最早的開始排列。"
+
+#: .\templates\planner\seek.html:89
+msgid "No guaranteed Uber in the list (the bonus one from an 11-draw)."
+msgstr "清單中沒有確定的超激(11連抽送的那隻)。"
+
+#: .\templates\planner\seek.html:90
+msgid "Nothing else was rolled in between — not even on another banner."
+msgstr "中間沒有抽過其他東西 — 包括其他轉蛋。"
+
+#: .\templates\planner\seek.html:112
+msgid ""
+"<strong>A guaranteed Uber is in the list.</strong> The bonus Uber from a guaranteed 11-draw (or the 15th roll of a step-up) doesn't come from the normal roll sequence - remove it and anything after it."
+msgstr ""
+"<strong>清單中有確定的超激。</strong>確定11連抽(或分階段連抽第15抽)送的超激不是來自一般序列 - 請刪掉它以及它之後的所有抽數。"
+
+#: .\templates\planner\seek.html:115
+msgid ""
+"<strong>The order is off.</strong> Enter the cats exactly in the order you got them, oldest first."
+msgstr "<strong>順序不對。</strong>請完全依照抽到的順序,從最早的開始輸入角色。"
+
+#: .\templates\planner\seek.html:117
+msgid ""
+"<strong>Something was rolled in between.</strong> Every rare banner shares one seed, so a roll on another banner in the middle breaks the chain."
+msgstr "<strong>中間抽了別的。</strong>所有稀有轉蛋共用一組種子碼,中間抽了其他轉蛋就會讓序列中斷。"
+
+#: .\templates\planner\seek.html:119
+msgid ""
+"<strong>Wrong banner or run.</strong> Pick the exact event you rolled on - the same name can come back with a different lineup."
+msgstr "<strong>轉蛋或期次選錯。</strong>請選擇你實際抽的那個活動 - 同名的轉蛋可能會以不同陣容再次登場。"
+
+#: .\templates\planner\seek.html:121
+msgid "<strong>A mis-picked cat.</strong> Look-alike names are easy to swap."
+msgstr "<strong>選錯角色。</strong>名字相近的很容易搞混。"
+
+#: .\templates\planner\tiers.html:5
+#, python-format
+msgid "%(label)s Tier List"
+msgstr "%(label)s 強度排行"
+
+#: .\templates\planner\tiers.html:5
+msgid "Uber & Legend Tier List"
+msgstr "超激與傳說稀有強度排行"
+
+#: .\templates\planner\tiers.html:7
+#, python-format
+msgid ""
+"The %(label)s ranking from <a href=\"%(source)s\" target=\"_blank\" rel=\"noopener\">The Battle Cats Tier List</a>, matched to the catalogue (fetched %(fetched)s)."
+msgstr ""
+"來自<a href=\"%(source)s\" target=\"_blank\" rel=\"noopener\">The Battle Cats Tier List</a>的%(label)s排名,已對應到本站的角色資料(取得於%(fetched)s)。"
+
+#: .\templates\planner\tiers.html:9
+#, python-format
+msgid ""
+"The cumulative Uber &amp; Legend Rare ranking from <a href=\"%(source)s\" target=\"_blank\" rel=\"noopener\">The Battle Cats Tier List</a>, matched to the catalogue (fetched %(fetched)s)."
+msgstr ""
+"來自<a href=\"%(source)s\" target=\"_blank\" rel=\"noopener\">The Battle Cats Tier List</a>的超激與傳說稀有綜合排名,已對應到本站的角色資料(取得於%(fetched)s)。"
+
+#: .\templates\planner\tiers.html:12
+msgid ""
+"Collab and limited units are left out; it ranks the standard permanent pool."
+msgstr "不包含合作與限定角色,只排名一般常駐角色。"
+
+#: .\templates\planner\tiers.html:13
+msgid ""
+"<strong>UF</strong> ranks a unit's Ultra Form, <strong>UT</strong> its Ultra Talents; a dimmed cat ranks higher up through one of those. Click a cat for its forms and wiki page."
+msgstr ""
+"<strong>UF</strong>是第4進化的排名,<strong>UT</strong>是超本能的排名;顯示較淡的角色會因其中之一而排得更高。點擊角色可查看型態與Wiki頁面。"
+
+#: .\templates\planner\tiers.html:19
+msgid "Pick which of the site's tier lists to show"
+msgstr "選擇要顯示的強度排行"
+
+#: .\templates\planner\tiers.html:20 .\templates\planner\tiers.html:68
+msgid "Cumulative — Uber & Legend"
+msgstr "綜合 — 超激與傳說"
+
+#: .\templates\planner\tiers.html:59
+msgid "Want the collab and limited units too?"
+msgstr "也想看合作與限定角色?"
+
+#: .\templates\planner\tiers.html:61
+msgid "Full Uber & Legend reference, with collabs and limiteds"
+msgstr "包含合作與限定的完整超激與傳說資料"
+
+#: .\templates\planner\tiers.html:65 .\templates\planner\tiers.html:66
+msgid "Every tier list"
+msgstr "所有強度排行"
+
+#: .\views.py:814 .\views.py:848 .\views.py:1060
+msgid "unknown banner"
+msgstr "未知的轉蛋"
+
+#: .\views.py:852 .\views.py:1064
+msgid "malformed rolls"
+msgstr "抽卡結果格式錯誤"
+
+#: .\views.py:855 .\views.py:1067
+#, python-format
+msgid "enter between %(min)s and %(max)s rolls"
+msgstr "請輸入%(min)s到%(max)s抽"
+
+#: .\views.py:982 .\views.py:1010
+msgid "give some tickets to at least one shown machine"
+msgstr "請為至少一台顯示中的轉蛋機輸入券數"
+
+#: .\views.py:993 .\views.py:1014
+msgid "unknown target"
+msgstr "未知的目標"

@@ -1,0 +1,72 @@
+{% extends "planner/base.html" %}
+
+{% block content %}
+  <h1>關於本站</h1>
+
+  <section class="about-section">
+    <h2>這個工具</h2>
+    <p class="muted">
+      <strong>Neko Optimizer</strong>是<em>貓咪大戰爭</em>的轉蛋規劃工具。
+      告訴它你想要的角色,以及稀有券與貓罐頭的預算,它就會算出
+      <strong>在哪裡、什麼時候、用什麼順序抽,花費的資源最少</strong>。
+    </p>
+    <p class="muted">
+      每個轉蛋都由同一組共用的XOR-shift亂數種子驅動,所以只要知道種子碼,之後的抽卡序列就是確定的。
+      Neko Optimizer用自己的引擎在本機計算這個序列,把抽卡視為狀態圖,並用A*與束搜尋(beam search)
+      找出收集你願望清單最便宜的路線。
+    </p>
+  </section>
+
+  <section class="about-section">
+    <h2>作者</h2>
+    <p class="muted">
+      由<strong>Iliyan Gavrilov</strong>以個人專案製作 &mdash; 當作深入研究路徑搜尋、確定性亂數,
+      以及完整做一個Django應用程式的藉口。原始碼放在
+      <a href="https://github.com/IliyanGavrilov/NekoOptimizer" target="_blank" rel="noopener">GitHub &#8599;</a>。
+    </p>
+  </section>
+
+  <section class="about-section">
+    <h2>使用的技術</h2>
+    <ul class="about-list muted">
+      <li>在瀏覽器中執行的引擎是<strong>Rust</strong>編譯成的<strong>WebAssembly</strong> &mdash; 抽卡計算、A*/束搜尋、掃過全部2<sup>32</sup>組種子碼的查詢,以及讀取貓咪圖鑑截圖,全都在Web Worker中執行。</li>
+      <li>參考用引擎(亂數、抽卡引擎、圖的建構與搜尋)以及遊戲資料處理使用<strong>Python 3.14</strong>。</li>
+      <li>網站、帳號、ORM、表單與模板使用<strong>Django 6.1</strong>;頁面上是純JavaScript。</li>
+      <li>正式環境使用<strong>Vercel</strong>上的<strong>PostgreSQL</strong>,本機使用SQLite,遊戲資料以JSON形式提交在儲存庫中。</li>
+      <li>測試與程式碼檢查使用<strong>pytest</strong>與<strong>ruff</strong>,並在GitHub Actions中搭配CodeQL與安全掃描執行。</li>
+    </ul>
+  </section>
+
+  <section class="about-section">
+    <h2>社群工具</h2>
+    <p class="muted">
+      Neko Optimizer專注於規劃轉蛋,刻意不做能力值計算器或關卡資料庫。
+      這些是值得在另一個分頁開著的工具。
+    </p>
+    {% for group, links in tool_directory %}
+      <h3 class="about-group">{{ group }}</h3>
+      <ul class="about-list muted">
+        {% for link in links %}
+          <li>
+            <a href="{{ link.url }}" target="_blank" rel="noopener">{{ link.label }} &#8599;</a>
+            &mdash; {{ link.note }}
+          </li>
+        {% endfor %}
+      </ul>
+    {% endfor %}
+  </section>
+
+  <section class="about-section">
+    <h2>致謝</h2>
+    <p class="muted">
+      逆向分析出的轉蛋機制 &mdash; XOR-shift亂數與抽卡引擎的內部細節(稀有重複重抽、反彈、確定連抽、換線)&mdash;
+      來自<a href="https://bc.godfat.org/" target="_blank" rel="noopener">godfat的貓咪大戰爭種子碼追蹤工具 &#8599;</a>
+      (Apache-2.0)。Neko Optimizer把它移植到Python,並用黃金測試驗證與godfat的輸出逐位元組一致;上層的規劃功能則是自己做的。
+    </p>
+    <p class="muted">
+      角色資料與圖示來自<a href="https://battlecatsinfo.github.io/" target="_blank" rel="noopener">battlecatsinfo &#8599;</a>,
+      強度排名來自<a href="https://www.battlecatstierlist.com/" target="_blank" rel="noopener">battlecatstierlist.com &#8599;</a>。
+      Neko Optimizer是粉絲製作的工具,與PONOS無關。
+    </p>
+  </section>
+{% endblock %}

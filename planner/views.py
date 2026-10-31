@@ -11,6 +11,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.template.loader import get_template, render_to_string
 from django.urls import Resolver404, resolve, reverse
 from django.utils.http import url_has_allowed_host_and_scheme
+from django.utils.translation import get_language, gettext
 from django.views.decorators.http import require_POST
 from django.views.generic import FormView
 
@@ -25,6 +26,7 @@ from neko.roller import DEFAULT_COUNT, GUARANTEED_OPTIONS, prepare_active, prepa
 from neko.seekspec import MAX_MATCHES, normal_spec, seed_spec
 from neko.statsdata import ABILITY_LABELS, ATTACK_LABELS, IMMUNITY_LABELS, TARGET_LABELS
 from neko.tierdata import load_tiers
+from planner.changelog import CHANGES
 from planner.forms import (
     MAX_FUTURE_UBERS,
     MAX_SEEK_ROLLS,
@@ -32,6 +34,7 @@ from planner.forms import (
     MIN_SEEK_ROLLS,
     PlannerForm,
 )
+from planner.labels import stat_forms
 from planner.links import TOOL_DIRECTORY, unit_links
 from planner.middleware import adopt_guest, owner, region_path, split_region
 from planner.models import CannonPlan, Cat, Seed, TalentPlan, Unit, UnitPlan
@@ -51,7 +54,6 @@ from planner.services import (
     NORMAL_TARGET_PRESETS,
     PLAN_FILTER_ROWS,
     RARITY_ORDER,
-    SECTION_NOTES,
     SUBSET_TARGET_LIMIT,
     apply_guide,
     banner_currencies,
@@ -87,6 +89,7 @@ from planner.services import (
     plannable_form,
     read_guide,
     resources_board,
+    section_notes,
     seek_banner,
     seek_pool_groups,
     seek_run_choices,
@@ -97,6 +100,7 @@ from planner.services import (
     tier_list_doc,
     tier_list_index,
     tier_list_rows,
+    tier_set_label,
     trace_marks,
     tracks_request,
     unit_stats,
@@ -763,16 +767,21 @@ def unit_info(request):
     if unit is None:
         return JsonResponse({"found": False})
 
+    stats = unit_stats(unit.unit_id)
+    if stats:
+        stats = {**stats, "forms": stat_forms(stats["forms"])}
+
     return JsonResponse(
         {
             "found": True,
             "unit_id": unit.unit_id,
             "name": unit.name,
             "rarity": unit.rarity,
+            "rarity_label": gettext(unit.rarity) if unit.rarity else "",
             "forms": unit.forms,
             "links": [asdict(link) for link in unit_links(unit.unit_id, unit.name, unit.rarity)],
             "tier": tier_badges().get(unit.unit_id),
-            "stats": unit_stats(unit.unit_id),
+            "stats": stats,
         }
     )
 
@@ -802,7 +811,7 @@ def seek_pool(request):
     build its roll pickers without shipping every pool up front."""
     banner = seek_banner(request.GET.get("banner", ""))
     if banner is None:
-        return HttpResponseBadRequest("unknown banner")
+        return HttpResponseBadRequest(gettext("unknown banner"))
 
     return JsonResponse({"name": banner.name, "groups": seek_pool_groups(banner)})
 
@@ -836,13 +845,16 @@ def seek_start(request):
     page to run."""
     banner = seek_banner(request.POST.get("banner", ""))
     if banner is None:
-        return HttpResponseBadRequest("unknown banner")
+        return HttpResponseBadRequest(gettext("unknown banner"))
 
     observed = _observed_rolls(request, banner)
     if observed is None:
-        return HttpResponseBadRequest("malformed rolls")
+        return HttpResponseBadRequest(gettext("malformed rolls"))
     if not MIN_SEEK_ROLLS <= len(observed) <= MAX_SEEK_ROLLS:
-        return HttpResponseBadRequest(f"enter between {MIN_SEEK_ROLLS} and {MAX_SEEK_ROLLS} rolls")
+        return HttpResponseBadRequest(
+            gettext("enter between %(min)s and %(max)s rolls")
+            % {"min": MIN_SEEK_ROLLS, "max": MAX_SEEK_ROLLS}
+        )
 
     rarity, slot = observed[-1]
 
@@ -967,7 +979,7 @@ def normal_plan(request):
     tickets = _normal_tickets(request)
     machines = [key for key in request.POST.getlist("banners") if key in BANNERS_BY_KEY]
     if not tickets or not machines:
-        return HttpResponseBadRequest("give some tickets to at least one shown machine")
+        return HttpResponseBadRequest(gettext("give some tickets to at least one shown machine"))
 
     plan = build_normal_plan(
         seed,
@@ -978,7 +990,7 @@ def normal_plan(request):
         last_item=request.POST.get("last_item", "").strip(),
     )
     if plan is None:
-        return HttpResponseBadRequest("unknown target")
+        return HttpResponseBadRequest(gettext("unknown target"))
 
     return render(request, "planner/_normal_plan.html", {"plan": plan, "track": plan["track"]})
 
@@ -995,11 +1007,11 @@ def normal_plan_engine(request):
     tickets = _normal_tickets(request)
     machines = [key for key in request.POST.getlist("banners") if key in BANNERS_BY_KEY]
     if not tickets or not machines:
-        return HttpResponseBadRequest("give some tickets to at least one shown machine")
+        return HttpResponseBadRequest(gettext("give some tickets to at least one shown machine"))
 
     resolved = normal_plan_targets(request.POST.get("target", "dark"))
     if resolved is None:
-        return HttpResponseBadRequest("unknown target")
+        return HttpResponseBadRequest(gettext("unknown target"))
 
     label, targets = resolved
     # The table shows the live machines in the page's fixed order; the search tries them in
@@ -1045,13 +1057,16 @@ def normal_seek_start(request):
     """seek_start for the normal seed: validate the posted rolls, hand back the search."""
     banner = normal_seek_banner(request.POST.get("banner", ""))
     if banner is None:
-        return HttpResponseBadRequest("unknown banner")
+        return HttpResponseBadRequest(gettext("unknown banner"))
 
     observed = _observed_normal_rolls(request, banner)
     if observed is None:
-        return HttpResponseBadRequest("malformed rolls")
+        return HttpResponseBadRequest(gettext("malformed rolls"))
     if not MIN_SEEK_ROLLS <= len(observed) <= MAX_SEEK_ROLLS:
-        return HttpResponseBadRequest(f"enter between {MIN_SEEK_ROLLS} and {MAX_SEEK_ROLLS} rolls")
+        return HttpResponseBadRequest(
+            gettext("enter between %(min)s and %(max)s rolls")
+            % {"min": MIN_SEEK_ROLLS, "max": MAX_SEEK_ROLLS}
+        )
 
     pool, slot = observed[-1]
 
@@ -1074,6 +1089,7 @@ def collection(request):
         unit.tier_badge = badges.get(unit.unit_id)
         unit.chip = chip.render({"unit": unit})
     guide = load_guide()["regions"].get(active_region(), [])
+    notes = section_notes()
     context = {
         # All views share the section partial, so a rarity bin becomes a one-row section.
         "dict_sections": [(r, "", [(r, bin)]) for r, bin in dictionary_sections(units, guide)],
@@ -1085,8 +1101,7 @@ def collection(request):
         "filter_immune": IMMUNITY_LABELS,
         "combo_groups": combo_filter_groups(),
         "set_sections": [
-            (label, SECTION_NOTES.get(label, ""), rarities)
-            for label, rarities in set_sections(units)
+            (label, notes.get(label, ""), rarities) for label, rarities in set_sections(units)
         ],
     }
 
@@ -1111,29 +1126,37 @@ def tier_list(request, category="", name=""):
         "rows": rows,
         "source": shown["source"],
         "fetched": shown["fetched"],
-        "label": shown.get("label", ""),
+        "label": tier_set_label(shown) if category else "",
         "slug": f"{category}/{name}" if category else "",
         "index": tier_list_index(doc),
     }
     if category:
-        context["page_meta"] = tier_set_meta(shown["label"])
+        context["page_meta"] = tier_set_meta(context["label"])
         context["structured_data"] = ld_json(
             breadcrumbs(
                 (BRAND, reverse("planner")),
                 ("Tier List", reverse("tier_list")),
-                (shown["label"], request.path),
+                (context["label"], request.path),
             )
         )
 
     return render(request, "planner/tiers.html", context)
 
 
+def whats_new(request):
+    """What's changed lately, newest first."""
+    return render(request, "planner/whats_new.html", {"changes": CHANGES})
+
+
+def _localized(name: str) -> list[str]:
+    """A long-form page's template in the interface language, English as the fallback:
+    prose reads better written whole than stitched from translated fragments."""
+    return [f"planner/{get_language()}/{name}", f"planner/{name}"]
+
+
 def _guide_links() -> list[tuple[str, str, str]]:
     """Each guide as (slug, heading, summary), in reading order."""
-    return [
-        (slug, meta.title.removesuffix(f" | {BRAND}"), meta.description)
-        for slug, meta in GUIDES.items()
-    ]
+    return [(slug, meta.name, meta.description) for slug, meta in GUIDES.items()]
 
 
 def guides(request):
@@ -1148,7 +1171,7 @@ def guide(request, slug):
         raise Http404("no such guide")
 
     links = _guide_links()
-    heading = next(name for key, name, _ in links if key == slug)
+    heading = str(next(name for key, name, _ in links if key == slug))
     context = {
         "heading": heading,
         "page_meta": meta,
@@ -1162,15 +1185,15 @@ def guide(request, slug):
         ),
     }
 
-    return render(request, f"planner/guides/{slug}.html", context)
+    return render(request, _localized(f"guides/{slug}.html"), context)
 
 
 def sitemap_pages() -> list[dict]:
-    """Every page worth a search listing - the shared pages and guides once, then the
-    tools and each gacha set's tier list at every game version's URL."""
+    """Every page worth a search listing, at every game version's URL: the tools, the
+    guides and each gacha set's tier list."""
     pages = [{"loc": reverse(name)} for name in INDEXED_PAGES if name not in REGION_PAGES]
-    pages += [{"loc": reverse("guide", args=[slug])} for slug in GUIDES]
     regional = [{"loc": reverse(name)} for name in INDEXED_PAGES if name in REGION_PAGES]
+    regional += [{"loc": reverse("guide", args=[slug])} for slug in GUIDES]
     regional += [
         {
             "loc": reverse("tier_list_page", args=entry["slug"].split("/")),
@@ -1211,7 +1234,7 @@ def indexnow_key(request, key):
 
 def about(request):
     """Static "about" page: what the tool is, who built it, and what's credited."""
-    return render(request, "planner/about.html", {"tool_directory": TOOL_DIRECTORY})
+    return render(request, _localized("about.html"), {"tool_directory": TOOL_DIRECTORY})
 
 
 class Signup(RedirectURLMixin, FormView):
@@ -1271,6 +1294,29 @@ def _posted_from(request, code: str) -> str:
     here = region_path(reverse(match.view_name, args=match.args, kwargs=match.kwargs), code)
 
     return f"{here}?{parts.query}" if parts.query else here
+
+
+@require_POST
+def set_language(request):
+    """Pick the interface language for every page, or - blank - go back to each game
+    version speaking its own. Lands back on the page it was posted from."""
+    code = request.POST.get("language", "")
+    if code and code not in dict(settings.LANGUAGES):
+        return HttpResponseBadRequest("unknown language")
+
+    response = redirect(_posted_from(request, request.region))
+    if code:
+        response.set_cookie(
+            settings.LANGUAGE_COOKIE_NAME,
+            code,
+            max_age=settings.LANGUAGE_COOKIE_AGE,
+            secure=settings.SESSION_COOKIE_SECURE,
+            samesite="Lax",
+        )
+    else:
+        response.delete_cookie(settings.LANGUAGE_COOKIE_NAME)
+
+    return response
 
 
 @require_POST

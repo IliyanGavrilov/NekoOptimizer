@@ -891,3 +891,21 @@ def test_the_picker_marks_only_the_visitors_own_cats(client, profile):
         Banner.objects.create(name="Epic")
     )
     assert b"chip owned" not in client.get("/").content
+
+
+@pytest.mark.django_db
+def test_the_planners_seed_box_says_which_seed_and_where_to_find_it(client):
+    content = client.get("/").content.decode()
+    assert "rare gacha</strong> seed" in content
+    assert 'href="/seek/" class="seed-find"' in content
+
+
+@pytest.mark.django_db
+def test_every_page_carries_the_first_visit_welcome(client):
+    assert 'id="welcome" hidden' in client.get("/collection/").content.decode()
+
+
+@pytest.mark.django_db
+def test_whats_new_lists_the_changes_newest_first(client):
+    content = client.get("/whats-new/").content.decode()
+    assert content.index("Oct. 31, 2026") < content.index("Oct. 30, 2026")

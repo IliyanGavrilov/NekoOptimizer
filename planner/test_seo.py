@@ -142,13 +142,13 @@ def test_a_versions_page_is_filed_under_its_own_url_and_names_its_siblings(clien
     assert f'hreflang="x-default" href="{SITE}/collection/"' in content
 
 
-def test_a_shared_page_is_filed_under_the_english_url(client, db):
-    content = client.get("/jp/about/").content.decode()
-    assert f'<link rel="canonical" href="{SITE}/about/">' in content
+def test_an_account_page_is_filed_under_the_english_url(client, db):
+    content = client.get("/jp/accounts/login/").content.decode()
+    assert f'<link rel="canonical" href="{SITE}/accounts/login/">' in content
     assert "hreflang" not in content
 
 
 def test_the_sitemap_lists_every_versions_tools(client, tiers):
     body = client.get("/sitemap.xml").content.decode()
     assert all(f"<loc>{SITE}{prefix}collection/</loc>" in body for prefix in ("/", "/jp/", "/kr/"))
-    assert f"<loc>{SITE}/jp/about/</loc>" not in body
+    assert f"<loc>{SITE}/jp/guides/find-your-seed/</loc>" in body

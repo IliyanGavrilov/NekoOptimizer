@@ -231,3 +231,5 @@ graphify-out/
 
 # Editor settings
 .vscode/
+# The site's compiled translations ship with it (the deploy has no msgfmt).
+!planner/locale/**/*.mo

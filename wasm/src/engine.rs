@@ -2,6 +2,8 @@
 // hands the page a request (the seed, the selected banners' pools and rates, names
 // interned once); the page passes it here and shows what comes back.
 
+use std::collections::HashMap;
+
 use serde::Deserialize;
 use serde_json::{json, Value};
 
@@ -37,6 +39,10 @@ pub struct Request {
     pub view: Option<crate::tracks::View>,
     pub plan: Option<crate::plans::PlanArgs>,
     pub normal: Option<crate::normal::NormalArgs>,
+    /// The page's text in its interface language, keyed by the English: whatever it
+    /// leaves out (all of it, for English) renders as written.
+    #[serde(default)]
+    pub text: HashMap<String, String>,
 }
 
 impl Request {
@@ -46,6 +52,33 @@ impl Request {
             .iter()
             .position(|n| n == name)
             .map_or(NONE, |i| i as u32)
+    }
+
+    /// One piece of the page's text in its interface language.
+    pub fn t<'a>(&'a self, english: &'a str) -> &'a str {
+        self.text.get(english).map_or(english, String::as_str)
+    }
+
+    /// A piece of text keyed apart from its English (``key``), for words that read
+    /// differently in different places; ``english`` when it isn't translated.
+    pub fn t_keyed<'a>(&'a self, key: &str, english: &'a str) -> &'a str {
+        self.text.get(key).map_or(english, String::as_str)
+    }
+
+    /// ``t`` for a message with ``%(name)s`` slots (Django's blocktranslate form, where a
+    /// literal percent is doubled), each filled with its already-escaped value.
+    pub fn tr(&self, english: &str, args: &[(&str, &str)]) -> String {
+        let mut out = self.t(english).replace("%%", "\u{0}");
+        for (name, value) in args {
+            out = out.replace(&format!("%({name})s"), value);
+        }
+        out.replace('\u{0}', "%")
+    }
+
+    /// ``tr`` for a counted message: English's singular for one, its plural otherwise -
+    /// the request carries each form's translation under its own English.
+    pub fn trn(&self, singular: &str, plural: &str, n: i64, args: &[(&str, &str)]) -> String {
+        self.tr(if n == 1 { singular } else { plural }, args)
     }
 
     pub fn name(&self, id: u32) -> &str {

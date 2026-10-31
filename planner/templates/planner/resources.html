@@ -1,10 +1,11 @@
 {% extends "planner/base.html" %}
+{% load i18n %}
 
 {% block content %}
-  <h1>Resources</h1>
-  <p class="muted">Your grind list. Add a cat, tick the evolutions and talents you want, add
+  <h1>{% translate "Resources" %}</h1>
+  <p class="muted">{% blocktranslate trimmed %}Your grind list. Add a cat, tick the evolutions and talents you want, add
     the base upgrades you&rsquo;re chasing &mdash; the running total alongside is everything you
-    still need. Saved instantly.</p>
+    still need. Saved instantly.{% endblocktranslate %}</p>
 
   <input type="hidden" id="csrfToken" value="{{ csrf_token }}">
   {{ cat_options|json_script:"resCatOptions" }}
@@ -15,16 +16,16 @@
   <div class="results-region">
     <div class="rolls-head">
       <div class="rolls-controls">
-        <label class="ctrl" title="Show each cat as its name, its form icon, or both"><select id="resDisplay">
-            <option value="text">Names</option>
-            <option value="icons">Icons</option>
-            <option value="both">Both</option>
+        <label class="ctrl" title="{% translate "Show each cat as its name, its form icon, or both" %}"><select id="resDisplay">
+            <option value="text">{% translate "Names" %}</option>
+            <option value="icons">{% translate "Icons" %}</option>
+            <option value="both">{% translate "Both" %}</option>
           </select></label>
-        <label class="ctrl" title="Show each cat as this form - name and icon; a unit without that form shows the last one it has"><select id="resForm">
-            <option value="0">Base</option>
-            <option value="1">Evolved</option>
-            <option value="2">True</option>
-            <option value="3">Ultra</option>
+        <label class="ctrl" title="{% translate "Show each cat as this form - name and icon; a unit without that form shows the last one it has" %}"><select id="resForm">
+            <option value="0">{% translate "Base" %}</option>
+            <option value="1">{% translate "Evolved" %}</option>
+            <option value="2">{% translate "True" %}</option>
+            <option value="3">{% translate "Ultra" %}</option>
           </select></label>
       </div>
     </div>

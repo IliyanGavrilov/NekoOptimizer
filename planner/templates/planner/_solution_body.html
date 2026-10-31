@@ -1,7 +1,7 @@
 {% comment %}A solution row's body: apply button, step list and highlighted track. Rendered
 with the row for the best plan, and fetched from plan_row when any other row is opened -
 the breakdown is 2^n rows and a track apiece is far more HTML than a browser will take.
-{% endcomment %}
+{% endcomment %}{% load i18n %}
 <div class="view-bar">
   <button type="button" class="apply-plan"
           data-cats="{{ s.cats }}"
@@ -10,7 +10,7 @@ the breakdown is 2^n rows and a track apiece is far more HTML than a browser wil
           data-platinum="{{ s.platinum_used }}"
           data-legend="{{ s.legend_used }}"{% if s.seed_after %}
           data-seed-after="{{ s.seed_after }}"
-          data-last-cat="{{ s.last_cat }}"{% endif %}>Apply this plan <span class="apply-cost">{{ s.cost_label }}</span></button>
+          data-last-cat="{{ s.last_cat }}"{% endif %}>{% translate "Apply this plan" %} <span class="apply-cost">{{ s.cost_label }}</span></button>
 </div>
 {# Steps and track merged into one follow-along: the step list walks the plan #}
 {# and lights each move on the track (app.js). Steps first so they stack above #}

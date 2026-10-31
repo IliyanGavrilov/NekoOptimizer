@@ -4,6 +4,8 @@
 
 from dataclasses import dataclass
 
+from django.utils.translation import gettext_lazy as _
+
 from planner.services import wiki_unit_url
 
 # battlecatsinfo's unit page takes the same unit id the catalogue and its icons use.
@@ -25,102 +27,102 @@ class Link:
 GODFAT = Link(
     "godfat's seed tracker",
     "https://bc.godfat.org/",
-    "The canonical tracker; our roll engine is validated against it.",
+    _("The canonical tracker; our roll engine is validated against it."),
 )
 AMPURI = Link(
-    "Normal Cat seed tracking",
+    _("Normal Cat seed tracking"),
     "https://ampuri.github.io/bc-normal-seed-tracking/",
-    "A tracker built around the Normal Capsule pools.",
+    _("A tracker built around the Normal Capsule pools."),
 )
 TRACKER_UTIL = Link(
     "BC Seed Tracker Util",
     "https://greasyfork.org/en/scripts/480239-bc-seed-tracker-util",
-    "Userscript overlaying godfat with paths to the cats you want.",
+    _("Userscript overlaying godfat with paths to the cats you want."),
 )
 FEANOR = Link(
     "thanksfeanor",
     "https://thanksfeanor.pythonanywhere.com/",
-    "A hosted grab-bag of Battle Cats utilities.",
+    _("A hosted grab-bag of Battle Cats utilities."),
 )
 INFO = Link(
     "battlecatsinfo",
     "https://battlecatsinfo.github.io/",
-    "All-in-one unit database, stage info and calculators.",
+    _("All-in-one unit database, stage info and calculators."),
 )
 INFO_GACHA = Link(
     "battlecatsinfo: Gacha",
     "https://battlecatsinfo.github.io/gachas.html",
-    "Every banner's pool and per-unit drop odds.",
+    _("Every banner's pool and per-unit drop odds."),
 )
 INFO_GUIDE = Link(
     "battlecatsinfo: Cat Guide",
     "https://battlecatsinfo.github.io/cat_guide.html",
-    "The picture-book listing, in the game's own order.",
+    _("The picture-book listing, in the game's own order."),
 )
 INFO_COMPARE = Link(
     "battlecatsinfo: Cat Comparison",
     "https://battlecatsinfo.github.io/compare.html",
-    "Line up two cats' stats side by side.",
+    _("Line up two cats' stats side by side."),
 )
 INFO_OTOTO = Link(
     "battlecatsinfo: Ototo",
     "https://battlecatsinfo.github.io/ototo.html",
-    "Cat Cannon recipes and upgrade costs.",
+    _("Cat Cannon recipes and upgrade costs."),
 )
 INFO_MATERIALS = Link(
     "battlecatsinfo: Materials",
     "https://battlecatsinfo.github.io/materials.html",
-    "Which stages drop which evolution materials.",
+    _("Which stages drop which evolution materials."),
 )
 INFO_TREASURES = Link(
     "battlecatsinfo: Treasures",
     "https://battlecatsinfo.github.io/treasure_list.html",
-    "Treasure locations and the stat bonuses they carry.",
+    _("Treasure locations and the stat bonuses they carry."),
 )
 STATS = Link(
     "battlecatsstats",
     "https://battlecatsstats.com/",
-    "True-damage and DPS calculators, range graphs, matchups.",
+    _("True-damage and DPS calculators, range graphs, matchups."),
 )
 MARKS = Link(
-    "Stat calculator",
+    _("Stat calculator"),
     "https://production.matthewmarks.com/battle-cats-stat-calculator/",
-    "Level-by-level stat breakdowns.",
+    _("Level-by-level stat breakdowns."),
 )
 STATS_TOOL = Link(
     "Cat Stats Tool",
     "https://battlecats.miraheze.org/wiki/Cat_Stats_Tool",
-    "The wiki's own filterable stat table, with form and talent toggles.",
+    _("The wiki's own filterable stat table, with form and talent toggles."),
 )
 TIER_SITE = Link(
     "The Battle Cats Tier List",
     "https://www.battlecatstierlist.com/",
-    "Where our rankings come from - plus DPS graphs and matchup charts.",
+    _("Where our rankings come from - plus DPS graphs and matchup charts."),
 )
 UPCOMING = Link(
-    "Upcoming events",
+    _("Upcoming events"),
     "https://docs.google.com/document/d/1ENv1edzJAcsmk3gjLpvhqVFxoQ4Lpde1K5dRTNxH8sA/edit",
-    "Community-maintained schedule of banners still to come.",
+    _("Community-maintained schedule of banners still to come."),
 )
 GAMATOTO = Link(
     "mygamatoto",
     "https://mygamatoto.com/",
-    "Account and collection manager with an event calendar.",
+    _("Account and collection manager with an event calendar."),
 )
 CALC = Link(
     "battlecats-calc",
     "https://battlecats-calc.com/",
-    "Tick off the cats you own and browse them as a set.",
+    _("Tick off the cats you own and browse them as a set."),
 )
 WIKI = Link(
     "The Battle Cats Wiki",
     "https://battlecats.miraheze.org/",
-    "The Miraheze wiki every other tool links back to.",
+    _("The Miraheze wiki every other tool links back to."),
 )
 ART_ARCHIVE = Link(
-    "Uber & collab art archive",
+    _("Uber & collab art archive"),
     "https://drive.google.com/drive/folders/12Iu_dv8AZWfU3ekRoA_km0dbJA9klNdC",
-    "Community gallery of every Uber, collabs included.",
+    _("Community gallery of every Uber, collabs included."),
 )
 
 _TIER_LINKS = (TIER_SITE, STATS, INFO_COMPARE)
@@ -138,11 +140,11 @@ PAGE_LINKS = {
 
 # The full directory, for the About page.
 TOOL_DIRECTORY = (
-    ("Seed trackers", (GODFAT, AMPURI, TRACKER_UTIL, FEANOR)),
-    ("Stats, calculators & databases", (INFO, STATS, STATS_TOOL, MARKS)),
-    ("Tier lists", (TIER_SITE,)),
-    ("Schedules & collections", (UPCOMING, GAMATOTO, CALC)),
-    ("Wikis & assets", (WIKI, ART_ARCHIVE)),
+    (_("Seed trackers"), (GODFAT, AMPURI, TRACKER_UTIL, FEANOR)),
+    (_("Stats, calculators & databases"), (INFO, STATS, STATS_TOOL, MARKS)),
+    (_("Tier lists"), (TIER_SITE,)),
+    (_("Schedules & collections"), (UPCOMING, GAMATOTO, CALC)),
+    (_("Wikis & assets"), (WIKI, ART_ARCHIVE)),
 )
 
 
@@ -152,7 +154,15 @@ def unit_links(unit_id: int, name: str, rarity: str = "") -> list[Link]:
     when there's a page for this unit (see wiki_unit_url)."""
     wiki = wiki_unit_url(unit_id, name, rarity)
     return [
-        *([Link("Battle Cats Wiki", wiki, "Full page: forms, talents, lore.")] if wiki else []),
-        Link("battlecatsinfo", INFO_UNIT.format(unit_id=unit_id), "Stats, animations, drop rates."),
-        Link("battlecatsstats", STATS_UNIT.format(unit_id=unit_id + 1), "DPS and matchup graphs."),
+        *(
+            [Link(_("Battle Cats Wiki"), wiki, _("Full page: forms, talents, lore."))]
+            if wiki
+            else []
+        ),
+        Link(
+            "battlecatsinfo", INFO_UNIT.format(unit_id=unit_id), _("Stats, animations, drop rates.")
+        ),
+        Link(
+            "battlecatsstats", STATS_UNIT.format(unit_id=unit_id + 1), _("DPS and matchup graphs.")
+        ),
     ]

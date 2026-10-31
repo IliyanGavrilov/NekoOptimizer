@@ -1,0 +1,14 @@
+{% extends "planner/base.html" %}
+{% load i18n %}
+
+{% block content %}
+  <h1>{% translate "What's new" %}</h1>
+  <div class="changelog">
+    {% for day, items in changes %}
+      <h2>{{ day|date:"DATE_FORMAT" }}</h2>
+      <ul>
+        {% for item in items %}<li>{{ item }}</li>{% endfor %}
+      </ul>
+    {% endfor %}
+  </div>
+{% endblock %}

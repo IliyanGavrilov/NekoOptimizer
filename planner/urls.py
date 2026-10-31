@@ -1,5 +1,6 @@
 from django.contrib.auth.views import LogoutView
 from django.urls import path
+from django.views.i18n import JavaScriptCatalog
 
 from planner.views import (
     Login,
@@ -33,12 +34,14 @@ from planner.views import (
     seed_finder,
     seek_pool,
     seek_start,
+    set_language,
     set_region,
     sitemap,
     tier_list,
     tracks_engine,
     unit_forms,
     unit_info,
+    whats_new,
 )
 
 urlpatterns = [
@@ -66,12 +69,15 @@ urlpatterns = [
     path("tiers/", tier_list, name="tier_list"),
     path("tiers/<slug:category>/<slug:name>/", tier_list, name="tier_list_page"),
     path("about/", about, name="about"),
+    path("whats-new/", whats_new, name="whats_new"),
     path("guides/", guides, name="guides"),
     path("guides/<slug:slug>/", guide, name="guide"),
     path("sitemap.xml", sitemap, name="sitemap"),
     path("robots.txt", robots, name="robots"),
     path("<slug:key>.txt", indexnow_key, name="indexnow_key"),
     path("region/", set_region, name="set_region"),
+    path("language/", set_language, name="set_language"),
+    path("jsi18n/", JavaScriptCatalog.as_view(), name="javascript_catalog"),
     path("collection/toggle/", collection_toggle, name="collection_toggle"),
     path("collection/bulk/", collection_bulk, name="collection_bulk"),
     path("collection/auto-wishlist/", collection_auto_wishlist, name="collection_auto_wishlist"),

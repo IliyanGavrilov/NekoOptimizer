@@ -77,28 +77,28 @@ if (seekForm) {
       resp = null;
     }
     if (!resp || !resp.ok) {
-      setError("Couldn't load that banner's cats - is the server still running?");
+      setError(gettext("Couldn't load that banner's cats - is the server still running?"));
       return;
     }
     const pool = await resp.json();
     optionsHtml =
-      `<input type="text" class="pick-search" placeholder="Search cats&hellip;"` +
+      `<input type="text" class="pick-search" placeholder="${gettext("Search cats…")}"` +
       ` autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">` +
       pool.groups
         .map(
           (g) =>
-            `<div class="combo-group">${esc(g.rarity)}</div>` +
+            `<div class="combo-group">${esc(g.label)}</div>` +
             g.options
               .map(
                 (o) =>
                   `<button type="button" class="combo-row" data-value="${o.value}"` +
                   ` data-search="${esc(o.label.toLowerCase())}">` +
-                  `<span class="rarity" data-rarity="${esc(g.rarity)}">${esc(g.rarity)}</span>` +
+                  `<span class="rarity" data-rarity="${esc(g.rarity)}">${esc(g.label)}</span>` +
                   `<span class="combo-cat">${esc(o.label)}</span></button>`
               )
               .join("")
         )
-        .join("") + `<p class="combo-empty" hidden>No cats match.</p>`;
+        .join("") + `<p class="combo-empty" hidden>${gettext("No cats match.")}</p>`;
     for (let i = 0; i < START_ROWS; i++) appendRow();
     pickHint.hidden = true;
     entry.hidden = false;
@@ -118,7 +118,7 @@ if (seekForm) {
     const li = document.createElement("li");
     li.innerHTML = `<div class="roll-pick">
       <button type="button" class="roll-trigger">
-        <span class="roll-label">Pick a cat&hellip;</span><span class="roll-chevron">&#9662;</span>
+        <span class="roll-label">${gettext("Pick a cat…")}</span><span class="roll-chevron">&#9662;</span>
       </button>
       <input type="hidden" class="seek-roll">
       <div class="combo-list" hidden>${optionsHtml}</div>
@@ -206,9 +206,9 @@ if (seekForm) {
   // ---- The search itself: validate on the server, sieve right here ----------------
 
   const PASS_LABELS = [
-    "Searching the seed space…",
-    "No clean match — retrying your first pull as a dupe reroll (below the shadow slot)…",
-    "No clean match — retrying your first pull as a dupe reroll (at or above the shadow slot)…",
+    gettext("Checking every possible seed (step 1 of 3)…"),
+    gettext("No exact match yet — checking if your first pull was a reroll (step 2 of 3)…"),
+    gettext("No exact match yet — checking if your first pull was a reroll (step 3 of 3)…"),
   ];
 
   const matchCard = (m, lastCat) => {
@@ -217,12 +217,13 @@ if (seekForm) {
     }`;
     const replay = `${plannerUrl}?seed=${m.seed_before}`;
     const dupeNote = m.run
-      ? " &middot; your first entered pull arrived as a dupe reroll, so the replay shows it in the R column"
+      ? ` &middot; ${gettext("your first entered pull arrived as a dupe reroll, so the replay shows it in the R column")}`
       : "";
+    const before = interpolate(gettext("Seed before those pulls: %s"), [m.seed_before]);
     return `<div class="seek-match">
-      <div class="seek-seed">Your seed is now <strong>${m.seed_after}</strong></div>
-      <a class="seek-open" href="${open}">Open the planner at your position &rarr;</a>
-      <p class="muted">Seed before those pulls: ${m.seed_before} &middot; <a href="${replay}">replay them</a>${dupeNote}</p>
+      <div class="seek-seed">${interpolate(gettext("Your seed is now %s"), [`<strong>${m.seed_after}</strong>`])}</div>
+      <a class="seek-open" href="${open}">${gettext("Open the planner at your position")} &rarr;</a>
+      <p class="muted">${before} &middot; <a href="${replay}">${gettext("replay them")}</a>${dupeNote}</p>
     </div>`;
   };
 
@@ -247,18 +248,25 @@ if (seekForm) {
     } catch {
       ok = false;
     }
+    const seed = `<strong>${m.seed_after}</strong>`;
+    const copy = `<button type="button" class="link-btn seek-copy">${gettext("copy a link to it")}</button>`;
     note.innerHTML = ok
-      ? `Saved as your seed ✓ - the planner opens on it from now on. Back it up too:
-         write down <strong>${m.seed_after}</strong>, or
-         <button type="button" class="link-btn seek-copy">copy a link to it</button>.`
-      : `Couldn't save it automatically - write down <strong>${m.seed_after}</strong>
-         and open the planner with the link above; it saves from there.`;
+      ? interpolate(
+          gettext("Saved as your seed ✓ - the planner opens on it from now on. Back it up too: write down %(seed)s, or %(copy)s."),
+          { seed, copy },
+          true,
+        )
+      : interpolate(
+          gettext("Couldn't save it automatically - write down %(seed)s and open the planner with the link above; it saves from there."),
+          { seed },
+          true,
+        );
   };
   results.addEventListener("click", async (e) => {
     const btn = e.target.closest(".seek-copy");
     if (!btn) return;
     const url = new URL(results.querySelector(".seek-open").href, location.href).href;
-    btn.textContent = (await copyToClipboard(url)) ? "link copied ✓" : url;
+    btn.textContent = (await copyToClipboard(url)) ? gettext("link copied ✓") : url;
   });
 
   const render = (data) => {
@@ -267,42 +275,32 @@ if (seekForm) {
     results.hidden = false;
 
     if (data.error) {
-      results.innerHTML = `<p class="field-error">Search failed: ${esc(data.error)}</p>`;
+      results.innerHTML = `<p class="field-error">${interpolate(gettext("Search failed: %s"), [esc(data.error)])}</p>`;
       return;
     }
     if (!data.matches.length) {
-      results.innerHTML = `<div class="seek-none"><p>No seed deals exactly those pulls.
-        Almost always one of these:</p>
-        <ul>
-          <li><strong>A guaranteed Uber is in the list.</strong> The bonus Uber from a
-            guaranteed 11-draw (or the 15th roll of a step-up) doesn't come from the normal
-            roll sequence - remove it and anything after it.</li>
-          <li><strong>The order is off.</strong> Enter the cats exactly in the order you got
-            them, oldest first.</li>
-          <li><strong>Something was rolled in between.</strong> Every rare banner shares one
-            seed, so a roll on another banner in the middle breaks the chain.</li>
-          <li><strong>Wrong banner or run.</strong> Pick the exact event you rolled on - the
-            same name can come back with a different lineup.</li>
-          <li><strong>A mis-picked cat.</strong> Look-alike names are easy to swap.</li>
-        </ul></div>`;
+      results.replaceChildren(document.getElementById("seekNoneTpl").content.cloneNode(true));
       return;
     }
 
     let notes = "";
     if (data.truncated) {
-      notes = `<p class="field-warning">Far too many seeds match - this window is too
-        short to pin yours down. Add a few more rolls and search again; only the first
-        ${data.matches.length} are shown.</p>`;
+      notes = `<p class="field-warning">${interpolate(
+        gettext("Far too many seeds match - this window is too short to pin yours down. Add a few more rolls and search again; only the first %s are shown."),
+        [data.matches.length],
+      )}</p>`;
     } else if (data.matches.length > 1) {
-      notes = `<p class="field-warning">${data.matches.length} seeds match. Roll a few
-        more cats, add them, and search again to narrow it down.</p>`;
+      notes = `<p class="field-warning">${interpolate(
+        gettext("%s seeds match. Roll a few more cats, add them, and search again to narrow it down."),
+        [data.matches.length],
+      )}</p>`;
     }
     results.innerHTML =
       notes + data.matches.map((m) => matchCard(m, data.last_cat)).join("");
     if (data.matches.length === 1 && !data.truncated) {
       results
         .querySelector(".seek-match")
-        .insertAdjacentHTML("beforeend", `<p class="seek-kept muted">Saving it as your seed&hellip;</p>`);
+        .insertAdjacentHTML("beforeend", `<p class="seek-kept muted">${gettext("Saving it as your seed…")}</p>`);
       keepFound(data.matches[0], data.last_cat);
     }
   };
@@ -336,16 +334,22 @@ if (seekForm) {
     const rarity = (i) => picks[i].value.split(":")[0];
     for (const at of [10, 14]) {
       if (picks.length > at && UBERISH.has(rarity(at))) {
-        notes.push(`Pull ${at + 1} is ${esc(picks[at].dataset.name)}. If that was the
-          <strong>guaranteed Uber</strong> of an 11-draw${at === 14 ? " or a step-up" : ""},
-          remove it and everything after it - it isn't part of the normal roll sequence.`);
+        const message =
+          at === 14
+            ? gettext("Pull %(n)s is %(cat)s. If that was the <strong>guaranteed Uber</strong> of an 11-draw or a step-up, remove it and everything after it - it isn't part of the normal roll sequence.")
+            : gettext("Pull %(n)s is %(cat)s. If that was the <strong>guaranteed Uber</strong> of an 11-draw, remove it and everything after it - it isn't part of the normal roll sequence.");
+        notes.push(interpolate(message, { n: at + 1, cat: esc(picks[at].dataset.name) }, true));
       }
     }
     for (let i = 1; i < picks.length; i++) {
       if (rarity(i) === RARE && picks[i].value === picks[i - 1].value) {
-        notes.push(`Pulls ${i} and ${i + 1} are both ${esc(picks[i].dataset.name)}. The game
-          never deals the same Rare cat twice in a row (it rerolls the repeat), so one of
-          them is probably mis-picked or out of order.`);
+        notes.push(
+          interpolate(
+            gettext("Pulls %(a)s and %(b)s are both %(cat)s. The game never deals the same Rare cat twice in a row (it rerolls the repeat), so one of them is probably mis-picked or out of order."),
+            { a: i, b: i + 1, cat: esc(picks[i].dataset.name) },
+            true,
+          ),
+        );
       }
     }
     return notes;
@@ -359,25 +363,25 @@ if (seekForm) {
     const notes = checked ? [] : preflight(picks);
     checkEl.hidden = !notes.length;
     if (notes.length) {
-      checkEl.innerHTML = `<p>Quick check before searching:</p><ul>${notes
+      checkEl.innerHTML = `<p>${gettext("Quick check before searching:")}</p><ul>${notes
         .map((n) => `<li>${n}</li>`)
-        .join("")}</ul><p>Fix it above, or search anyway if it's right.</p>`;
-      goBtn.textContent = "Search anyway";
+        .join("")}</ul><p>${gettext("Fix it above, or search anyway if it's right.")}</p>`;
+      goBtn.textContent = gettext("Search anyway");
       checked = true;
       return;
     }
-    goBtn.textContent = "Find my seed";
+    goBtn.textContent = gettext("Find my seed");
     checked = false;
 
     const values = [...rollsEl.querySelectorAll(".seek-roll")].map((h) => h.value);
     const last = values.length - 1 - [...values].reverse().findIndex(Boolean);
     const filled = values.filter(Boolean);
     if (filled.length && values.slice(0, last + 1).some((v) => !v)) {
-      setError("Fill your pulls in order, top to bottom - no gaps.");
+      setError(gettext("Fill your pulls in order, top to bottom - no gaps."));
       return;
     }
     if (filled.length < MIN) {
-      setError(`Enter at least ${MIN} pulls (around 10 works best).`);
+      setError(interpolate(gettext("Enter at least %s pulls (around 10 works best)."), [MIN]));
       return;
     }
 

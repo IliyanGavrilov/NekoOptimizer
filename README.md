@@ -89,6 +89,25 @@ cp target/wasm32-unknown-unknown/release/nekowasm.wasm ../planner/static/planner
 cargo test --release                # the Rust tests
 ```
 
+### Translations
+
+Each game version's pages speak its players' language (`/jp/` Japanese, `/tw/` Traditional
+Chinese, `/kr/` Korean); the header's language picker overrides it. The catalogues live in
+`planner/locale/`, with the shared terms in `planner/locale/GLOSSARY.md`; the guides and the
+About page are whole templates per language under `planner/templates/planner/<language>/`.
+After changing any text, refresh the catalogues, fill in the new strings, and compile them -
+the compiled `.mo` files are committed, since the deploy has no `msgfmt`:
+
+```bash
+cd planner
+python ../manage.py makemessages -l ja -l zh_Hant -l ko
+python ../manage.py makemessages -d djangojs -l ja -l zh_Hant -l ko
+python ../manage.py compilemessages -l ja -l zh_Hant -l ko
+```
+
+gettext before 0.21 can't parse JavaScript template literals and skips strings after them;
+`planner/test_translation.py` fails on any script or engine string left untranslated.
+
 ### Deploying
 
 Production runs on [Vercel](https://vercel.com/) (region `fra1`, next to its Postgres
