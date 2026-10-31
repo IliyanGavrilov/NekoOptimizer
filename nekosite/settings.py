@@ -38,6 +38,8 @@ SITE_URL = os.environ.get("SITE_URL", "https://neko-optimizer.vercel.app").rstri
 # Search Console's and Bing Webmaster Tools' ownership tokens, for sites verified by meta tag.
 GOOGLE_SITE_VERIFICATION = os.environ.get("GOOGLE_SITE_VERIFICATION", "")
 BING_SITE_VERIFICATION = os.environ.get("BING_SITE_VERIFICATION", "")
+# The IndexNow key that proves this site may tell Bing and friends which pages changed.
+INDEXNOW_KEY = os.environ.get("INDEXNOW_KEY", "")
 
 ALLOWED_HOSTS = os.environ.get("DJANGO_ALLOWED_HOSTS", "*" if DEBUG else "").split(",")
 # Vercel names each deployment's own hosts at runtime: its unique URL, its branch's, and
