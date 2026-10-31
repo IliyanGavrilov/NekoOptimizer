@@ -2351,9 +2351,9 @@ msgstr "規劃路線 — 用你的抽數拿最多貓眼石【闇】"
 
 #: .\templates\planner\normal.html:103
 msgid ""
-"Enter how many tickets you have and pick what you want: you get the order to roll in. <strong>Normal Cat Tickets</strong> work on the plain, Catfruit and Catseye machines. Lucky Tickets are separate, and the plan uses as few as it can."
+"Enter how many tickets you have and pick what you want: you get the order to roll in. <strong>Normal Cat Tickets</strong> work on the plain, Catfruit and Catseye machines. Lucky Tickets are separate and never roll a Catseye; once you enter some, the plan can use their machine even while its column is hidden."
 msgstr ""
-"輸入你有幾張券並選擇想要的東西,就會得到抽的順序。<strong>貓咪轉蛋券</strong>可用於一般、貓薄荷與貓眼石轉蛋。招福轉蛋券另外計算,計畫會盡量少用。"
+"輸入你有幾張券並選擇想要的東西,就會得到抽的順序。<strong>貓咪轉蛋券</strong>可用於一般、貓薄荷與貓眼石轉蛋。招福轉蛋券另外計算,而且抽不到貓眼石;輸入張數後,即使隱藏該欄,計畫也能使用那台轉蛋。"
 
 #: .\templates\planner\normal.html:107
 msgid "Normal Cat Tickets"
@@ -2748,3 +2748,15 @@ msgstr "目前的頭像"
 
 msgid "Search cats…"
 msgstr "搜尋角色…"
+
+msgid "Which tickets pay for the pulls that only walk the track on to the next target"
+msgstr "只為走到下一個目標而抽的那幾抽,要用哪種券"
+
+msgid "Pulls in between"
+msgstr "中間的抽"
+
+msgid "Lucky Tickets first"
+msgstr "先用招福轉蛋券"
+
+msgid "Normal Cat Tickets first"
+msgstr "先用貓咪轉蛋券"

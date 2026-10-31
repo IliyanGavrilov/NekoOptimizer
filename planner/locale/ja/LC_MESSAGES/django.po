@@ -2366,9 +2366,9 @@ msgstr "経路を計画 — 引ける回数でキャッツアイ【闇】を最�
 
 #: .\templates\planner\normal.html:103
 msgid ""
-"Enter how many tickets you have and pick what you want: you get the order to roll in. <strong>Normal Cat Tickets</strong> work on the plain, Catfruit and Catseye machines. Lucky Tickets are separate, and the plan uses as few as it can."
+"Enter how many tickets you have and pick what you want: you get the order to roll in. <strong>Normal Cat Tickets</strong> work on the plain, Catfruit and Catseye machines. Lucky Tickets are separate and never roll a Catseye; once you enter some, the plan can use their machine even while its column is hidden."
 msgstr ""
-"持っているチケットの枚数を入れて、ほしいものを選ぶと、引く順番がわかります。<strong>にゃんこチケット</strong>は通常・マタタビ・キャッツアイのガチャで使えます。福引チケットは別で、プランはなるべく少なく使います。"
+"持っているチケットの枚数を入れて、ほしいものを選ぶと、引く順番がわかります。<strong>にゃんこチケット</strong>は通常・マタタビ・キャッツアイのガチャで使えます。福引チケットは別で、キャッツアイは出ません。枚数を入れれば、列を隠していてもプランはそのガチャを使えます。"
 
 #: .\templates\planner\normal.html:107
 msgid "Normal Cat Tickets"
@@ -2770,3 +2770,15 @@ msgstr "現在のアイコン"
 
 msgid "Search cats…"
 msgstr "キャラを検索…"
+
+msgid "Which tickets pay for the pulls that only walk the track on to the next target"
+msgstr "次の目当てまでトラックを進めるだけの回に、どのチケットを使うか"
+
+msgid "Pulls in between"
+msgstr "つなぎの回"
+
+msgid "Lucky Tickets first"
+msgstr "福引チケットから"
+
+msgid "Normal Cat Tickets first"
+msgstr "にゃんこチケットから"

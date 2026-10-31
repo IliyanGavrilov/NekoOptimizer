@@ -11,15 +11,17 @@
       <li><span class="entry on-path sample">{% translate "path" %}</span> {% translate "a planned pull" %} <span class="sep">&middot;</span> <span class="entry target sample"><span class="item got">{% translate "target" %}</span></span> {% translate "what it collects" %}</li>
     </ul>
   </details>
-  {% if track.legend|length > 1 %}
-    <ul class="track-legend">
+  {# The banner legend is the thead's first row, so the two stick as one block. #}
+  <table class="track normal-track">
+    <thead>
+    {% if track.legend|length > 1 %}
+    <tr class="legend-row"><th colspan="3"><ul class="track-legend">
       {% for b in track.legend %}
         <li><span class="tag">{{ b.tag }}</span> {{ b.name }}</li>
       {% endfor %}
-    </ul>
-  {% endif %}
-  <table class="track normal-track">
-    <thead><tr>
+    </ul></th></tr>
+    {% endif %}
+    <tr>
       <th class="pos">#</th>
       <th>{% translate "Track A" %}</th>
       <th>{% translate "Track B" %}</th>
@@ -28,8 +30,8 @@
       {% for row in track.rows %}
         <tr>
           <th scope="row" class="pos">{{ row.pos }}</th>
-          {% include "planner/_normal_cell.html" with entries=row.a multi=track.legend|length cell_seed=row.a_seed cell_item=row.a_item cell_track="A" %}
-          {% include "planner/_normal_cell.html" with entries=row.b multi=track.legend|length cell_seed=row.b_seed cell_item=row.b_item cell_track="B" %}
+          {% include "planner/_normal_cell.html" with entries=row.a multi=track.legend|length %}
+          {% include "planner/_normal_cell.html" with entries=row.b multi=track.legend|length %}
         </tr>
       {% endfor %}
     </tbody>

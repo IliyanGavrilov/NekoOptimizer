@@ -3443,9 +3443,9 @@ def build_normal_tracks(
 ) -> dict:
     """One merged A/B table over the chosen normal banners, like build_tracks: each
     cell stacks each banner's item at that shared stream position, with the dupe
-    branches the play chains realize. The cell's dice state is banner-independent
-    (a clean roll uses the same two stream values whatever the pool), so one dice
-    serves the whole cell; ``item`` feeds the dupe memory when every banner agrees.
+    branches the play chains realize. Each entry carries its own dice: the state after
+    a clean roll is banner-independent, but the item it remembers for the dupe memory
+    is that banner's.
 
     ``marks`` is a plan's highlighting: {(position, track): {banner key: step}},
     each step a plan pull at that cell - it lights the machine's entry (the dupe
@@ -3504,6 +3504,7 @@ def build_normal_tracks(
                     "tag": column["tag"],
                     "item": pull.item,
                     "label": names.get(pull.item, pull.item),
+                    "seed": pull.seed,
                     "pool": pull.pool,
                     "upgrade": pull.item in UPGRADES,
                     "dark": pull.item == "Dark Catseye",
@@ -3519,21 +3520,8 @@ def build_normal_tracks(
 
         return cells
 
-    def cell_item(position: int, track: str) -> str:
-        names = {column["pulls"][(position, track)].item for column in columns}
-
-        return names.pop() if len(names) == 1 else ""
-
     rows = [
-        {
-            "pos": position,
-            "a": entries(position, "A"),
-            "b": entries(position, "B"),
-            "a_seed": columns[0]["pulls"][(position, "A")].seed,
-            "a_item": cell_item(position, "A"),
-            "b_seed": columns[0]["pulls"][(position, "B")].seed,
-            "b_item": cell_item(position, "B"),
-        }
+        {"pos": position, "a": entries(position, "A"), "b": entries(position, "B")}
         for position in range(1, count + 1)
     ]
 
@@ -3584,11 +3572,13 @@ def normal_request(
     label: str = "",
     targets: Iterable[str] = (),
     budgets: Iterable[tuple[int, Iterable[str]]] = (),
+    optional: Iterable[str] = (),
 ) -> dict:
     """The Normal Capsules page as an engine request: ``op`` "normal_tracks" is the
     merged table over the machines ``keys`` (build_normal_tracks), "normal_plan" the path
-    planner over them (build_normal_plan, with its ``label``/``targets`` and the currency
-    ``budgets`` as (rolls, machine keys fed) pairs). Machines are items in one name
+    planner over them (build_normal_plan, with its ``label``/``targets``, the currency
+    ``budgets`` as (rolls, machine keys fed) pairs, and the ``optional`` machines its table
+    shows only when the plan pulls them). Machines are items in one name
     table, each with its bands' rates, pools and reroll flags."""
     banners = [BANNERS_BY_KEY[key] for key in keys if key in BANNERS_BY_KEY]
     table = _NameTable([])
@@ -3620,6 +3610,7 @@ def normal_request(
             "budgets": [
                 [count, [index[key] for key in fed if key in index]] for count, fed in budgets
             ],
+            "optional": [index[key] for key in optional if key in index],
         }
     # Cat items get their catalogue id and form names, so the page's form/icon picker
     # reaches them exactly like the rare tracks' cells.
@@ -3639,20 +3630,28 @@ def normal_request(
     return request
 
 
-def normal_budgets(machines: Iterable[str], tickets: Mapping[str, int]) -> list:
-    """The currency budgets a plan searches with (as build_normal_plan builds them): one
-    pool of Normal Cat Tickets feeding every live ticket machine, and each live lucky
-    machine its own."""
+# Which stash pays for the walking pulls between targets, as the stashes dearest first.
+# "lucky" keeps the Normal Cat Tickets - the only ones that roll the Catseye machine -
+# and walks on lucky tickets; "normal" keeps the lucky tickets for their own drops.
+NORMAL_MOVES = {
+    "lucky": ("normal", "luckyg", "lucky"),
+    "normal": ("luckyg", "lucky", "normal"),
+}
+
+
+def normal_budgets(
+    machines: Iterable[str], tickets: Mapping[str, int], moves: str = "lucky"
+) -> list:
+    """The currency budgets a plan searches with (as build_normal_plan builds them),
+    dearest first: one pool of Normal Cat Tickets feeding every live ticket machine,
+    and each lucky machine its own - whenever you hold its tickets, shown or not."""
     live = [key for key in machines if key in BANNERS_BY_KEY]
-    budgets = []
-    normal_fed = [key for key in live if key in CHEAP_KEYS]
-    if normal_fed:
-        budgets.append((tickets.get("normal", 0), normal_fed))
-    if "lt" in live:
-        budgets.append((tickets.get("lucky", 0), ["lt"]))
-    if "ltg" in live:
-        budgets.append((tickets.get("luckyg", 0), ["ltg"]))
-    return budgets
+    fed = {"normal": [key for key in live if key in CHEAP_KEYS], "lucky": ["lt"], "luckyg": ["ltg"]}
+    return [
+        (tickets[kind], fed[kind])
+        for kind in NORMAL_MOVES.get(moves, NORMAL_MOVES["lucky"])
+        if tickets.get(kind, 0) > 0 and fed[kind]
+    ]
 
 
 # The plan's target picker: what to chase on the normal-side machines. Dark
@@ -3699,6 +3698,7 @@ def build_normal_plan(
     target: str,
     count: int,
     last_item: str = "",
+    moves: str = "lucky",
 ) -> dict | None:
     """Run the normal-side path planner and shape its result for the fragment:
     the merged legs (consecutive pulls on one machine), the spend summary, and the
@@ -3707,14 +3707,14 @@ def build_normal_plan(
     ``machines`` are the machines live for the player (the page's checked
     columns); ``tickets`` the currency counts - "normal" (Normal Cat Tickets,
     feeding the plain capsule and the Catfruit/Catseye machines alike), "lucky"
-    and "luckyg". A currency only enters the search when a machine it feeds is
-    live."""
+    and "luckyg"; ``moves`` the stash the walking pulls come out of (NORMAL_MOVES).
+    Normal Cat Tickets only enter the search when a machine they feed is live."""
     resolved = normal_plan_targets(target)
     if resolved is None:
         return None
 
     live = [key for key in machines if key in BANNERS_BY_KEY]
-    budgets = normal_budgets(live, tickets)
+    budgets = normal_budgets(live, tickets, moves)
 
     label, targets = resolved
     plan = plan_normal(seed, budgets, targets, last_item=last_item)
@@ -3769,8 +3769,11 @@ def build_normal_plan(
         leg["kind_text"] = ngettext("%(n)s&times; pull", "%(n)s&times; pulls", pulls) % {"n": pulls}
         leg["cost_text"] = _normal_count(leg["currency"], pulls)
 
-    # The table shows the live machines, reaching at least the plan's furthest cell.
-    keys = [banner.key for banner in NORMAL_BANNERS if banner.key in live]
+    # The table shows the live machines and any lucky one the plan pulls, reaching at
+    # least the plan's furthest cell.
+    keys = [
+        banner.key for banner in NORMAL_BANNERS if banner.key in live or banner.key in plan.spent
+    ]
     rows = max((step.position for step in plan.steps), default=0)
     track = build_normal_tracks(seed, keys, max(count, rows + 2), last_item, marks=marks)
 
