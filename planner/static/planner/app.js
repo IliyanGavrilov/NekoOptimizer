@@ -1354,15 +1354,82 @@ if (picker) {
   }
 }
 
+// ---- Cat filters: ownership, rarity and the facet panel ---------------------
+// Collection and the avatar picker share _cat_filters.html. The facet data (targets,
+// abilities, immunities, combos, talents) ships once as JSON keyed by unit id; selected
+// pills combine under "Match all" (AND) or "Match any" (OR). Binds every control to
+// onChange and returns a reader of the current picks, whose keeps() tests one cat.
+function catFilters(onChange) {
+  const facetData = JSON.parse(document.getElementById("catFacets").textContent);
+  const rarityBtns = [...document.querySelectorAll("#rarityFilter button")];
+  const statusBtns = [...document.querySelectorAll("#statusFilter button")];
+  const facetPanel = document.getElementById("facetPanel");
+  const facetBtns = [...facetPanel.querySelectorAll(".facet-filter button")];
+  const modeBtns = [...facetPanel.querySelectorAll("#facetMode .view-btn")];
+  const comboSel = document.getElementById("comboFilter");
+  const facetCount = document.getElementById("facetCount");
+  const pressed = (btns) => btns.find((b) => b.getAttribute("aria-pressed") === "true");
+
+  const bindRadio = (id, btns) =>
+    document.getElementById(id).addEventListener("click", (e) => {
+      const btn = e.target.closest("button");
+      if (!btn) return;
+      btns.forEach((b) => b.setAttribute("aria-pressed", b === btn ? "true" : "false"));
+      onChange();
+    });
+  bindRadio("rarityFilter", rarityBtns);
+  bindRadio("statusFilter", statusBtns);
+  // Facet pills toggle independently (multi-select); the mode pair is a radio.
+  facetPanel.addEventListener("click", (e) => {
+    const btn = e.target.closest("button");
+    if (!btn) return;
+    if (btn.closest("#facetMode")) {
+      modeBtns.forEach((b) => b.classList.toggle("is-active", b === btn));
+    } else if (btn.id === "facetClear") {
+      facetBtns.forEach((b) => b.setAttribute("aria-pressed", "false"));
+      comboSel.value = "";
+    } else if (btn.closest(".facet-filter")) {
+      btn.setAttribute("aria-pressed", btn.getAttribute("aria-pressed") === "true" ? "false" : "true");
+    } else {
+      return;
+    }
+    onChange();
+  });
+  comboSel.addEventListener("change", onChange);
+
+  return () => {
+    const rarity = pressed(rarityBtns).dataset.rarity;
+    const status = pressed(statusBtns).dataset.status;
+    const picks = facetBtns
+      .filter((b) => b.getAttribute("aria-pressed") === "true")
+      .map((b) => ({ group: b.closest(".facet-filter").dataset.group, value: b.dataset.value }));
+    if (comboSel.value) picks.push({ group: "c", value: Number(comboSel.value) });
+    const mode = modeBtns.find((b) => b.classList.contains("is-active")).dataset.mode;
+    facetCount.textContent = picks.length ? `(${picks.length} active)` : "";
+    const test = (f, p) => (p.group === "k" ? !!f[p.value] : (f[p.group] || []).includes(p.value));
+    const facetHit = (f) =>
+      !picks.length || (!!f && (mode === "and" ? picks.every((p) => test(f, p)) : picks.some((p) => test(f, p))));
+    return {
+      any: !!(rarity || status || picks.length),
+      // "wishlist" means still-wanted, so it drops cats you own - matching how the
+      // planner reads the wishlist (owned cats are never on it).
+      keeps: (uid, catRarity, owned, wanted) =>
+        (!rarity || catRarity === rarity) &&
+        (status === "owned" ? owned : status === "wishlist" ? wanted && !owned : true) &&
+        facetHit(facetData[uid]),
+    };
+  };
+}
+
 // ---- Collection: views, filters, instant owned / wishlist toggles ----
 const collectionBrowser = document.getElementById("collectionBrowser");
 if (collectionBrowser) {
   const token = document.getElementById("csrfToken").value;
   const noMatches = collectionBrowser.querySelector(".no-matches");
 
-  // Three renderings of the same units (Cat Guide dictionary order / by rarity / by
-  // gacha set); one is shown at a time and the choice sticks across visits. Marks
-  // are synced between them by pk.
+  // Four renderings of the same units (Cat Guide dictionary order / by rarity / by
+  // gacha set / A-Z); one is shown at a time and the choice sticks across visits.
+  // Marks are synced between them by pk.
   const VIEW_KEY = "nekoCollectionView";
   const viewBtns = [...document.querySelectorAll("#collectionViews .view-btn")];
   const views = [...collectionBrowser.querySelectorAll(".collection-view")];
@@ -1385,31 +1452,10 @@ if (collectionBrowser) {
     showView(btn.dataset.view);
   });
 
-  // Search and the rarity pills combine, applied to the visible view. Every row
-  // carries its rarity (a rarity section is one row of itself), so both views
-  // filter the same way: hide non-matching chips, then empty rows and sections.
+  // Search and the cat filters combine, applied to the visible view: hide
+  // non-matching chips, then empty rows and sections.
   const search = document.getElementById("collectionSearch");
-  const rarityBtns = [...document.querySelectorAll("#rarityFilter button")];
-  const statusBtns = [...document.querySelectorAll("#statusFilter button")];
-  // Ownership filter: "wishlist" means still-wanted, so it drops cats you own -
-  // matching how the planner reads the wishlist (owned cats are never on it).
-  const statusHit = (chip, status) =>
-    status === "owned"
-      ? chip.classList.contains("owned")
-      : status === "wishlist"
-        ? chip.classList.contains("wanted") && !chip.classList.contains("owned")
-        : true;
-
-  // Facet panel: per-unit filter data (targets/abilities/immunities/combos/talents)
-  // keyed by unit id, shipped once as JSON. Selected pills become predicates that
-  // combine under "Match all" (AND) or "Match any" (OR); search/rarity/ownership
-  // always apply on top.
-  const facetData = JSON.parse(document.getElementById("catFacets").textContent);
-  const facetPanel = document.getElementById("facetPanel");
-  const facetBtns = [...facetPanel.querySelectorAll(".facet-filter button")];
-  const modeBtns = [...facetPanel.querySelectorAll("#facetMode .view-btn")];
-  const comboSel = document.getElementById("comboFilter");
-  const facetCount = document.getElementById("facetCount");
+  const readFilters = catFilters(() => applyFilters());
 
   // The chips are rendered once and never added or removed, so index them up front:
   // every mark, count and filter pass used to re-run querySelectorAll over all three
@@ -1424,14 +1470,14 @@ if (collectionBrowser) {
       name: el.dataset.name,
       names: (el.dataset.forms || el.dataset.name).toLowerCase(),
       forms: el.dataset.forms ? el.dataset.forms.split("|") : [],
-      facets: facetData[el.dataset.uid],
+      uid: el.dataset.uid,
+      rarity: el.dataset.rarity,
       catname: el.querySelector(".catname"),
     };
   };
   const indexSection = (el) => {
     const rows = [...el.querySelectorAll(".rarity-row")].map((row) => ({
       el: row,
-      rarity: row.dataset.rarity,
       chips: [...row.querySelectorAll(".own-chip")].map(indexChip),
     }));
     return {
@@ -1448,31 +1494,12 @@ if (collectionBrowser) {
   const allSections = [...viewSections.values()].flat();
   const allChips = allSections.flatMap((section) => section.rows.flatMap((row) => row.chips));
 
-  function facetPicks() {
-    const picks = facetBtns
-      .filter((b) => b.getAttribute("aria-pressed") === "true")
-      .map((b) => ({ group: b.closest(".facet-filter").dataset.group, value: b.dataset.value }));
-    if (comboSel.value) picks.push({ group: "c", value: Number(comboSel.value) });
-    return picks;
-  }
-  function facetHit(chip, picks, mode) {
-    if (!picks.length) return true;
-    const f = chip.facets;
-    if (!f) return false;
-    const test = (p) =>
-      p.group === "k" ? !!f[p.value] : (f[p.group] || []).includes(p.value);
-    return mode === "and" ? picks.every(test) : picks.some(test);
-  }
   function applyFilters() {
     const query = search.value.trim().toLowerCase();
-    const rarity = rarityBtns.find((b) => b.getAttribute("aria-pressed") === "true").dataset.rarity;
-    const status = statusBtns.find((b) => b.getAttribute("aria-pressed") === "true").dataset.status;
-    const picks = facetPicks();
-    const mode = modeBtns.find((b) => b.classList.contains("is-active")).dataset.mode;
-    facetCount.textContent = picks.length ? `(${picks.length} active)` : "";
+    const filters = readFilters();
     // Any active filter overrides a section's collapsed state, so matches can't
     // hide inside a folded-up section.
-    collectionBrowser.classList.toggle("filtering", !!(query || rarity || status || picks.length));
+    collectionBrowser.classList.toggle("filtering", !!query || filters.any);
     const active = views.find((v) => !v.hidden);
     let anySection = false;
     for (const section of viewSections.get(active)) {
@@ -1481,15 +1508,13 @@ if (collectionBrowser) {
       let anyRow = false;
       for (const row of section.rows) {
         let shown = 0;
-        const rarityHidesRow = rarity && row.rarity !== rarity;
         for (const chip of row.chips) {
           // Match on any form name (data-forms carries them all), so "Mohawk"
           // finds the Cat whatever form the picker is showing.
+          const { classList } = chip.el;
           const hit =
-            !rarityHidesRow &&
             (!query || labelHit || chip.names.includes(query)) &&
-            statusHit(chip.el, status) &&
-            facetHit(chip, picks, mode);
+            filters.keeps(chip.uid, chip.rarity, classList.contains("owned"), classList.contains("wanted"));
           chip.el.hidden = !hit;
           shown += hit;
         }
@@ -1502,33 +1527,6 @@ if (collectionBrowser) {
     noMatches.hidden = anySection;
   }
   search.addEventListener("input", applyFilters);
-  const bindFilter = (id, btns) =>
-    document.getElementById(id).addEventListener("click", (e) => {
-      const btn = e.target.closest("button");
-      if (!btn) return;
-      btns.forEach((b) => b.setAttribute("aria-pressed", b === btn ? "true" : "false"));
-      applyFilters();
-    });
-  bindFilter("rarityFilter", rarityBtns);
-  bindFilter("statusFilter", statusBtns);
-
-  // Facet pills toggle independently (multi-select); the mode pair is a radio.
-  facetPanel.addEventListener("click", (e) => {
-    const btn = e.target.closest("button");
-    if (!btn) return;
-    if (btn.closest("#facetMode")) {
-      modeBtns.forEach((b) => b.classList.toggle("is-active", b === btn));
-    } else if (btn.id === "facetClear") {
-      facetBtns.forEach((b) => b.setAttribute("aria-pressed", "false"));
-      comboSel.value = "";
-    } else if (btn.closest(".facet-filter")) {
-      btn.setAttribute("aria-pressed", btn.getAttribute("aria-pressed") === "true" ? "false" : "true");
-    } else {
-      return;
-    }
-    applyFilters();
-  });
-  comboSel.addEventListener("change", applyFilters);
 
   // "12 / 325 owned" per section header plus one grand total, both ignoring
   // filters and refreshed on every change. The grand total counts each unit once
@@ -1676,12 +1674,19 @@ if (collectionBrowser) {
   const formSel = document.getElementById("collectionForm");
   restorePick(displaySel, DISPLAY_KEY);
   restorePick(formSel, FORM_KEY);
+  // The A-Z view's one row sorts by the name each chip shows, so it follows the form.
+  const alphaRows = viewSections.get(views.find((v) => v.dataset.view === "alpha")).flatMap((s) => s.rows);
+  const collator = new Intl.Collator(document.documentElement.lang || undefined);
   const applyDisplay = () => {
     const form = Number(formSel.value);
     for (const chip of allChips) {
       chip.catname.textContent = chip.forms.length
         ? chip.forms[Math.min(form, chip.forms.length - 1)]
         : chip.name;
+    }
+    for (const row of alphaRows) {
+      row.chips.sort((a, b) => collator.compare(a.catname.textContent, b.catname.textContent));
+      row.el.querySelector(".chips").append(...row.chips.map((chip) => chip.el));
     }
     syncCatDisplay(collectionBrowser, displaySel.value, form, views.find((v) => !v.hidden));
   };
@@ -1696,7 +1701,7 @@ if (collectionBrowser) {
 
   updateCounts();
   const savedView = localStorage.getItem(VIEW_KEY);
-  showView(["rarity", "sets"].includes(savedView) ? savedView : "dictionary");
+  showView(["rarity", "sets", "alpha"].includes(savedView) ? savedView : "dictionary");
 }
 
 // ---- Tier list: the form picker renames each unit and swaps its icon ----
@@ -1915,17 +1920,18 @@ document.addEventListener("keydown", (e) => {
   if (e.key === "Escape") for (const menu of headerMenus) menu.open = false;
 });
 
-// ---- Avatar picker: search every cat, pick one of its forms ------------------
-// An empty search lists your own cats (or the game's own order when you own none); a
-// search matches any form's name. Each form is a submit button posting "<unit id>/<form>".
+// ---- Avatar picker: every cat A-Z, filtered; pick one of its forms -----------
+// The search matches any form's name, on top of the Collection's filters. The matches
+// render a batch at a time, the next once you scroll near the end. Each form is a
+// submit button posting "<unit id>/<form>".
 const avatarPicker = document.getElementById("avatarPicker");
 if (avatarPicker) {
-  const AVATAR_LIMIT = 60;
+  const BATCH = 60;
   const cats = JSON.parse(document.getElementById("avatarCats").textContent);
-  const owned = new Set(JSON.parse(document.getElementById("avatarOwned").textContent));
   const searchEl = document.getElementById("avatarSearch");
   const grid = document.getElementById("avatarGrid");
   const hintEl = document.getElementById("avatarHint");
+  const endEl = document.getElementById("avatarMore");
   const esc = (text) => text.replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
   const formsOf = (cat) => (cat.forms.length ? cat.forms : [cat.name]);
   const card = (cat) =>
@@ -1938,23 +1944,30 @@ if (avatarPicker) {
       )
       .join("") +
     "</span></div>";
+  let shown = [];
+  const readFilters = catFilters(() => render());
+  const nearEnd = new IntersectionObserver(([entry]) => entry.isIntersecting && more(), {
+    rootMargin: "600px",
+  });
+  // Re-observing re-checks at once, so a batch that leaves the end in reach pulls the next.
+  const more = () => {
+    const at = grid.childElementCount;
+    if (at >= shown.length) return;
+    grid.insertAdjacentHTML("beforeend", shown.slice(at, at + BATCH).map(card).join(""));
+    nearEnd.unobserve(endEl);
+    nearEnd.observe(endEl);
+  };
   const render = () => {
     const query = searchEl.value.trim().toLowerCase();
-    let shown = query
-      ? cats.filter((cat) => formsOf(cat).concat(cat.name).some((n) => n.toLowerCase().includes(query)))
-      : cats.filter((cat) => owned.has(cat.id));
-    if (!query && !shown.length) shown = [...cats].sort((a, b) => a.id - b.id);
-    const more = shown.length - AVATAR_LIMIT;
-    grid.innerHTML = shown.slice(0, AVATAR_LIMIT).map(card).join("");
-    hintEl.textContent = !shown.length
-      ? gettext("No cats match.")
-      : more > 0
-        ? interpolate(gettext("%(more)s more - search to narrow it down."), { more }, true)
-        : query
-          ? ""
-          : owned.size
-            ? gettext("Your cats - search for any other.")
-            : "";
+    const filters = readFilters();
+    shown = cats.filter(
+      (cat) =>
+        (!query || formsOf(cat).concat(cat.name).some((n) => n.toLowerCase().includes(query))) &&
+        filters.keeps(cat.id, cat.rarity, cat.owned, cat.wanted),
+    );
+    grid.replaceChildren();
+    hintEl.hidden = shown.length > 0;
+    more();
   };
   // A form with no icon (not released yet) has nothing to pick: hide its button.
   grid.addEventListener("error", (e) => e.target.closest(".avatar-pick")?.remove(), true);

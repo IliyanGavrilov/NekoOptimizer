@@ -43,6 +43,18 @@ def test_collection_offers_both_views(client):
 
 
 @pytest.mark.django_db
+def test_the_a_to_z_view_lists_every_rarity_in_one_row_by_name(client):
+    unit("Tank Cat", rarity="Normal")
+    unit("Bahamut", rarity="Uber Super Rare")
+    unit("Moneko", rarity="Rare")
+
+    [(_, _, [(rarity, units)])] = client.get("/collection/").context["alpha_sections"]
+
+    assert rarity == ""
+    assert [u.name for u in units] == ["Bahamut", "Moneko", "Tank Cat"]
+
+
+@pytest.mark.django_db
 def test_collection_shows_a_named_set(client):
     unit("Ice Cat", set_name="The Dynamites")
     assert b"The Dynamites" in client.get("/collection/").content

@@ -91,3 +91,19 @@ def test_a_guest_is_sent_to_log_in_before_picking_an_avatar(client):
     response = client.get("/accounts/avatar/")
     assert response.status_code == 302
     assert response["Location"].startswith("/accounts/login/")
+
+
+def test_the_avatar_picker_lists_every_cat_a_to_z_with_its_marks(logged_in):
+    logged_in.get("/accounts/avatar/")
+    profile = Profile.objects.get()
+    profile.owned.add(Unit.objects.create(unit_id=3, name="Tank Cat", rarity="Normal"))
+    profile.wanted.add(Unit.objects.create(unit_id=2, name="Axe Cat", rarity="Normal"))
+    Unit.objects.create(unit_id=1, name="Bahamut")
+
+    cats = logged_in.get("/accounts/avatar/").context["cats"]
+
+    assert [(c["name"], c["rarity"], c["owned"], c["wanted"]) for c in cats] == [
+        ("Axe Cat", "Normal", False, True),
+        ("Bahamut", "Unknown", False, False),
+        ("Tank Cat", "Normal", True, False),
+    ]

@@ -2782,3 +2782,9 @@ msgstr "福引チケットから"
 
 msgid "Normal Cat Tickets first"
 msgstr "にゃんこチケットから"
+
+msgid "A–Z"
+msgstr "名前順"
+
+msgid "Every cat in alphabetical order of the form shown"
+msgstr "表示中の形態の名前順で、すべてのキャラを並べます"

@@ -2786,3 +2786,9 @@ msgstr "럭키 티켓 먼저"
 
 msgid "Normal Cat Tickets first"
 msgstr "냥코 티켓 먼저"
+
+msgid "A–Z"
+msgstr "이름순"
+
+msgid "Every cat in alphabetical order of the form shown"
+msgstr "표시 중인 형태의 이름순으로 모든 캐릭터를 나열합니다"

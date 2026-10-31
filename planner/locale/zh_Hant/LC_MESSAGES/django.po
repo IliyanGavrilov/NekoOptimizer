@@ -2760,3 +2760,9 @@ msgstr "先用招福轉蛋券"
 
 msgid "Normal Cat Tickets first"
 msgstr "先用貓咪轉蛋券"
+
+msgid "A–Z"
+msgstr "依名稱"
+
+msgid "Every cat in alphabetical order of the form shown"
+msgstr "依目前顯示形態的名稱排序所有貓咪"
