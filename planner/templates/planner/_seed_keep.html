@@ -1,17 +1,22 @@
 {% comment %}Where the page's seed is kept. app.js's seedKeeper posts every change to
 save_seed, so the seed lives on the profile rather than in one browser's storage; the
-held note shows when a shared link opened on someone else's seed.{% endcomment %}
-<div class="seed-keep" data-url="{% url 'save_seed' %}" data-kind="{{ kind }}"
+held note shows when a shared link opened on someone else's seed. ``kind`` says which
+of the two seeds this is, and ``finder`` where to look it up.{% endcomment %}
+{% load i18n %}<div class="seed-keep" data-url="{% url 'save_seed' %}" data-kind="{{ kind }}"
      data-saved="{{ saved.value|default_if_none:'' }}" data-saved-last="{{ saved.last }}">
   <p class="seed-status muted">
     <span class="seed-state" aria-live="polite"></span>
-    {% if user.is_authenticated %}Kept on your account, on every device.{% else %}Kept for this browser only &mdash; <a href="{% url 'signup' %}?next={{ request.path|urlencode }}">sign up</a> (free, no email) to keep it on every device.{% endif %}
-    Back it up too: write the number down, or <button type="button" class="link-btn seed-copy">copy a link to it</button>.
+    {% if kind == "normal" %}{% blocktranslate trimmed %}This is your <strong>Normal Capsule</strong> seed. Your rare gacha seed is a different number, set in the Planner.{% endblocktranslate %}{% else %}{% blocktranslate trimmed %}This is your <strong>rare gacha</strong> seed. Normal Capsules use a different number, on their own page.{% endblocktranslate %}{% endif %}
+    {% blocktranslate trimmed %}Don't know it? <a href="{{ finder }}" class="seed-find">Find it</a>.{% endblocktranslate %}
+  </p>
+  <p class="seed-status muted">
+    {% if user.is_authenticated %}{% translate "Saved to your account, on every device." %}{% else %}{% url 'signup' as signup_url %}{% blocktranslate trimmed with next=request.path|urlencode %}Saved in this browser only &mdash; <a href="{{ signup_url }}?next={{ next }}">sign up</a> (free, no email) to keep it on every device.{% endblocktranslate %}{% endif %}
+    {% blocktranslate trimmed %}Keep a backup: <button type="button" class="link-btn seed-copy">copy a link</button> that brings this seed back, and paste it into your notes.{% endblocktranslate %}
   </p>
   <div class="seed-held" hidden>
-    <p>You're looking at a shared seed (<strong class="seed-held-link"></strong>). Your own
-      seed (<strong class="seed-held-own"></strong>) stays as it is until you choose.</p>
-    <button type="button" class="seed-adopt">Make this my seed</button>
-    <button type="button" class="seed-return">Back to my seed</button>
+    <p>{% blocktranslate trimmed %}You're looking at a shared seed (<strong class="seed-held-link"></strong>). Your own
+      seed (<strong class="seed-held-own"></strong>) stays as it is until you choose.{% endblocktranslate %}</p>
+    <button type="button" class="seed-adopt">{% translate "Make this my seed" %}</button>
+    <button type="button" class="seed-return">{% translate "Back to my seed" %}</button>
   </div>
 </div>

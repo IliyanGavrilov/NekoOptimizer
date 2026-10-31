@@ -18,7 +18,7 @@ if (guideBtn) {
     ioMsg.hidden = false;
   };
   const sayErrors = (errors) =>
-    say(`<b>Not imported:</b><ul>${errors.map((e) => `<li>${esc(e)}</li>`).join("")}</ul>`);
+    say(`<b>${gettext("Not imported:")}</b><ul>${errors.map((e) => `<li>${esc(e)}</li>`).join("")}</ul>`);
 
   const load = async () => {
     if (!reader) {
@@ -72,9 +72,9 @@ if (guideBtn) {
     }
     // Pass 2: every shot under one grid, a full page's - they all came off one screen.
     const full = measured.find((m) => m.found & 2 && m.page[7] === 6 && m.page[8] === 4);
-    if (!full) return { error: "None of these shows a full Cat Guide page - is it the right screen?" };
+    if (!full) return { error: gettext("None of these shows a full Cat Guide page - is it the right screen?") };
     if (measured.some((m) => m.size !== full.size)) {
-      return { error: "Take every screenshot on the same device, in the same orientation." };
+      return { error: gettext("Take every screenshot on the same device, in the same orientation.") };
     }
     const grid = Array.from(full.page.slice(1, 7));
     const shots = [];
@@ -95,23 +95,27 @@ if (guideBtn) {
     guideFiles.value = "";
     if (!files.length) return;
 
-    say(`Reading ${files.length} screenshot${files.length === 1 ? "" : "s"}…`);
-    const { shots, error } = await read(files).catch(() => ({ error: "Couldn't open those images." }));
+    say(interpolate(ngettext("Reading %s screenshot…", "Reading %s screenshots…", files.length), [files.length]));
+    const { shots, error } = await read(files).catch(() => ({ error: gettext("Couldn't open those images.") }));
     if (error) return sayErrors([error]);
 
     const check = await post(shots, false);
-    if (!check.ok) return sayErrors(["Those screenshots couldn't be read."]);
+    if (!check.ok) return sayErrors([gettext("Those screenshots couldn't be read.")]);
     const verdict = await check.json();
     if (verdict.errors.length) return sayErrors(verdict.errors);
 
     const ok = confirm(
-      `The Cat Guide shows ${verdict.owned} of ${verdict.total} cats owned. Mark exactly those as owned? Your wishlist stays as it is.`,
+      interpolate(
+        gettext("The Cat Guide shows %(owned)s of %(total)s cats owned. Mark exactly those as owned? Your wishlist stays as it is."),
+        verdict,
+        true,
+      ),
     );
-    if (!ok) return say("Import cancelled - nothing changed.");
+    if (!ok) return say(gettext("Import cancelled - nothing changed."));
 
     const result = await (await post(shots, true)).json();
     if (!result.applied) return sayErrors(result.errors);
-    say(`Marked ${result.owned} cats owned from your Cat Guide. Reloading…`);
+    say(interpolate(gettext("Marked %s cats owned from your Cat Guide. Reloading…"), [result.owned]));
     location.reload();
   });
 }

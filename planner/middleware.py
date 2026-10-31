@@ -1,6 +1,7 @@
 from django.conf import settings
 from django.shortcuts import redirect
 from django.urls import Resolver404, get_script_prefix, resolve, set_script_prefix
+from django.utils import translation
 
 from neko.region import CODES, DEFAULT_REGION, using
 from planner.models import Profile
@@ -8,6 +9,9 @@ from planner.seo import REGION_PAGES
 
 PROFILE_COOKIE = "neko_profile"
 _COOKIE_AGE = 2 * 365 * 24 * 60 * 60
+
+# The interface language each game version opens in: the language its players' game is in.
+REGION_LANGUAGES = {"en": "en", "jp": "ja", "tw": "zh-hant", "kr": "ko"}
 
 
 def current_profile(request) -> Profile:
@@ -59,6 +63,13 @@ def region_path(path: str, code: str) -> str:
     return rest if code == DEFAULT_REGION else f"/{code}{rest}"
 
 
+def ui_language(request) -> str:
+    """The interface language: the one the visitor picked, else their game version's."""
+    picked = request.COOKIES.get(settings.LANGUAGE_COOKIE_NAME)
+
+    return picked if picked in dict(settings.LANGUAGES) else REGION_LANGUAGES[request.region]
+
+
 def _is_page(request, path: str) -> bool:
     """Whether a request opens one of the pages each version has its own copy of."""
     if request.method != "GET":
@@ -79,7 +90,8 @@ def profile_scope(get_response):
     before routing and set as the script prefix, so every reverse() and {% url %} stays
     inside the version. Opening a version's page makes it the profile's; an unprefixed
     page for someone whose profile is on another version sends them there, so the bare
-    address always comes back to your own version."""
+    address always comes back to your own version. The page speaks the version's
+    language too, unless the visitor picked another (ui_language)."""
 
     def middleware(request):
         url_region, request.path_info = split_region(request.path_info)
@@ -97,11 +109,13 @@ def profile_scope(get_response):
         base = get_script_prefix()
         if url_region:
             set_script_prefix(f"{base}{url_region}/")
+        request.LANGUAGE_CODE = ui_language(request)
         try:
-            with using(request.region):
+            with using(request.region), translation.override(request.LANGUAGE_CODE):
                 response = get_response(request)
         finally:
             set_script_prefix(base)
+        response.headers.setdefault("Content-Language", request.LANGUAGE_CODE)
         if (
             profile.pk
             and not profile.user_id

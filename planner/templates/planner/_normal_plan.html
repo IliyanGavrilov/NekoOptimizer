@@ -1,25 +1,25 @@
 {% comment %}The path planner's result: the haul, the spend, then the steps and the
 tracks table merged into one follow-along - the step list walks the plan and lights each
 move on the track (normal.js). Steps sit first so they stack above the track on narrow
-screens.{% endcomment %}
+screens.{% endcomment %}{% load i18n %}
 <div class="normal-plan">
   {% if plan.hits %}
     <p class="plan-haul">
       <strong>{{ plan.hits }}</strong> {{ plan.label }}
-      for
-      {% for s in plan.spent %}{% if not forloop.first %} + {% endif %}{{ s.rolls }} {{ s.name }}{{ s.rolls|pluralize }}{% endfor %}.
+      {% translate "for" %}
+      {% for s in plan.spent %}{% if not forloop.first %} + {% endif %}{{ s.text }}{% endfor %}.
       <button type="button" class="seek-use plan-apply" data-seed="{{ plan.seed_after }}"
               data-item="{{ plan.last_item }}"
-              title="You rolled this plan: the seed jumps to just after its final pull">I rolled it &mdash; advance my seed</button>
+              title="{% translate "You rolled this plan: the seed jumps to just after its final pull" %}">{% translate "I rolled it &mdash; advance my seed" %}</button>
     </p>
     <div class="plan-follow">
       <div class="plan-steps">
         <div class="steps-head">
-          <span class="steps-title">Steps</span>
-          <div class="step-nav" role="group" aria-label="Walk the plan step by step">
-            <button type="button" class="step-nav-btn step-prev" aria-label="Previous step">&#8249;</button>
+          <span class="steps-title">{% translate "Steps" %}</span>
+          <div class="step-nav" role="group" aria-label="{% translate "Walk the plan step by step" %}">
+            <button type="button" class="step-nav-btn step-prev" aria-label="{% translate "Previous step" %}">&#8249;</button>
             <span class="step-count" aria-live="polite"></span>
-            <button type="button" class="step-nav-btn step-next" aria-label="Next step">&#8250;</button>
+            <button type="button" class="step-nav-btn step-next" aria-label="{% translate "Next step" %}">&#8250;</button>
           </div>
         </div>
         <div class="step-list">
@@ -30,10 +30,10 @@ screens.{% endcomment %}
                 <span class="step-banner">{{ leg.name }}</span>
               </span>
               <span class="step-meta">
-                <span class="step-kind">{{ leg.pulls|length }}&times; pull{{ leg.pulls|length|pluralize }}</span>
-                <span class="step-cost">{{ leg.pulls|length }} {{ leg.currency }}{{ leg.pulls|length|pluralize }}</span>
+                <span class="step-kind">{{ leg.kind_text|safe }}</span>
+                <span class="step-cost">{{ leg.cost_text }}</span>
               </span>
-              {% if leg.targets %}<span class="step-gets">gets {% for p in leg.targets %}{% if not forloop.first %}, {% endif %}<span class="step-get{% if p.dark %} dark-catseye{% endif %}">{{ p.item }}</span>{% endfor %}</span>{% endif %}
+              {% if leg.targets %}<span class="step-gets">{% translate "gets" %} {% for p in leg.targets %}{% if not forloop.first %}, {% endif %}<span class="step-get{% if p.dark %} dark-catseye{% endif %}">{{ p.label }}</span>{% endfor %}</span>{% endif %}
             </button>
           {% endfor %}
         </div>
@@ -41,8 +41,8 @@ screens.{% endcomment %}
       <div class="plan-track">{% include "planner/_normal_tracks.html" %}</div>
     </div>
   {% else %}
-    <p class="seek-none">No {{ plan.label }} reachable with those rolls. Give a machine more
-      budget, or try again after your next real pulls move the seed.</p>
+    <p class="seek-none">{% blocktranslate trimmed with target=plan.label %}No {{ target }} reachable with those rolls. Give a machine more
+      budget, or try again after your next real pulls move the seed.{% endblocktranslate %}</p>
     {% include "planner/_normal_tracks.html" %}
   {% endif %}
 </div>

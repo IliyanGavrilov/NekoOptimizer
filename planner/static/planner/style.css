@@ -2637,3 +2637,54 @@ button, .chip, .entry, .banner-group, .banner-include, .step-card, .site-header 
 .guide-list li { margin: 0 0 1rem; }
 .guide-list a { font-weight: 600; font-size: 1.05rem; }
 .guide-list p { margin: 0.2rem 0 0; }
+
+/* The interface-language picker, sized to sit beside the version switcher. */
+.lang-switch { margin: 0; }
+.lang-switch select {
+  height: 1.7rem;
+  padding: 0 0.4rem;
+  border: 1px solid var(--line);
+  border-radius: var(--pill);
+  background: transparent;
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+.lang-switch select:hover { color: var(--ink); }
+
+/* The first visit's welcome strip, and the short how-it-works intros. */
+.welcome {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  max-width: calc(760px - 2.5rem);
+  margin: 1rem auto 0;
+  padding: 0.6rem 0.9rem;
+  border: 1px solid var(--accent);
+  border-radius: var(--radius);
+  font-size: 0.9rem;
+}
+.welcome[hidden] { display: none; }
+@media (max-width: 800px) { .welcome { margin: 1rem 1.25rem 0; } }
+.welcome p { margin: 0; flex: 1; }
+.welcome-close {
+  flex: 0 0 auto;
+  background: none;
+  border: 0;
+  padding: 0 0.2rem;
+  color: var(--muted);
+  font-size: 1.3rem;
+  line-height: 1;
+  cursor: pointer;
+}
+.welcome-close:hover { color: var(--ink); filter: none; }
+.page-intro p { margin: 0 0 0.4rem; }
+.quick-steps { margin: 0 0 0.4rem; padding-left: 1.3rem; }
+.quick-steps li { margin: 0.15rem 0; }
+.changelog { max-width: 44rem; }
+.changelog h2 { font-size: 1rem; margin: 1.4rem 0 0.4rem; }
+.changelog ul { padding-left: 1.2rem; }
+.changelog li { margin: 0.3rem 0; line-height: 1.55; }
+.terms dt { font-weight: 700; margin: 1rem 0 0.2rem; }
+.terms dd { margin: 0; line-height: 1.6; }

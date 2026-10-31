@@ -1,22 +1,22 @@
-{# One collection card: a rarity bin or a gacha set, with bulk own/wishlist buttons. #}
+{% load i18n %}{# One collection card: a rarity bin or a gacha set, with bulk own/wishlist buttons. #}
 <section class="collection-section" data-label="{{ label }}">
   <h3>
-    <button type="button" class="section-toggle" aria-expanded="true" title="Collapse / expand" aria-label="Collapse or expand this section">&#9662;</button>
+    <button type="button" class="section-toggle" aria-expanded="true" title="{% translate "Collapse / expand" %}" aria-label="{% translate "Collapse or expand this section" %}">&#9662;</button>
     {% if is_rarity %}
-      <span class="rarity" data-rarity="{{ label }}">{{ label }}</span>
+      <span class="rarity" data-rarity="{{ label }}">{% translate label %}</span>
     {% else %}
-      <span class="set-name">{{ label }}</span>
+      <span class="set-name">{% translate label %}</span>
     {% endif %}
     <span class="owned-count muted"></span>
     <span class="bulk-buttons">
-      <button type="button" class="bulk-own" title="Own all / clear" aria-label="Toggle owning every cat here">&#10003;</button>
-      <button type="button" class="bulk-star" title="Wishlist all / clear" aria-label="Toggle wishlisting every cat here">&#9733;</button>
+      <button type="button" class="bulk-own" title="{% translate "Own all / clear" %}" aria-label="{% translate "Toggle owning every cat here" %}">&#10003;</button>
+      <button type="button" class="bulk-star" title="{% translate "Wishlist all / clear" %}" aria-label="{% translate "Toggle wishlisting every cat here" %}">&#9733;</button>
     </span>
   </h3>
-  {% if note %}<p class="muted section-note">{{ note }}</p>{% endif %}
+  {% if note %}<p class="muted section-note">{% translate note %}</p>{% endif %}
   {% for rarity, units in rarities %}
     <div class="rarity-row" data-rarity="{{ rarity }}">
-      {% if not is_rarity %}<span class="rarity" data-rarity="{{ rarity }}">{{ rarity }}</span>{% endif %}
+      {% if not is_rarity %}<span class="rarity" data-rarity="{{ rarity }}">{% translate rarity %}</span>{% endif %}
       <div class="chips">
         {% for unit in units %}{{ unit.chip }}{% endfor %}
       </div>

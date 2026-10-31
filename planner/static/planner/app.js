@@ -84,11 +84,11 @@ function seedKeeper(box, { current, onRestore, linkFor }) {
     if (ok) {
       own = seed;
       ownLast = last;
-      say("Saved ✓", "ok");
+      say(gettext("Saved ✓"), "ok");
       return;
     }
     // Offline or a server hiccup: keep trying, so the seed never silently stays unsaved.
-    say("Not saved yet - retrying…", "error");
+    say(gettext("Not saved yet - retrying…"), "error");
     pending = [seed, last];
     timer = setTimeout(() => send(seed, last), 10000);
   }
@@ -101,7 +101,7 @@ function seedKeeper(box, { current, onRestore, linkFor }) {
   copy.addEventListener("click", async () => {
     const url = new URL(linkFor(), location.href).href;
     const copied = await copyToClipboard(url);
-    copy.textContent = copied ? "link copied ✓ - paste it somewhere safe" : url;
+    copy.textContent = copied ? gettext("link copied ✓ - paste it somewhere safe") : url;
   });
 
   const showHeld = (link) => {
@@ -116,7 +116,7 @@ function seedKeeper(box, { current, onRestore, linkFor }) {
     onRestore(own, ownLast);
   });
 
-  if (own) say("Saved ✓", "ok");
+  if (own) say(gettext("Saved ✓"), "ok");
 
   const keeper = {
     own: () => [own, ownLast],
@@ -144,7 +144,7 @@ function seedKeeper(box, { current, onRestore, linkFor }) {
       if (seed === own && last === ownLast && !pending) return;
       clearTimeout(timer);
       pending = [seed, last];
-      say("Saving…", "busy");
+      say(gettext("Saving…"), "busy");
       timer = setTimeout(() => send(seed, last), 600);
     },
   };
@@ -243,7 +243,7 @@ function setupFollowAlong(follow) {
     if (first) {
       const pin = document.createElement("span");
       pin.className = "step-here";
-      pin.textContent = "you are here";
+      pin.textContent = gettext("you are here");
       first.appendChild(pin);
       if (scroll) first.scrollIntoView({ block: "center", behavior: "smooth" });
     }
@@ -435,7 +435,7 @@ if (picker) {
       applySearch(); // rows that arrived mid-search must obey the current query
     } catch {
       pastLoaded = false; // reopen retries
-      if (note) note.textContent = "Couldn't load past banners - close and reopen to retry.";
+      if (note) note.textContent = gettext("Couldn't load past banners - close and reopen to retry.");
     }
   }
   if (pastGroup) {
@@ -470,8 +470,8 @@ if (picker) {
     }
     const n = bannerInputs.childElementCount;
     bannerCount.textContent = n
-      ? `Rolling ${n} banner${n === 1 ? "" : "s"}.`
-      : "No banners selected.";
+      ? interpolate(ngettext("Rolling %s banner.", "Rolling %s banners.", n), [n])
+      : gettext("No banners selected.");
     if (n === 0) sessionDayAnchor = null; // nothing selected -> the next pick sets the time
     bannerWarn.hidden = true; // a valid change clears any capsule-mismatch warning
     locateIdx = 0;
@@ -578,8 +578,10 @@ if (picker) {
   let sessionDayAnchor = null;
   function rejectCapsule(group) {
     bannerWarn.textContent =
-      "That Platinum/Legend Capsules run wasn't live during the selected banners' time. " +
-      "Pick the run that overlaps them, or clear the selection first.";
+      gettext(
+        "That Platinum/Legend Capsules run wasn't live during the selected banners' time. " +
+          "Pick the run that overlaps them, or clear the selection first.",
+      );
     bannerWarn.hidden = false;
     group.classList.remove("flash-blocked");
     void group.offsetWidth; // restart the pulse on a repeat click
@@ -872,9 +874,9 @@ if (picker) {
     const url = new URL(permalink(), location.href).href;
     history.replaceState(null, "", url);
     const copied = await copyToClipboard(url);
-    shareLink.textContent = copied ? "Link copied ✓" : "Link is in the address bar";
+    shareLink.textContent = copied ? gettext("Link copied ✓") : gettext("Link is in the address bar");
     clearTimeout(shareTimer);
-    shareTimer = setTimeout(() => (shareLink.textContent = "Copy link"), 2000);
+    shareTimer = setTimeout(() => (shareLink.textContent = gettext("Copy link")), 2000);
   });
 
   // ---- Narrowing a big breakdown ---------------------------------------
@@ -935,11 +937,12 @@ if (picker) {
       const html = resp.ok ? await runPlans(await resp.text()).catch(() => null) : null;
       if (html === null) {
         delete body.dataset.loading; // a failed fetch shouldn't wedge the row shut
-        body.querySelector(".plan-loading").textContent = "Couldn't work this plan out.";
+        body.querySelector(".plan-loading").textContent = gettext("Couldn't work this plan out.");
         return;
       }
       delete body.dataset.subset;
-      body.innerHTML = html || '<p class="muted">No plan for these cats within your resources.</p>';
+      body.innerHTML =
+        html || `<p class="muted">${gettext("No plan for these cats within your resources.")}</p>`;
       syncRollDisplay(); // this track carries icons too
       wireFollowAlong(body); // step list + track walk together
       watchLegends();
@@ -985,7 +988,7 @@ if (picker) {
       refreshTracks();
     }
     btn.disabled = true;
-    btn.textContent = "Applied ✓";
+    btn.textContent = gettext("Applied ✓");
   });
 
   // ---- Live A/B tracks: reload whenever the seed or banner set changes ----
@@ -1210,7 +1213,9 @@ if (picker) {
   const keepSeed = () => seedKeep.push(seedEl.value.trim(), lastCatEl.value);
   function syncUndo() {
     seedUndo.hidden = undoStack.length === 0;
-    if (undoStack.length) seedUndo.title = `Back to seed ${undoStack[undoStack.length - 1]}`;
+    if (undoStack.length) {
+      seedUndo.title = interpolate(gettext("Back to seed %s"), [undoStack[undoStack.length - 1]]);
+    }
   }
   function setSeed(value, cat) {
     const prev = seedEl.value.trim();
@@ -1299,14 +1304,14 @@ if (picker) {
     e.preventDefault();
     // Client-side checks first, with an inline note + flash instead of the
     // browser's "Please fill out this field" popup.
-    if (!seedEl.value.trim()) return setError("seedError", "Enter a seed to roll.", seedEl);
+    if (!seedEl.value.trim()) return setError("seedError", gettext("Enter a seed to roll."), seedEl);
     if (!anyBanner()) {
-      return setError("targetsError", "Select at least one banner to roll.", targetsSection);
+      return setError("targetsError", gettext("Select at least one banner to roll."), targetsSection);
     }
     if (inputs.childElementCount === 0 && !wishlistEl.checked && futureTargets.size === 0) {
       return setError(
         "targetsError",
-        "Pick a target cat, or tick \"search my wishlist\".",
+        gettext("Pick a target cat, or tick \"search my wishlist\"."),
         targetsSection,
       );
     }
@@ -1329,7 +1334,7 @@ if (picker) {
         if (field) {
           setError(fieldSlot[field][0], errors[field][0], fieldSlot[field][1]);
         } else {
-          const msg = (errors.__all__ || ["Check the form and try again."])[0];
+          const msg = (errors.__all__ || [gettext("Check the form and try again.")])[0];
           setError("targetsError", msg, targetsSection);
         }
       }
@@ -1537,11 +1542,17 @@ if (collectionBrowser) {
   function updateCounts() {
     for (const section of allSections) {
       const owned = section.chips.filter((c) => c.classList.contains("owned")).length;
-      section.count.textContent = `${owned} / ${section.chips.length} owned`;
+      section.count.textContent = interpolate(gettext("%(owned)s / %(total)s owned"), {
+        owned,
+        total: section.chips.length,
+      }, true);
     }
     const owned = rarityChips.filter((c) => c.classList.contains("owned")).length;
     const wished = rarityChips.filter((c) => c.classList.contains("wanted") && !c.classList.contains("owned")).length;
-    totalEl.textContent = `${owned} / ${rarityChips.length} owned${wished ? ` · ${wished} wishlisted` : ""}`;
+    const total = interpolate(gettext("%(owned)s / %(total)s owned"), { owned, total: rarityChips.length }, true);
+    totalEl.textContent = wished
+      ? `${total} · ${interpolate(gettext("%s wishlisted"), [wished])}`
+      : total;
   }
 
   // The same unit renders once per view; every change lands on all its copies.
@@ -1627,7 +1638,7 @@ if (collectionBrowser) {
     const file = importFile.files[0];
     if (!file) return;
     const ok = confirm(
-      "Replace your collection with this file? Your current owned and wishlist marks will be overwritten.",
+      gettext("Replace your collection with this file? Your current owned and wishlist marks will be overwritten."),
     );
     importFile.value = "";
     if (!ok) return;
@@ -1638,10 +1649,13 @@ if (collectionBrowser) {
       headers: { "X-CSRFToken": token },
       body,
     });
-    if (!resp.ok) return showIoMsg("Import failed — that isn't a Neko collection file.");
+    if (!resp.ok) return showIoMsg(gettext("Import failed — that isn't a Neko collection file."));
     const { owned, wanted, missing } = await resp.json();
-    const skipped = missing.length ? `, ${missing.length} not in the catalogue` : "";
-    showIoMsg(`Imported ${owned} owned, ${wanted} wishlisted${skipped}. Reloading…`);
+    const done = interpolate(gettext("Imported %(owned)s owned, %(wanted)s wishlisted"), { owned, wanted }, true);
+    const skipped = missing.length
+      ? interpolate(gettext(", %s not in the catalogue"), [missing.length])
+      : "";
+    showIoMsg(`${done}${skipped}. ${gettext("Reloading…")}`);
     location.reload();
   });
 
@@ -1805,6 +1819,33 @@ function watchLegends() {
   if (!legends.length) document.documentElement.style.setProperty("--legend-h", "0px");
 }
 
+// The first visit's welcome strip, until it's dismissed. Storage can be off (private
+// mode); then it simply shows again next time.
+const welcome = document.getElementById("welcome");
+if (welcome) {
+  const WELCOME_KEY = "neko:welcomed";
+  let seen = false;
+  try {
+    seen = localStorage.getItem(WELCOME_KEY) === "1";
+  } catch {
+    seen = false;
+  }
+  welcome.hidden = seen;
+  welcome.querySelector(".welcome-close").addEventListener("click", () => {
+    welcome.hidden = true;
+    try {
+      localStorage.setItem(WELCOME_KEY, "1");
+    } catch {
+      /* nothing to remember it in */
+    }
+  });
+}
+
+// A picker that is a whole form (the header's language select): choosing submits it.
+document.querySelectorAll("select[data-autosubmit]").forEach((select) => {
+  select.addEventListener("change", () => select.form.submit());
+});
+
 // ---- Theme: light / dark / match-the-device, persisted -----------------
 // The <head> bootstrap already applied the saved choice before first paint;
 // this wires the header buttons and follows the OS while on "system".
@@ -1915,39 +1956,41 @@ if (catPopup) {
     [...formsEl.children].forEach((fig, i) => fig.classList.toggle("selected", !!form && i === index));
     if (!form) return;
     gridEl.replaceChildren(
-      statCell("HP", fmt(form.hp)),
-      statCell("Attack", fmt(form.atk)),
-      statCell("DPS", form.dps === null ? "?" : fmt(form.dps)),
-      statCell("Attack rate", form.freq === null ? "?" : `${form.freq}s`),
-      statCell("Range", form.range),
-      statCell("Attack type", form.area ? "Area" : "Single"),
-      statCell("Recharge", `${form.recharge}s`),
-      statCell("Speed", form.speed),
-      statCell("Knockbacks", form.kb),
-      statCell("Cost", fmt(form.cost)),
+      statCell(gettext("HP"), fmt(form.hp)),
+      statCell(gettext("Attack"), fmt(form.atk)),
+      statCell(gettext("DPS"), form.dps === null ? "?" : fmt(form.dps)),
+      statCell(gettext("Attack rate"), form.freq === null ? "?" : `${form.freq}s`),
+      statCell(gettext("Range"), form.range),
+      statCell(gettext("Attack type"), form.area ? gettext("Area") : gettext("Single")),
+      statCell(gettext("Recharge"), `${form.recharge}s`),
+      statCell(gettext("Speed"), form.speed),
+      statCell(gettext("Knockbacks"), form.kb),
+      statCell(gettext("Cost"), fmt(form.cost)),
     );
     chipsEl.replaceChildren();
     form.targets.forEach((trait) => chipsEl.appendChild(chip(trait, "target")));
     form.effects.forEach((effect) => chipsEl.appendChild(chip(effect)));
     if (form.immune.length) {
-      chipsEl.appendChild(chip(`Immune: ${form.immune.join(", ")}`, "immune"));
+      chipsEl.appendChild(chip(interpolate(gettext("Immune: %s"), [form.immune.join(", ")]), "immune"));
     }
-    noteEl.textContent = `Lv ${info.stats.level} stats with max treasures; cost in chapter 2.`;
+    noteEl.textContent = interpolate(gettext("Lv %s stats with max treasures; cost in chapter 2."), [
+      info.stats.level,
+    ]);
   }
 
   async function openFor(name, uid) {
     const info = await load(name, uid);
     if (!info) return; // a cat not in the catalogue yet: no forms or links to show
     nameEl.textContent = info.name;
-    rarityEl.textContent = info.rarity;
+    rarityEl.textContent = info.rarity_label || info.rarity;
     rarityEl.dataset.rarity = info.rarity;
     rarityEl.hidden = !info.rarity;
     tierEl.hidden = !info.tier;
     if (info.tier) {
       tierEl.dataset.band = info.tier.tier[0];
       tierEl.textContent = info.tier.up
-        ? `Tier ${info.tier.tier} · ${info.tier.up_note}`
-        : `Tier ${info.tier.tier}`;
+        ? `${interpolate(gettext("Tier %s"), [info.tier.tier])} · ${info.tier.up_note}`
+        : interpolate(gettext("Tier %s"), [info.tier.tier]);
     }
     linksEl.replaceChildren(
       ...(info.links || []).map((link) => {
@@ -2065,7 +2108,7 @@ if (resBoard) {
         chip.textContent = option.forms[Math.min(form, option.forms.length - 1)] || option.name;
         if (planned.has(String(option.id))) {
           chip.classList.add("on");
-          chip.title = "Already on your list";
+          chip.title = gettext("Already on your list");
         }
         return chip;
       }),

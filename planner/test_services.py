@@ -703,11 +703,11 @@ def test_build_tracks_gilds_a_browse_target_on_its_dupe_branch():
 def test_build_tracks_future_uber_cell_shows_the_short_label():
     banner_pulls = {"X": [TrackPull(1, "A", "Future Uber 1 @ Epicfest", U)]}
     entry = build_tracks(banner_pulls, {}, {})["rows"][0]["a"][0]
-    # The banner-qualified name is the identity; the cell displays the short label (its
-    # column already names the banner). A real cell carries no separate label.
-    assert (entry["future"], entry["future_label"]) == (True, "Future Uber 1")
+    # The banner-qualified name is the identity; the cell shows just its number, worded as
+    # "Future Uber 1" (its column already names the banner). A real cell carries none.
+    assert (entry["future"], entry["future_n"]) == (True, "1")
     assert (
-        "future_label"
+        "future_n"
         not in build_tracks({"X": [TrackPull(1, "A", "Bahamut", U)]}, {}, {})["rows"][0]["a"][0]
     )
 
@@ -715,11 +715,11 @@ def test_build_tracks_future_uber_cell_shows_the_short_label():
 def test_build_tracks_lists_added_future_ubers_as_toggle_chips():
     banner_pulls = {"Epicfest": [TrackPull(1, "A", "Bahamut", U)]}
     legend = build_tracks(banner_pulls, {}, {}, future={"Epicfest": 2})["legend"][0]
-    # Each added future uber is a toggle chip: the short label to show, the banner-qualified
+    # Each added future uber is a toggle chip: its number for the label, the banner-qualified
     # name (unique per banner) to search on.
-    assert [(c["label"], c["name"]) for c in legend["future_chips"]] == [
-        ("Future Uber 1", "Future Uber 1 @ Epicfest"),
-        ("Future Uber 2", "Future Uber 2 @ Epicfest"),
+    assert [(c["n"], c["name"]) for c in legend["future_chips"]] == [
+        (1, "Future Uber 1 @ Epicfest"),
+        (2, "Future Uber 2 @ Epicfest"),
     ]
     # No padding -> no chips.
     assert build_tracks(banner_pulls, {}, {}, future={})["legend"][0]["future_chips"] == []
@@ -1266,7 +1266,7 @@ def test_build_tracks_guaranteed_dupe_line_can_be_a_future_uber():
     cell = build_tracks(
         banner_pulls, rerolls, {}, guaranteed=guaranteed, guaranteed_rerolls=guaranteed_rerolls
     )["rows"][1]["ga"][0]
-    assert (cell["alt"]["future"], cell["alt"]["future_label"]) == (True, "Future Uber 1")
+    assert (cell["alt"]["future"], cell["alt"]["future_n"]) == (True, "1")
 
 
 def test_build_tracks_every_entry_carries_its_own_dice_seed():

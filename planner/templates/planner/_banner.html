@@ -1,12 +1,12 @@
-<details class="banner-group" data-title="{{ title }}"{% if is_open %} open{% endif %}{% if dates %} data-start="{{ dates.iso_start }}" data-end="{{ dates.iso_end }}"{% endif %}>
+{% load i18n %}<details class="banner-group" data-title="{{ title }}"{% if is_open %} open{% endif %}{% if dates %} data-start="{{ dates.iso_start }}" data-end="{{ dates.iso_end }}"{% endif %}>
   <summary>
-    {% if dates %}<button type="button" class="banner-include" aria-pressed="false" data-banner="{{ banner }}" data-run="{{ dates.iso_start }}" title="Roll this banner's session" aria-label="Include banner">&plus;</button>{% endif %}
-    <span class="banner-name">{{ title }}{% if title != banner %} <span class="banner-sub">{{ banner }}</span>{% endif %}{% if new %} <span class="banner-new" title="First appearance anywhere in the game">New: {% for name in new %}<b>{{ name }}</b>{% if not forloop.last %}, {% endif %}{% endfor %}</span>{% endif %}</span>
+    {% if dates %}<button type="button" class="banner-include" aria-pressed="false" data-banner="{{ banner }}" data-run="{{ dates.iso_start }}" title="{% translate "Roll this banner's session" %}" aria-label="{% translate "Include banner" %}">&plus;</button>{% endif %}
+    <span class="banner-name">{{ title }}{% if title != banner %} <span class="banner-sub">{{ banner }}</span>{% endif %}{% if new %} <span class="banner-new" title="{% translate "First appearance anywhere in the game" %}">{% translate "New:" %} {% for name in new %}<b>{{ name }}</b>{% if not forloop.last %}, {% endif %}{% endfor %}</span>{% endif %}</span>
     {% if dates %}<span class="dates">{{ dates.label }}</span>{% endif %}
   </summary>
   {% for rarity, cats in rarities %}
     <div class="rarity-row" data-rarity-row>
-      <span class="rarity" data-rarity="{{ rarity }}">{{ rarity }}</span>
+      <span class="rarity" data-rarity="{{ rarity }}">{% translate rarity %}</span>
       <div class="chips">
         {% for cat in cats %}{{ cat.chip }}{% endfor %}
       </div>

@@ -157,3 +157,9 @@ def test_normal_plan_rejects_bad_posts(client):
 )
 def test_normal_posts_reject_get(client, path):
     assert client.get(path).status_code == 405
+
+
+def test_the_normal_seed_box_says_which_seed_and_opens_its_finder(client):
+    content = client.get("/normal/").content.decode()
+    assert "Normal Capsule</strong> seed" in content
+    assert 'href="#normalFinder" class="seed-find"' in content

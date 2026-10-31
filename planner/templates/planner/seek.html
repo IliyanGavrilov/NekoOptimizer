@@ -1,37 +1,39 @@
 {% extends "planner/base.html" %}
-{% load static %}
+{% load i18n static %}
 
 {% block content %}
-  <h1>Seed Finder</h1>
+  <h1>{% translate "Seed Finder" %}</h1>
   <p class="muted">
-    Don't know your seed? Roll the gacha in your game, record what you get, and the
-    finder replays every possible seed until it finds the one that deals exactly
-    those cats.
+    {% blocktranslate trimmed %}
+      Don't know your seed? Roll the gacha in your game, record what you get, and the
+      finder replays every possible seed until it finds the one that deals exactly
+      those cats.
+    {% endblocktranslate %}
   </p>
   <details class="advanced seek-howto">
-    <summary>How to record your rolls</summary>
+    <summary>{% translate "How to record your rolls" %}</summary>
     <ul>
-      <li>Pick the gacha event you rolled on (e.g. Ultra Souls or Uberfest). Rare
-        (gold) tickets or cat food &mdash; both work the same.</li>
-      <li>Roll several times &mdash; preferably 7 to 10 &mdash; and record the results.
+      <li>{% blocktranslate trimmed %}Pick the gacha event you rolled on (e.g. Ultra Souls or Uberfest). Rare
+        (gold) tickets or cat food &mdash; both work the same.{% endblocktranslate %}</li>
+      <li>{% blocktranslate trimmed %}Roll several times &mdash; preferably 7 to 10 &mdash; and record the results.
         The more rolls, the more certain the answer. Fill them in below in the exact
-        order you rolled them.</li>
-      <li>If you did an 11-roll on a guaranteed event, or a 15-roll (3+5+7) step-up:
+        order you rolled them.{% endblocktranslate %}</li>
+      <li>{% blocktranslate trimmed %}If you did an 11-roll on a guaranteed event, or a 15-roll (3+5+7) step-up:
         <strong>don't include the guaranteed uber</strong> &mdash; enter the 10 real
-        rolls before it, and nothing rolled after it.</li>
-      <li>Short on tickets? Enter {{ min_rolls }} rolls and search. If several seeds
+        rolls before it, and nothing rolled after it.{% endblocktranslate %}</li>
+      <li>{% blocktranslate trimmed %}Short on tickets? Enter {{ min_rolls }} rolls and search. If several seeds
         match, roll one more cat, add it, and search again &mdash; repeat until one
-        seed remains.</li>
-      <li>Avoid events that repeat the same cat in their pool (e.g. Metal Busters or
+        seed remains.{% endblocktranslate %}</li>
+      <li>{% blocktranslate trimmed %}Avoid events that repeat the same cat in their pool (e.g. Metal Busters or
         some collabs): the duplicate slots are indistinguishable, so you'd have to try
-        each copy in the list one by one.</li>
-      <li>You only need to find your seed once &mdash; from then on the planner tracks
-        it as you roll.</li>
-      <li>New to this? The <a href="{% url 'guide' 'find-your-seed' %}">step-by-step
-        guide</a> walks through it.</li>
-      <li>Looking for your <strong>Normal Capsule</strong> seed? That's a separate seed
-        &mdash; use the finder on the <a href="{% url 'normal_capsules' %}">Normal
-        Capsules</a> page instead.</li>
+        each copy in the list one by one.{% endblocktranslate %}</li>
+      <li>{% blocktranslate trimmed %}You only need to find your seed once &mdash; from then on the planner tracks
+        it as you roll.{% endblocktranslate %}</li>
+      <li>{% url 'guide' 'find-your-seed' as guide_url %}{% blocktranslate trimmed %}New to this? The <a href="{{ guide_url }}">step-by-step
+        guide</a> walks through it.{% endblocktranslate %}</li>
+      <li>{% url 'normal_capsules' as normal_url %}{% blocktranslate trimmed %}Looking for your <strong>Normal Capsule</strong> seed? That's a separate seed
+        &mdash; use the finder on the <a href="{{ normal_url }}">Normal
+        Capsules</a> page instead.{% endblocktranslate %}</li>
     </ul>
   </details>
 
@@ -45,10 +47,10 @@
         data-max-rolls="{{ max_rolls }}">
     {% csrf_token %}
 
-    <label class="seek-label" for="seekBannerSearch">Banner you rolled on</label>
+    <label class="seek-label" for="seekBannerSearch">{% translate "Banner you rolled on" %}</label>
     <div id="seekBanner">
       <div class="search-wrap">
-        <input type="search" id="seekBannerSearch" placeholder="Search banners&hellip;"
+        <input type="search" id="seekBannerSearch" placeholder="{% translate "Search banners…" %}"
                autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
       </div>
       <input type="hidden" id="seekBannerValue">
@@ -58,13 +60,13 @@
         {% for label, runs in run_groups %}
           {% if runs %}
             {% if forloop.first %}
-              <h2 class="group">{{ label }} <span class="count-pill">{{ runs|length }}</span></h2>
+              <h2 class="group">{% translate label %} <span class="count-pill">{{ runs|length }}</span></h2>
               {% for value, title, name, dates in runs %}
                 {% include "planner/_seek_run.html" %}
               {% endfor %}
             {% else %}
               <details class="group-drop">
-                <summary>{{ label }} <span class="count-pill">{{ runs|length }}</span></summary>
+                <summary>{% translate label %} <span class="count-pill">{{ runs|length }}</span></summary>
                 {% for value, title, name, dates in runs %}
                   {% include "planner/_seek_run.html" %}
                 {% endfor %}
@@ -72,25 +74,25 @@
             {% endif %}
           {% endif %}
         {% endfor %}
-        <p class="muted seek-no-match" hidden>No banners match.</p>
+        <p class="muted seek-no-match" hidden>{% translate "No banners match." %}</p>
       </div>
     </div>
 
-    <p class="muted hint" id="seekPickHint">Pick the banner above &mdash; its cats then
-      appear here for you to fill in, one search box per pull.</p>
+    <p class="muted hint" id="seekPickHint">{% blocktranslate trimmed %}Pick the banner above &mdash; its cats then
+      appear here for you to fill in, one search box per pull.{% endblocktranslate %}</p>
 
     <div id="seekEntry" hidden>
-      <p class="muted hint">Your pulls, oldest first &mdash; search each cat you got:</p>
+      <p class="muted hint">{% translate "Your pulls, oldest first — search each cat you got:" %}</p>
       <ul class="seek-checklist muted">
-        <li>The banner above is the one you actually rolled on.</li>
-        <li>Pulls are in the order you got them, oldest first.</li>
-        <li>No guaranteed Uber in the list (the bonus one from an 11-draw).</li>
-        <li>Nothing else was rolled in between &mdash; not even on another banner.</li>
+        <li>{% translate "The banner above is the one you actually rolled on." %}</li>
+        <li>{% translate "Pulls are in the order you got them, oldest first." %}</li>
+        <li>{% translate "No guaranteed Uber in the list (the bonus one from an 11-draw)." %}</li>
+        <li>{% translate "Nothing else was rolled in between — not even on another banner." %}</li>
       </ul>
       <ol id="seekRolls" class="seek-rolls"></ol>
       <div class="seek-actions">
-        <button type="button" id="seekAddRow" class="seek-add">+ one more roll</button>
-        <button type="submit" id="seekGo">Find my seed</button>
+        <button type="button" id="seekAddRow" class="seek-add">+ {% translate "one more roll" %}</button>
+        <button type="submit" id="seekGo">{% translate "Find my seed" %}</button>
       </div>
     </div>
     <div id="seekCheck" class="seek-check" hidden aria-live="polite"></div>
@@ -99,10 +101,27 @@
 
   <div id="seekProgress" class="seek-progress" hidden role="status" aria-live="polite">
     <progress id="seekBar" max="1" value="0"></progress>
-    <p id="seekProgressText">Searching&hellip;</p>
+    <p id="seekProgressText">{% translate "Searching…" %}</p>
   </div>
 
   <div id="seekResults" class="seek-results" hidden aria-live="polite"></div>
+  <template id="seekNoneTpl">
+    <div class="seek-none">
+      <p>{% translate "No seed deals exactly those pulls. Almost always one of these:" %}</p>
+      <ul>
+        <li>{% blocktranslate trimmed %}<strong>A guaranteed Uber is in the list.</strong> The bonus Uber from a
+          guaranteed 11-draw (or the 15th roll of a step-up) doesn't come from the normal
+          roll sequence - remove it and anything after it.{% endblocktranslate %}</li>
+        <li>{% blocktranslate trimmed %}<strong>The order is off.</strong> Enter the cats exactly in the order you got
+          them, oldest first.{% endblocktranslate %}</li>
+        <li>{% blocktranslate trimmed %}<strong>Something was rolled in between.</strong> Every rare banner shares one
+          seed, so a roll on another banner in the middle breaks the chain.{% endblocktranslate %}</li>
+        <li>{% blocktranslate trimmed %}<strong>Wrong banner or run.</strong> Pick the exact event you rolled on - the
+          same name can come back with a different lineup.{% endblocktranslate %}</li>
+        <li>{% blocktranslate trimmed %}<strong>A mis-picked cat.</strong> Look-alike names are easy to swap.{% endblocktranslate %}</li>
+      </ul>
+    </div>
+  </template>
 {% endblock %}
 
 {% block scripts %}

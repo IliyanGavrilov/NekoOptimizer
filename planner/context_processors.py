@@ -1,14 +1,25 @@
 from django.conf import settings
+from django.utils.translation import gettext_lazy as _
 
-from neko.region import CODES, DEFAULT_REGION, REGIONS, spec
+from neko.region import CODES, DEFAULT_REGION, REGIONS
 from planner.links import PAGE_LINKS
 from planner.middleware import region_path, split_region
 from planner.seo import HREFLANG, REGION_PAGES, home_graph, ld_json, page_meta
 
+# The switcher's version names, in the interface language.
+REGION_NAMES = {"en": _("English"), "jp": _("Japan"), "tw": _("Taiwan"), "kr": _("Korea")}
+
 
 def region(request) -> dict:
-    """The active game version and the switcher's options, for the shared header."""
-    return {"region": getattr(request, "region", DEFAULT_REGION), "regions": REGIONS}
+    """The active game version and the switcher's options, plus the interface language the
+    visitor picked ("" when the page follows its version), for the shared header."""
+    picked = request.COOKIES.get(settings.LANGUAGE_COOKIE_NAME, "")
+
+    return {
+        "region": getattr(request, "region", DEFAULT_REGION),
+        "regions": [(option.code, REGION_NAMES[option.code]) for option in REGIONS],
+        "language_pick": picked if picked in dict(settings.LANGUAGES) else "",
+    }
 
 
 def icons(request) -> dict:
@@ -39,7 +50,6 @@ def seo(request) -> dict:
 
     return {
         "page_meta": page_meta(url_name),
-        "region_label": spec(url_region).label if regional and url_region else "",
         "site_url": settings.SITE_URL,
         "canonical_url": f"{settings.SITE_URL}{request.path if regional else path}",
         "alternates": alternates,

@@ -99,6 +99,7 @@ TEMPLATES = [
         "OPTIONS": {
             "context_processors": [
                 "django.template.context_processors.request",
+                "django.template.context_processors.i18n",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
                 "planner.context_processors.region",
@@ -148,7 +149,13 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/6.0/topics/i18n/
 
-LANGUAGE_CODE = "en-us"
+LANGUAGE_CODE = "en"
+# The interface languages: English plus each other game version's own. A page opens in its
+# version's language (planner.middleware) unless the visitor picked one in the header.
+LANGUAGES = [("en", "English"), ("ja", "日本語"), ("zh-hant", "繁體中文"), ("ko", "한국어")]
+LANGUAGE_COOKIE_NAME = "neko_lang"
+LANGUAGE_COOKIE_AGE = 2 * 365 * 24 * 60 * 60
+LOCALE_PATHS = [BASE_DIR / "planner" / "locale"]
 
 TIME_ZONE = "UTC"
 

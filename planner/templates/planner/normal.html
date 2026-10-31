@@ -1,29 +1,32 @@
 {% extends "planner/base.html" %}
-{% load static %}
+{% load i18n static %}
 
 {% block content %}
-  <h1>Normal Capsules</h1>
+  <h1>{% translate "Normal Capsules" %}</h1>
   <p class="muted">
-    The Normal Cat Capsule runs on its <strong>own seed</strong>, separate from the rare
-    gacha the planner tracks. Every normal-side machine (Catfruit, Catseye, Lucky
-    Tickets&hellip;) reads the same normal seed, so one table predicts them all &mdash;
-    including which pulls land a <span class="item dark-catseye">Dark Catseye</span>
-    during a Catseye Capsules event.
+    {% blocktranslate trimmed %}
+      The Normal Cat Capsule runs on its <strong>own seed</strong>, separate from the rare
+      gacha the planner tracks. Every normal-side machine (Catfruit, Catseye, Lucky
+      Tickets&hellip;) reads the same normal seed, so one table predicts them all &mdash;
+      including which pulls land a <span class="item dark-catseye">Dark Catseye</span>
+      during a Catseye Capsules event.
+    {% endblocktranslate %}
   </p>
+  <p class="muted">{% url 'guide' 'normal-capsules' as guide_url %}{% blocktranslate trimmed %}New here? <a href="{{ guide_url }}">The Normal Capsules guide</a> takes two minutes.{% endblocktranslate %}</p>
 
   <details class="advanced seek-howto" id="normalFinder">
-    <summary>Find my normal seed</summary>
+    <summary>{% translate "Find my normal seed" %}</summary>
     <ul>
-      <li>Roll the plain Normal Capsules several times &mdash; 8 to 12 works best &mdash;
+      <li>{% blocktranslate trimmed %}Roll the plain Normal Capsules several times &mdash; 8 to 12 works best &mdash;
         and record what you get, in order. They cost pocket XP, so this is the cheap way
-        (the event machines would burn 12+ tickets for the same answer).</li>
-      <li>The finder searches the pool your <strong>Superfeline unlocked</strong>
+        (the event machines would burn 12+ tickets for the same answer).{% endblocktranslate %}</li>
+      <li>{% blocktranslate trimmed %}The finder searches the pool your <strong>Superfeline unlocked</strong>
         toggle (next to the machine picks below) says you have &mdash; the pools
-        differ, so if the search finds nothing, check that toggle first.</li>
-      <li>The pulls must be consecutive: nothing rolled in between on any normal-side
-        machine.</li>
-      <li>You only need this once &mdash; from then on the tracker follows your seed as
-        you click the dice.</li>
+        differ, so if the search finds nothing, check that toggle first.{% endblocktranslate %}</li>
+      <li>{% blocktranslate trimmed %}The pulls must be consecutive: nothing rolled in between on any normal-side
+        machine.{% endblocktranslate %}</li>
+      <li>{% blocktranslate trimmed %}You only need this once &mdash; from then on the tracker follows your seed as
+        you click the dice.{% endblocktranslate %}</li>
     </ul>
     <form id="nseekForm" class="seek-panel" novalidate
           data-start-url="{% url 'normal_seek_start' %}"
@@ -31,20 +34,35 @@
           data-min-rolls="{{ min_rolls }}"
           data-max-rolls="{{ max_rolls }}">
       {% csrf_token %}
-      <p class="muted hint">Searching the <strong id="nseekPool">Normal Capsules</strong>
-        pool. Your pulls, oldest first &mdash; search each item you got:</p>
+      <p class="muted hint">{% blocktranslate trimmed %}Searching the <strong id="nseekPool">Normal Capsules</strong>
+        pool. Your pulls, oldest first &mdash; search each item you got:{% endblocktranslate %}</p>
       <ol id="nseekRolls" class="seek-rolls"></ol>
       <div class="seek-actions">
-        <button type="button" id="nseekAddRow" class="seek-add">+ one more roll</button>
-        <button type="submit" id="nseekGo">Find my seed</button>
+        <button type="button" id="nseekAddRow" class="seek-add">+ {% translate "one more roll" %}</button>
+        <button type="submit" id="nseekGo">{% translate "Find my seed" %}</button>
       </div>
       <p class="field-error" id="nseekError" aria-live="polite"></p>
     </form>
     <div id="nseekProgress" class="seek-progress" hidden role="status" aria-live="polite">
       <progress id="nseekBar" max="1" value="0"></progress>
-      <p id="nseekProgressText">Searching&hellip;</p>
+      <p id="nseekProgressText">{% translate "Searching…" %}</p>
     </div>
     <div id="nseekResults" class="seek-results" hidden aria-live="polite"></div>
+    <template id="nseekNoneTpl">
+      <div class="seek-none">
+        <p>{% translate "No seed deals exactly those pulls. Almost always one of these:" %}</p>
+        <ul>
+          <li>{% blocktranslate trimmed %}<strong>Superfeline is set wrong.</strong> Once Superfeline is in your capsule
+            pool every roll changes - tick "Superfeline unlocked" only if it is.{% endblocktranslate %}</li>
+          <li>{% blocktranslate trimmed %}<strong>The order is off.</strong> Enter the items exactly in the order you
+            got them, oldest first.{% endblocktranslate %}</li>
+          <li>{% blocktranslate trimmed %}<strong>Something was rolled in between.</strong> The Catfruit, Catseye and
+            Lucky Ticket machines share this seed, so a roll on any of them in the middle
+            breaks the chain.{% endblocktranslate %}</li>
+          <li>{% blocktranslate trimmed %}<strong>A mis-picked item.</strong> Look-alike names are easy to swap.{% endblocktranslate %}</li>
+        </ul>
+      </div>
+    </template>
   </details>
 
   <form id="normalForm" data-tracks-url="{% url 'normal_tracks' %}"
@@ -53,95 +71,92 @@
         data-engine-worker-url="{% static 'planner/engine-worker.js' %}">
     {% csrf_token %}
     <div class="roll-options">
-      <label class="opt">Normal seed
+      <label class="opt">{% translate "Normal seed" %}
         <input type="number" id="normalSeed" min="0" autocomplete="off"
-               placeholder="e.g. 1515525936">
+               placeholder="{% translate "e.g. 1515525936" %}">
       </label>
-      <span class="normal-machines" role="group" aria-label="Capsule machines">
+      <span class="normal-machines" role="group" aria-label="{% translate "Capsule machines" %}">
         <label class="machine-toggle">
           <input type="checkbox" id="machineNormal" checked>
-          Normal Capsules
+          {% translate "Normal Capsules" %}
         </label>
         <label class="machine-toggle superfeline-toggle"
-               title="Once Superfeline joins your capsule pool it never leaves - this is about your save, not a viewing choice. It changes every roll, so get it right.">
+               title="{% translate "Once Superfeline joins your capsule pool it never leaves - this is about your save, not a viewing choice. It changes every roll, so get it right." %}">
           <input type="checkbox" id="superfeline" checked>
-          Superfeline unlocked
+          {% translate "Superfeline unlocked" %}
         </label>
         {% for banner in banners %}
           {% if banner.key != "n" and banner.key != "np" %}
             <label class="machine-toggle">
               <input type="checkbox" value="{{ banner.key }}"
                      {% if banner.key in default_keys %}checked{% endif %}>
-              {{ banner.name }}
+              {{ banner.label }}
             </label>
           {% endif %}
         {% endfor %}
       </span>
     </div>
-    {% include "planner/_seed_keep.html" with kind="normal" saved=saved_seed %}
+    {% include "planner/_seed_keep.html" with kind="normal" saved=saved_seed finder="#normalFinder" %}
 
     <details class="advanced" id="normalPlanPanel">
-      <summary>Plan a path &mdash; most Dark Catseyes for your rolls</summary>
-      <p class="muted hint">Enter your ticket stashes &mdash; <strong>Normal Cat
-        Tickets</strong> feed the plain capsule and the Catfruit/Catseye machines
-        alike, the lucky tickets are their own &mdash; pick a target, and the planner
-        steers the shared seed stream across the machines shown above: normal-ticket
-        rolls to walk it, the odd lucky ticket to dupe-switch tracks, collecting as
-        many as possible while burning as few lucky tickets as it can.</p>
+      <summary>{% translate "Plan a path — most Dark Catseyes for your rolls" %}</summary>
+      <p class="muted hint">{% blocktranslate trimmed %}Enter how many tickets you have and pick what you want: you get the
+        order to roll in. <strong>Normal Cat Tickets</strong> work on the plain, Catfruit and
+        Catseye machines. Lucky Tickets are separate, and the plan uses as few as it can.{% endblocktranslate %}</p>
       <div class="plan-budgets">
-        <label class="opt">Normal Cat Tickets
+        <label class="opt">{% translate "Normal Cat Tickets" %}
           <input type="number" class="plan-budget" data-kind="normal"
                  min="0" max="500" value="0">
         </label>
-        <label class="opt">Lucky Tickets
+        <label class="opt">{% translate "Lucky Tickets" %}
           <input type="number" class="plan-budget" data-kind="lucky"
                  min="0" max="500" value="0">
         </label>
-        <label class="opt">Lucky Tickets G
+        <label class="opt">{% translate "Lucky Tickets G" %}
           <input type="number" class="plan-budget" data-kind="luckyg"
                  min="0" max="500" value="0">
         </label>
       </div>
       <div class="plan-controls">
-        <label class="opt">Chasing
+        <label class="opt">{% translate "Chasing" %}
           <select id="normalTarget">
             {% for value, label in target_presets %}
-              <option value="{{ value }}">{{ label }}</option>
+              <option value="{{ value }}">{% translate label %}</option>
             {% endfor %}
-            <optgroup label="A specific item">
-              {% for item in item_options %}
-                <option value="item:{{ item }}">{{ item }}</option>
+            <optgroup label="{% translate "A specific item" %}">
+              {% for item, label in item_options %}
+                <option value="item:{{ item }}">{{ label }}</option>
               {% endfor %}
             </optgroup>
           </select>
         </label>
-        <button type="button" id="normalPlanGo">Find a path</button>
+        <button type="button" id="normalPlanGo">{% translate "Find a path" %}</button>
         <span class="field-error" id="normalPlanError" aria-live="polite"></span>
       </div>
     </details>
   </form>
 
-  <p class="muted hint" id="normalHint" hidden>Enter your normal seed above &mdash; or open
-    <strong>Find my normal seed</strong> and let the finder recover it from a few real pulls.</p>
+  <p class="muted hint" id="normalHint" hidden>{% blocktranslate trimmed %}Enter your normal seed above &mdash; or open
+    <strong>Find my normal seed</strong> and let the finder recover it from a few real pulls.{% endblocktranslate %}</p>
 
   {% comment %}The same live display controls the rare planner's Rolls table carries, on
   the same saved picks - the icon/form pair reaches the cat items the normal pools drop.
   {% endcomment %}
   <div id="normalRolls" class="results-region">
     <div class="rolls-head">
-      <h2 class="results-h">Rolls</h2>
+      <h2 class="results-h">{% translate "Rolls" %}</h2>
       <div class="rolls-controls">
-        <label class="ctrl">Show <input type="number" id="normalCount" value="100" min="1" max="999" title="How many rolls the table shows (up to 999)"> rolls</label>
-        <label class="ctrl" title="Show each cat as its name, its form icon, or both"><select id="normalDisplay">
-            <option value="text">Names</option>
-            <option value="icons">Icons</option>
-            <option value="both">Both</option>
+        <label class="ctrl">{% translate "Show" %} <input type="number" id="normalCount" value="100" min="1" max="999" title="{% translate "How many rolls the table shows (up to 999)" %}"> {% translate "rolls" %}</label>
+        <label class="ctrl" title="{% translate "Show each cat as its name, its form icon, or both" %}"><select id="normalDisplay">
+            <option value="text">{% translate "Names" %}</option>
+            <option value="icons">{% translate "Icons" %}</option>
+            <option value="both">{% translate "Both" %}</option>
           </select></label>
-        <label class="ctrl" title="Show each cat as this form - name and icon; a unit without that form shows the last one it has"><select id="normalRollForm">
-            <option value="0">Base</option>
-            <option value="1">Evolved</option>
-            <option value="2">True</option>
-            <option value="3">Ultra</option>
+        <label class="ctrl" title="{% translate "Show each cat as this form - name and icon; a unit without that form shows the last one it has" %}"><select id="normalRollForm">
+            <option value="0">{% translate "Base" %}</option>
+            <option value="1">{% translate "Evolved" %}</option>
+            <option value="2">{% translate "True" %}</option>
+            <option value="3">{% translate "Ultra" %}</option>
           </select></label>
       </div>
     </div>

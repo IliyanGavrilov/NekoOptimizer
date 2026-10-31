@@ -1,0 +1,467 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-10-31 00:16+0200\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+
+#: .\static\planner\app.js:87 .\static\planner\app.js:119
+msgid "Saved ✓"
+msgstr "저장됨 ✓"
+
+#: .\static\planner\app.js:91
+msgid "Not saved yet - retrying…"
+msgstr "아직 저장되지 않음 - 다시 시도 중…"
+
+#: .\static\planner\app.js:104
+msgid "link copied ✓ - paste it somewhere safe"
+msgstr "링크 복사됨 ✓ - 안전한 곳에 붙여 넣으세요"
+
+#: .\static\planner\app.js:147
+msgid "Saving…"
+msgstr "저장 중…"
+
+#: .\static\planner\app.js:246
+msgid "you are here"
+msgstr "현재 위치"
+
+#: .\static\planner\app.js:438
+msgid "Couldn't load past banners - close and reopen to retry."
+msgstr "지난 뽑기를 불러오지 못했습니다 - 닫았다가 다시 열면 재시도합니다."
+
+#: .\static\planner\app.js:473
+#, javascript-format
+msgid "Rolling %s banner."
+msgid_plural "Rolling %s banners."
+msgstr[0] "뽑기 %s개를 돌립니다."
+
+#: .\static\planner\app.js:474
+msgid "No banners selected."
+msgstr "선택한 뽑기가 없습니다."
+
+#: .\static\planner\app.js:582
+msgid ""
+"That Platinum/Legend Capsules run wasn't live during the selected banners' time. Pick the run that overlaps them, or clear the selection first."
+msgstr "그 플래티넘/레전드 뽑기 회차는 고른 뽑기 기간에 열리지 않았습니다. 기간이 겹치는 회차를 고르거나 먼저 선택을 지우세요."
+
+#: .\static\planner\app.js:877
+msgid "Link copied ✓"
+msgstr "링크 복사됨 ✓"
+
+#: .\static\planner\app.js:877
+msgid "Link is in the address bar"
+msgstr "링크가 주소창에 있습니다"
+
+#: .\static\planner\app.js:879
+msgid "Copy link"
+msgstr "링크 복사"
+
+#: .\static\planner\app.js:940
+msgid "Couldn't work this plan out."
+msgstr "이 플랜을 계산하지 못했습니다."
+
+#: .\static\planner\app.js:945
+msgid "No plan for these cats within your resources."
+msgstr "지금 자원으로는 이 캐릭터들의 플랜이 없습니다."
+
+#: .\static\planner\app.js:991
+msgid "Applied ✓"
+msgstr "적용됨 ✓"
+
+#: .\static\planner\app.js:1217
+#, javascript-format
+msgid "Back to seed %s"
+msgstr "시드 %s(으)로 되돌리기"
+
+#: .\static\planner\app.js:1307
+msgid "Enter a seed to roll."
+msgstr "시드를 입력하세요."
+
+#: .\static\planner\app.js:1309
+msgid "Select at least one banner to roll."
+msgstr "뽑기를 하나 이상 고르세요."
+
+#: .\static\planner\app.js:1314
+msgid "Pick a target cat, or tick \"search my wishlist\"."
+msgstr "목표 캐릭터를 고르거나 「위시리스트도 검색」을 체크하세요."
+
+#: .\static\planner\app.js:1337
+msgid "Check the form and try again."
+msgstr "입력 내용을 확인하고 다시 시도하세요."
+
+#: .\static\planner\app.js:1545 .\static\planner\app.js:1552
+msgid "%(owned)s / %(total)s owned"
+msgstr "%(owned)s / %(total)s 보유"
+
+#: .\static\planner\app.js:1554
+#, javascript-format
+msgid "%s wishlisted"
+msgstr "위시리스트 %s"
+
+#: .\static\planner\app.js:1641
+msgid ""
+"Replace your collection with this file? Your current owned and wishlist marks will be overwritten."
+msgstr "이 파일로 컬렉션을 바꿀까요? 지금의 보유·위시리스트 표시는 덮어써집니다."
+
+#: .\static\planner\app.js:1652
+msgid "Import failed — that isn't a Neko collection file."
+msgstr "가져오기 실패 — Neko Optimizer 컬렉션 파일이 아닙니다."
+
+#: .\static\planner\app.js:1654
+msgid "Imported %(owned)s owned, %(wanted)s wishlisted"
+msgstr "보유 %(owned)s개, 위시리스트 %(wanted)s개를 가져왔습니다"
+
+#: .\static\planner\app.js:1656
+#, javascript-format
+msgid ", %s not in the catalogue"
+msgstr ", %s개는 캐릭터 데이터에 없음"
+
+#: .\static\planner\app.js:1658
+msgid "Reloading…"
+msgstr "다시 불러오는 중…"
+
+#: .\static\planner\app.js:1937
+msgid "HP"
+msgstr "체력"
+
+#: .\static\planner\app.js:1938
+msgid "Attack"
+msgstr "공격"
+
+#: .\static\planner\app.js:1939
+msgid "DPS"
+msgstr "DPS"
+
+#: .\static\planner\app.js:1940
+msgid "Attack rate"
+msgstr "공격 빈도"
+
+#: .\static\planner\app.js:1941
+msgid "Range"
+msgstr "사정거리"
+
+#: .\static\planner\app.js:1942
+msgid "Attack type"
+msgstr "공격 유형"
+
+#: .\static\planner\app.js:1942
+msgid "Area"
+msgstr "범위 공격"
+
+#: .\static\planner\app.js:1942
+msgid "Single"
+msgstr "단일 공격"
+
+#: .\static\planner\app.js:1943
+msgid "Recharge"
+msgstr "재생산"
+
+#: .\static\planner\app.js:1944
+msgid "Speed"
+msgstr "이동 속도"
+
+#: .\static\planner\app.js:1945
+msgid "Knockbacks"
+msgstr "넉백 수"
+
+#: .\static\planner\app.js:1946
+msgid "Cost"
+msgstr "코스트"
+
+#: .\static\planner\app.js:1952
+#, javascript-format
+msgid "Immune: %s"
+msgstr "무효: %s"
+
+#: .\static\planner\app.js:1954
+#, javascript-format
+msgid "Lv %s stats with max treasures; cost in chapter 2."
+msgstr "Lv %s, 보물 최대 기준 스탯. 코스트는 2장 기준입니다."
+
+#: .\static\planner\app.js:1970 .\static\planner\app.js:1971
+#, javascript-format
+msgid "Tier %s"
+msgstr "티어 %s"
+
+#: .\static\planner\app.js:2089
+msgid "Already on your list"
+msgstr "이미 목록에 있습니다"
+
+#: .\static\planner\guideimport.js:21
+msgid "Not imported:"
+msgstr "가져오지 않음:"
+
+#: .\static\planner\guideimport.js:75
+msgid "None of these shows a full Cat Guide page - is it the right screen?"
+msgstr "어느 것도 냥코 도감 전체 페이지가 아닙니다 - 올바른 화면인가요?"
+
+#: .\static\planner\guideimport.js:77
+msgid "Take every screenshot on the same device, in the same orientation."
+msgstr "모든 스크린샷을 같은 기기, 같은 방향으로 찍으세요."
+
+#: .\static\planner\guideimport.js:98
+#, javascript-format
+msgid "Reading %s screenshot…"
+msgid_plural "Reading %s screenshots…"
+msgstr[0] "스크린샷 %s장을 읽는 중…"
+
+#: .\static\planner\guideimport.js:99
+msgid "Couldn't open those images."
+msgstr "그 이미지를 열 수 없습니다."
+
+#: .\static\planner\guideimport.js:103
+msgid "Those screenshots couldn't be read."
+msgstr "스크린샷을 읽을 수 없습니다."
+
+#: .\static\planner\guideimport.js:109
+msgid ""
+"The Cat Guide shows %(owned)s of %(total)s cats owned. Mark exactly those as owned? Your wishlist stays as it is."
+msgstr ""
+"냥코 도감에 %(total)s개 중 %(owned)s개를 보유 중입니다. 정확히 그 캐릭터들을 보유로 표시할까요? 위시리스트는 그대로입니다."
+
+#: .\static\planner\guideimport.js:114
+msgid "Import cancelled - nothing changed."
+msgstr "가져오기를 취소했습니다 - 바뀐 것은 없습니다."
+
+#: .\static\planner\guideimport.js:118
+#, javascript-format
+msgid "Marked %s cats owned from your Cat Guide. Reloading…"
+msgstr "냥코 도감에서 %s개를 보유로 표시했습니다. 다시 불러오는 중…"
+
+#: .\static\planner\normal.js:138
+msgid "Couldn't load the tracks - is the server still running?"
+msgstr "배열을 불러오지 못했습니다 - 서버가 실행 중인가요?"
+
+#: .\static\planner\normal.js:310
+msgid "No items match."
+msgstr "일치하는 아이템이 없습니다."
+
+#: .\static\planner\normal.js:423 .\static\planner\seek.js:209
+msgid "Searching the seed space…"
+msgstr "시드를 검색 중…"
+
+#: .\static\planner\normal.js:424 .\static\planner\seek.js:210
+msgid ""
+"No clean match — retrying your first pull as a dupe reroll (below the shadow slot)…"
+msgstr "정확히 일치하는 것 없음 — 첫 뽑기를 중복 재추첨으로 보고 다시 검색 중(섀도 슬롯 아래)…"
+
+#: .\static\planner\normal.js:425 .\static\planner\seek.js:211
+msgid ""
+"No clean match — retrying your first pull as a dupe reroll (at or above the shadow slot)…"
+msgstr "정확히 일치하는 것 없음 — 첫 뽑기를 중복 재추첨으로 보고 다시 검색 중(섀도 슬롯 이상)…"
+
+#: .\static\planner\normal.js:429
+#, javascript-format
+msgid "Your normal seed is now %s"
+msgstr "현재 냥코 뽑기 시드는 %s입니다"
+
+#: .\static\planner\normal.js:431
+msgid "Show my upcoming rolls"
+msgstr "앞으로의 뽑기 결과 보기"
+
+#: .\static\planner\normal.js:436
+msgid ""
+"your first entered pull arrived as a dupe reroll, so the replay shows it as its cell's branch value"
+msgstr "처음 입력한 뽑기는 중복 재추첨이었으므로, 다시 보기에서는 칸의 분기 결과로 표시됩니다"
+
+#: .\static\planner\normal.js:447 .\static\planner\seek.js:278
+#, javascript-format
+msgid "Search failed: %s"
+msgstr "검색 실패: %s"
+
+#: .\static\planner\normal.js:463
+#, javascript-format
+msgid ""
+"%s seeds match. Roll a few more items, add them, and search again to narrow it down."
+msgstr "시드 %s개가 일치합니다. 몇 번 더 뽑아 아이템을 추가하고 다시 검색해 좁히세요."
+
+#: .\static\planner\seek.js:80
+msgid "Couldn't load that banner's cats - is the server still running?"
+msgstr "그 뽑기의 캐릭터를 불러오지 못했습니다 - 서버가 실행 중인가요?"
+
+#: .\static\planner\seek.js:101
+msgid "No cats match."
+msgstr "일치하는 캐릭터가 없습니다."
+
+#: .\static\planner\seek.js:220
+msgid ""
+"your first entered pull arrived as a dupe reroll, so the replay shows it in the R column"
+msgstr "처음 입력한 뽑기는 레어 중복 재추첨이었으므로, 다시 보기에서는 R 열에 표시됩니다"
+
+#: .\static\planner\seek.js:222
+#, javascript-format
+msgid "Seed before those pulls: %s"
+msgstr "그 뽑기 전 시드: %s"
+
+#: .\static\planner\seek.js:224
+#, javascript-format
+msgid "Your seed is now %s"
+msgstr "현재 시드는 %s입니다"
+
+#: .\static\planner\seek.js:225
+msgid "Open the planner at your position"
+msgstr "현재 위치에서 플래너 열기"
+
+#: .\static\planner\seek.js:255
+msgid ""
+"Saved as your seed ✓ - the planner opens on it from now on. Back it up too: write down %(seed)s, or %(copy)s."
+msgstr ""
+"시드로 저장했습니다 ✓ - 이제 플래너가 이 시드로 열립니다. 백업도 해 두세요: %(seed)s을(를) 적어 두거나 %(copy)s."
+
+#: .\static\planner\seek.js:260
+msgid ""
+"Couldn't save it automatically - write down %(seed)s and open the planner with the link above; it saves from there."
+msgstr "자동으로 저장하지 못했습니다 - %(seed)s을(를) 적어 두고 위 링크로 플래너를 여세요. 거기서 저장됩니다."
+
+#: .\static\planner\seek.js:269
+msgid "link copied ✓"
+msgstr "링크 복사됨 ✓"
+
+#: .\static\planner\seek.js:294
+#, javascript-format
+msgid ""
+"%s seeds match. Roll a few more cats, add them, and search again to narrow it down."
+msgstr "시드 %s개가 일치합니다. 몇 번 더 뽑아 캐릭터를 추가하고 다시 검색해 좁히세요."
+
+#: .\static\planner\seek.js:339
+msgid ""
+"Pull %(n)s is %(cat)s. If that was the <strong>guaranteed Uber</strong> of an 11-draw or a step-up, remove it and everything after it - it isn't part of the normal roll sequence."
+msgstr ""
+"%(n)s번째 뽑기는 %(cat)s입니다. 그게 11연 뽑기나 단계별 연속 뽑기의 <strong>확정 울슈레</strong>라면 그것과 그 뒤를 모두 지우세요 - 일반 흐름에 포함되지 않습니다."
+
+#: .\static\planner\seek.js:340
+msgid ""
+"Pull %(n)s is %(cat)s. If that was the <strong>guaranteed Uber</strong> of an 11-draw, remove it and everything after it - it isn't part of the normal roll sequence."
+msgstr ""
+"%(n)s번째 뽑기는 %(cat)s입니다. 그게 11연 뽑기의 <strong>확정 울슈레</strong>라면 그것과 그 뒤를 모두 지우세요 - 일반 흐름에 포함되지 않습니다."
+
+#: .\static\planner\seek.js:348
+msgid ""
+"Pulls %(a)s and %(b)s are both %(cat)s. The game never deals the same Rare cat twice in a row (it rerolls the repeat), so one of them is probably mis-picked or out of order."
+msgstr ""
+"%(a)s번째와 %(b)s번째가 모두 %(cat)s입니다. 게임은 같은 레어 캐릭터를 연속으로 주지 않으므로(레어 중복은 다시 뽑힘), 둘 중 하나를 잘못 골랐거나 순서가 틀렸을 가능성이 높습니다."
+
+#: .\static\planner\seek.js:366
+msgid "Quick check before searching:"
+msgstr "검색 전 확인:"
+
+#: .\static\planner\seek.js:369
+msgid "Search anyway"
+msgstr "그대로 검색"
+
+#: .\static\planner\seek.js:373
+msgid "Find my seed"
+msgstr "내 시드 찾기"
+
+#: .\static\planner\seek.js:380
+msgid "Fill your pulls in order, top to bottom - no gaps."
+msgstr "위에서부터 차례로, 빈칸 없이 입력하세요."
+
+#: .\static\planner\seek.js:384
+#, javascript-format
+msgid "Enter at least %s pulls (around 10 works best)."
+msgstr "%s회 이상 입력하세요(10회 정도가 가장 좋습니다)."
+
+#: static/planner/normal.js
+#, javascript-format
+msgid "Enter (or find) your normal seed first."
+msgstr "먼저 냥코 뽑기 시드를 입력(또는 찾기)하세요."
+
+#: static/planner/normal.js
+#, javascript-format
+msgid "Enter at least one ticket stash."
+msgstr "티켓 수를 하나 이상 입력하세요."
+
+#: static/planner/normal.js
+#, javascript-format
+msgid "Searching…"
+msgstr "검색 중…"
+
+#: static/planner/normal.js
+#, javascript-format
+msgid "Find a path"
+msgstr "경로 찾기"
+
+#: static/planner/normal.js
+#, javascript-format
+msgid "Lost the server - try again."
+msgstr "서버 연결이 끊겼습니다 - 다시 시도하세요."
+
+#: static/planner/normal.js
+#, javascript-format
+msgid "Couldn't work out a path - try again."
+msgstr "경로를 계산하지 못했습니다 - 다시 시도하세요."
+
+#: static/planner/normal.js
+#, javascript-format
+msgid "Search items…"
+msgstr "아이템 검색…"
+
+#: static/planner/normal.js
+#, javascript-format
+msgid "Pick an item…"
+msgstr "아이템 고르기…"
+
+#: static/planner/normal.js
+#, javascript-format
+msgid "replay them"
+msgstr "다시 보기"
+
+#: static/planner/normal.js
+#, javascript-format
+msgid "Far too many seeds match - this window is too short to pin yours down. Add a few more rolls and search again; only the first %s are shown."
+msgstr "일치하는 시드가 너무 많습니다 - 이 횟수로는 특정할 수 없습니다. 몇 번 더 추가해 다시 검색하세요. 처음 %s개만 표시합니다."
+
+#: static/planner/normal.js
+#, javascript-format
+msgid "Enter at least %s pulls (8-12 works best)."
+msgstr "%s회 이상 입력하세요(8~12회가 가장 좋습니다)."
+
+#: static/planner/seek.js
+#, javascript-format
+msgid "Search cats…"
+msgstr "캐릭터 검색…"
+
+#: static/planner/seek.js
+#, javascript-format
+msgid "Pick a cat…"
+msgstr "캐릭터 고르기…"
+
+#: static/planner/seek.js
+#, javascript-format
+msgid "copy a link to it"
+msgstr "링크 복사"
+
+#: static/planner/seek.js
+#, javascript-format
+msgid "Saving it as your seed…"
+msgstr "시드로 저장 중…"
+
+#: static/planner/seek.js
+#, javascript-format
+msgid "Fix it above, or search anyway if it's right."
+msgstr "위에서 고치거나, 맞다면 그대로 검색하세요."
+
+#: static/planner/seek.js static/planner/normal.js
+msgid "Checking every possible seed (step 1 of 3)…"
+msgstr "가능한 모든 시드를 확인 중(3단계 중 1)…"
+
+#: static/planner/seek.js static/planner/normal.js
+msgid "No exact match yet — checking if your first pull was a reroll (step 2 of 3)…"
+msgstr "아직 정확히 일치하는 것 없음 — 첫 뽑기가 재추첨이었는지 확인 중(3단계 중 2)…"
+
+#: static/planner/seek.js static/planner/normal.js
+msgid "No exact match yet — checking if your first pull was a reroll (step 3 of 3)…"
+msgstr "아직 정확히 일치하는 것 없음 — 첫 뽑기가 재추첨이었는지 확인 중(3단계 중 3)…"

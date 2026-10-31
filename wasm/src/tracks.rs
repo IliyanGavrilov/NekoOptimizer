@@ -398,6 +398,13 @@ fn future_label(name: &str) -> &str {
 const DICE: &str = "<svg width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" aria-hidden=\"true\"><use href=\"#dice-icon\"/></svg>\n";
 const FUTURE_TITLE: &str = "An uber not released yet - a stand-in for whatever joins the pool next";
 
+/// A future uber's label, "Future Uber 3", in the interface language.
+fn future_text(req: &Request, name: &str) -> String {
+    let label = future_label(name);
+    let n = label.strip_prefix("Future Uber ").unwrap_or(label);
+    req.tr("Future Uber %(n)s", &[("n", &esc(n))])
+}
+
 struct Ctx<'a> {
     req: &'a Request,
     view: &'a View,
@@ -635,10 +642,11 @@ fn cell(
         if let Some(step) = e.step.filter(|&s| s != 0) {
             let _ = write!(out, " data-step=\"{step}\"");
         }
+        let req = ctx.req;
         if e.shared {
-            out.push_str(" title=\"This step of the plan can be rolled on this banner instead - you'd get this cat, and the rest of the plan still works\"");
+            let _ = write!(out, " title=\"{}\"", req.t("This step of the plan can be rolled on this banner instead - you'd get this cat, and the rest of the plan still works"));
         } else if e.next {
-            out.push_str(" title=\"You land here next: the first cat another roll on this banner would give after the highlighted draws\"");
+            let _ = write!(out, " title=\"{}\"", req.t("You land here next: the first cat another roll on this banner would give after the highlighted draws"));
         }
         out.push_str("><span class=\"entry-name\">");
         if let Some(step) = e.step.filter(|&s| s != 0) {
@@ -654,8 +662,9 @@ fn cell(
         if e.future {
             let _ = write!(
                 out,
-                "<span class=\"catlink future{target}\" title=\"{FUTURE_TITLE}\">{}</span>",
-                esc(future_label(ctx.name(e.cat)))
+                "<span class=\"catlink future{target}\" title=\"{}\">{}</span>",
+                req.t(FUTURE_TITLE),
+                future_text(req, ctx.name(e.cat))
             );
         } else {
             let _ = write!(
@@ -668,64 +677,79 @@ fn cell(
             let _ = write!(out, "><span class=\"catname\">{name}</span></button>");
         }
         if e.debut {
-            out.push_str(" <span class=\"debut\" title=\"Debuts with this banner &mdash; this is its first event anywhere\">new</span>");
+            let _ = write!(
+                out,
+                " <span class=\"debut\" title=\"{}\">{}</span>",
+                req.t("Debuts with this banner &mdash; this is its first event anywhere"),
+                req.t("new")
+            );
         }
         let rarity = RARITIES[usize::from(e.rarity)];
         let _ = write!(
             out,
-            "</span><span class=\"entry-rarity\"><span class=\"rarity\" data-rarity=\"{rarity}\" title=\"{rarity}\">{}</span></span><span class=\"entry-tier\">",
-            SHORT_RARITY[usize::from(e.rarity)]
+            "</span><span class=\"entry-rarity\"><span class=\"rarity\" data-rarity=\"{rarity}\" title=\"{}\">{}</span></span><span class=\"entry-tier\">",
+            req.t(rarity),
+            {
+                let short = SHORT_RARITY[usize::from(e.rarity)];
+                req.t_keyed(&format!("short rarity:{short}"), short)
+            }
         );
         badge(out, ctx.tier(e.cat));
         out.push_str("</span><span class=\"entry-dice\">");
         if e.seed != 0 {
-            let title = if cell_class.is_empty() {
+            let title = req.t(if cell_class.is_empty() {
                 "Rolled this? Jump the seed to just after this clean pull (a dupe's branch has its own dice)"
             } else {
                 "Rolled this guaranteed multi? Jump the seed to just after its final draw"
-            };
+            });
             let _ = write!(
                 out,
-                "<button type=\"button\" class=\"reseed inline\" data-seed=\"{}\" data-cat=\"{name}\" title=\"{title}\" aria-label=\"Jump the seed to just after {name}\">{DICE}</button>",
-                e.seed
+                "<button type=\"button\" class=\"reseed inline\" data-seed=\"{}\" data-cat=\"{name}\" title=\"{title}\" aria-label=\"{}\">{DICE}</button>",
+                e.seed,
+                req.tr("Jump the seed to just after %(name)s", &[("name", &name)])
             );
         }
         out.push_str("</span>");
         if let Some(alt) = &e.alt {
             let alt_name = esc(ctx.name(alt.cat));
-            out.push_str("<span class=\"arrow\"");
-            out.push_str(if alt.guaranteed {
-                " title=\"If this guaranteed multi's first roll comes up as a dupe, it rerolls and the multi ends on a different cell - you get this uber instead\""
+            let why = if alt.guaranteed {
+                "If this guaranteed multi's first roll comes up as a dupe, it rerolls and the multi ends on a different cell - you get this uber instead"
             } else if e.switch {
-                " title=\"Following the track dupes here: the previous pull obtains this same cat, so this cell rerolls into the branch value and jumps tracks\""
+                "Following the track dupes here: the previous pull obtains this same cat, so this cell rerolls into the branch value and jumps tracks"
             } else {
-                " title=\"Only when the arriving pull already holds this cell's cat (a bounce path, or your remembered last pull): it rerolls into the branch value and jumps tracks\""
-            });
-            out.push_str(if alt.left { ">&#8626;" } else { ">&#8627;" });
-            out.push_str(" if dupe: ");
+                "Only when the arriving pull already holds this cell's cat (a bounce path, or your remembered last pull): it rerolls into the branch value and jumps tracks"
+            };
+            let _ = write!(out, "<span class=\"arrow\" title=\"{}\">", req.t(why));
+            out.push_str(if alt.left { "&#8626;" } else { "&#8627;" });
+            let _ = write!(out, " {} ", req.t("if dupe:"));
             let alt_target = if alt.target { " target" } else { "" };
             if alt.guaranteed && is_future_uber(ctx.name(alt.cat)) {
                 let _ = write!(
                     out,
-                    "<span class=\"catlink future{alt_target}\" title=\"{FUTURE_TITLE}\">{}</span>",
-                    esc(future_label(ctx.name(alt.cat)))
+                    "<span class=\"catlink future{alt_target}\" title=\"{}\">{}</span>",
+                    req.t(FUTURE_TITLE),
+                    future_text(req, ctx.name(alt.cat))
                 );
             } else {
                 let _ = write!(out, "<button type=\"button\" class=\"catlink{alt_target}\" data-name=\"{alt_name}\">{alt_name}</button>");
             }
             if !alt.guaranteed {
-                let _ = write!(out, ", jumps to {}", alt.to);
+                out.push_str(&req.tr(", jumps to %(to)s", &[("to", &alt.to.to_string())]));
             }
             if alt.seed != 0 {
                 let title = if alt.guaranteed {
-                    "Rolled this guaranteed multi (its first roll duped)? Jump the seed to just after its final draw".to_owned()
+                    req.t("Rolled this guaranteed multi (its first roll duped)? Jump the seed to just after its final draw").to_owned()
                 } else {
-                    format!("Got {alt_name} here? Jump the seed to just after that reroll")
+                    req.tr(
+                        "Got %(name)s here? Jump the seed to just after that reroll",
+                        &[("name", &alt_name)],
+                    )
                 };
                 let _ = write!(
                     out,
-                    " <button type=\"button\" class=\"reseed inline\" data-seed=\"{}\" data-cat=\"{alt_name}\" title=\"{title}\" aria-label=\"Jump the seed to just after {alt_name}\">{DICE}</button>",
-                    alt.seed
+                    " <button type=\"button\" class=\"reseed inline\" data-seed=\"{}\" data-cat=\"{alt_name}\" title=\"{title}\" aria-label=\"{}\">{DICE}</button>",
+                    alt.seed,
+                    req.tr("Jump the seed to just after %(name)s", &[("name", &alt_name)])
                 );
             }
             out.push_str("</span>");
@@ -733,18 +757,26 @@ fn cell(
         out.push_str("</div>");
     }
     if let Some((rarity_seed, slot_seed)) = details {
-        let _ = write!(
-            out,
-            "<span class=\"cell-seeds\">rarity {rarity_seed} &middot; slot {slot_seed}</span>"
+        let seeds = ctx.req.tr(
+            "rarity %(rarity)s &middot; slot %(slot)s",
+            &[
+                ("rarity", &rarity_seed.to_string()),
+                ("slot", &slot_seed.to_string()),
+            ],
         );
+        let _ = write!(out, "<span class=\"cell-seeds\">{seeds}</span>");
     }
     out.push_str("</td>\n");
 }
 
 fn found_panel(out: &mut String, ctx: &Ctx, items: &[(Found, bool)], hits: usize) {
+    let req = ctx.req;
     let _ = write!(
         out,
-        "\n<div class=\"found-cats\">\n<span class=\"found-label\" title=\"Every cat you're searching for - the targets you picked, your wishlist (when that search is on), and any future ubers you've toggled - with its next spot in these rolls. Click a position to jump to its cell.\">Targets</span>\n<span class=\"found-count\" title=\"{hits} of them turn up in these rolls\">{}</span>\n<ul class=\"found-list\">\n",
+        "\n<div class=\"found-cats\">\n<span class=\"found-label\" title=\"{}\">{}</span>\n<span class=\"found-count\" title=\"{}\">{}</span>\n<ul class=\"found-list\">\n",
+        req.t("Every cat you're searching for - the targets you picked, your wishlist (when that search is on), and any future ubers you've toggled - with its next spot in these rolls. Click a position to jump to its cell."),
+        req.t("Targets"),
+        req.tr("%(hits)s of them turn up in these rolls", &[("hits", &hits.to_string())]),
         items.len()
     );
     let pks: HashMap<u32, u64> = ctx.view.pks.iter().copied().collect();
@@ -767,18 +799,20 @@ fn found_panel(out: &mut String, ctx: &Ctx, items: &[(Found, bool)], hits: usize
         }
         out.push_str("\">\n");
         if !f.rarity.is_empty() {
-            let rarity = esc(&f.rarity);
             let _ = writeln!(
                 out,
-                "<span class=\"rarity\" data-rarity=\"{rarity}\">{rarity}</span>"
+                "<span class=\"rarity\" data-rarity=\"{}\">{}</span>",
+                esc(&f.rarity),
+                esc(req.t(&f.rarity))
             );
         }
         let future = is_future_uber(raw);
         if future {
             let _ = write!(
                 out,
-                "<span class=\"found-cat future\" title=\"An uber not released yet - a stand-in for whatever joins this banner's pool next\"><span class=\"catname\">{}</span></span>",
-                esc(future_label(raw))
+                "<span class=\"found-cat future\" title=\"{}\"><span class=\"catname\">{}</span></span>",
+                req.t("An uber not released yet - a stand-in for whatever joins this banner's pool next"),
+                future_text(req, raw)
             );
             if let Some((_, banner)) = raw.split_once(" @ ") {
                 let shown = ctx
@@ -808,41 +842,69 @@ fn found_panel(out: &mut String, ctx: &Ctx, items: &[(Found, bool)], hits: usize
             }
             let _ = writeln!(
                 out,
-                " title=\"Jump to {0} in the track\">{0}</button>",
+                " title=\"{}\">{}</button>",
+                req.tr("Jump to %(pos)s in the track", &[("pos", &f.pos)]),
                 f.pos
             );
         } else if f.unreachable {
             let _ = writeln!(
                 out,
-                "<span class=\"find-warn\" role=\"img\" aria-label=\"Won't drop on the selected banners\" title=\"Won't drop on the selected banners: {}. Add a banner that carries it, or remove it.\">&#9888;</span>",
-                esc(&ctx.view.selected_titles)
+                "<span class=\"find-warn\" role=\"img\" aria-label=\"{}\" title=\"{}\">&#9888;</span>",
+                req.t("Won't drop on the selected banners"),
+                req.tr(
+                    "Won't drop on the selected banners: %(banners)s. Add a banner that carries it, or remove it.",
+                    &[("banners", &esc(&ctx.view.selected_titles))]
+                )
             );
         } else {
-            let _ = writeln!(out, "<span class=\"find-out\" title=\"Doesn't turn up in the first {} rolls\">{}</span>", f.pos.replace('+', ""), f.pos);
+            let _ = writeln!(
+                out,
+                "<span class=\"find-out\" title=\"{}\">{}</span>",
+                req.tr(
+                    "Doesn't turn up in the first %(rolls)s rolls",
+                    &[("rolls", &f.pos.replace('+', ""))]
+                ),
+                f.pos
+            );
         }
+        let remove = req.t("Remove target");
         if let Some(pk) = pks.get(&f.name) {
-            let _ = write!(out, "<button type=\"button\" class=\"found-remove\" data-pk=\"{pk}\" title=\"Remove {name} from your targets\" aria-label=\"Remove target\">&times;</button>");
+            let title = req.tr("Remove %(name)s from your targets", &[("name", &name)]);
+            let _ = write!(out, "<button type=\"button\" class=\"found-remove\" data-pk=\"{pk}\" title=\"{title}\" aria-label=\"{remove}\">&times;</button>");
         } else if future {
-            let _ = write!(out, "<button type=\"button\" class=\"found-remove\" data-future-name=\"{name}\" title=\"Stop searching for this future uber\" aria-label=\"Remove target\">&times;</button>");
+            let title = req.t("Stop searching for this future uber");
+            let _ = write!(out, "<button type=\"button\" class=\"found-remove\" data-future-name=\"{name}\" title=\"{title}\" aria-label=\"{remove}\">&times;</button>");
         }
         out.push_str("\n</li>\n");
     }
     out.push_str("</ul>\n</div>\n");
 }
 
-const LEGEND: &str = r#"<details class="track-guide">
-<summary>Legend</summary>
-<ul class="symbol-legend">
-<li><span class="sym">A / B</span> alternate timelines; a dupe rerolls and switches track</li>
-<li><span class="sym dice-sym">DICE</span> &ldquo;I rolled this cell&rdquo; &mdash; jumps the seed to just after it</li>
-<li><span class="arrow sample">&#8627; if dupe</span> the reroll branch (its own dice &amp; landing)</li>
-<li><span class="entry on-path sample">path</span> click a cell's name-free space: the rolls up to it light like a plan</li>
-<li><span class="entry next sample">striped</span> you land here next &mdash; the first cat one more roll would give after the lit draws</li>
-<li><span class="entry new sample"><span class="catlink">green name</span></span> Uber/Legend not in your collection</li>
-<li><span class="entry owned sample"><span class="catlink"></span></span> owned <span class="sep">&middot;</span> <span class="entry wanted sample"><span class="catlink"><span class="catname">cat</span></span></span> wishlisted</li>
-<li><span class="entry target sample"><span class="catlink target"><span class="catname">cat</span></span></span> a target you picked &mdash; gold here, and its next spot shows in <em>Targets</em> above</li>
-<li><span class="debut">new</span> Uber debuting with this banner (its first event anywhere)</li>
-"#;
+/// The track guide's opening and its always-there entries (_tracks.html).
+fn legend(req: &Request) -> String {
+    let t = |s| req.t(s);
+    format!(
+        "<details class=\"track-guide\">\n<summary>{}</summary>\n<ul class=\"symbol-legend\">\n<li><span class=\"sym\">A / B</span> {}</li>\n<li><span class=\"sym dice-sym\">{DICE}</span> {}</li>\n<li><span class=\"arrow sample\">&#8627; {}</span> {}</li>\n<li><span class=\"entry on-path sample\">{}</span> {}</li>\n<li><span class=\"entry next sample\">{}</span> {}</li>\n<li><span class=\"entry new sample\"><span class=\"catlink\">{}</span></span> {}</li>\n<li><span class=\"entry owned sample\"><span class=\"catlink\"></span></span> {} <span class=\"sep\">&middot;</span> <span class=\"entry wanted sample\"><span class=\"catlink\"><span class=\"catname\">{}</span></span></span> {}</li>\n<li><span class=\"entry target sample\"><span class=\"catlink target\"><span class=\"catname\">{}</span></span></span> {}</li>\n<li><span class=\"debut\">{}</span> {}</li>\n",
+        t("Legend"),
+        t("alternate timelines; a dupe rerolls and switches track"),
+        t("&ldquo;I rolled this cell&rdquo; &mdash; jumps the seed to just after it"),
+        t("if dupe"),
+        t("the reroll branch (its own dice &amp; landing)"),
+        t("path"),
+        t("click a cell's name-free space: the rolls up to it light like a plan"),
+        t("striped"),
+        t("you land here next &mdash; the first cat one more roll would give after the lit draws"),
+        t("green name"),
+        t("Uber/Legend not in your collection"),
+        t("owned"),
+        t("cat"),
+        t("wishlisted"),
+        t("cat"),
+        t("a target you picked &mdash; gold here, and its next spot shows in <em>Targets</em> above"),
+        t("new"),
+        t("Uber debuting with this banner (its first event anywhere)"),
+    )
+}
 
 /// The browse view's Rolls table (the tracks view, rendered): rolls every selected
 /// banner ``count`` rows deep for the Targets panel, shows ``view.rows`` of them.
@@ -959,8 +1021,10 @@ pub(crate) fn table(
         .unwrap_or(0);
     let max_pos = avail.min(rows.max(needed));
     if max_pos == 0 {
-        return "\n  <p class=\"muted\">No rolls for this seed and banner selection.</p>\n"
-            .to_owned();
+        return format!(
+            "\n  <p class=\"muted\">{}</p>\n",
+            req.t("No rolls for this seed and banner selection.")
+        );
     }
 
     let has_guaranteed = groups.iter().any(|g| g.graph.has_guaranteed());
@@ -973,23 +1037,52 @@ pub(crate) fn table(
     if let Some((items, hits)) = panel.filter(|(items, _)| !items.is_empty()) {
         found_panel(&mut out, &ctx, items, hits);
     }
-    out.push_str(&LEGEND.replace("DICE", DICE));
+    out.push_str(&legend(req));
     if padded {
-        out.push_str("<li><span class=\"entry new sample\"><span class=\"catlink future\">Future Uber 1</span></span> an expected-but-unreleased Uber padding the pool</li>\n");
+        let _ = writeln!(
+            out,
+            "<li><span class=\"entry new sample\"><span class=\"catlink future\">{}</span></span> {}</li>",
+            req.tr("Future Uber %(n)s", &[("n", "1")]),
+            req.t("an expected-but-unreleased Uber padding the pool")
+        );
     }
     if has_guaranteed {
-        out.push_str("<li><span class=\"sym\">Guaranteed</span> the Uber a guaranteed multi awards if started on that cell</li>\n");
+        let _ = writeln!(
+            out,
+            "<li><span class=\"sym\">{}</span> {}</li>",
+            req.t("Guaranteed"),
+            req.t("the Uber a guaranteed multi awards if started on that cell")
+        );
     }
     if marks
         .iter()
         .any(|m| !m.shared.is_empty() || !m.gshared.is_empty())
     {
-        out.push_str("<li><span class=\"entry shared sample\">dashed</span> another banner this plan step can roll on instead</li>\n");
+        let _ = writeln!(
+            out,
+            "<li><span class=\"entry shared sample\">{}</span> {}</li>",
+            req.t("dashed"),
+            req.t("another banner this plan step can roll on instead")
+        );
     }
     if has_currency {
-        out.push_str("<li><span class=\"capsule-tag platinum\">platinum</span> / <span class=\"capsule-tag legend\">legend</span> a capsule banner &mdash; its pulls spend that scarce ticket, not rare tickets or catfood</li>\n");
+        let _ = writeln!(
+            out,
+            "<li><span class=\"capsule-tag platinum\">{}</span> / <span class=\"capsule-tag legend\">{}</span> {}</li>",
+            req.t("platinum"),
+            req.t("legend"),
+            req.t("a capsule banner &mdash; its pulls spend that scarce ticket, not rare tickets or catfood")
+        );
     }
-    out.push_str("</ul>\n<div class=\"rarity-legend\">\n<span class=\"rarity\" data-rarity=\"Rare\">Rare</span>\n<span class=\"rarity\" data-rarity=\"Super Rare\">Super Rare</span>\n<span class=\"rarity\" data-rarity=\"Uber Super Rare\">Uber Super Rare</span>\n<span class=\"rarity\" data-rarity=\"Legend Rare\">Legend Rare</span>\n</div>\n</details>\n");
+    out.push_str("</ul>\n<div class=\"rarity-legend\">\n");
+    for rarity in RARITIES {
+        let _ = writeln!(
+            out,
+            "<span class=\"rarity\" data-rarity=\"{rarity}\">{}</span>",
+            req.t(rarity)
+        );
+    }
+    out.push_str("</div>\n</details>\n");
 
     let show_future = view.future.is_some();
     if groups.len() > 1 || show_future || has_currency {
@@ -1012,7 +1105,8 @@ pub(crate) fn table(
                 let currency = currencies[g];
                 let _ = write!(
                     out,
-                    " <span class=\"capsule-tag {currency}\">{currency}</span>"
+                    " <span class=\"capsule-tag {currency}\">{}</span>",
+                    req.t(currency)
                 );
             }
             if let Some(future) = &view.future {
@@ -1024,17 +1118,25 @@ pub(crate) fn table(
                     .collect();
                 let _ = write!(
                     out,
-                    " <label class=\"future-ctl\" title=\"Pad this banner's uber pool with expected-but-unreleased ubers (godfat's Count of future ubers) - its uber cells land as if those units were already in the pool; drag the box up/down to adjust\">Add future ubers <input type=\"number\" class=\"future-ubers\" value=\"{count}\" min=\"0\" max=\"99\" data-names=\"{}\"></label>",
+                    " <label class=\"future-ctl\" title=\"{}\">{} <input type=\"number\" class=\"future-ubers\" value=\"{count}\" min=\"0\" max=\"99\" data-names=\"{}\"></label>",
+                    req.t("Pad this banner's uber pool with expected-but-unreleased ubers (godfat's Count of future ubers) - its uber cells land as if those units were already in the pool; drag the box up/down to adjust"),
+                    req.t("Add future ubers"),
                     esc(&json_list(&keys))
                 );
                 if count > 0 {
                     let rep = req.banners[group.keys[0]].key.as_str();
-                    out.push_str(" <span class=\"future-targets\" title=\"Toggle a future uber to search for it - it joins your Targets above and glows on this banner's cells\">");
+                    let _ = write!(
+                        out,
+                        " <span class=\"future-targets\" title=\"{}\">",
+                        req.t("Toggle a future uber to search for it - it joins your Targets above and glows on this banner's cells")
+                    );
                     for n in 1..=count {
+                        let label = req.tr("Future Uber %(n)s", &[("n", &n.to_string())]);
                         let _ = write!(
                             out,
-                            "<button type=\"button\" class=\"future-target\" aria-pressed=\"false\" data-future-name=\"{}\" title=\"Search for Future Uber {n} on {names}\">Future Uber {n}</button>",
-                            esc(&format!("Future Uber {n} @ {rep}"))
+                            "<button type=\"button\" class=\"future-target\" aria-pressed=\"false\" data-future-name=\"{}\" title=\"{}\">{label}</button>",
+                            esc(&format!("Future Uber {n} @ {rep}")),
+                            req.tr("Search for %(label)s on %(banners)s", &[("label", &label), ("banners", &names)])
                         );
                     }
                     out.push_str("</span>");
@@ -1045,15 +1147,21 @@ pub(crate) fn table(
         out.push_str("</ul>\n");
     }
 
-    out.push_str(
-        "<table class=\"track\">\n<thead><tr>\n<th class=\"pos\">#</th>\n<th>Track A</th>\n",
+    let guaranteed = format!(
+        "<th class=\"guaranteed-col\">{}</th>\n",
+        req.t("Guaranteed")
+    );
+    let _ = write!(
+        out,
+        "<table class=\"track\">\n<thead><tr>\n<th class=\"pos\">#</th>\n<th>{}</th>\n",
+        req.t("Track A")
     );
     if has_guaranteed {
-        out.push_str("<th class=\"guaranteed-col\">Guaranteed</th>\n");
+        out.push_str(&guaranteed);
     }
-    out.push_str("<th>Track B</th>\n");
+    let _ = writeln!(out, "<th>{}</th>", req.t("Track B"));
     if has_guaranteed {
-        out.push_str("<th class=\"guaranteed-col\">Guaranteed</th>\n");
+        out.push_str(&guaranteed);
     }
     out.push_str("</tr></thead>\n<tbody>\n");
     let details = |index: usize| {

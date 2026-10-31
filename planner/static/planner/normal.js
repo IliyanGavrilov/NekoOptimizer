@@ -60,6 +60,11 @@ if (normalForm) {
     }
   };
 
+  // The seed box's "Find it" opens the finder above instead of only scrolling to it.
+  normalForm.querySelector(".seed-find").addEventListener("click", () => {
+    document.getElementById("normalFinder").open = true;
+  });
+
   const keeper = seedKeeper(normalForm.querySelector(".seed-keep"), {
     current: () => [seedEl.value.trim(), stored.last || ""],
     onRestore: (seed, last) => setSeed(seed, last),
@@ -135,7 +140,7 @@ if (normalForm) {
     } catch {
       resp = null;
     }
-    const failed = `<p class="field-error">Couldn't load the tracks - is the server still running?</p>`;
+    const failed = `<p class="field-error">${gettext("Couldn't load the tracks - is the server still running?")}</p>`;
     tracksHost.innerHTML =
       resp && resp.ok ? await runTables(await resp.text()).catch(() => failed) : failed;
     applyDisplay();
@@ -219,7 +224,7 @@ if (normalForm) {
     planError.textContent = "";
     const seed = seedEl.value.trim();
     if (!/^\d+$/.test(seed)) {
-      planError.textContent = "Enter (or find) your normal seed first.";
+      planError.textContent = gettext("Enter (or find) your normal seed first.");
       return;
     }
     const tickets = {};
@@ -228,12 +233,12 @@ if (normalForm) {
       if (count > 0) tickets[el.dataset.kind] = count;
     }
     if (!Object.keys(tickets).length) {
-      planError.textContent = "Enter at least one ticket stash.";
+      planError.textContent = gettext("Enter at least one ticket stash.");
       return;
     }
 
     planGo.disabled = true;
-    planGo.textContent = "Searching…";
+    planGo.textContent = gettext("Searching…");
     const body = new URLSearchParams({
       seed,
       tickets: JSON.stringify(tickets),
@@ -254,15 +259,15 @@ if (normalForm) {
       resp = null;
     }
     planGo.disabled = false;
-    planGo.textContent = "Find a path";
+    planGo.textContent = gettext("Find a path");
     if (!resp || !resp.ok) {
-      planError.textContent = resp ? await resp.text() : "Lost the server - try again.";
+      planError.textContent = resp ? await resp.text() : gettext("Lost the server - try again.");
       return;
     }
     try {
       tracksHost.innerHTML = await runPlans(await resp.text());
     } catch {
-      planError.textContent = "Couldn't work out a path - try again.";
+      planError.textContent = gettext("Couldn't work out a path - try again.");
       return;
     }
     applyDisplay();
@@ -292,7 +297,7 @@ if (normalForm) {
   const optionsHtml = () => {
     const pool = pools[normalKey()];
     return (
-      `<input type="text" class="pick-search" placeholder="Search items&hellip;"` +
+      `<input type="text" class="pick-search" placeholder="${gettext("Search items…")}"` +
       ` autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">` +
       pool.groups
         .map(
@@ -307,7 +312,7 @@ if (normalForm) {
               )
               .join("")
         )
-        .join("") + `<p class="combo-empty" hidden>No items match.</p>`
+        .join("") + `<p class="combo-empty" hidden>${gettext("No items match.")}</p>`
     );
   };
 
@@ -325,7 +330,7 @@ if (normalForm) {
     const li = document.createElement("li");
     li.innerHTML = `<div class="roll-pick">
       <button type="button" class="roll-trigger">
-        <span class="roll-label">Pick an item&hellip;</span><span class="roll-chevron">&#9662;</span>
+        <span class="roll-label">${gettext("Pick an item…")}</span><span class="roll-chevron">&#9662;</span>
       </button>
       <input type="hidden" class="seek-roll">
       <div class="combo-list" hidden>${optionsHtml()}</div>
@@ -420,20 +425,20 @@ if (normalForm) {
 
   // ---- The search itself: validate on the server, sieve right here -----------------
   const PASS_LABELS = [
-    "Searching the seed space…",
-    "No clean match — retrying your first pull as a dupe reroll (below the shadow slot)…",
-    "No clean match — retrying your first pull as a dupe reroll (at or above the shadow slot)…",
+    gettext("Checking every possible seed (step 1 of 3)…"),
+    gettext("No exact match yet — checking if your first pull was a reroll (step 2 of 3)…"),
+    gettext("No exact match yet — checking if your first pull was a reroll (step 3 of 3)…"),
   ];
 
   const matchCard = (m, lastItem, machine) => `<div class="seek-match">
-      <div class="seek-seed">Your normal seed is now <strong>${m.seed_after}</strong></div>
+      <div class="seek-seed">${interpolate(gettext("Your normal seed is now %s"), [`<strong>${m.seed_after}</strong>`])}</div>
       <button type="button" class="seek-use" data-seed="${m.seed_after}"
-        data-item="${esc(lastItem || "")}" data-machine="${esc(machine)}">Show my upcoming rolls &rarr;</button>
-      <p class="muted">Seed before those pulls: ${m.seed_before} &middot;
+        data-item="${esc(lastItem || "")}" data-machine="${esc(machine)}">${gettext("Show my upcoming rolls")} &rarr;</button>
+      <p class="muted">${interpolate(gettext("Seed before those pulls: %s"), [m.seed_before])} &middot;
         <button type="button" class="seek-use" data-seed="${m.seed_before}"
-          data-machine="${esc(machine)}">replay them</button>${
+          data-machine="${esc(machine)}">${gettext("replay them")}</button>${
         m.run
-          ? " &middot; your first entered pull arrived as a dupe reroll, so the replay shows it as its cell's branch value"
+          ? ` &middot; ${gettext("your first entered pull arrived as a dupe reroll, so the replay shows it as its cell's branch value")}`
           : ""
       }</p>
     </div>`;
@@ -444,33 +449,25 @@ if (normalForm) {
     results.hidden = false;
 
     if (data.error) {
-      results.innerHTML = `<p class="field-error">Search failed: ${esc(data.error)}</p>`;
+      results.innerHTML = `<p class="field-error">${interpolate(gettext("Search failed: %s"), [esc(data.error)])}</p>`;
       return;
     }
     if (!data.matches.length) {
-      results.innerHTML = `<div class="seek-none"><p>No seed deals exactly those pulls.
-        Almost always one of these:</p>
-        <ul>
-          <li><strong>Superfeline is set wrong.</strong> Once Superfeline is in your capsule
-            pool every roll changes - tick "Superfeline unlocked" only if it is.</li>
-          <li><strong>The order is off.</strong> Enter the items exactly in the order you
-            got them, oldest first.</li>
-          <li><strong>Something was rolled in between.</strong> The Catfruit, Catseye and
-            Lucky Ticket machines share this seed, so a roll on any of them in the middle
-            breaks the chain.</li>
-          <li><strong>A mis-picked item.</strong> Look-alike names are easy to swap.</li>
-        </ul></div>`;
+      results.replaceChildren(document.getElementById("nseekNoneTpl").content.cloneNode(true));
       return;
     }
 
     let notes = "";
     if (data.truncated) {
-      notes = `<p class="field-warning">Far too many seeds match - this window is too
-        short to pin yours down. Add a few more rolls and search again; only the first
-        ${data.matches.length} are shown.</p>`;
+      notes = `<p class="field-warning">${interpolate(
+        gettext("Far too many seeds match - this window is too short to pin yours down. Add a few more rolls and search again; only the first %s are shown."),
+        [data.matches.length],
+      )}</p>`;
     } else if (data.matches.length > 1) {
-      notes = `<p class="field-warning">${data.matches.length} seeds match. Roll a few
-        more items, add them, and search again to narrow it down.</p>`;
+      notes = `<p class="field-warning">${interpolate(
+        gettext("%s seeds match. Roll a few more items, add them, and search again to narrow it down."),
+        [data.matches.length],
+      )}</p>`;
     }
     results.innerHTML =
       notes + data.matches.map((m) => matchCard(m, data.last_cat, machine)).join("");
@@ -514,11 +511,11 @@ if (normalForm) {
     const last = values.length - 1 - [...values].reverse().findIndex(Boolean);
     const filled = values.filter(Boolean);
     if (filled.length && values.slice(0, last + 1).some((v) => !v)) {
-      setError("Fill your pulls in order, top to bottom - no gaps.");
+      setError(gettext("Fill your pulls in order, top to bottom - no gaps."));
       return;
     }
     if (filled.length < MIN) {
-      setError(`Enter at least ${MIN} pulls (8-12 works best).`);
+      setError(interpolate(gettext("Enter at least %s pulls (8-12 works best)."), [MIN]));
       return;
     }
 

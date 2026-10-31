@@ -7,6 +7,7 @@ from dataclasses import dataclass
 
 from django.conf import settings
 from django.utils.safestring import mark_safe
+from django.utils.translation import gettext_lazy as _
 
 BRAND = "Neko Optimizer"
 
@@ -16,96 +17,141 @@ _SCRIPT_SAFE = str.maketrans({"<": "\\u003c", ">": "\\u003e", "&": "\\u0026"})
 
 @dataclass(frozen=True, slots=True)
 class PageMeta:
-    """A page's search listing, and whether to keep it out of the index altogether."""
+    """A page's search listing, and whether to keep it out of the index altogether. The
+    name and description are lazy, read in whichever language the page renders in."""
 
-    title: str
+    name: str
     description: str
     noindex: bool = False
+
+    @property
+    def title(self) -> str:
+        """The <title>: the page's name, the brand trailing."""
+        return BRAND if str(self.name) == BRAND else f"{self.name} | {BRAND}"
 
 
 DEFAULT_META = PageMeta(
     BRAND,
-    "Free Battle Cats gacha planner: track your seed, see every upcoming roll and get the "
-    "cheapest path in tickets and catfood to the Ubers you want.",
+    _(
+        "Free Battle Cats gacha planner: track your seed, see every upcoming roll and get the "
+        "cheapest path in tickets and catfood to the Ubers you want."
+    ),
 )
 
 PAGE_META = {
     "planner": PageMeta(
-        f"Battle Cats Gacha Planner & Seed Tracker | {BRAND}",
-        "Plan your Battle Cats rare gacha pulls from your seed: every upcoming roll on both "
-        "tracks, and the cheapest path in tickets and catfood to the Ubers you want.",
+        _("Battle Cats Gacha Planner & Seed Tracker"),
+        _(
+            "Plan your Battle Cats rare gacha pulls from your seed: every upcoming roll on both "
+            "tracks, and the cheapest path in tickets and catfood to the Ubers you want."
+        ),
     ),
     "normal_capsules": PageMeta(
-        f"Battle Cats Normal Capsule Seed Tracker | {BRAND}",
-        "Predict the Battle Cats Normal Cat Capsule from your normal seed: the Catfruit, "
-        "Catseye and Lucky Ticket machines in one table, with the pulls worth taking.",
+        _("Battle Cats Normal Capsule Seed Tracker"),
+        _(
+            "Predict the Battle Cats Normal Cat Capsule from your normal seed: the Catfruit, "
+            "Catseye and Lucky Ticket machines in one table, with the pulls worth taking."
+        ),
     ),
     "collection": PageMeta(
-        f"Battle Cats Cat Guide & Collection Tracker | {BRAND}",
-        "Track every Battle Cats unit you own and want in Cat Guide order. Import your "
-        "collection from in-game screenshots and filter by abilities, combos and talents.",
+        _("Battle Cats Cat Guide & Collection Tracker"),
+        _(
+            "Track every Battle Cats unit you own and want in Cat Guide order. Import your "
+            "collection from in-game screenshots and filter by abilities, combos and talents."
+        ),
     ),
     "resources": PageMeta(
-        f"Battle Cats Evolution, Talent & Cannon Calculator | {BRAND}",
-        "Total the catfruit, behemoth stones, XP, NP and cannon materials you need to evolve "
-        "your Battle Cats units, unlock their talents and build your Cat Base cannons.",
+        _("Battle Cats Evolution, Talent & Cannon Calculator"),
+        _(
+            "Total the catfruit, behemoth stones, XP, NP and cannon materials you need to evolve "
+            "your Battle Cats units, unlock their talents and build your Cat Base cannons."
+        ),
     ),
     "tier_list": PageMeta(
-        f"Battle Cats Uber Tier List: Best Ubers & Legend Rares | {BRAND}",
-        "Every permanent Battle Cats Uber and Legend Rare ranked tier by tier, with Ultra "
-        "Form and Ultra Talent placements - plus a tier list for every gacha set.",
+        _("Battle Cats Uber Tier List: Best Ubers & Legend Rares"),
+        _(
+            "Every permanent Battle Cats Uber and Legend Rare ranked tier by tier, with Ultra "
+            "Form and Ultra Talent placements - plus a tier list for every gacha set."
+        ),
     ),
     "seed_finder": PageMeta(
-        f"Battle Cats Seed Finder: Find Your Gacha Seed | {BRAND}",
-        "Don't know your Battle Cats seed? Enter the cats from a few rolls and the finder "
-        "checks all 4.3 billion seeds in your browser for the one that matches.",
+        _("Battle Cats Seed Finder: Find Your Gacha Seed"),
+        _(
+            "Don't know your Battle Cats seed? Enter the cats from a few rolls and the finder "
+            "checks all 4.3 billion seeds in your browser for the one that matches."
+        ),
     ),
     "guides": PageMeta(
-        f"Battle Cats Gacha Guides: Seeds, Tracks & Planning | {BRAND}",
-        "Step-by-step Battle Cats guides: find your gacha seed, read the A/B roll tracks, "
-        "plan your pulls for the Ubers you want and predict the Normal Capsules.",
+        _("Battle Cats Gacha Guides: Seeds, Tracks & Planning"),
+        _(
+            "Step-by-step Battle Cats guides: find your gacha seed, read the A/B roll tracks, "
+            "plan your pulls for the Ubers you want and predict the Normal Capsules."
+        ),
+    ),
+    "whats_new": PageMeta(
+        _("What's New in Neko Optimizer"),
+        _("The latest changes to Neko Optimizer, the Battle Cats gacha planner, newest first."),
     ),
     "about": PageMeta(
-        f"About | {BRAND}",
-        "Who built Neko Optimizer, the tech behind its Battle Cats gacha planner, and the "
-        "community tools and data it credits.",
+        _("About"),
+        _(
+            "Who built Neko Optimizer, the tech behind its Battle Cats gacha planner, and the "
+            "community tools and data it credits."
+        ),
     ),
-    "signup": PageMeta(f"Sign up | {BRAND}", DEFAULT_META.description, noindex=True),
-    "login": PageMeta(f"Log in | {BRAND}", DEFAULT_META.description, noindex=True),
+    "signup": PageMeta(_("Sign up"), DEFAULT_META.description, noindex=True),
+    "login": PageMeta(_("Log in"), DEFAULT_META.description, noindex=True),
 }
 
 # The how-to guides by slug, in reading order; each body is planner/guides/<slug>.html.
 GUIDES = {
+    "gacha-terms": PageMeta(
+        _("Battle Cats Gacha Words, Explained Simply"),
+        _(
+            "What seeds, tracks A and B, rerolls, guaranteed draws and the other Battle Cats "
+            "gacha words mean, in a sentence or two each."
+        ),
+    ),
     "find-your-seed": PageMeta(
-        f"How to Find Your Battle Cats Seed (Step by Step) | {BRAND}",
-        "Find your Battle Cats gacha seed from a few rolls: which banner to use, how to "
-        "record your cats, the guaranteed-Uber trap, and what to do when several seeds match.",
+        _("How to Find Your Battle Cats Seed (Step by Step)"),
+        _(
+            "Find your Battle Cats gacha seed from a few rolls: which banner to use, how to "
+            "record your cats, the guaranteed-Uber trap, and what to do when several seeds match."
+        ),
     ),
     "read-the-tracks": PageMeta(
-        f"Battle Cats Seed Tracker: How to Read Tracks A and B | {BRAND}",
-        "How Battle Cats rare gacha rolls work from your seed: tracks A and B, duplicate "
-        "rerolls that switch tracks, guaranteed 11-draws and how to step to the cat you want.",
+        _("Battle Cats Seed Tracker: How to Read Tracks A and B"),
+        _(
+            "How Battle Cats rare gacha rolls work from your seed: tracks A and B, duplicate "
+            "rerolls that switch tracks, guaranteed 11-draws and how to step to the cat you want."
+        ),
     ),
     "plan-your-rolls": PageMeta(
-        f"How to Plan Battle Cats Gacha Rolls for the Ubers You Want | {BRAND}",
-        "Use your seed to get the Ubers you want for the fewest tickets and catfood: pick "
-        "targets and banners, set your budget, follow the plan and apply it when you've rolled.",
+        _("How to Plan Battle Cats Gacha Rolls for the Ubers You Want"),
+        _(
+            "Use your seed to get the Ubers you want for the fewest tickets and catfood: pick "
+            "targets and banners, set your budget, follow the plan and apply it when you've rolled."
+        ),
     ),
     "normal-capsules": PageMeta(
-        f"Battle Cats Normal Capsule Seed Guide: Catfruit & Catseyes | {BRAND}",
-        "The Battle Cats Normal Capsules run on their own seed. Find it, predict the "
-        "Catfruit, Catseye and Lucky Ticket machines, and plan your normal tickets.",
+        _("Battle Cats Normal Capsule Seed Guide: Catfruit & Catseyes"),
+        _(
+            "The Battle Cats Normal Capsules run on their own seed. Find it, predict the "
+            "Catfruit, Catseye and Lucky Ticket machines, and plan your normal tickets."
+        ),
     ),
     "keep-your-seed": PageMeta(
-        f"Never Lose Your Battle Cats Seed | {BRAND}",
-        "Where Neko Optimizer keeps your Battle Cats seeds, how to carry them to another "
-        "device, and the one-minute backup that makes losing them impossible.",
+        _("Never Lose Your Battle Cats Seed"),
+        _(
+            "Where Neko Optimizer keeps your Battle Cats seeds, how to carry them to another "
+            "device, and the one-minute backup that makes losing them impossible."
+        ),
     ),
 }
 
-# The pages whose content is the game version's own (its catalogue, banners, tier
-# names), so each version has a URL of its own for them. The rest - about, the guides,
-# the account forms - read the same everywhere and are filed under the English URL.
+# The pages each game version has its own copy of - its catalogue, banners and tier
+# names, in its players' language - so each has a URL per version. The account forms,
+# kept out of search, are the only pages filed under the English URL alone.
 REGION_PAGES = frozenset(
     {
         "planner",
@@ -115,11 +161,15 @@ REGION_PAGES = frozenset(
         "tier_list",
         "tier_list_page",
         "seed_finder",
+        "guides",
+        "guide",
+        "about",
+        "whats_new",
     }
 )
 
-# Each version's hreflang: the language its game data (cat and banner names) is in.
-HREFLANG = {"en": "en", "jp": "ja", "tw": "zh-TW", "kr": "ko"}
+# Each version's hreflang: its pages' language, the one its game is in.
+HREFLANG = {"en": "en", "jp": "ja", "tw": "zh-Hant", "kr": "ko"}
 
 # The pages worth a search listing, by URL name, for the sitemap.
 INDEXED_PAGES = tuple(name for name, meta in PAGE_META.items() if not meta.noindex)
@@ -133,9 +183,12 @@ def page_meta(url_name: str | None) -> PageMeta:
 def tier_set_meta(label: str) -> PageMeta:
     """The listing for one gacha set's tier list."""
     return PageMeta(
-        f"Battle Cats {label} Tier List | {BRAND}",
-        f"The Battle Cats {label} tier list: every unit in the set ranked tier by tier, with "
-        "Ultra Form and Ultra Talent placements and each cat's forms.",
+        _("Battle Cats %(label)s Tier List") % {"label": label},
+        _(
+            "The Battle Cats %(label)s tier list: every unit in the set ranked tier by tier, "
+            "with Ultra Form and Ultra Talent placements and each cat's forms."
+        )
+        % {"label": label},
     )
 
 
@@ -155,7 +208,7 @@ def home_graph() -> dict:
                 "@type": "WebApplication",
                 "name": BRAND,
                 "url": f"{settings.SITE_URL}/",
-                "description": PAGE_META["planner"].description,
+                "description": str(PAGE_META["planner"].description),
                 "applicationCategory": "GameApplication",
                 "operatingSystem": "Any",
                 "browserRequirements": "Requires JavaScript and WebAssembly",

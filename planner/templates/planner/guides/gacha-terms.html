@@ -1,0 +1,47 @@
+{% extends "planner/guide.html" %}
+
+{% block guide %}
+  <p>The words this site uses, each in a sentence or two. Start here if any of it is new.</p>
+
+  <dl class="terms">
+    <dt>Seed</dt>
+    <dd>A number the game keeps for your account. It decides what every gacha roll gives, and
+      moves on by one each time you roll. Know it, and you know every roll ahead of time.</dd>
+
+    <dt>Two seeds</dt>
+    <dd>You have two, and they have nothing to do with each other: one for the rare gacha
+      (Rare Capsules), one for the Normal Capsules. Each has its own page here &mdash;
+      the <a href="{% url 'planner' %}">Planner</a> and <a href="{% url 'normal_capsules' %}">Normal Capsules</a>.</dd>
+
+    <dt>Roll (or pull)</dt>
+    <dd>One draw from a gacha.</dd>
+
+    <dt>Single and 11-draw</dt>
+    <dd>A single is one roll (a Rare Ticket or 150 Cat Food). An 11-draw is eleven rolls at once
+      for 1500 Cat Food.</dd>
+
+    <dt>Guaranteed</dt>
+    <dd>Some events promise an Uber with an 11-draw. That Uber is a bonus on top of the eleven
+      normal rolls, so leave it out when you look up your seed.</dd>
+
+    <dt>Banner</dt>
+    <dd>One gacha event, like an Uberfest or a collab, with its own cats.</dd>
+
+    <dt>Track A and track B</dt>
+    <dd>The rolls ahead of you, shown as two side-by-side columns. You go down one of them,
+      one row per roll.</dd>
+
+    <dt>Duplicate (reroll)</dt>
+    <dd>If a roll would give the same Rare cat you just got, the game rolls again and you
+      jump to the other track. You can use this on purpose to reach cats on the other side.</dd>
+
+    <dt>Uber and Legend Rare</dt>
+    <dd>The two rarest kinds of cat. Uber is short for Uber Super Rare.</dd>
+
+    <dt>Plan</dt>
+    <dd>The order of rolls the <a href="{% url 'planner' %}">Planner</a> picks to get the cats you
+      want for the fewest tickets and Cat Food.</dd>
+  </dl>
+
+  <p>Next: <a href="{% url 'guide' 'find-your-seed' %}">find your seed</a>.</p>
+{% endblock %}
