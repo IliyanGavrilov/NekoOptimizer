@@ -105,6 +105,21 @@ def test_robots_points_crawlers_at_the_sitemap(client):
     assert f"Sitemap: {SITE}/sitemap.xml" in client.get("/robots.txt").content.decode()
 
 
+def test_the_indexnow_key_file_serves_the_key(client, settings):
+    settings.INDEXNOW_KEY = "abc123key"
+    assert client.get("/abc123key.txt").content == b"abc123key"
+
+
+def test_any_other_txt_name_is_not_a_key_file(client, settings):
+    settings.INDEXNOW_KEY = "abc123key"
+    assert client.get("/guess.txt").status_code == 404
+
+
+def test_no_key_file_exists_without_a_configured_key(client, settings):
+    settings.INDEXNOW_KEY = ""
+    assert client.get("/abc123key.txt").status_code == 404
+
+
 def test_every_guide_is_in_the_sitemap(client, tiers):
     body = client.get("/sitemap.xml").content.decode()
     assert all(f"<loc>{SITE}/guides/{slug}/</loc>" in body for slug in GUIDES)

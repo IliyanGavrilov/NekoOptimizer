@@ -1165,7 +1165,7 @@ def guide(request, slug):
     return render(request, f"planner/guides/{slug}.html", context)
 
 
-def sitemap(request):
+def sitemap_pages() -> list[dict]:
     """Every page worth a search listing - the shared pages and guides once, then the
     tools and each gacha set's tier list at every game version's URL."""
     pages = [{"loc": reverse(name)} for name in INDEXED_PAGES if name not in REGION_PAGES]
@@ -1182,7 +1182,13 @@ def sitemap(request):
     pages += [
         {**page, "loc": region_path(page["loc"], code)} for code in CODES for page in regional
     ]
-    context = {"site_url": settings.SITE_URL, "pages": pages}
+
+    return pages
+
+
+def sitemap(request):
+    """The sitemap: every listed page under the public site URL."""
+    context = {"site_url": settings.SITE_URL, "pages": sitemap_pages()}
 
     return render(request, "planner/sitemap.xml", context, content_type="application/xml")
 
@@ -1193,6 +1199,14 @@ def robots(request):
     body = f"User-agent: *\nDisallow: /admin/\n\nSitemap: {sitemap_url}\n"
 
     return HttpResponse(body, content_type="text/plain")
+
+
+def indexnow_key(request, key):
+    """IndexNow's ownership proof: the key, served at /<key>.txt and nowhere else."""
+    if not settings.INDEXNOW_KEY or key != settings.INDEXNOW_KEY:
+        raise Http404
+
+    return HttpResponse(key, content_type="text/plain")
 
 
 def about(request):
