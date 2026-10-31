@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-31 12:23+0200\n"
+"POT-Creation-Date: 2026-10-31 13:07+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -26,43 +26,49 @@ msgstr "網站現在支援日文、繁體中文與韓文。每個遊戲版本會
 msgid "Each game version has its own pages: /jp/, /tw/ and /kr/."
 msgstr "每個遊戲版本都有自己的頁面:/jp/、/tw/ 與 /kr/。"
 
-#: .\changelog.py:17
+#: .\changelog.py:18
+msgid ""
+"Your first visit opens the version your browser's language points to: Japanese, Traditional Chinese or Korean, else English."
+msgstr "第一次造訪時,會依瀏覽器的語言開啟對應版本:日文、繁體中文或韓文,其他則為英文。"
+
+#: .\changelog.py:21
+msgid "The Seed Finder's checks now show as you pick each cat."
+msgstr "種子碼查詢的檢查現在會在你選每隻角色時即時顯示。"
+
+#: .\changelog.py:22
 msgid ""
 "Fest and set names use each game version's own names, taken from the game's data."
 msgstr "祭典與系列名稱改用遊戲資料中各版本自己的名稱。"
 
-#: .\changelog.py:19
-#| msgid ""
-#| "A short welcome for first visits, plain how-it-works steps on the "
-#| "Planner, and a page of game words explained."
+#: .\changelog.py:24
 msgid ""
 "A short welcome for first visits, guide links on the pages that need them, and a page of game words explained."
 msgstr "新增首次造訪的簡短歡迎、在需要的頁面加上攻略連結,以及遊戲用語說明頁。"
 
-#: .\changelog.py:28
+#: .\changelog.py:33
 msgid ""
 "Your seeds are saved to your profile. A new device or a cleared browser no longer loses them, and a line under the seed shows when it's saved."
 msgstr "你的種子碼現在會存到個人資料中。換裝置或清除瀏覽器都不會再遺失,種子碼下方也會顯示是否已儲存。"
 
-#: .\changelog.py:32
+#: .\changelog.py:37
 msgid ""
 "The Seed Finder checks your entry for the usual mistakes before it searches, and saves the seed it finds."
 msgstr "種子碼查詢會在搜尋前檢查常見錯誤,並儲存找到的種子碼。"
 
-#: .\changelog.py:35
+#: .\changelog.py:40
 msgid ""
 "Opening someone else's link no longer replaces your own seed until you choose to."
 msgstr "打開別人的連結時,除非你自己選擇,否則不會取代你的種子碼。"
 
-#: .\changelog.py:36
+#: .\changelog.py:41
 msgid "New step-by-step guides."
 msgstr "新增逐步教學攻略。"
 
-#: .\changelog.py:42
+#: .\changelog.py:47
 msgid "Import your collection from screenshots of the in-game Cat Guide."
 msgstr "可從遊戲內貓咪圖鑑的截圖匯入收藏。"
 
-#: .\changelog.py:43
+#: .\changelog.py:48
 msgid ""
 "The seed search and the rolls run in your browser, so they're much faster."
 msgstr "種子碼搜尋與抽卡計算改在你的瀏覽器中執行,速度快很多。"
@@ -148,7 +154,7 @@ msgstr "在這裡抽到%(name)s?將種子碼推進到那次重抽之後"
 
 #: .\engine_text.py:31 .\templates\planner\_tracks.html:47
 #: .\templates\planner\_tracks.html:69 .\templates\planner\_tracks.html:71
-#: .\templates\planner\planner.html:142
+#: .\templates\planner\planner.html:141
 msgid "Guaranteed"
 msgstr "確定"
 
@@ -217,346 +223,350 @@ msgstr "抽到這個?將種子碼推進到這次一般抽之後(稀有重複的�
 msgid "Search for %(label)s on %(banners)s"
 msgstr "在%(banners)s搜尋%(label)s"
 
-#: .\engine_text.py:61 .\templates\planner\_tracks.html:26
+#: .\engine_text.py:61 .\templates\planner\_tier_badge.html:1
+msgid "See it in the tier list"
+msgstr "在強度排行中查看"
+
+#: .\engine_text.py:62 .\templates\planner\_tracks.html:26
 msgid "Stop searching for this future uber"
 msgstr "停止搜尋這隻未實裝超激"
 
-#: .\engine_text.py:62 .\templates\planner\_tracks.html:8
-#: .\templates\planner\collection.html:70 .\templates\planner\planner.html:24
+#: .\engine_text.py:63 .\templates\planner\_tracks.html:8
+#: .\templates\planner\collection.html:70 .\templates\planner\planner.html:23
 msgid "Targets"
 msgstr "目標"
 
-#: .\engine_text.py:64 .\templates\planner\_track_cell.html:6
+#: .\engine_text.py:65 .\templates\planner\_track_cell.html:6
 msgid ""
 "This step of the plan can be rolled on this banner instead - you'd get this cat, and the rest of the plan still works"
 msgstr "計畫的這一步也可以改抽這個轉蛋 - 會得到這隻角色,其餘計畫照樣成立"
 
-#: .\engine_text.py:68 .\templates\planner\_tracks.html:61
+#: .\engine_text.py:69 .\templates\planner\_tracks.html:61
 msgid ""
 "Toggle a future uber to search for it - it joins your Targets above and glows on this banner's cells"
 msgstr "開啟即搜尋這隻未實裝超激 - 會加入上方目標,並在此轉蛋的格子中發光"
 
-#: .\engine_text.py:71 .\templates\planner\_normal_tracks.html:24
+#: .\engine_text.py:72 .\templates\planner\_normal_tracks.html:24
 #: .\templates\planner\_tracks.html:68
 msgid "Track A"
 msgstr "A線"
 
-#: .\engine_text.py:72 .\templates\planner\_normal_tracks.html:25
+#: .\engine_text.py:73 .\templates\planner\_normal_tracks.html:25
 #: .\templates\planner\_tracks.html:70
 msgid "Track B"
 msgstr "B線"
 
-#: .\engine_text.py:73 .\templates\planner\_tracks.html:45
+#: .\engine_text.py:74 .\templates\planner\_tracks.html:45
 msgid "Uber debuting with this banner (its first event anywhere)"
 msgstr "在此轉蛋首次登場的超激稀有(遊戲中的第一個活動)"
 
-#: .\engine_text.py:74 .\templates\planner\_tracks.html:42
+#: .\engine_text.py:75 .\templates\planner\_tracks.html:42
 msgid "Uber/Legend not in your collection"
 msgstr "收藏中沒有的超激/傳說"
 
-#: .\engine_text.py:75 .\templates\planner\_tracks.html:22
+#: .\engine_text.py:76 .\templates\planner\_tracks.html:22
 msgid "Won't drop on the selected banners"
 msgstr "選擇的轉蛋中不會出現"
 
-#: .\engine_text.py:77 .\templates\planner\_tracks.html:22
+#: .\engine_text.py:78 .\templates\planner\_tracks.html:22
 #, python-format
 msgid ""
 "Won't drop on the selected banners: %(banners)s. Add a banner that carries it, or remove it."
 msgstr "選擇的轉蛋中不會出現:%(banners)s。請加入有這隻角色的轉蛋,或將它移除。"
 
-#: .\engine_text.py:81 .\templates\planner\_track_cell.html:6
+#: .\engine_text.py:82 .\templates\planner\_track_cell.html:6
 msgid ""
 "You land here next: the first cat another roll on this banner would give after the highlighted draws"
 msgstr "下一抽在這裡:亮起的抽數之後,再抽一次此轉蛋會得到的第一隻角色"
 
-#: .\engine_text.py:85 .\templates\planner\_tracks.html:49
+#: .\engine_text.py:86 .\templates\planner\_tracks.html:49
 msgid ""
 "a capsule banner &mdash; its pulls spend that scarce ticket, not rare tickets or catfood"
 msgstr "專用券轉蛋 &mdash; 這裡的抽數使用那種稀少的券,而不是稀有券或貓罐頭"
 
-#: .\engine_text.py:88 .\templates\planner\_tracks.html:44
+#: .\engine_text.py:89 .\templates\planner\_tracks.html:44
 msgid ""
 "a target you picked &mdash; gold here, and its next spot shows in <em>Targets</em> above"
 msgstr "你選的目標 &mdash; 這裡顯示為金色,下一個位置會顯示在上方<em>目標</em>中"
 
-#: .\engine_text.py:90 .\templates\planner\_normal_tracks.html:5
+#: .\engine_text.py:91 .\templates\planner\_normal_tracks.html:5
 #: .\templates\planner\_tracks.html:37
 msgid "alternate timelines; a dupe rerolls and switches track"
 msgstr "兩條平行的路線;稀有重複會重抽並換線"
 
-#: .\engine_text.py:91 .\templates\planner\_tracks.html:46
+#: .\engine_text.py:92 .\templates\planner\_tracks.html:46
 msgid "an expected-but-unreleased Uber padding the pool"
 msgstr "填入轉蛋池的未實裝超激稀有"
 
-#: .\engine_text.py:92 .\templates\planner\_tracks.html:48
+#: .\engine_text.py:93 .\templates\planner\_tracks.html:48
 msgid "another banner this plan step can roll on instead"
 msgstr "這一步計畫也可以改抽的另一個轉蛋"
 
-#: .\engine_text.py:93 .\templates\planner\_tracks.html:43
+#: .\engine_text.py:94 .\templates\planner\_tracks.html:43
 #: .\templates\planner\_tracks.html:44
 msgid "cat"
 msgstr "角色"
 
-#: .\engine_text.py:94 .\templates\planner\_tracks.html:40
+#: .\engine_text.py:95 .\templates\planner\_tracks.html:40
 msgid "click a cell's name-free space: the rolls up to it light like a plan"
 msgstr "點擊格子中名字以外的地方:到那裡為止的抽數會像計畫一樣亮起"
 
-#: .\engine_text.py:95 .\templates\planner\_tracks.html:48
+#: .\engine_text.py:96 .\templates\planner\_tracks.html:48
 msgid "dashed"
 msgstr "虛線"
 
-#: .\engine_text.py:96 .\templates\planner\_tracks.html:42
+#: .\engine_text.py:97 .\templates\planner\_tracks.html:42
 msgid "green name"
 msgstr "綠色名字"
 
-#: .\engine_text.py:97 .\templates\planner\_normal_tracks.html:7
+#: .\engine_text.py:98 .\templates\planner\_normal_tracks.html:7
 #: .\templates\planner\_tracks.html:39
 msgid "if dupe"
 msgstr "若稀有重複"
 
-#: .\engine_text.py:98 .\templates\planner\_normal_cell.html:11
+#: .\engine_text.py:99 .\templates\planner\_normal_cell.html:11
 #: .\templates\planner\_track_cell.html:6
 msgid "if dupe:"
 msgstr "若稀有重複:"
 
-#: .\engine_text.py:99 .\templates\planner\_tracks.html:49
+#: .\engine_text.py:100 .\templates\planner\_tracks.html:49
 msgid "legend"
 msgstr "傳說"
 
-#: .\engine_text.py:100 .\templates\planner\_track_cell.html:6
+#: .\engine_text.py:101 .\templates\planner\_track_cell.html:6
 #: .\templates\planner\_tracks.html:45
 msgid "new"
 msgstr "新"
 
-#: .\engine_text.py:101 .\templates\planner\_tracks.html:43
+#: .\engine_text.py:102 .\templates\planner\_tracks.html:43
 msgid "owned"
 msgstr "已擁有"
 
-#: .\engine_text.py:102 .\templates\planner\_normal_tracks.html:11
+#: .\engine_text.py:103 .\templates\planner\_normal_tracks.html:11
 #: .\templates\planner\_tracks.html:40
 msgid "path"
 msgstr "路徑"
 
-#: .\engine_text.py:103 .\templates\planner\_tracks.html:49
+#: .\engine_text.py:104 .\templates\planner\_tracks.html:49
 msgid "platinum"
 msgstr "白金"
 
-#: .\engine_text.py:104 .\templates\planner\_track_cell.html:6
+#: .\engine_text.py:105 .\templates\planner\_track_cell.html:6
 #, python-format
 msgid "rarity %(rarity)s &middot; slot %(slot)s"
 msgstr "稀有度 %(rarity)s &middot; 位置 %(slot)s"
 
-#: .\engine_text.py:105 .\templates\planner\_tracks.html:41
+#: .\engine_text.py:106 .\templates\planner\_tracks.html:41
 msgid "striped"
 msgstr "斜線"
 
-#: .\engine_text.py:106 .\templates\planner\_tracks.html:47
+#: .\engine_text.py:107 .\templates\planner\_tracks.html:47
 msgid "the Uber a guaranteed multi awards if started on that cell"
 msgstr "從該格開始確定連抽時會獲得的超激稀有"
 
-#: .\engine_text.py:107 .\templates\planner\_normal_tracks.html:7
+#: .\engine_text.py:108 .\templates\planner\_normal_tracks.html:7
 #: .\templates\planner\_tracks.html:39
 msgid "the reroll branch (its own dice &amp; landing)"
 msgstr "重抽的分支(有自己的骰子與落點)"
 
-#: .\engine_text.py:108 .\templates\planner\_tracks.html:43
+#: .\engine_text.py:109 .\templates\planner\_tracks.html:43
 msgid "wishlisted"
 msgstr "願望清單"
 
-#: .\engine_text.py:110 .\templates\planner\_tracks.html:41
+#: .\engine_text.py:111 .\templates\planner\_tracks.html:41
 msgid ""
 "you land here next &mdash; the first cat one more roll would give after the lit draws"
 msgstr "下一抽在這裡 &mdash; 亮起的抽數之後再抽一次會得到的第一隻角色"
 
-#: .\engine_text.py:113 .\labels.py:13 .\templates\planner\_tracks.html:52
+#: .\engine_text.py:114 .\labels.py:13 .\templates\planner\_tracks.html:52
 msgid "Rare"
 msgstr "稀有"
 
-#: .\engine_text.py:114 .\labels.py:14 .\templates\planner\_tracks.html:53
+#: .\engine_text.py:115 .\labels.py:14 .\templates\planner\_tracks.html:53
 msgid "Super Rare"
 msgstr "激稀有"
 
-#: .\engine_text.py:115 .\labels.py:15 .\templates\planner\_tracks.html:54
+#: .\engine_text.py:116 .\labels.py:15 .\templates\planner\_tracks.html:54
 msgid "Uber Super Rare"
 msgstr "超激稀有"
 
-#: .\engine_text.py:116 .\labels.py:16 .\templates\planner\_tracks.html:55
+#: .\engine_text.py:117 .\labels.py:16 .\templates\planner\_tracks.html:55
 msgid "Legend Rare"
 msgstr "傳說稀有"
 
-#: .\engine_text.py:118 .\services.py:1711 .\templates\planner\_steps.html:24
+#: .\engine_text.py:119 .\services.py:1711 .\templates\planner\_steps.html:24
 #, python-format
 msgid "%(n)s catfood"
 msgstr "貓罐頭%(n)s個"
 
-#: .\engine_text.py:119 .\templates\planner\_solutions.html:11
+#: .\engine_text.py:120 .\templates\planner\_solutions.html:11
 #, python-format
 msgid "%(n)s plans"
 msgstr "%(n)s個計畫"
 
-#: .\engine_text.py:120
+#: .\engine_text.py:121
 #, python-format
 msgid "%(n)s-roll"
 msgstr "%(n)s連抽"
 
-#: .\engine_text.py:121
+#: .\engine_text.py:122
 #, python-format
 msgid "%(n)s-roll (guaranteed)"
 msgstr "%(n)s連抽(確定)"
 
-#: .\engine_text.py:122 .\templates\planner\_solution_body.html:13
+#: .\engine_text.py:123 .\templates\planner\_solution_body.html:13
 msgid "Apply this plan"
 msgstr "套用這個計畫"
 
-#: .\engine_text.py:124 .\templates\planner\_solution.html:9
+#: .\engine_text.py:125 .\templates\planner\_solution.html:9
 #, python-format
 msgid ""
 "Best plan found, not a proven cheapest one. Past %(limit)s cats the search for the whole set is bounded - an exact one would take 2^N searches - so a cheaper plan may exist. Every smaller row here IS exact."
 msgstr ""
 "這是找到的最佳計畫,但未證明是最便宜的。目標超過%(limit)s隻時,整體搜尋會受限(精確需要2^N次搜尋),所以可能有更便宜的計畫。比這小的每一列都是精確的。"
 
-#: .\engine_text.py:128 .\templates\planner\_res_board.html:68
+#: .\engine_text.py:129 .\templates\planner\_res_board.html:68
 #: .\templates\planner\_solutions.html:10
 #: .\templates\planner\collection.html:67
 msgid "Clear"
 msgstr "清除"
 
-#: .\engine_text.py:129 .\templates\planner\_normal_plan.html:23
+#: .\engine_text.py:130 .\templates\planner\_normal_plan.html:23
 #: .\templates\planner\_steps.html:12
 msgid "Next step"
 msgstr "下一步"
 
-#: .\engine_text.py:130 .\templates\planner\_solutions.html:18
+#: .\engine_text.py:131 .\templates\planner\_solutions.html:18
 msgid "No reachable plan with given resources."
 msgstr "以目前資源沒有可達成的計畫。"
 
-#: .\engine_text.py:131 .\templates\planner\_solution.html:10
+#: .\engine_text.py:132 .\templates\planner\_solution.html:10
 msgid "Not found"
 msgstr "找不到"
 
-#: .\engine_text.py:132 .\templates\planner\_solutions.html:6
+#: .\engine_text.py:133 .\templates\planner\_solutions.html:6
 msgid "Only plans with"
 msgstr "只看包含以下的計畫"
 
-#: .\engine_text.py:133 .\templates\planner\_normal_plan.html:21
+#: .\engine_text.py:134 .\templates\planner\_normal_plan.html:21
 #: .\templates\planner\_steps.html:10
 msgid "Previous step"
 msgstr "上一步"
 
-#: .\engine_text.py:134
+#: .\engine_text.py:135
 msgid "Single pull"
 msgstr "單抽"
 
-#: .\engine_text.py:135 .\templates\planner\_normal_plan.html:19
+#: .\engine_text.py:136 .\templates\planner\_normal_plan.html:19
 #: .\templates\planner\_steps.html:8
 msgid "Steps"
 msgstr "步驟"
 
-#: .\engine_text.py:136 .\templates\planner\_steps.html:30
+#: .\engine_text.py:137 .\templates\planner\_steps.html:30
 #, python-format
 msgid "Total &middot; %(total)s"
 msgstr "總計 &middot; %(total)s"
 
-#: .\engine_text.py:137 .\templates\planner\_normal_plan.html:20
+#: .\engine_text.py:138 .\templates\planner\_normal_plan.html:20
 #: .\templates\planner\_steps.html:9
 msgid "Walk the plan step by step"
 msgstr "逐步走完計畫"
 
-#: .\engine_text.py:138 .\templates\planner\_solution.html:17
+#: .\engine_text.py:139 .\templates\planner\_solution.html:17
 msgid "Working out this plan&hellip;"
 msgstr "正在計算計畫&hellip;"
 
-#: .\engine_text.py:139 .\templates\planner\_solution.html:9
+#: .\engine_text.py:140 .\templates\planner\_solution.html:9
 msgid "best found"
 msgstr "最佳結果"
 
-#: .\engine_text.py:140 .\services.py:1713 .\templates\planner\_steps.html:24
+#: .\engine_text.py:141 .\services.py:1713 .\templates\planner\_steps.html:24
 msgid "free"
 msgstr "免費"
 
-#: .\engine_text.py:141 .\templates\planner\_normal_plan.html:37
+#: .\engine_text.py:142 .\templates\planner\_normal_plan.html:37
 #: .\templates\planner\_steps.html:26
 msgid "gets"
 msgstr "取得:"
 
-#: .\engine_text.py:142 .\templates\planner\_steps.html:20
+#: .\engine_text.py:143 .\templates\planner\_steps.html:20
 msgid "same rolls"
 msgstr "相同結果"
 
-#: .\engine_text.py:144 .\templates\planner\_normal_tracks.html:10
+#: .\engine_text.py:145 .\templates\planner\_normal_tracks.html:10
 msgid "Dark Catseye"
 msgstr "貓眼石【闇】"
 
-#: .\engine_text.py:146 .\templates\planner\_normal_cell.html:11
+#: .\engine_text.py:147 .\templates\planner\_normal_cell.html:11
 msgid ""
 "Following the track dupes here: the previous pull obtains this same item, so this cell rerolls into the branch value and jumps tracks"
 msgstr "沿著這條線抽到這裡會重複:前一抽拿到同一個道具,所以這格會重抽成分支結果並換線"
 
-#: .\engine_text.py:149 .\templates\planner\_normal_plan.html:14
+#: .\engine_text.py:150 .\templates\planner\_normal_plan.html:14
 msgid "I rolled it &mdash; advance my seed"
 msgstr "已經抽了 &mdash; 推進我的種子碼"
 
-#: .\engine_text.py:151 .\templates\planner\_normal_plan.html:45
+#: .\engine_text.py:152 .\templates\planner\_normal_plan.html:45
 #, python-format
 msgid ""
 "No %(target)s reachable with those rolls. Give a machine more budget, or try again after your next real pulls move the seed."
 msgstr "以這些抽數拿不到%(target)s。請增加某個轉蛋的預算,或等你實際抽完、種子碼前進後再試一次。"
 
-#: .\engine_text.py:154 .\templates\planner\_normal_tracks.html:38
+#: .\engine_text.py:155 .\templates\planner\_normal_tracks.html:38
 msgid "Pick at least one capsule machine to roll."
 msgstr "請至少選擇一台轉蛋機。"
 
-#: .\engine_text.py:156 .\templates\planner\_normal_cell.html:11
+#: .\engine_text.py:157 .\templates\planner\_normal_cell.html:11
 #, python-format
 msgid ""
 "Rolled %(cell)s? Jump the seed to just after it (its clean roll; a dupe's branch has its own dice)"
 msgstr "抽到%(cell)s?將種子碼推進到它之後(一般抽;重複的分支有自己的骰子)"
 
-#: .\engine_text.py:159 .\templates\planner\_normal_plan.html:14
+#: .\engine_text.py:160 .\templates\planner\_normal_plan.html:14
 msgid "You rolled this plan: the seed jumps to just after its final pull"
 msgstr "已抽完這個計畫:將種子碼推進到最後一抽之後"
 
-#: .\engine_text.py:160 .\templates\planner\_normal_tracks.html:11
+#: .\engine_text.py:161 .\templates\planner\_normal_tracks.html:11
 msgid "a planned pull"
 msgstr "計畫中的一抽"
 
-#: .\engine_text.py:161 .\templates\planner\_normal_tracks.html:9
+#: .\engine_text.py:162 .\templates\planner\_normal_tracks.html:9
 msgid "an upgrade (Special Skill), not a cat"
 msgstr "升級道具,不是角色"
 
-#: .\engine_text.py:162 .\templates\planner\_normal_tracks.html:8
+#: .\engine_text.py:163 .\templates\planner\_normal_tracks.html:8
 msgid "aqua"
 msgstr "水藍"
 
-#: .\engine_text.py:163 .\templates\planner\_normal_tracks.html:9
+#: .\engine_text.py:164 .\templates\planner\_normal_tracks.html:9
 msgid "blue"
 msgstr "藍"
 
-#: .\engine_text.py:164 .\templates\planner\_normal_plan.html:10
+#: .\engine_text.py:165 .\templates\planner\_normal_plan.html:10
 msgid "for"
 msgstr "花費:"
 
-#: .\engine_text.py:165 .\templates\planner\_normal_tracks.html:8
+#: .\engine_text.py:166 .\templates\planner\_normal_tracks.html:8
 msgid "gold"
 msgstr "金"
 
-#: .\engine_text.py:166 .\templates\planner\_normal_tracks.html:8
+#: .\engine_text.py:167 .\templates\planner\_normal_tracks.html:8
 msgid "red"
 msgstr "紅"
 
-#: .\engine_text.py:167 .\templates\planner\_normal_tracks.html:11
+#: .\engine_text.py:168 .\templates\planner\_normal_tracks.html:11
 msgid "target"
 msgstr "目標"
 
-#: .\engine_text.py:168
+#: .\engine_text.py:169
 msgid "the 1% Catseye-event jackpot"
 msgstr "貓眼石活動1%的大獎"
 
-#: .\engine_text.py:169 .\templates\planner\_normal_tracks.html:8
+#: .\engine_text.py:170 .\templates\planner\_normal_tracks.html:8
 msgid "the machine's rarer rate bands, scarcest last"
 msgstr "轉蛋機中較稀有的機率段,越後面越稀少"
 
-#: .\engine_text.py:170 .\templates\planner\_normal_tracks.html:11
+#: .\engine_text.py:171 .\templates\planner\_normal_tracks.html:11
 msgid "what it collects"
 msgstr "會得到的東西"
 
@@ -1172,8 +1182,8 @@ msgid ""
 "The latest changes to Neko Optimizer, the Battle Cats gacha planner, newest first."
 msgstr "貓咪大戰爭轉蛋規劃工具 Neko Optimizer 的最新變更,由新到舊。"
 
-#: .\seo.py:96 .\templates\planner\base.html:62
-#: .\templates\planner\base.html:144
+#: .\seo.py:96 .\templates\planner\base.html:64
+#: .\templates\planner\base.html:148
 msgid "About"
 msgstr "關於本站"
 
@@ -1183,13 +1193,13 @@ msgid ""
 msgstr "Neko Optimizer的作者、這個貓咪大戰爭轉蛋規劃工具背後的技術,以及我們致謝的社群工具與資料。"
 
 #: .\seo.py:102 .\templates\planner\account.html:6
-#: .\templates\planner\account.html:32 .\templates\planner\base.html:102
+#: .\templates\planner\account.html:32 .\templates\planner\base.html:104
 msgid "Sign up"
 msgstr "註冊"
 
 #: .\seo.py:103 .\templates\planner\account.html:16
 #: .\templates\planner\account.html:27 .\templates\planner\account.html:30
-#: .\templates\planner\base.html:101
+#: .\templates\planner\base.html:103
 msgid "Log in"
 msgstr "登入"
 
@@ -1496,7 +1506,7 @@ msgstr "Y年n月j日"
 msgid "M j"
 msgstr "n月j日"
 
-#: .\services.py:1494 .\templates\planner\planner.html:58
+#: .\services.py:1494 .\templates\planner\planner.html:57
 msgid "Past"
 msgstr "已結束"
 
@@ -1899,118 +1909,122 @@ msgstr "已經有帳號了?"
 msgid "No account yet?"
 msgstr "還沒有帳號?"
 
-#: .\templates\planner\base.html:55
+#: .\templates\planner\base.html:57
 msgid "Planner"
 msgstr "規劃"
 
-#: .\templates\planner\base.html:56 .\templates\planner\normal.html:5
+#: .\templates\planner\base.html:58 .\templates\planner\normal.html:5
 #: .\templates\planner\normal.html:81
 msgid "Normal Capsules"
 msgstr "貓咪轉蛋"
 
-#: .\templates\planner\base.html:57 .\templates\planner\collection.html:5
+#: .\templates\planner\base.html:59 .\templates\planner\collection.html:5
 msgid "Collection"
 msgstr "收藏"
 
-#: .\templates\planner\base.html:58 .\templates\planner\resources.html:5
+#: .\templates\planner\base.html:60 .\templates\planner\resources.html:5
 msgid "Resources"
 msgstr "資源"
 
-#: .\templates\planner\base.html:59
+#: .\templates\planner\base.html:61
 msgid "Tier List"
 msgstr "強度排行"
 
-#: .\templates\planner\base.html:60 .\templates\planner\seek.html:5
+#: .\templates\planner\base.html:62 .\templates\planner\seek.html:5
 msgid "Seed Finder"
 msgstr "種子碼查詢"
 
-#: .\templates\planner\base.html:61 .\templates\planner\base.html:142
+#: .\templates\planner\base.html:63 .\templates\planner\base.html:146
 #: .\templates\planner\guides.html:5
 msgid "Guides"
 msgstr "攻略"
 
-#: .\templates\planner\base.html:66
+#: .\templates\planner\base.html:68
 msgid "Game version"
 msgstr "遊戲版本"
 
-#: .\templates\planner\base.html:69
+#: .\templates\planner\base.html:71
 #, python-format
 msgid "%(label)s version"
 msgstr "%(label)s"
 
-#: .\templates\planner\base.html:76
+#: .\templates\planner\base.html:78
 msgid "Language"
 msgstr "語言"
 
-#: .\templates\planner\base.html:77
+#: .\templates\planner\base.html:79
 msgid "Game's language"
 msgstr "遊戲的語言"
 
-#: .\templates\planner\base.html:82
+#: .\templates\planner\base.html:84
 msgid "Set"
 msgstr "設定"
 
-#: .\templates\planner\base.html:87
+#: .\templates\planner\base.html:89
 #, python-format
 msgid "Logged in as %(name)s"
 msgstr "已以%(name)s登入"
 
-#: .\templates\planner\base.html:87
+#: .\templates\planner\base.html:89
 msgid "Account"
 msgstr "帳號"
 
-#: .\templates\planner\base.html:91
+#: .\templates\planner\base.html:93
 msgid "Logged in as"
 msgstr "目前登入:"
 
-#: .\templates\planner\base.html:96
+#: .\templates\planner\base.html:98
 msgid "Log out"
 msgstr "登出"
 
-#: .\templates\planner\base.html:105
+#: .\templates\planner\base.html:107
 msgid "Theme"
 msgstr "主題"
 
-#: .\templates\planner\base.html:106
+#: .\templates\planner\base.html:108
 msgid "Light theme"
 msgstr "淺色主題"
 
-#: .\templates\planner\base.html:107
+#: .\templates\planner\base.html:109
 msgid "Dark theme"
 msgstr "深色主題"
 
-#: .\templates\planner\base.html:108
+#: .\templates\planner\base.html:110
 msgid "Match my device"
 msgstr "跟隨裝置設定"
 
-#: .\templates\planner\base.html:116
+#: .\templates\planner\base.html:118
 msgid "Welcome"
 msgstr "歡迎"
 
-#: .\templates\planner\base.html:117
+#: .\templates\planner\base.html:119
 #, python-format
 msgid ""
 "New here? <a href=\"%(guides_url)s\">The short guides</a> explain how it all works."
 msgstr "第一次來?<a href=\"%(guides_url)s\">簡短攻略</a>會說明怎麼使用。"
 
-#: .\templates\planner\base.html:118 .\templates\planner\base.html:153
+#: .\templates\planner\base.html:120 .\templates\planner\base.html:157
 msgid "Close"
 msgstr "關閉"
 
-#: .\templates\planner\base.html:124
+#: .\templates\planner\base.html:126
 msgid "Elsewhere"
 msgstr "其他網站"
 
-#: .\templates\planner\base.html:138
+#: .\templates\planner\base.html:140
 msgid ""
 "Neko Optimizer is a free, fan-made tool for <em>The Battle Cats</em> and is not affiliated with PONOS."
 msgstr "Neko Optimizer是<em>貓咪大戰爭</em>的免費粉絲工具,與PONOS無關。"
 
-#: .\templates\planner\base.html:143 .\templates\planner\whats_new.html:5
+#: .\templates\planner\base.html:145
+msgid "More"
+msgstr "更多"
+
+#: .\templates\planner\base.html:147 .\templates\planner\whats_new.html:5
 msgid "What's new"
 msgstr "更新內容"
 
-#: .\templates\planner\base.html:145
+#: .\templates\planner\base.html:149
 msgid "Source"
 msgstr "原始碼"
 
@@ -2045,47 +2059,47 @@ msgid "Show each cat as its name, its form icon, or both"
 msgstr "以名字、型態圖示或兩者顯示角色"
 
 #: .\templates\planner\collection.html:17 .\templates\planner\normal.html:152
-#: .\templates\planner\planner.html:131 .\templates\planner\resources.html:21
+#: .\templates\planner\planner.html:130 .\templates\planner\resources.html:21
 msgid "Names"
 msgstr "名字"
 
 #: .\templates\planner\collection.html:18 .\templates\planner\normal.html:153
-#: .\templates\planner\planner.html:132 .\templates\planner\resources.html:22
+#: .\templates\planner\planner.html:131 .\templates\planner\resources.html:22
 msgid "Icons"
 msgstr "圖示"
 
 #: .\templates\planner\collection.html:19 .\templates\planner\normal.html:154
-#: .\templates\planner\planner.html:133 .\templates\planner\resources.html:23
+#: .\templates\planner\planner.html:132 .\templates\planner\resources.html:23
 msgid "Both"
 msgstr "兩者"
 
 #: .\templates\planner\collection.html:21 .\templates\planner\normal.html:156
-#: .\templates\planner\planner.html:135 .\templates\planner\resources.html:25
+#: .\templates\planner\planner.html:134 .\templates\planner\resources.html:25
 #: .\templates\planner\tiers.html:29
 msgid ""
 "Show each cat as this form - name and icon; a unit without that form shows the last one it has"
 msgstr "以這個型態顯示每隻角色(名字與圖示);沒有該型態的角色會顯示它最後的型態"
 
 #: .\templates\planner\collection.html:22 .\templates\planner\normal.html:157
-#: .\templates\planner\planner.html:136 .\templates\planner\resources.html:26
+#: .\templates\planner\planner.html:135 .\templates\planner\resources.html:26
 #: .\templates\planner\tiers.html:30
 msgid "Base"
 msgstr "第1型態"
 
 #: .\templates\planner\collection.html:23 .\templates\planner\normal.html:158
-#: .\templates\planner\planner.html:137 .\templates\planner\resources.html:27
+#: .\templates\planner\planner.html:136 .\templates\planner\resources.html:27
 #: .\templates\planner\tiers.html:31
 msgid "Evolved"
 msgstr "第2型態"
 
 #: .\templates\planner\collection.html:24 .\templates\planner\normal.html:159
-#: .\templates\planner\planner.html:138 .\templates\planner\resources.html:28
+#: .\templates\planner\planner.html:137 .\templates\planner\resources.html:28
 #: .\templates\planner\tiers.html:32
 msgid "True"
 msgstr "第3進化"
 
 #: .\templates\planner\collection.html:25 .\templates\planner\normal.html:160
-#: .\templates\planner\planner.html:139 .\templates\planner\resources.html:29
+#: .\templates\planner\planner.html:138 .\templates\planner\resources.html:29
 #: .\templates\planner\tiers.html:33
 msgid "Ultra"
 msgstr "第4進化"
@@ -2370,156 +2384,151 @@ msgid ""
 "Enter your normal seed above &mdash; or open <strong>Find my normal seed</strong> and let the finder recover it from a few real pulls."
 msgstr "請在上方輸入貓咪轉蛋種子碼 &mdash; 或打開<strong>找出我的貓咪轉蛋種子碼</strong>,用幾次實際抽到的結果找出它。"
 
-#: .\templates\planner\normal.html:148 .\templates\planner\planner.html:127
+#: .\templates\planner\normal.html:148 .\templates\planner\planner.html:126
 msgid "Rolls"
 msgstr "轉蛋序列"
 
-#: .\templates\planner\normal.html:150 .\templates\planner\planner.html:129
+#: .\templates\planner\normal.html:150 .\templates\planner\planner.html:128
 msgid "Show"
 msgstr "顯示"
 
-#: .\templates\planner\normal.html:150 .\templates\planner\planner.html:129
+#: .\templates\planner\normal.html:150 .\templates\planner\planner.html:128
 msgid "How many rolls the table shows (up to 999)"
 msgstr "表格顯示的抽數(最多999)"
 
-#: .\templates\planner\normal.html:150 .\templates\planner\planner.html:129
+#: .\templates\planner\normal.html:150 .\templates\planner\planner.html:128
 msgid "rolls"
 msgstr "抽"
 
 #: .\templates\planner\planner.html:7
-msgid ""
-"See every rare gacha roll your seed will give, and the cheapest way to the cats you want."
-msgstr "查看你的種子碼接下來每一抽稀有轉蛋的結果,以及抽到想要角色最便宜的方法。"
-
-#: .\templates\planner\planner.html:8
 #, python-format
 msgid ""
 "New here? <a href=\"%(tracks_url)s\">How to read the rolls</a> &middot; <a href=\"%(plan_url)s\">How to plan</a>"
 msgstr ""
 "第一次用?<a href=\"%(tracks_url)s\">如何看懂序列</a> &middot; <a href=\"%(plan_url)s\">如何規劃</a>"
 
-#: .\templates\planner\planner.html:18
+#: .\templates\planner\planner.html:17
 msgid "required"
 msgstr "必填"
 
-#: .\templates\planner\planner.html:18
+#: .\templates\planner\planner.html:17
 msgid "Step the seed back one roll"
 msgstr "將種子碼倒退一抽"
 
-#: .\templates\planner\planner.html:18
+#: .\templates\planner\planner.html:17
 msgid "back"
 msgstr "倒退"
 
-#: .\templates\planner\planner.html:18
+#: .\templates\planner\planner.html:17
 msgid "undo"
 msgstr "復原"
 
-#: .\templates\planner\planner.html:24
+#: .\templates\planner\planner.html:23
 msgid "pick a target, or tick “search my wishlist”"
 msgstr "選擇目標,或勾選「同時搜尋願望清單」"
 
-#: .\templates\planner\planner.html:26
+#: .\templates\planner\planner.html:25
 msgid ""
 "Tap <span class=\"key\">&plus;</span> to roll a banner. Click a banner's name to see its cats."
 msgstr "按<span class=\"key\">&plus;</span>即可抽這個轉蛋;點轉蛋名稱可看它的角色。"
 
-#: .\templates\planner\planner.html:26
+#: .\templates\planner\planner.html:25
 msgid "Show me the selected banners"
 msgstr "顯示已選的轉蛋"
 
-#: .\templates\planner\planner.html:35
+#: .\templates\planner\planner.html:34
 msgid "Search cats & banners…"
 msgstr "搜尋角色與轉蛋…"
 
-#: .\templates\planner\planner.html:36
+#: .\templates\planner\planner.html:35
 msgid "Clear search and browse banners"
 msgstr "清除搜尋並瀏覽轉蛋"
 
-#: .\templates\planner\planner.html:37
+#: .\templates\planner\planner.html:36
 msgid "Matching banners (every run) and cats · clear to browse"
 msgstr "符合的轉蛋(所有期次)與角色 · 清除後即可瀏覽"
 
-#: .\templates\planner\planner.html:59
+#: .\templates\planner\planner.html:58
 msgid "Loading…"
 msgstr "載入中…"
 
-#: .\templates\planner\planner.html:70
+#: .\templates\planner\planner.html:69
 #, python-format
 msgid "No cats yet &mdash; <a href=\"%(collection_url)s\">add some</a>."
 msgstr "還沒有角色 &mdash; <a href=\"%(collection_url)s\">去加入一些</a>。"
 
-#: .\templates\planner\planner.html:84
+#: .\templates\planner\planner.html:83
 msgid "Your resources"
 msgstr "你的資源"
 
-#: .\templates\planner\planner.html:92
+#: .\templates\planner\planner.html:91
 msgid ""
 "Platinum and Legend Capsules use their own tickets. Enter how many you have (0 to skip them)."
 msgstr "白金轉蛋與傳說轉蛋使用各自的券。請輸入你有幾張(0表示略過)。"
 
-#: .\templates\planner\planner.html:100
+#: .\templates\planner\planner.html:99
 msgid "Advanced"
 msgstr "進階設定"
 
-#: .\templates\planner\planner.html:106
+#: .\templates\planner\planner.html:105
 #, python-format
 msgid "1 rare ticket is worth %(field)s catfood"
 msgstr "1張稀有券 = 貓罐頭%(field)s個"
 
-#: .\templates\planner\planner.html:107
+#: .\templates\planner\planner.html:106
 msgid ""
 "One draw is 150 catfood, and the planner spends tickets first. Raise the ticket value above 150 if rare tickets are precious to you &mdash; the planner will then spend catfood to save them."
 msgstr "一抽是150個貓罐頭,規劃工具會先用稀有券。若你很珍惜稀有券,就把價值調到150以上 &mdash; 規劃工具會改用貓罐頭來保留它們。"
 
-#: .\templates\planner\planner.html:112
+#: .\templates\planner\planner.html:111
 msgid "Find plan"
 msgstr "找出計畫"
 
-#: .\templates\planner\planner.html:113
+#: .\templates\planner\planner.html:112
 msgid ""
 "Copy a link that reopens this seed and Rolls view (rolls shown, names/icons, form, details)"
 msgstr "複製能重新打開這組種子碼與序列畫面(抽數、名字/圖示、型態、細節)的連結"
 
-#: .\templates\planner\planner.html:113
+#: .\templates\planner\planner.html:112
 msgid "Copy link"
 msgstr "複製連結"
 
-#: .\templates\planner\planner.html:119
+#: .\templates\planner\planner.html:118
 msgid "Finding your plan…"
 msgstr "正在找出計畫…"
 
-#: .\templates\planner\planner.html:130
+#: .\templates\planner\planner.html:129
 msgid "Show each roll cell as the cat's name, its form icon, or both"
 msgstr "每格以角色名字、型態圖示或兩者顯示"
 
-#: .\templates\planner\planner.html:141
+#: .\templates\planner\planner.html:140
 msgid ""
 "Reveal each cell's rarity and slot seed, for cross-checking against godfat"
 msgstr "顯示每格的稀有度與位置種子,方便與godfat比對"
 
-#: .\templates\planner\planner.html:141
+#: .\templates\planner\planner.html:140
 msgid "Details"
 msgstr "細節"
 
-#: .\templates\planner\planner.html:142
+#: .\templates\planner\planner.html:141
 msgid ""
 "Force a guaranteed multi of this size onto every banner, to preview the uber each cell's guaranteed draw would give"
 msgstr "對每個轉蛋套用這個抽數的確定連抽,預覽從各格開始確定抽會給的超激"
 
-#: .\templates\planner\planner.html:144
+#: .\templates\planner\planner.html:143
 msgid "None"
 msgstr "無"
 
-#: .\templates\planner\planner.html:151
+#: .\templates\planner\planner.html:150
 msgid ""
 "When a guaranteed multi is in play, ignore the guaranteed column when finding cats - so Find next lists only normal-roll positions"
 msgstr "有確定連抽時,搜尋角色會忽略確定欄 - 讓「找下一個」只列出一般抽的位置"
 
-#: .\templates\planner\planner.html:151
+#: .\templates\planner\planner.html:150
 msgid "Skip guaranteed in Find"
 msgstr "搜尋時略過確定"
 
-#: .\templates\planner\planner.html:158
+#: .\templates\planner\planner.html:157
 msgid "Back to rolls"
 msgstr "回到序列"
 

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-31 12:23+0200\n"
+"POT-Creation-Date: 2026-10-31 13:07+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -26,43 +26,49 @@ msgstr "日本語・繁体字中国語・韓国語に対応しました。ゲー
 msgid "Each game version has its own pages: /jp/, /tw/ and /kr/."
 msgstr "ゲームのバージョンごとに専用のページができました:/jp/、/tw/、/kr/。"
 
-#: .\changelog.py:17
+#: .\changelog.py:18
+msgid ""
+"Your first visit opens the version your browser's language points to: Japanese, Traditional Chinese or Korean, else English."
+msgstr "初めての訪問では、ブラウザの言語に合ったバージョンが開きます:日本語・繁体字中国語・韓国語、それ以外は英語です。"
+
+#: .\changelog.py:21
+msgid "The Seed Finder's checks now show as you pick each cat."
+msgstr "シード値検索のチェックが、キャラを選ぶたびにその場で表示されるようになりました。"
+
+#: .\changelog.py:22
 msgid ""
 "Fest and set names use each game version's own names, taken from the game's data."
 msgstr "祭やセットの名前は、ゲームデータにある各バージョンの正式名称で表示されます。"
 
-#: .\changelog.py:19
-#| msgid ""
-#| "A short welcome for first visits, plain how-it-works steps on the "
-#| "Planner, and a page of game words explained."
+#: .\changelog.py:24
 msgid ""
 "A short welcome for first visits, guide links on the pages that need them, and a page of game words explained."
 msgstr "初めての方向けの短い案内、必要なページへのガイドのリンク、ゲーム用語の説明ページを追加しました。"
 
-#: .\changelog.py:28
+#: .\changelog.py:33
 msgid ""
 "Your seeds are saved to your profile. A new device or a cleared browser no longer loses them, and a line under the seed shows when it's saved."
 msgstr "シード値がプロフィールに保存されるようになりました。端末を変えてもブラウザを消去しても失われず、シード値の下に保存されたことが表示されます。"
 
-#: .\changelog.py:32
+#: .\changelog.py:37
 msgid ""
 "The Seed Finder checks your entry for the usual mistakes before it searches, and saves the seed it finds."
 msgstr "シード値検索が、検索前によくあるミスをチェックし、見つけたシード値を保存するようになりました。"
 
-#: .\changelog.py:35
+#: .\changelog.py:40
 msgid ""
 "Opening someone else's link no longer replaces your own seed until you choose to."
 msgstr "他の人のリンクを開いても、自分で選ぶまで自分のシード値は置き換わりません。"
 
-#: .\changelog.py:36
+#: .\changelog.py:41
 msgid "New step-by-step guides."
 msgstr "手順つきのガイドを追加しました。"
 
-#: .\changelog.py:42
+#: .\changelog.py:47
 msgid "Import your collection from screenshots of the in-game Cat Guide."
 msgstr "ゲーム内のにゃんこ図鑑のスクリーンショットからコレクションを取り込めます。"
 
-#: .\changelog.py:43
+#: .\changelog.py:48
 msgid ""
 "The seed search and the rolls run in your browser, so they're much faster."
 msgstr "シード値の検索とガチャ計算がブラウザ上で動くようになり、大幅に速くなりました。"
@@ -148,7 +154,7 @@ msgstr "ここで%(name)sを引いた?その引き直しの直後へシード値
 
 #: .\engine_text.py:31 .\templates\planner\_tracks.html:47
 #: .\templates\planner\_tracks.html:69 .\templates\planner\_tracks.html:71
-#: .\templates\planner\planner.html:142
+#: .\templates\planner\planner.html:141
 msgid "Guaranteed"
 msgstr "確定"
 
@@ -217,346 +223,350 @@ msgstr "これを引いた?被りのない通常の1回の直後へシード値�
 msgid "Search for %(label)s on %(banners)s"
 msgstr "%(banners)sで%(label)sを探す"
 
-#: .\engine_text.py:61 .\templates\planner\_tracks.html:26
+#: .\engine_text.py:61 .\templates\planner\_tier_badge.html:1
+msgid "See it in the tier list"
+msgstr "ティア表で見る"
+
+#: .\engine_text.py:62 .\templates\planner\_tracks.html:26
 msgid "Stop searching for this future uber"
 msgstr "この未実装超激の検索をやめる"
 
-#: .\engine_text.py:62 .\templates\planner\_tracks.html:8
-#: .\templates\planner\collection.html:70 .\templates\planner\planner.html:24
+#: .\engine_text.py:63 .\templates\planner\_tracks.html:8
+#: .\templates\planner\collection.html:70 .\templates\planner\planner.html:23
 msgid "Targets"
 msgstr "ターゲット"
 
-#: .\engine_text.py:64 .\templates\planner\_track_cell.html:6
+#: .\engine_text.py:65 .\templates\planner\_track_cell.html:6
 msgid ""
 "This step of the plan can be rolled on this banner instead - you'd get this cat, and the rest of the plan still works"
 msgstr "プランのこの手順はこのガチャで代わりに引けます - このキャラが手に入り、残りのプランもそのまま使えます"
 
-#: .\engine_text.py:68 .\templates\planner\_tracks.html:61
+#: .\engine_text.py:69 .\templates\planner\_tracks.html:61
 msgid ""
 "Toggle a future uber to search for it - it joins your Targets above and glows on this banner's cells"
 msgstr "オンにするとこの未実装超激を探します - 上のターゲットに加わり、このガチャのセルで光ります"
 
-#: .\engine_text.py:71 .\templates\planner\_normal_tracks.html:24
+#: .\engine_text.py:72 .\templates\planner\_normal_tracks.html:24
 #: .\templates\planner\_tracks.html:68
 msgid "Track A"
 msgstr "A列"
 
-#: .\engine_text.py:72 .\templates\planner\_normal_tracks.html:25
+#: .\engine_text.py:73 .\templates\planner\_normal_tracks.html:25
 #: .\templates\planner\_tracks.html:70
 msgid "Track B"
 msgstr "B列"
 
-#: .\engine_text.py:73 .\templates\planner\_tracks.html:45
+#: .\engine_text.py:74 .\templates\planner\_tracks.html:45
 msgid "Uber debuting with this banner (its first event anywhere)"
 msgstr "このガチャで初登場する超激レア(ゲーム全体で初めてのイベント)"
 
-#: .\engine_text.py:74 .\templates\planner\_tracks.html:42
+#: .\engine_text.py:75 .\templates\planner\_tracks.html:42
 msgid "Uber/Legend not in your collection"
 msgstr "コレクションにない超激/伝説"
 
-#: .\engine_text.py:75 .\templates\planner\_tracks.html:22
+#: .\engine_text.py:76 .\templates\planner\_tracks.html:22
 msgid "Won't drop on the selected banners"
 msgstr "選んだガチャでは出ません"
 
-#: .\engine_text.py:77 .\templates\planner\_tracks.html:22
+#: .\engine_text.py:78 .\templates\planner\_tracks.html:22
 #, python-format
 msgid ""
 "Won't drop on the selected banners: %(banners)s. Add a banner that carries it, or remove it."
 msgstr "選んだガチャでは出ません: %(banners)s。このキャラが出るガチャを追加するか、ターゲットから外してください。"
 
-#: .\engine_text.py:81 .\templates\planner\_track_cell.html:6
+#: .\engine_text.py:82 .\templates\planner\_track_cell.html:6
 msgid ""
 "You land here next: the first cat another roll on this banner would give after the highlighted draws"
 msgstr "次はここ:光っている回のあと、このガチャをもう1回引くと出る最初のキャラです"
 
-#: .\engine_text.py:85 .\templates\planner\_tracks.html:49
+#: .\engine_text.py:86 .\templates\planner\_tracks.html:49
 msgid ""
 "a capsule banner &mdash; its pulls spend that scarce ticket, not rare tickets or catfood"
 msgstr "チケット専用ガチャ &mdash; ここでの1回はレアチケットやネコカンではなく、その貴重なチケットを使います"
 
-#: .\engine_text.py:88 .\templates\planner\_tracks.html:44
+#: .\engine_text.py:89 .\templates\planner\_tracks.html:44
 msgid ""
 "a target you picked &mdash; gold here, and its next spot shows in <em>Targets</em> above"
 msgstr "選んだターゲット &mdash; ここでは金色で、次の位置は上の<em>ターゲット</em>に表示されます"
 
-#: .\engine_text.py:90 .\templates\planner\_normal_tracks.html:5
+#: .\engine_text.py:91 .\templates\planner\_normal_tracks.html:5
 #: .\templates\planner\_tracks.html:37
 msgid "alternate timelines; a dupe rerolls and switches track"
 msgstr "2本の分岐した流れ。レア被りで引き直され、列移動します"
 
-#: .\engine_text.py:91 .\templates\planner\_tracks.html:46
+#: .\engine_text.py:92 .\templates\planner\_tracks.html:46
 msgid "an expected-but-unreleased Uber padding the pool"
 msgstr "プールを埋める未実装の超激レア"
 
-#: .\engine_text.py:92 .\templates\planner\_tracks.html:48
+#: .\engine_text.py:93 .\templates\planner\_tracks.html:48
 msgid "another banner this plan step can roll on instead"
 msgstr "プランのこの手順で代わりに引ける別のガチャ"
 
-#: .\engine_text.py:93 .\templates\planner\_tracks.html:43
+#: .\engine_text.py:94 .\templates\planner\_tracks.html:43
 #: .\templates\planner\_tracks.html:44
 msgid "cat"
 msgstr "キャラ"
 
-#: .\engine_text.py:94 .\templates\planner\_tracks.html:40
+#: .\engine_text.py:95 .\templates\planner\_tracks.html:40
 msgid "click a cell's name-free space: the rolls up to it light like a plan"
 msgstr "セルの名前以外の部分をクリック:そこまでの回がプランのように光ります"
 
-#: .\engine_text.py:95 .\templates\planner\_tracks.html:48
+#: .\engine_text.py:96 .\templates\planner\_tracks.html:48
 msgid "dashed"
 msgstr "点線"
 
-#: .\engine_text.py:96 .\templates\planner\_tracks.html:42
+#: .\engine_text.py:97 .\templates\planner\_tracks.html:42
 msgid "green name"
 msgstr "緑の名前"
 
-#: .\engine_text.py:97 .\templates\planner\_normal_tracks.html:7
+#: .\engine_text.py:98 .\templates\planner\_normal_tracks.html:7
 #: .\templates\planner\_tracks.html:39
 msgid "if dupe"
 msgstr "レア被りなら"
 
-#: .\engine_text.py:98 .\templates\planner\_normal_cell.html:11
+#: .\engine_text.py:99 .\templates\planner\_normal_cell.html:11
 #: .\templates\planner\_track_cell.html:6
 msgid "if dupe:"
 msgstr "レア被りなら:"
 
-#: .\engine_text.py:99 .\templates\planner\_tracks.html:49
+#: .\engine_text.py:100 .\templates\planner\_tracks.html:49
 msgid "legend"
 msgstr "レジェンド"
 
-#: .\engine_text.py:100 .\templates\planner\_track_cell.html:6
+#: .\engine_text.py:101 .\templates\planner\_track_cell.html:6
 #: .\templates\planner\_tracks.html:45
 msgid "new"
 msgstr "初"
 
-#: .\engine_text.py:101 .\templates\planner\_tracks.html:43
+#: .\engine_text.py:102 .\templates\planner\_tracks.html:43
 msgid "owned"
 msgstr "所持"
 
-#: .\engine_text.py:102 .\templates\planner\_normal_tracks.html:11
+#: .\engine_text.py:103 .\templates\planner\_normal_tracks.html:11
 #: .\templates\planner\_tracks.html:40
 msgid "path"
 msgstr "経路"
 
-#: .\engine_text.py:103 .\templates\planner\_tracks.html:49
+#: .\engine_text.py:104 .\templates\planner\_tracks.html:49
 msgid "platinum"
 msgstr "プラチナ"
 
-#: .\engine_text.py:104 .\templates\planner\_track_cell.html:6
+#: .\engine_text.py:105 .\templates\planner\_track_cell.html:6
 #, python-format
 msgid "rarity %(rarity)s &middot; slot %(slot)s"
 msgstr "レアリティ %(rarity)s &middot; スロット %(slot)s"
 
-#: .\engine_text.py:105 .\templates\planner\_tracks.html:41
+#: .\engine_text.py:106 .\templates\planner\_tracks.html:41
 msgid "striped"
 msgstr "斜線"
 
-#: .\engine_text.py:106 .\templates\planner\_tracks.html:47
+#: .\engine_text.py:107 .\templates\planner\_tracks.html:47
 msgid "the Uber a guaranteed multi awards if started on that cell"
 msgstr "そのセルから確定ガチャを始めた時にもらえる超激レア"
 
-#: .\engine_text.py:107 .\templates\planner\_normal_tracks.html:7
+#: .\engine_text.py:108 .\templates\planner\_normal_tracks.html:7
 #: .\templates\planner\_tracks.html:39
 msgid "the reroll branch (its own dice &amp; landing)"
 msgstr "引き直しの分岐(専用のサイコロと着地点つき)"
 
-#: .\engine_text.py:108 .\templates\planner\_tracks.html:43
+#: .\engine_text.py:109 .\templates\planner\_tracks.html:43
 msgid "wishlisted"
 msgstr "ほしいもの"
 
-#: .\engine_text.py:110 .\templates\planner\_tracks.html:41
+#: .\engine_text.py:111 .\templates\planner\_tracks.html:41
 msgid ""
 "you land here next &mdash; the first cat one more roll would give after the lit draws"
 msgstr "次はここ &mdash; 光っている回のあと、もう1回引くと出る最初のキャラ"
 
-#: .\engine_text.py:113 .\labels.py:13 .\templates\planner\_tracks.html:52
+#: .\engine_text.py:114 .\labels.py:13 .\templates\planner\_tracks.html:52
 msgid "Rare"
 msgstr "レア"
 
-#: .\engine_text.py:114 .\labels.py:14 .\templates\planner\_tracks.html:53
+#: .\engine_text.py:115 .\labels.py:14 .\templates\planner\_tracks.html:53
 msgid "Super Rare"
 msgstr "激レア"
 
-#: .\engine_text.py:115 .\labels.py:15 .\templates\planner\_tracks.html:54
+#: .\engine_text.py:116 .\labels.py:15 .\templates\planner\_tracks.html:54
 msgid "Uber Super Rare"
 msgstr "超激レア"
 
-#: .\engine_text.py:116 .\labels.py:16 .\templates\planner\_tracks.html:55
+#: .\engine_text.py:117 .\labels.py:16 .\templates\planner\_tracks.html:55
 msgid "Legend Rare"
 msgstr "伝説レア"
 
-#: .\engine_text.py:118 .\services.py:1711 .\templates\planner\_steps.html:24
+#: .\engine_text.py:119 .\services.py:1711 .\templates\planner\_steps.html:24
 #, python-format
 msgid "%(n)s catfood"
 msgstr "ネコカン%(n)s個"
 
-#: .\engine_text.py:119 .\templates\planner\_solutions.html:11
+#: .\engine_text.py:120 .\templates\planner\_solutions.html:11
 #, python-format
 msgid "%(n)s plans"
 msgstr "%(n)s件のプラン"
 
-#: .\engine_text.py:120
+#: .\engine_text.py:121
 #, python-format
 msgid "%(n)s-roll"
 msgstr "%(n)s連"
 
-#: .\engine_text.py:121
+#: .\engine_text.py:122
 #, python-format
 msgid "%(n)s-roll (guaranteed)"
 msgstr "%(n)s連(確定)"
 
-#: .\engine_text.py:122 .\templates\planner\_solution_body.html:13
+#: .\engine_text.py:123 .\templates\planner\_solution_body.html:13
 msgid "Apply this plan"
 msgstr "このプランを適用"
 
-#: .\engine_text.py:124 .\templates\planner\_solution.html:9
+#: .\engine_text.py:125 .\templates\planner\_solution.html:9
 #, python-format
 msgid ""
 "Best plan found, not a proven cheapest one. Past %(limit)s cats the search for the whole set is bounded - an exact one would take 2^N searches - so a cheaper plan may exist. Every smaller row here IS exact."
 msgstr ""
 "見つかった最良のプランで、最安だとは証明されていません。ターゲットが%(limit)s体を超えると全体の探索に上限がかかるため(厳密には2^N回の探索が必要)、もっと安いプランがあるかもしれません。これより小さい行はすべて厳密です。"
 
-#: .\engine_text.py:128 .\templates\planner\_res_board.html:68
+#: .\engine_text.py:129 .\templates\planner\_res_board.html:68
 #: .\templates\planner\_solutions.html:10
 #: .\templates\planner\collection.html:67
 msgid "Clear"
 msgstr "クリア"
 
-#: .\engine_text.py:129 .\templates\planner\_normal_plan.html:23
+#: .\engine_text.py:130 .\templates\planner\_normal_plan.html:23
 #: .\templates\planner\_steps.html:12
 msgid "Next step"
 msgstr "次の手順"
 
-#: .\engine_text.py:130 .\templates\planner\_solutions.html:18
+#: .\engine_text.py:131 .\templates\planner\_solutions.html:18
 msgid "No reachable plan with given resources."
 msgstr "今の資源で届くプランはありません。"
 
-#: .\engine_text.py:131 .\templates\planner\_solution.html:10
+#: .\engine_text.py:132 .\templates\planner\_solution.html:10
 msgid "Not found"
 msgstr "見つかりません"
 
-#: .\engine_text.py:132 .\templates\planner\_solutions.html:6
+#: .\engine_text.py:133 .\templates\planner\_solutions.html:6
 msgid "Only plans with"
 msgstr "次を含むプランのみ"
 
-#: .\engine_text.py:133 .\templates\planner\_normal_plan.html:21
+#: .\engine_text.py:134 .\templates\planner\_normal_plan.html:21
 #: .\templates\planner\_steps.html:10
 msgid "Previous step"
 msgstr "前の手順"
 
-#: .\engine_text.py:134
+#: .\engine_text.py:135
 msgid "Single pull"
 msgstr "単発"
 
-#: .\engine_text.py:135 .\templates\planner\_normal_plan.html:19
+#: .\engine_text.py:136 .\templates\planner\_normal_plan.html:19
 #: .\templates\planner\_steps.html:8
 msgid "Steps"
 msgstr "手順"
 
-#: .\engine_text.py:136 .\templates\planner\_steps.html:30
+#: .\engine_text.py:137 .\templates\planner\_steps.html:30
 #, python-format
 msgid "Total &middot; %(total)s"
 msgstr "合計 &middot; %(total)s"
 
-#: .\engine_text.py:137 .\templates\planner\_normal_plan.html:20
+#: .\engine_text.py:138 .\templates\planner\_normal_plan.html:20
 #: .\templates\planner\_steps.html:9
 msgid "Walk the plan step by step"
 msgstr "プランを1手順ずつたどる"
 
-#: .\engine_text.py:138 .\templates\planner\_solution.html:17
+#: .\engine_text.py:139 .\templates\planner\_solution.html:17
 msgid "Working out this plan&hellip;"
 msgstr "プランを計算中&hellip;"
 
-#: .\engine_text.py:139 .\templates\planner\_solution.html:9
+#: .\engine_text.py:140 .\templates\planner\_solution.html:9
 msgid "best found"
 msgstr "最良候補"
 
-#: .\engine_text.py:140 .\services.py:1713 .\templates\planner\_steps.html:24
+#: .\engine_text.py:141 .\services.py:1713 .\templates\planner\_steps.html:24
 msgid "free"
 msgstr "無料"
 
-#: .\engine_text.py:141 .\templates\planner\_normal_plan.html:37
+#: .\engine_text.py:142 .\templates\planner\_normal_plan.html:37
 #: .\templates\planner\_steps.html:26
 msgid "gets"
 msgstr "入手:"
 
-#: .\engine_text.py:142 .\templates\planner\_steps.html:20
+#: .\engine_text.py:143 .\templates\planner\_steps.html:20
 msgid "same rolls"
 msgstr "同じ結果"
 
-#: .\engine_text.py:144 .\templates\planner\_normal_tracks.html:10
+#: .\engine_text.py:145 .\templates\planner\_normal_tracks.html:10
 msgid "Dark Catseye"
 msgstr "キャッツアイ【闇】"
 
-#: .\engine_text.py:146 .\templates\planner\_normal_cell.html:11
+#: .\engine_text.py:147 .\templates\planner\_normal_cell.html:11
 msgid ""
 "Following the track dupes here: the previous pull obtains this same item, so this cell rerolls into the branch value and jumps tracks"
 msgstr "この列をたどるとここで被り:直前の1回が同じアイテムを出すので、このセルは分岐先に引き直されて列移動します"
 
-#: .\engine_text.py:149 .\templates\planner\_normal_plan.html:14
+#: .\engine_text.py:150 .\templates\planner\_normal_plan.html:14
 msgid "I rolled it &mdash; advance my seed"
 msgstr "引いた &mdash; シード値を進める"
 
-#: .\engine_text.py:151 .\templates\planner\_normal_plan.html:45
+#: .\engine_text.py:152 .\templates\planner\_normal_plan.html:45
 #, python-format
 msgid ""
 "No %(target)s reachable with those rolls. Give a machine more budget, or try again after your next real pulls move the seed."
 msgstr "その回数では%(target)sに届きません。ガチャの予算を増やすか、実際に引いてシード値が進んでからもう一度お試しください。"
 
-#: .\engine_text.py:154 .\templates\planner\_normal_tracks.html:38
+#: .\engine_text.py:155 .\templates\planner\_normal_tracks.html:38
 msgid "Pick at least one capsule machine to roll."
 msgstr "ガチャを1つ以上選んでください。"
 
-#: .\engine_text.py:156 .\templates\planner\_normal_cell.html:11
+#: .\engine_text.py:157 .\templates\planner\_normal_cell.html:11
 #, python-format
 msgid ""
 "Rolled %(cell)s? Jump the seed to just after it (its clean roll; a dupe's branch has its own dice)"
 msgstr "%(cell)sを引いた?その直後へシード値を進めます(被りのない通常の1回。被りの分岐には専用のサイコロがあります)"
 
-#: .\engine_text.py:159 .\templates\planner\_normal_plan.html:14
+#: .\engine_text.py:160 .\templates\planner\_normal_plan.html:14
 msgid "You rolled this plan: the seed jumps to just after its final pull"
 msgstr "このプランを引いた:最後の1回の直後へシード値を進めます"
 
-#: .\engine_text.py:160 .\templates\planner\_normal_tracks.html:11
+#: .\engine_text.py:161 .\templates\planner\_normal_tracks.html:11
 msgid "a planned pull"
 msgstr "プランの1回"
 
-#: .\engine_text.py:161 .\templates\planner\_normal_tracks.html:9
+#: .\engine_text.py:162 .\templates\planner\_normal_tracks.html:9
 msgid "an upgrade (Special Skill), not a cat"
 msgstr "パワーアップアイテム(キャラではありません)"
 
-#: .\engine_text.py:162 .\templates\planner\_normal_tracks.html:8
+#: .\engine_text.py:163 .\templates\planner\_normal_tracks.html:8
 msgid "aqua"
 msgstr "水色"
 
-#: .\engine_text.py:163 .\templates\planner\_normal_tracks.html:9
+#: .\engine_text.py:164 .\templates\planner\_normal_tracks.html:9
 msgid "blue"
 msgstr "青"
 
-#: .\engine_text.py:164 .\templates\planner\_normal_plan.html:10
+#: .\engine_text.py:165 .\templates\planner\_normal_plan.html:10
 msgid "for"
 msgstr "消費:"
 
-#: .\engine_text.py:165 .\templates\planner\_normal_tracks.html:8
+#: .\engine_text.py:166 .\templates\planner\_normal_tracks.html:8
 msgid "gold"
 msgstr "金"
 
-#: .\engine_text.py:166 .\templates\planner\_normal_tracks.html:8
+#: .\engine_text.py:167 .\templates\planner\_normal_tracks.html:8
 msgid "red"
 msgstr "赤"
 
-#: .\engine_text.py:167 .\templates\planner\_normal_tracks.html:11
+#: .\engine_text.py:168 .\templates\planner\_normal_tracks.html:11
 msgid "target"
 msgstr "ターゲット"
 
-#: .\engine_text.py:168
+#: .\engine_text.py:169
 msgid "the 1% Catseye-event jackpot"
 msgstr "キャッツアイイベントの1%の大当たり"
 
-#: .\engine_text.py:169 .\templates\planner\_normal_tracks.html:8
+#: .\engine_text.py:170 .\templates\planner\_normal_tracks.html:8
 msgid "the machine's rarer rate bands, scarcest last"
 msgstr "ガチャのレアな排出帯(後ろほど希少)"
 
-#: .\engine_text.py:170 .\templates\planner\_normal_tracks.html:11
+#: .\engine_text.py:171 .\templates\planner\_normal_tracks.html:11
 msgid "what it collects"
 msgstr "入手するもの"
 
@@ -1176,8 +1186,8 @@ msgid ""
 "The latest changes to Neko Optimizer, the Battle Cats gacha planner, newest first."
 msgstr "にゃんこ大戦争のガチャプランナー、Neko Optimizerの最新の変更点(新しい順)。"
 
-#: .\seo.py:96 .\templates\planner\base.html:62
-#: .\templates\planner\base.html:144
+#: .\seo.py:96 .\templates\planner\base.html:64
+#: .\templates\planner\base.html:148
 msgid "About"
 msgstr "このサイトについて"
 
@@ -1187,13 +1197,13 @@ msgid ""
 msgstr "Neko Optimizerの作者、にゃんこ大戦争ガチャプランナーを支える技術、そしてクレジットしているコミュニティのツールとデータ。"
 
 #: .\seo.py:102 .\templates\planner\account.html:6
-#: .\templates\planner\account.html:32 .\templates\planner\base.html:102
+#: .\templates\planner\account.html:32 .\templates\planner\base.html:104
 msgid "Sign up"
 msgstr "新規登録"
 
 #: .\seo.py:103 .\templates\planner\account.html:16
 #: .\templates\planner\account.html:27 .\templates\planner\account.html:30
-#: .\templates\planner\base.html:101
+#: .\templates\planner\base.html:103
 msgid "Log in"
 msgstr "ログイン"
 
@@ -1502,7 +1512,7 @@ msgstr "Y年n月j日"
 msgid "M j"
 msgstr "n月j日"
 
-#: .\services.py:1494 .\templates\planner\planner.html:58
+#: .\services.py:1494 .\templates\planner\planner.html:57
 msgid "Past"
 msgstr "終了"
 
@@ -1908,118 +1918,122 @@ msgstr "アカウントをお持ちですか?"
 msgid "No account yet?"
 msgstr "アカウントがまだない?"
 
-#: .\templates\planner\base.html:55
+#: .\templates\planner\base.html:57
 msgid "Planner"
 msgstr "プランナー"
 
-#: .\templates\planner\base.html:56 .\templates\planner\normal.html:5
+#: .\templates\planner\base.html:58 .\templates\planner\normal.html:5
 #: .\templates\planner\normal.html:81
 msgid "Normal Capsules"
 msgstr "にゃんこガチャ"
 
-#: .\templates\planner\base.html:57 .\templates\planner\collection.html:5
+#: .\templates\planner\base.html:59 .\templates\planner\collection.html:5
 msgid "Collection"
 msgstr "コレクション"
 
-#: .\templates\planner\base.html:58 .\templates\planner\resources.html:5
+#: .\templates\planner\base.html:60 .\templates\planner\resources.html:5
 msgid "Resources"
 msgstr "素材"
 
-#: .\templates\planner\base.html:59
+#: .\templates\planner\base.html:61
 msgid "Tier List"
 msgstr "ティア表"
 
-#: .\templates\planner\base.html:60 .\templates\planner\seek.html:5
+#: .\templates\planner\base.html:62 .\templates\planner\seek.html:5
 msgid "Seed Finder"
 msgstr "シード値検索"
 
-#: .\templates\planner\base.html:61 .\templates\planner\base.html:142
+#: .\templates\planner\base.html:63 .\templates\planner\base.html:146
 #: .\templates\planner\guides.html:5
 msgid "Guides"
 msgstr "ガイド"
 
-#: .\templates\planner\base.html:66
+#: .\templates\planner\base.html:68
 msgid "Game version"
 msgstr "ゲームのバージョン"
 
-#: .\templates\planner\base.html:69
+#: .\templates\planner\base.html:71
 #, python-format
 msgid "%(label)s version"
 msgstr "%(label)s"
 
-#: .\templates\planner\base.html:76
+#: .\templates\planner\base.html:78
 msgid "Language"
 msgstr "言語"
 
-#: .\templates\planner\base.html:77
+#: .\templates\planner\base.html:79
 msgid "Game's language"
 msgstr "ゲームの言語"
 
-#: .\templates\planner\base.html:82
+#: .\templates\planner\base.html:84
 msgid "Set"
 msgstr "設定"
 
-#: .\templates\planner\base.html:87
+#: .\templates\planner\base.html:89
 #, python-format
 msgid "Logged in as %(name)s"
 msgstr "%(name)sでログイン中"
 
-#: .\templates\planner\base.html:87
+#: .\templates\planner\base.html:89
 msgid "Account"
 msgstr "アカウント"
 
-#: .\templates\planner\base.html:91
+#: .\templates\planner\base.html:93
 msgid "Logged in as"
 msgstr "ログイン中:"
 
-#: .\templates\planner\base.html:96
+#: .\templates\planner\base.html:98
 msgid "Log out"
 msgstr "ログアウト"
 
-#: .\templates\planner\base.html:105
+#: .\templates\planner\base.html:107
 msgid "Theme"
 msgstr "テーマ"
 
-#: .\templates\planner\base.html:106
+#: .\templates\planner\base.html:108
 msgid "Light theme"
 msgstr "ライトテーマ"
 
-#: .\templates\planner\base.html:107
+#: .\templates\planner\base.html:109
 msgid "Dark theme"
 msgstr "ダークテーマ"
 
-#: .\templates\planner\base.html:108
+#: .\templates\planner\base.html:110
 msgid "Match my device"
 msgstr "端末の設定に合わせる"
 
-#: .\templates\planner\base.html:116
+#: .\templates\planner\base.html:118
 msgid "Welcome"
 msgstr "ようこそ"
 
-#: .\templates\planner\base.html:117
+#: .\templates\planner\base.html:119
 #, python-format
 msgid ""
 "New here? <a href=\"%(guides_url)s\">The short guides</a> explain how it all works."
 msgstr "はじめて?<a href=\"%(guides_url)s\">短いガイド</a>で使い方がわかります。"
 
-#: .\templates\planner\base.html:118 .\templates\planner\base.html:153
+#: .\templates\planner\base.html:120 .\templates\planner\base.html:157
 msgid "Close"
 msgstr "閉じる"
 
-#: .\templates\planner\base.html:124
+#: .\templates\planner\base.html:126
 msgid "Elsewhere"
 msgstr "関連サイト"
 
-#: .\templates\planner\base.html:138
+#: .\templates\planner\base.html:140
 msgid ""
 "Neko Optimizer is a free, fan-made tool for <em>The Battle Cats</em> and is not affiliated with PONOS."
 msgstr "Neko Optimizerは<em>にゃんこ大戦争</em>の無料ファンツールで、PONOSとは関係ありません。"
 
-#: .\templates\planner\base.html:143 .\templates\planner\whats_new.html:5
+#: .\templates\planner\base.html:145
+msgid "More"
+msgstr "その他"
+
+#: .\templates\planner\base.html:147 .\templates\planner\whats_new.html:5
 msgid "What's new"
 msgstr "更新情報"
 
-#: .\templates\planner\base.html:145
+#: .\templates\planner\base.html:149
 msgid "Source"
 msgstr "ソース"
 
@@ -2055,47 +2069,47 @@ msgid "Show each cat as its name, its form icon, or both"
 msgstr "キャラを名前・形態アイコン・両方のどれで表示するか"
 
 #: .\templates\planner\collection.html:17 .\templates\planner\normal.html:152
-#: .\templates\planner\planner.html:131 .\templates\planner\resources.html:21
+#: .\templates\planner\planner.html:130 .\templates\planner\resources.html:21
 msgid "Names"
 msgstr "名前"
 
 #: .\templates\planner\collection.html:18 .\templates\planner\normal.html:153
-#: .\templates\planner\planner.html:132 .\templates\planner\resources.html:22
+#: .\templates\planner\planner.html:131 .\templates\planner\resources.html:22
 msgid "Icons"
 msgstr "アイコン"
 
 #: .\templates\planner\collection.html:19 .\templates\planner\normal.html:154
-#: .\templates\planner\planner.html:133 .\templates\planner\resources.html:23
+#: .\templates\planner\planner.html:132 .\templates\planner\resources.html:23
 msgid "Both"
 msgstr "両方"
 
 #: .\templates\planner\collection.html:21 .\templates\planner\normal.html:156
-#: .\templates\planner\planner.html:135 .\templates\planner\resources.html:25
+#: .\templates\planner\planner.html:134 .\templates\planner\resources.html:25
 #: .\templates\planner\tiers.html:29
 msgid ""
 "Show each cat as this form - name and icon; a unit without that form shows the last one it has"
 msgstr "各キャラをこの形態で表示(名前とアイコン)。その形態がないキャラは最後の形態を表示します"
 
 #: .\templates\planner\collection.html:22 .\templates\planner\normal.html:157
-#: .\templates\planner\planner.html:136 .\templates\planner\resources.html:26
+#: .\templates\planner\planner.html:135 .\templates\planner\resources.html:26
 #: .\templates\planner\tiers.html:30
 msgid "Base"
 msgstr "第1形態"
 
 #: .\templates\planner\collection.html:23 .\templates\planner\normal.html:158
-#: .\templates\planner\planner.html:137 .\templates\planner\resources.html:27
+#: .\templates\planner\planner.html:136 .\templates\planner\resources.html:27
 #: .\templates\planner\tiers.html:31
 msgid "Evolved"
 msgstr "第2形態"
 
 #: .\templates\planner\collection.html:24 .\templates\planner\normal.html:159
-#: .\templates\planner\planner.html:138 .\templates\planner\resources.html:28
+#: .\templates\planner\planner.html:137 .\templates\planner\resources.html:28
 #: .\templates\planner\tiers.html:32
 msgid "True"
 msgstr "第3形態"
 
 #: .\templates\planner\collection.html:25 .\templates\planner\normal.html:160
-#: .\templates\planner\planner.html:139 .\templates\planner\resources.html:29
+#: .\templates\planner\planner.html:138 .\templates\planner\resources.html:29
 #: .\templates\planner\tiers.html:33
 msgid "Ultra"
 msgstr "第4形態"
@@ -2386,157 +2400,152 @@ msgid ""
 msgstr ""
 "上ににゃんこガチャのシード値を入力してください &mdash; または<strong>にゃんこガチャのシード値を調べる</strong>を開き、実際に数回引いた結果から割り出しましょう。"
 
-#: .\templates\planner\normal.html:148 .\templates\planner\planner.html:127
+#: .\templates\planner\normal.html:148 .\templates\planner\planner.html:126
 msgid "Rolls"
 msgstr "ガチャテーブル"
 
-#: .\templates\planner\normal.html:150 .\templates\planner\planner.html:129
+#: .\templates\planner\normal.html:150 .\templates\planner\planner.html:128
 msgid "Show"
 msgstr "表示"
 
-#: .\templates\planner\normal.html:150 .\templates\planner\planner.html:129
+#: .\templates\planner\normal.html:150 .\templates\planner\planner.html:128
 msgid "How many rolls the table shows (up to 999)"
 msgstr "表に表示する回数(最大999)"
 
-#: .\templates\planner\normal.html:150 .\templates\planner\planner.html:129
+#: .\templates\planner\normal.html:150 .\templates\planner\planner.html:128
 msgid "rolls"
 msgstr "回"
 
 #: .\templates\planner\planner.html:7
-msgid ""
-"See every rare gacha roll your seed will give, and the cheapest way to the cats you want."
-msgstr "シード値から出るレアガチャの結果をすべて表示し、ほしいキャラへのいちばん安い引き方を見つけます。"
-
-#: .\templates\planner\planner.html:8
 #, python-format
 msgid ""
 "New here? <a href=\"%(tracks_url)s\">How to read the rolls</a> &middot; <a href=\"%(plan_url)s\">How to plan</a>"
 msgstr ""
 "はじめて?<a href=\"%(tracks_url)s\">ガチャテーブルの見方</a> &middot; <a href=\"%(plan_url)s\">計画の立て方</a>"
 
-#: .\templates\planner\planner.html:18
+#: .\templates\planner\planner.html:17
 msgid "required"
 msgstr "必須"
 
-#: .\templates\planner\planner.html:18
+#: .\templates\planner\planner.html:17
 msgid "Step the seed back one roll"
 msgstr "シード値を1回分戻す"
 
-#: .\templates\planner\planner.html:18
+#: .\templates\planner\planner.html:17
 msgid "back"
 msgstr "戻る"
 
-#: .\templates\planner\planner.html:18
+#: .\templates\planner\planner.html:17
 msgid "undo"
 msgstr "元に戻す"
 
-#: .\templates\planner\planner.html:24
+#: .\templates\planner\planner.html:23
 msgid "pick a target, or tick “search my wishlist”"
 msgstr "ターゲットを選ぶか、「ほしいものリストも検索」にチェック"
 
-#: .\templates\planner\planner.html:26
+#: .\templates\planner\planner.html:25
 msgid ""
 "Tap <span class=\"key\">&plus;</span> to roll a banner. Click a banner's name to see its cats."
 msgstr "<span class=\"key\">&plus;</span>でそのガチャを回します。ガチャ名をクリックするとキャラが見られます。"
 
-#: .\templates\planner\planner.html:26
+#: .\templates\planner\planner.html:25
 msgid "Show me the selected banners"
 msgstr "選んだガチャを表示"
 
-#: .\templates\planner\planner.html:35
+#: .\templates\planner\planner.html:34
 msgid "Search cats & banners…"
 msgstr "キャラ&ガチャを検索…"
 
-#: .\templates\planner\planner.html:36
+#: .\templates\planner\planner.html:35
 msgid "Clear search and browse banners"
 msgstr "検索をクリアしてガチャ一覧へ"
 
-#: .\templates\planner\planner.html:37
+#: .\templates\planner\planner.html:36
 msgid "Matching banners (every run) and cats · clear to browse"
 msgstr "一致するガチャ(全開催回)とキャラ · クリアで一覧へ"
 
-#: .\templates\planner\planner.html:59
+#: .\templates\planner\planner.html:58
 msgid "Loading…"
 msgstr "読み込み中…"
 
-#: .\templates\planner\planner.html:70
+#: .\templates\planner\planner.html:69
 #, python-format
 msgid "No cats yet &mdash; <a href=\"%(collection_url)s\">add some</a>."
 msgstr "まだキャラがいません &mdash; <a href=\"%(collection_url)s\">追加しましょう</a>。"
 
-#: .\templates\planner\planner.html:84
+#: .\templates\planner\planner.html:83
 msgid "Your resources"
 msgstr "手持ちの資源"
 
-#: .\templates\planner\planner.html:92
+#: .\templates\planner\planner.html:91
 msgid ""
 "Platinum and Legend Capsules use their own tickets. Enter how many you have (0 to skip them)."
 msgstr "プラチナガチャとレジェンドガチャは専用のチケットを使います。持っている枚数を入れてください(0でスキップ)。"
 
-#: .\templates\planner\planner.html:100
+#: .\templates\planner\planner.html:99
 msgid "Advanced"
 msgstr "詳細設定"
 
-#: .\templates\planner\planner.html:106
+#: .\templates\planner\planner.html:105
 #, python-format
 msgid "1 rare ticket is worth %(field)s catfood"
 msgstr "レアチケット1枚 = ネコカン%(field)s個"
 
-#: .\templates\planner\planner.html:107
+#: .\templates\planner\planner.html:106
 msgid ""
 "One draw is 150 catfood, and the planner spends tickets first. Raise the ticket value above 150 if rare tickets are precious to you &mdash; the planner will then spend catfood to save them."
 msgstr ""
 "1回はネコカン150個で、プランナーはチケットを先に使います。レアチケットを温存したいなら価値を150より上げてください &mdash; プランナーがネコカンを使ってチケットを残すようになります。"
 
-#: .\templates\planner\planner.html:112
+#: .\templates\planner\planner.html:111
 msgid "Find plan"
 msgstr "プランを探す"
 
-#: .\templates\planner\planner.html:113
+#: .\templates\planner\planner.html:112
 msgid ""
 "Copy a link that reopens this seed and Rolls view (rolls shown, names/icons, form, details)"
 msgstr "このシード値とガチャテーブルの表示(回数・名前/アイコン・形態・詳細)を開き直すリンクをコピー"
 
-#: .\templates\planner\planner.html:113
+#: .\templates\planner\planner.html:112
 msgid "Copy link"
 msgstr "リンクをコピー"
 
-#: .\templates\planner\planner.html:119
+#: .\templates\planner\planner.html:118
 msgid "Finding your plan…"
 msgstr "プランを探しています…"
 
-#: .\templates\planner\planner.html:130
+#: .\templates\planner\planner.html:129
 msgid "Show each roll cell as the cat's name, its form icon, or both"
 msgstr "各セルをキャラ名・形態アイコン・両方のどれで表示するか"
 
-#: .\templates\planner\planner.html:141
+#: .\templates\planner\planner.html:140
 msgid ""
 "Reveal each cell's rarity and slot seed, for cross-checking against godfat"
 msgstr "godfatと照合できるよう、各セルのレアリティとスロットのシード値を表示"
 
-#: .\templates\planner\planner.html:141
+#: .\templates\planner\planner.html:140
 msgid "Details"
 msgstr "詳細"
 
-#: .\templates\planner\planner.html:142
+#: .\templates\planner\planner.html:141
 msgid ""
 "Force a guaranteed multi of this size onto every banner, to preview the uber each cell's guaranteed draw would give"
 msgstr "すべてのガチャにこの回数の確定ガチャを適用し、各セルから確定で何の超激が出るかを確認"
 
-#: .\templates\planner\planner.html:144
+#: .\templates\planner\planner.html:143
 msgid "None"
 msgstr "なし"
 
-#: .\templates\planner\planner.html:151
+#: .\templates\planner\planner.html:150
 msgid ""
 "When a guaranteed multi is in play, ignore the guaranteed column when finding cats - so Find next lists only normal-roll positions"
 msgstr "確定ガチャがある時、キャラ検索で確定列を無視します - 「次を検索」が通常の回の位置だけを表示します"
 
-#: .\templates\planner\planner.html:151
+#: .\templates\planner\planner.html:150
 msgid "Skip guaranteed in Find"
 msgstr "検索で確定を除く"
 
-#: .\templates\planner\planner.html:158
+#: .\templates\planner\planner.html:157
 msgid "Back to rolls"
 msgstr "ガチャテーブルに戻る"
 

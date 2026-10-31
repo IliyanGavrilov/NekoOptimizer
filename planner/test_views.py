@@ -909,3 +909,22 @@ def test_every_page_carries_the_first_visit_welcome(client):
 def test_whats_new_lists_the_changes_newest_first(client):
     content = client.get("/whats-new/").content.decode()
     assert content.index("Oct. 31, 2026") < content.index("Oct. 30, 2026")
+
+
+@pytest.mark.django_db
+def test_a_tier_badge_knows_its_unit_so_it_can_open_the_tier_list(client, monkeypatch):
+    Unit.objects.create(unit_id=25, name="Bahamut", rarity="Uber Super Rare")
+    monkeypatch.setattr(
+        "planner.views.tier_badges",
+        lambda: {25: {"tier": "S", "up": None, "up_note": "", "uid": 25}},
+    )
+    assert client.get("/unit/info/", {"name": "Bahamut"}).json()["tier"]["uid"] == 25
+
+
+@pytest.mark.django_db
+def test_the_popup_keeps_each_traits_english_name_for_its_colour(client, monkeypatch):
+    Unit.objects.create(unit_id=25, name="Bahamut", rarity="Uber Super Rare")
+    stats = {"level": 30, "units": [{"id": 25, "forms": [{"targets": ["Red"]}]}]}
+    monkeypatch.setattr("planner.services.load_stats", lambda: stats)
+    form = client.get("/unit/info/", {"name": "Bahamut"}).json()["stats"]["forms"][0]
+    assert form["trait_keys"] == ["Red"]

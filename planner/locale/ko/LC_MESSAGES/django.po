@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-31 12:23+0200\n"
+"POT-Creation-Date: 2026-10-31 13:07+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -26,43 +26,49 @@ msgstr "이제 일본어, 번체 중국어, 한국어를 지원합니다. 게임
 msgid "Each game version has its own pages: /jp/, /tw/ and /kr/."
 msgstr "게임 버전마다 전용 페이지가 생겼습니다: /jp/, /tw/, /kr/."
 
-#: .\changelog.py:17
+#: .\changelog.py:18
+msgid ""
+"Your first visit opens the version your browser's language points to: Japanese, Traditional Chinese or Korean, else English."
+msgstr "처음 방문하면 브라우저 언어에 맞는 버전이 열립니다: 일본어, 번체 중국어, 한국어, 그 외에는 영어."
+
+#: .\changelog.py:21
+msgid "The Seed Finder's checks now show as you pick each cat."
+msgstr "시드 찾기의 확인이 이제 캐릭터를 고를 때마다 바로 표시됩니다."
+
+#: .\changelog.py:22
 msgid ""
 "Fest and set names use each game version's own names, taken from the game's data."
 msgstr "축제와 세트 이름은 게임 데이터에 있는 각 버전의 정식 이름으로 표시됩니다."
 
-#: .\changelog.py:19
-#| msgid ""
-#| "A short welcome for first visits, plain how-it-works steps on the "
-#| "Planner, and a page of game words explained."
+#: .\changelog.py:24
 msgid ""
 "A short welcome for first visits, guide links on the pages that need them, and a page of game words explained."
 msgstr "처음 온 분을 위한 짧은 안내, 필요한 페이지의 가이드 링크, 게임 용어 설명 페이지를 추가했습니다."
 
-#: .\changelog.py:28
+#: .\changelog.py:33
 msgid ""
 "Your seeds are saved to your profile. A new device or a cleared browser no longer loses them, and a line under the seed shows when it's saved."
 msgstr "시드가 프로필에 저장됩니다. 기기를 바꾸거나 브라우저를 지워도 사라지지 않으며, 시드 아래에 저장 여부가 표시됩니다."
 
-#: .\changelog.py:32
+#: .\changelog.py:37
 msgid ""
 "The Seed Finder checks your entry for the usual mistakes before it searches, and saves the seed it finds."
 msgstr "시드 찾기가 검색 전에 흔한 실수를 확인하고, 찾은 시드를 저장합니다."
 
-#: .\changelog.py:35
+#: .\changelog.py:40
 msgid ""
 "Opening someone else's link no longer replaces your own seed until you choose to."
 msgstr "다른 사람의 링크를 열어도, 직접 고르기 전까지 내 시드는 바뀌지 않습니다."
 
-#: .\changelog.py:36
+#: .\changelog.py:41
 msgid "New step-by-step guides."
 msgstr "단계별 가이드를 추가했습니다."
 
-#: .\changelog.py:42
+#: .\changelog.py:47
 msgid "Import your collection from screenshots of the in-game Cat Guide."
 msgstr "게임 내 냥코 도감 스크린샷으로 컬렉션을 가져올 수 있습니다."
 
-#: .\changelog.py:43
+#: .\changelog.py:48
 msgid ""
 "The seed search and the rolls run in your browser, so they're much faster."
 msgstr "시드 검색과 뽑기 계산이 브라우저에서 돌아가서 훨씬 빨라졌습니다."
@@ -148,7 +154,7 @@ msgstr "여기서 %(name)s을(를) 뽑았나요? 그 재추첨 직후로 시드�
 
 #: .\engine_text.py:31 .\templates\planner\_tracks.html:47
 #: .\templates\planner\_tracks.html:69 .\templates\planner\_tracks.html:71
-#: .\templates\planner\planner.html:142
+#: .\templates\planner\planner.html:141
 msgid "Guaranteed"
 msgstr "확정"
 
@@ -218,346 +224,350 @@ msgstr "이걸 뽑았나요? 중복 없는 일반 뽑기 직후로 시드를 옮
 msgid "Search for %(label)s on %(banners)s"
 msgstr "%(banners)s에서 %(label)s 찾기"
 
-#: .\engine_text.py:61 .\templates\planner\_tracks.html:26
+#: .\engine_text.py:61 .\templates\planner\_tier_badge.html:1
+msgid "See it in the tier list"
+msgstr "티어표에서 보기"
+
+#: .\engine_text.py:62 .\templates\planner\_tracks.html:26
 msgid "Stop searching for this future uber"
 msgstr "이 미구현 울슈레 검색 중지"
 
-#: .\engine_text.py:62 .\templates\planner\_tracks.html:8
-#: .\templates\planner\collection.html:70 .\templates\planner\planner.html:24
+#: .\engine_text.py:63 .\templates\planner\_tracks.html:8
+#: .\templates\planner\collection.html:70 .\templates\planner\planner.html:23
 msgid "Targets"
 msgstr "목표"
 
-#: .\engine_text.py:64 .\templates\planner\_track_cell.html:6
+#: .\engine_text.py:65 .\templates\planner\_track_cell.html:6
 msgid ""
 "This step of the plan can be rolled on this banner instead - you'd get this cat, and the rest of the plan still works"
 msgstr "플랜의 이 단계는 이 뽑기에서 대신 돌릴 수 있습니다 - 이 캐릭터를 얻고 나머지 플랜도 그대로 됩니다"
 
-#: .\engine_text.py:68 .\templates\planner\_tracks.html:61
+#: .\engine_text.py:69 .\templates\planner\_tracks.html:61
 msgid ""
 "Toggle a future uber to search for it - it joins your Targets above and glows on this banner's cells"
 msgstr "켜면 이 미구현 울슈레를 찾습니다 - 위 목표에 추가되고 이 뽑기의 칸에서 빛납니다"
 
-#: .\engine_text.py:71 .\templates\planner\_normal_tracks.html:24
+#: .\engine_text.py:72 .\templates\planner\_normal_tracks.html:24
 #: .\templates\planner\_tracks.html:68
 msgid "Track A"
 msgstr "A열"
 
-#: .\engine_text.py:72 .\templates\planner\_normal_tracks.html:25
+#: .\engine_text.py:73 .\templates\planner\_normal_tracks.html:25
 #: .\templates\planner\_tracks.html:70
 msgid "Track B"
 msgstr "B열"
 
-#: .\engine_text.py:73 .\templates\planner\_tracks.html:45
+#: .\engine_text.py:74 .\templates\planner\_tracks.html:45
 msgid "Uber debuting with this banner (its first event anywhere)"
 msgstr "이 뽑기로 첫 등장하는 울트라 슈퍼 레어(게임 전체에서 첫 이벤트)"
 
-#: .\engine_text.py:74 .\templates\planner\_tracks.html:42
+#: .\engine_text.py:75 .\templates\planner\_tracks.html:42
 msgid "Uber/Legend not in your collection"
 msgstr "컬렉션에 없는 울슈레/레전드"
 
-#: .\engine_text.py:75 .\templates\planner\_tracks.html:22
+#: .\engine_text.py:76 .\templates\planner\_tracks.html:22
 msgid "Won't drop on the selected banners"
 msgstr "고른 뽑기에서는 나오지 않습니다"
 
-#: .\engine_text.py:77 .\templates\planner\_tracks.html:22
+#: .\engine_text.py:78 .\templates\planner\_tracks.html:22
 #, python-format
 msgid ""
 "Won't drop on the selected banners: %(banners)s. Add a banner that carries it, or remove it."
 msgstr "고른 뽑기에서는 나오지 않습니다: %(banners)s. 이 캐릭터가 나오는 뽑기를 추가하거나 목표에서 제거하세요."
 
-#: .\engine_text.py:81 .\templates\planner\_track_cell.html:6
+#: .\engine_text.py:82 .\templates\planner\_track_cell.html:6
 msgid ""
 "You land here next: the first cat another roll on this banner would give after the highlighted draws"
 msgstr "다음은 여기: 빛나는 뽑기 다음에 이 뽑기를 한 번 더 돌리면 나오는 첫 캐릭터입니다"
 
-#: .\engine_text.py:85 .\templates\planner\_tracks.html:49
+#: .\engine_text.py:86 .\templates\planner\_tracks.html:49
 msgid ""
 "a capsule banner &mdash; its pulls spend that scarce ticket, not rare tickets or catfood"
 msgstr "전용 티켓 뽑기 &mdash; 여기서의 뽑기는 레어 티켓이나 고양이 통조림이 아니라 그 귀한 티켓을 씁니다"
 
-#: .\engine_text.py:88 .\templates\planner\_tracks.html:44
+#: .\engine_text.py:89 .\templates\planner\_tracks.html:44
 msgid ""
 "a target you picked &mdash; gold here, and its next spot shows in <em>Targets</em> above"
 msgstr "고른 목표 &mdash; 여기선 금색이고, 다음 위치는 위 <em>목표</em>에 표시됩니다"
 
-#: .\engine_text.py:90 .\templates\planner\_normal_tracks.html:5
+#: .\engine_text.py:91 .\templates\planner\_normal_tracks.html:5
 #: .\templates\planner\_tracks.html:37
 msgid "alternate timelines; a dupe rerolls and switches track"
 msgstr "두 갈래의 흐름. 레어 중복이면 다시 뽑히고 열을 이동합니다"
 
-#: .\engine_text.py:91 .\templates\planner\_tracks.html:46
+#: .\engine_text.py:92 .\templates\planner\_tracks.html:46
 msgid "an expected-but-unreleased Uber padding the pool"
 msgstr "풀을 채우는 미구현 울트라 슈퍼 레어"
 
-#: .\engine_text.py:92 .\templates\planner\_tracks.html:48
+#: .\engine_text.py:93 .\templates\planner\_tracks.html:48
 msgid "another banner this plan step can roll on instead"
 msgstr "이 플랜 단계에서 대신 돌릴 수 있는 다른 뽑기"
 
-#: .\engine_text.py:93 .\templates\planner\_tracks.html:43
+#: .\engine_text.py:94 .\templates\planner\_tracks.html:43
 #: .\templates\planner\_tracks.html:44
 msgid "cat"
 msgstr "캐릭터"
 
-#: .\engine_text.py:94 .\templates\planner\_tracks.html:40
+#: .\engine_text.py:95 .\templates\planner\_tracks.html:40
 msgid "click a cell's name-free space: the rolls up to it light like a plan"
 msgstr "칸의 이름 외 부분을 클릭: 거기까지의 뽑기가 플랜처럼 빛납니다"
 
-#: .\engine_text.py:95 .\templates\planner\_tracks.html:48
+#: .\engine_text.py:96 .\templates\planner\_tracks.html:48
 msgid "dashed"
 msgstr "점선"
 
-#: .\engine_text.py:96 .\templates\planner\_tracks.html:42
+#: .\engine_text.py:97 .\templates\planner\_tracks.html:42
 msgid "green name"
 msgstr "초록 이름"
 
-#: .\engine_text.py:97 .\templates\planner\_normal_tracks.html:7
+#: .\engine_text.py:98 .\templates\planner\_normal_tracks.html:7
 #: .\templates\planner\_tracks.html:39
 msgid "if dupe"
 msgstr "레어 중복이면"
 
-#: .\engine_text.py:98 .\templates\planner\_normal_cell.html:11
+#: .\engine_text.py:99 .\templates\planner\_normal_cell.html:11
 #: .\templates\planner\_track_cell.html:6
 msgid "if dupe:"
 msgstr "레어 중복이면:"
 
-#: .\engine_text.py:99 .\templates\planner\_tracks.html:49
+#: .\engine_text.py:100 .\templates\planner\_tracks.html:49
 msgid "legend"
 msgstr "레전드"
 
-#: .\engine_text.py:100 .\templates\planner\_track_cell.html:6
+#: .\engine_text.py:101 .\templates\planner\_track_cell.html:6
 #: .\templates\planner\_tracks.html:45
 msgid "new"
 msgstr "신규"
 
-#: .\engine_text.py:101 .\templates\planner\_tracks.html:43
+#: .\engine_text.py:102 .\templates\planner\_tracks.html:43
 msgid "owned"
 msgstr "보유"
 
-#: .\engine_text.py:102 .\templates\planner\_normal_tracks.html:11
+#: .\engine_text.py:103 .\templates\planner\_normal_tracks.html:11
 #: .\templates\planner\_tracks.html:40
 msgid "path"
 msgstr "경로"
 
-#: .\engine_text.py:103 .\templates\planner\_tracks.html:49
+#: .\engine_text.py:104 .\templates\planner\_tracks.html:49
 msgid "platinum"
 msgstr "플래티넘"
 
-#: .\engine_text.py:104 .\templates\planner\_track_cell.html:6
+#: .\engine_text.py:105 .\templates\planner\_track_cell.html:6
 #, python-format
 msgid "rarity %(rarity)s &middot; slot %(slot)s"
 msgstr "레어도 %(rarity)s &middot; 슬롯 %(slot)s"
 
-#: .\engine_text.py:105 .\templates\planner\_tracks.html:41
+#: .\engine_text.py:106 .\templates\planner\_tracks.html:41
 msgid "striped"
 msgstr "빗금"
 
-#: .\engine_text.py:106 .\templates\planner\_tracks.html:47
+#: .\engine_text.py:107 .\templates\planner\_tracks.html:47
 msgid "the Uber a guaranteed multi awards if started on that cell"
 msgstr "그 칸에서 확정 뽑기를 시작하면 받는 울트라 슈퍼 레어"
 
-#: .\engine_text.py:107 .\templates\planner\_normal_tracks.html:7
+#: .\engine_text.py:108 .\templates\planner\_normal_tracks.html:7
 #: .\templates\planner\_tracks.html:39
 msgid "the reroll branch (its own dice &amp; landing)"
 msgstr "재추첨 분기(전용 주사위와 도착 위치)"
 
-#: .\engine_text.py:108 .\templates\planner\_tracks.html:43
+#: .\engine_text.py:109 .\templates\planner\_tracks.html:43
 msgid "wishlisted"
 msgstr "위시리스트"
 
-#: .\engine_text.py:110 .\templates\planner\_tracks.html:41
+#: .\engine_text.py:111 .\templates\planner\_tracks.html:41
 msgid ""
 "you land here next &mdash; the first cat one more roll would give after the lit draws"
 msgstr "다음은 여기 &mdash; 빛나는 뽑기 다음에 한 번 더 돌리면 나오는 첫 캐릭터"
 
-#: .\engine_text.py:113 .\labels.py:13 .\templates\planner\_tracks.html:52
+#: .\engine_text.py:114 .\labels.py:13 .\templates\planner\_tracks.html:52
 msgid "Rare"
 msgstr "레어"
 
-#: .\engine_text.py:114 .\labels.py:14 .\templates\planner\_tracks.html:53
+#: .\engine_text.py:115 .\labels.py:14 .\templates\planner\_tracks.html:53
 msgid "Super Rare"
 msgstr "슈퍼 레어"
 
-#: .\engine_text.py:115 .\labels.py:15 .\templates\planner\_tracks.html:54
+#: .\engine_text.py:116 .\labels.py:15 .\templates\planner\_tracks.html:54
 msgid "Uber Super Rare"
 msgstr "울트라 슈퍼 레어"
 
-#: .\engine_text.py:116 .\labels.py:16 .\templates\planner\_tracks.html:55
+#: .\engine_text.py:117 .\labels.py:16 .\templates\planner\_tracks.html:55
 msgid "Legend Rare"
 msgstr "레전드 레어"
 
-#: .\engine_text.py:118 .\services.py:1711 .\templates\planner\_steps.html:24
+#: .\engine_text.py:119 .\services.py:1711 .\templates\planner\_steps.html:24
 #, python-format
 msgid "%(n)s catfood"
 msgstr "고양이 통조림 %(n)s개"
 
-#: .\engine_text.py:119 .\templates\planner\_solutions.html:11
+#: .\engine_text.py:120 .\templates\planner\_solutions.html:11
 #, python-format
 msgid "%(n)s plans"
 msgstr "플랜 %(n)s개"
 
-#: .\engine_text.py:120
+#: .\engine_text.py:121
 #, python-format
 msgid "%(n)s-roll"
 msgstr "%(n)s연 뽑기"
 
-#: .\engine_text.py:121
+#: .\engine_text.py:122
 #, python-format
 msgid "%(n)s-roll (guaranteed)"
 msgstr "%(n)s연 뽑기(확정)"
 
-#: .\engine_text.py:122 .\templates\planner\_solution_body.html:13
+#: .\engine_text.py:123 .\templates\planner\_solution_body.html:13
 msgid "Apply this plan"
 msgstr "이 플랜 적용"
 
-#: .\engine_text.py:124 .\templates\planner\_solution.html:9
+#: .\engine_text.py:125 .\templates\planner\_solution.html:9
 #, python-format
 msgid ""
 "Best plan found, not a proven cheapest one. Past %(limit)s cats the search for the whole set is bounded - an exact one would take 2^N searches - so a cheaper plan may exist. Every smaller row here IS exact."
 msgstr ""
 "찾은 최선의 플랜이며, 가장 싸다고 증명된 것은 아닙니다. 목표가 %(limit)s개를 넘으면 전체 탐색에 한도가 걸리므로(정확히 하려면 2^N번 탐색 필요) 더 싼 플랜이 있을 수 있습니다. 이보다 작은 행은 모두 정확합니다."
 
-#: .\engine_text.py:128 .\templates\planner\_res_board.html:68
+#: .\engine_text.py:129 .\templates\planner\_res_board.html:68
 #: .\templates\planner\_solutions.html:10
 #: .\templates\planner\collection.html:67
 msgid "Clear"
 msgstr "지우기"
 
-#: .\engine_text.py:129 .\templates\planner\_normal_plan.html:23
+#: .\engine_text.py:130 .\templates\planner\_normal_plan.html:23
 #: .\templates\planner\_steps.html:12
 msgid "Next step"
 msgstr "다음 단계"
 
-#: .\engine_text.py:130 .\templates\planner\_solutions.html:18
+#: .\engine_text.py:131 .\templates\planner\_solutions.html:18
 msgid "No reachable plan with given resources."
 msgstr "지금 자원으로 가능한 플랜이 없습니다."
 
-#: .\engine_text.py:131 .\templates\planner\_solution.html:10
+#: .\engine_text.py:132 .\templates\planner\_solution.html:10
 msgid "Not found"
 msgstr "찾지 못함"
 
-#: .\engine_text.py:132 .\templates\planner\_solutions.html:6
+#: .\engine_text.py:133 .\templates\planner\_solutions.html:6
 msgid "Only plans with"
 msgstr "다음을 포함한 플랜만"
 
-#: .\engine_text.py:133 .\templates\planner\_normal_plan.html:21
+#: .\engine_text.py:134 .\templates\planner\_normal_plan.html:21
 #: .\templates\planner\_steps.html:10
 msgid "Previous step"
 msgstr "이전 단계"
 
-#: .\engine_text.py:134
+#: .\engine_text.py:135
 msgid "Single pull"
 msgstr "1회 뽑기"
 
-#: .\engine_text.py:135 .\templates\planner\_normal_plan.html:19
+#: .\engine_text.py:136 .\templates\planner\_normal_plan.html:19
 #: .\templates\planner\_steps.html:8
 msgid "Steps"
 msgstr "단계"
 
-#: .\engine_text.py:136 .\templates\planner\_steps.html:30
+#: .\engine_text.py:137 .\templates\planner\_steps.html:30
 #, python-format
 msgid "Total &middot; %(total)s"
 msgstr "합계 &middot; %(total)s"
 
-#: .\engine_text.py:137 .\templates\planner\_normal_plan.html:20
+#: .\engine_text.py:138 .\templates\planner\_normal_plan.html:20
 #: .\templates\planner\_steps.html:9
 msgid "Walk the plan step by step"
 msgstr "플랜을 한 단계씩 따라가기"
 
-#: .\engine_text.py:138 .\templates\planner\_solution.html:17
+#: .\engine_text.py:139 .\templates\planner\_solution.html:17
 msgid "Working out this plan&hellip;"
 msgstr "플랜 계산 중&hellip;"
 
-#: .\engine_text.py:139 .\templates\planner\_solution.html:9
+#: .\engine_text.py:140 .\templates\planner\_solution.html:9
 msgid "best found"
 msgstr "최선 결과"
 
-#: .\engine_text.py:140 .\services.py:1713 .\templates\planner\_steps.html:24
+#: .\engine_text.py:141 .\services.py:1713 .\templates\planner\_steps.html:24
 msgid "free"
 msgstr "무료"
 
-#: .\engine_text.py:141 .\templates\planner\_normal_plan.html:37
+#: .\engine_text.py:142 .\templates\planner\_normal_plan.html:37
 #: .\templates\planner\_steps.html:26
 msgid "gets"
 msgstr "획득:"
 
-#: .\engine_text.py:142 .\templates\planner\_steps.html:20
+#: .\engine_text.py:143 .\templates\planner\_steps.html:20
 msgid "same rolls"
 msgstr "같은 결과"
 
-#: .\engine_text.py:144 .\templates\planner\_normal_tracks.html:10
+#: .\engine_text.py:145 .\templates\planner\_normal_tracks.html:10
 msgid "Dark Catseye"
 msgstr "캣츠아이【다크】"
 
-#: .\engine_text.py:146 .\templates\planner\_normal_cell.html:11
+#: .\engine_text.py:147 .\templates\planner\_normal_cell.html:11
 msgid ""
 "Following the track dupes here: the previous pull obtains this same item, so this cell rerolls into the branch value and jumps tracks"
 msgstr "이 열을 따라오면 여기서 중복: 직전 뽑기가 같은 아이템을 얻어서 이 칸은 분기 결과로 다시 뽑히고 열을 이동합니다"
 
-#: .\engine_text.py:149 .\templates\planner\_normal_plan.html:14
+#: .\engine_text.py:150 .\templates\planner\_normal_plan.html:14
 msgid "I rolled it &mdash; advance my seed"
 msgstr "뽑았다 &mdash; 내 시드 진행"
 
-#: .\engine_text.py:151 .\templates\planner\_normal_plan.html:45
+#: .\engine_text.py:152 .\templates\planner\_normal_plan.html:45
 #, python-format
 msgid ""
 "No %(target)s reachable with those rolls. Give a machine more budget, or try again after your next real pulls move the seed."
 msgstr "그 횟수로는 %(target)s에 닿지 않습니다. 뽑기 예산을 늘리거나, 실제로 뽑아서 시드가 바뀐 뒤 다시 시도하세요."
 
-#: .\engine_text.py:154 .\templates\planner\_normal_tracks.html:38
+#: .\engine_text.py:155 .\templates\planner\_normal_tracks.html:38
 msgid "Pick at least one capsule machine to roll."
 msgstr "뽑기를 하나 이상 고르세요."
 
-#: .\engine_text.py:156 .\templates\planner\_normal_cell.html:11
+#: .\engine_text.py:157 .\templates\planner\_normal_cell.html:11
 #, python-format
 msgid ""
 "Rolled %(cell)s? Jump the seed to just after it (its clean roll; a dupe's branch has its own dice)"
 msgstr "%(cell)s을(를) 뽑았나요? 바로 다음으로 시드를 옮깁니다(중복 없는 일반 뽑기. 중복 분기에는 전용 주사위가 있습니다)"
 
-#: .\engine_text.py:159 .\templates\planner\_normal_plan.html:14
+#: .\engine_text.py:160 .\templates\planner\_normal_plan.html:14
 msgid "You rolled this plan: the seed jumps to just after its final pull"
 msgstr "이 플랜대로 뽑았음: 마지막 뽑기 직후로 시드를 옮깁니다"
 
-#: .\engine_text.py:160 .\templates\planner\_normal_tracks.html:11
+#: .\engine_text.py:161 .\templates\planner\_normal_tracks.html:11
 msgid "a planned pull"
 msgstr "플랜의 한 번"
 
-#: .\engine_text.py:161 .\templates\planner\_normal_tracks.html:9
+#: .\engine_text.py:162 .\templates\planner\_normal_tracks.html:9
 msgid "an upgrade (Special Skill), not a cat"
 msgstr "파워 업 아이템(캐릭터가 아님)"
 
-#: .\engine_text.py:162 .\templates\planner\_normal_tracks.html:8
+#: .\engine_text.py:163 .\templates\planner\_normal_tracks.html:8
 msgid "aqua"
 msgstr "하늘색"
 
-#: .\engine_text.py:163 .\templates\planner\_normal_tracks.html:9
+#: .\engine_text.py:164 .\templates\planner\_normal_tracks.html:9
 msgid "blue"
 msgstr "파랑"
 
-#: .\engine_text.py:164 .\templates\planner\_normal_plan.html:10
+#: .\engine_text.py:165 .\templates\planner\_normal_plan.html:10
 msgid "for"
 msgstr "소비:"
 
-#: .\engine_text.py:165 .\templates\planner\_normal_tracks.html:8
+#: .\engine_text.py:166 .\templates\planner\_normal_tracks.html:8
 msgid "gold"
 msgstr "금색"
 
-#: .\engine_text.py:166 .\templates\planner\_normal_tracks.html:8
+#: .\engine_text.py:167 .\templates\planner\_normal_tracks.html:8
 msgid "red"
 msgstr "빨강"
 
-#: .\engine_text.py:167 .\templates\planner\_normal_tracks.html:11
+#: .\engine_text.py:168 .\templates\planner\_normal_tracks.html:11
 msgid "target"
 msgstr "목표"
 
-#: .\engine_text.py:168
+#: .\engine_text.py:169
 msgid "the 1% Catseye-event jackpot"
 msgstr "캣츠아이 이벤트의 1% 대박"
 
-#: .\engine_text.py:169 .\templates\planner\_normal_tracks.html:8
+#: .\engine_text.py:170 .\templates\planner\_normal_tracks.html:8
 msgid "the machine's rarer rate bands, scarcest last"
 msgstr "뽑기의 희귀한 확률 구간(뒤로 갈수록 희귀)"
 
-#: .\engine_text.py:170 .\templates\planner\_normal_tracks.html:11
+#: .\engine_text.py:171 .\templates\planner\_normal_tracks.html:11
 msgid "what it collects"
 msgstr "얻는 것"
 
@@ -1177,8 +1187,8 @@ msgid ""
 "The latest changes to Neko Optimizer, the Battle Cats gacha planner, newest first."
 msgstr "냥코 대전쟁 뽑기 플래너 Neko Optimizer의 최근 변경 사항(최신순)."
 
-#: .\seo.py:96 .\templates\planner\base.html:62
-#: .\templates\planner\base.html:144
+#: .\seo.py:96 .\templates\planner\base.html:64
+#: .\templates\planner\base.html:148
 msgid "About"
 msgstr "소개"
 
@@ -1188,13 +1198,13 @@ msgid ""
 msgstr "Neko Optimizer를 만든 사람, 냥코 대전쟁 뽑기 플래너의 기술, 그리고 출처로 밝힌 커뮤니티 도구와 데이터."
 
 #: .\seo.py:102 .\templates\planner\account.html:6
-#: .\templates\planner\account.html:32 .\templates\planner\base.html:102
+#: .\templates\planner\account.html:32 .\templates\planner\base.html:104
 msgid "Sign up"
 msgstr "회원가입"
 
 #: .\seo.py:103 .\templates\planner\account.html:16
 #: .\templates\planner\account.html:27 .\templates\planner\account.html:30
-#: .\templates\planner\base.html:101
+#: .\templates\planner\base.html:103
 msgid "Log in"
 msgstr "로그인"
 
@@ -1504,7 +1514,7 @@ msgstr "Y년 n월 j일"
 msgid "M j"
 msgstr "n월 j일"
 
-#: .\services.py:1494 .\templates\planner\planner.html:58
+#: .\services.py:1494 .\templates\planner\planner.html:57
 msgid "Past"
 msgstr "종료"
 
@@ -1909,118 +1919,122 @@ msgstr "이미 계정이 있나요?"
 msgid "No account yet?"
 msgstr "아직 계정이 없나요?"
 
-#: .\templates\planner\base.html:55
+#: .\templates\planner\base.html:57
 msgid "Planner"
 msgstr "플래너"
 
-#: .\templates\planner\base.html:56 .\templates\planner\normal.html:5
+#: .\templates\planner\base.html:58 .\templates\planner\normal.html:5
 #: .\templates\planner\normal.html:81
 msgid "Normal Capsules"
 msgstr "냥코 뽑기"
 
-#: .\templates\planner\base.html:57 .\templates\planner\collection.html:5
+#: .\templates\planner\base.html:59 .\templates\planner\collection.html:5
 msgid "Collection"
 msgstr "컬렉션"
 
-#: .\templates\planner\base.html:58 .\templates\planner\resources.html:5
+#: .\templates\planner\base.html:60 .\templates\planner\resources.html:5
 msgid "Resources"
 msgstr "자원"
 
-#: .\templates\planner\base.html:59
+#: .\templates\planner\base.html:61
 msgid "Tier List"
 msgstr "티어표"
 
-#: .\templates\planner\base.html:60 .\templates\planner\seek.html:5
+#: .\templates\planner\base.html:62 .\templates\planner\seek.html:5
 msgid "Seed Finder"
 msgstr "시드 찾기"
 
-#: .\templates\planner\base.html:61 .\templates\planner\base.html:142
+#: .\templates\planner\base.html:63 .\templates\planner\base.html:146
 #: .\templates\planner\guides.html:5
 msgid "Guides"
 msgstr "가이드"
 
-#: .\templates\planner\base.html:66
+#: .\templates\planner\base.html:68
 msgid "Game version"
 msgstr "게임 버전"
 
-#: .\templates\planner\base.html:69
+#: .\templates\planner\base.html:71
 #, python-format
 msgid "%(label)s version"
 msgstr "%(label)s"
 
-#: .\templates\planner\base.html:76
+#: .\templates\planner\base.html:78
 msgid "Language"
 msgstr "언어"
 
-#: .\templates\planner\base.html:77
+#: .\templates\planner\base.html:79
 msgid "Game's language"
 msgstr "게임 언어"
 
-#: .\templates\planner\base.html:82
+#: .\templates\planner\base.html:84
 msgid "Set"
 msgstr "설정"
 
-#: .\templates\planner\base.html:87
+#: .\templates\planner\base.html:89
 #, python-format
 msgid "Logged in as %(name)s"
 msgstr "%(name)s(으)로 로그인됨"
 
-#: .\templates\planner\base.html:87
+#: .\templates\planner\base.html:89
 msgid "Account"
 msgstr "계정"
 
-#: .\templates\planner\base.html:91
+#: .\templates\planner\base.html:93
 msgid "Logged in as"
 msgstr "로그인됨:"
 
-#: .\templates\planner\base.html:96
+#: .\templates\planner\base.html:98
 msgid "Log out"
 msgstr "로그아웃"
 
-#: .\templates\planner\base.html:105
+#: .\templates\planner\base.html:107
 msgid "Theme"
 msgstr "테마"
 
-#: .\templates\planner\base.html:106
+#: .\templates\planner\base.html:108
 msgid "Light theme"
 msgstr "라이트 테마"
 
-#: .\templates\planner\base.html:107
+#: .\templates\planner\base.html:109
 msgid "Dark theme"
 msgstr "다크 테마"
 
-#: .\templates\planner\base.html:108
+#: .\templates\planner\base.html:110
 msgid "Match my device"
 msgstr "기기 설정 따르기"
 
-#: .\templates\planner\base.html:116
+#: .\templates\planner\base.html:118
 msgid "Welcome"
 msgstr "환영합니다"
 
-#: .\templates\planner\base.html:117
+#: .\templates\planner\base.html:119
 #, python-format
 msgid ""
 "New here? <a href=\"%(guides_url)s\">The short guides</a> explain how it all works."
 msgstr "처음이신가요? <a href=\"%(guides_url)s\">짧은 가이드</a>에서 사용법을 알 수 있습니다."
 
-#: .\templates\planner\base.html:118 .\templates\planner\base.html:153
+#: .\templates\planner\base.html:120 .\templates\planner\base.html:157
 msgid "Close"
 msgstr "닫기"
 
-#: .\templates\planner\base.html:124
+#: .\templates\planner\base.html:126
 msgid "Elsewhere"
 msgstr "관련 사이트"
 
-#: .\templates\planner\base.html:138
+#: .\templates\planner\base.html:140
 msgid ""
 "Neko Optimizer is a free, fan-made tool for <em>The Battle Cats</em> and is not affiliated with PONOS."
 msgstr "Neko Optimizer는 <em>냥코 대전쟁</em>의 무료 팬 도구이며 PONOS와 관련이 없습니다."
 
-#: .\templates\planner\base.html:143 .\templates\planner\whats_new.html:5
+#: .\templates\planner\base.html:145
+msgid "More"
+msgstr "더 보기"
+
+#: .\templates\planner\base.html:147 .\templates\planner\whats_new.html:5
 msgid "What's new"
 msgstr "새 소식"
 
-#: .\templates\planner\base.html:145
+#: .\templates\planner\base.html:149
 msgid "Source"
 msgstr "소스"
 
@@ -2056,47 +2070,47 @@ msgid "Show each cat as its name, its form icon, or both"
 msgstr "캐릭터를 이름, 형태 아이콘, 둘 다 중 무엇으로 표시할지"
 
 #: .\templates\planner\collection.html:17 .\templates\planner\normal.html:152
-#: .\templates\planner\planner.html:131 .\templates\planner\resources.html:21
+#: .\templates\planner\planner.html:130 .\templates\planner\resources.html:21
 msgid "Names"
 msgstr "이름"
 
 #: .\templates\planner\collection.html:18 .\templates\planner\normal.html:153
-#: .\templates\planner\planner.html:132 .\templates\planner\resources.html:22
+#: .\templates\planner\planner.html:131 .\templates\planner\resources.html:22
 msgid "Icons"
 msgstr "아이콘"
 
 #: .\templates\planner\collection.html:19 .\templates\planner\normal.html:154
-#: .\templates\planner\planner.html:133 .\templates\planner\resources.html:23
+#: .\templates\planner\planner.html:132 .\templates\planner\resources.html:23
 msgid "Both"
 msgstr "둘 다"
 
 #: .\templates\planner\collection.html:21 .\templates\planner\normal.html:156
-#: .\templates\planner\planner.html:135 .\templates\planner\resources.html:25
+#: .\templates\planner\planner.html:134 .\templates\planner\resources.html:25
 #: .\templates\planner\tiers.html:29
 msgid ""
 "Show each cat as this form - name and icon; a unit without that form shows the last one it has"
 msgstr "각 캐릭터를 이 형태로 표시(이름과 아이콘). 그 형태가 없는 캐릭터는 마지막 형태를 표시합니다"
 
 #: .\templates\planner\collection.html:22 .\templates\planner\normal.html:157
-#: .\templates\planner\planner.html:136 .\templates\planner\resources.html:26
+#: .\templates\planner\planner.html:135 .\templates\planner\resources.html:26
 #: .\templates\planner\tiers.html:30
 msgid "Base"
 msgstr "제1형태"
 
 #: .\templates\planner\collection.html:23 .\templates\planner\normal.html:158
-#: .\templates\planner\planner.html:137 .\templates\planner\resources.html:27
+#: .\templates\planner\planner.html:136 .\templates\planner\resources.html:27
 #: .\templates\planner\tiers.html:31
 msgid "Evolved"
 msgstr "제2형태"
 
 #: .\templates\planner\collection.html:24 .\templates\planner\normal.html:159
-#: .\templates\planner\planner.html:138 .\templates\planner\resources.html:28
+#: .\templates\planner\planner.html:137 .\templates\planner\resources.html:28
 #: .\templates\planner\tiers.html:32
 msgid "True"
 msgstr "제3형태"
 
 #: .\templates\planner\collection.html:25 .\templates\planner\normal.html:160
-#: .\templates\planner\planner.html:139 .\templates\planner\resources.html:29
+#: .\templates\planner\planner.html:138 .\templates\planner\resources.html:29
 #: .\templates\planner\tiers.html:33
 msgid "Ultra"
 msgstr "제4형태"
@@ -2387,157 +2401,152 @@ msgid ""
 msgstr ""
 "위에 냥코 뽑기 시드를 입력하세요 &mdash; 또는 <strong>냥코 뽑기 시드 찾기</strong>를 열어 실제로 몇 번 뽑은 결과로 알아내세요."
 
-#: .\templates\planner\normal.html:148 .\templates\planner\planner.html:127
+#: .\templates\planner\normal.html:148 .\templates\planner\planner.html:126
 msgid "Rolls"
 msgstr "배열"
 
-#: .\templates\planner\normal.html:150 .\templates\planner\planner.html:129
+#: .\templates\planner\normal.html:150 .\templates\planner\planner.html:128
 msgid "Show"
 msgstr "표시"
 
-#: .\templates\planner\normal.html:150 .\templates\planner\planner.html:129
+#: .\templates\planner\normal.html:150 .\templates\planner\planner.html:128
 msgid "How many rolls the table shows (up to 999)"
 msgstr "표에 표시할 횟수(최대 999)"
 
-#: .\templates\planner\normal.html:150 .\templates\planner\planner.html:129
+#: .\templates\planner\normal.html:150 .\templates\planner\planner.html:128
 msgid "rolls"
 msgstr "회"
 
 #: .\templates\planner\planner.html:7
-msgid ""
-"See every rare gacha roll your seed will give, and the cheapest way to the cats you want."
-msgstr "시드로 나올 모든 레어 뽑기 결과와, 원하는 캐릭터까지 가장 싸게 가는 방법을 보여 줍니다."
-
-#: .\templates\planner\planner.html:8
 #, python-format
 msgid ""
 "New here? <a href=\"%(tracks_url)s\">How to read the rolls</a> &middot; <a href=\"%(plan_url)s\">How to plan</a>"
 msgstr ""
 "처음이라면? <a href=\"%(tracks_url)s\">배열 보는 법</a> &middot; <a href=\"%(plan_url)s\">계획 세우는 법</a>"
 
-#: .\templates\planner\planner.html:18
+#: .\templates\planner\planner.html:17
 msgid "required"
 msgstr "필수"
 
-#: .\templates\planner\planner.html:18
+#: .\templates\planner\planner.html:17
 msgid "Step the seed back one roll"
 msgstr "시드를 1회 되돌리기"
 
-#: .\templates\planner\planner.html:18
+#: .\templates\planner\planner.html:17
 msgid "back"
 msgstr "뒤로"
 
-#: .\templates\planner\planner.html:18
+#: .\templates\planner\planner.html:17
 msgid "undo"
 msgstr "되돌리기"
 
-#: .\templates\planner\planner.html:24
+#: .\templates\planner\planner.html:23
 msgid "pick a target, or tick “search my wishlist”"
 msgstr "목표를 고르거나 「위시리스트도 검색」을 체크"
 
-#: .\templates\planner\planner.html:26
+#: .\templates\planner\planner.html:25
 msgid ""
 "Tap <span class=\"key\">&plus;</span> to roll a banner. Click a banner's name to see its cats."
 msgstr "<span class=\"key\">&plus;</span>로 그 뽑기를 돌립니다. 뽑기 이름을 누르면 캐릭터가 보입니다."
 
-#: .\templates\planner\planner.html:26
+#: .\templates\planner\planner.html:25
 msgid "Show me the selected banners"
 msgstr "선택한 뽑기 보기"
 
-#: .\templates\planner\planner.html:35
+#: .\templates\planner\planner.html:34
 msgid "Search cats & banners…"
 msgstr "캐릭터 & 뽑기 검색…"
 
-#: .\templates\planner\planner.html:36
+#: .\templates\planner\planner.html:35
 msgid "Clear search and browse banners"
 msgstr "검색을 지우고 뽑기 둘러보기"
 
-#: .\templates\planner\planner.html:37
+#: .\templates\planner\planner.html:36
 msgid "Matching banners (every run) and cats · clear to browse"
 msgstr "일치하는 뽑기(모든 회차)와 캐릭터 · 지우면 목록으로"
 
-#: .\templates\planner\planner.html:59
+#: .\templates\planner\planner.html:58
 msgid "Loading…"
 msgstr "불러오는 중…"
 
-#: .\templates\planner\planner.html:70
+#: .\templates\planner\planner.html:69
 #, python-format
 msgid "No cats yet &mdash; <a href=\"%(collection_url)s\">add some</a>."
 msgstr "아직 캐릭터가 없습니다 &mdash; <a href=\"%(collection_url)s\">추가하세요</a>."
 
-#: .\templates\planner\planner.html:84
+#: .\templates\planner\planner.html:83
 msgid "Your resources"
 msgstr "보유 자원"
 
-#: .\templates\planner\planner.html:92
+#: .\templates\planner\planner.html:91
 msgid ""
 "Platinum and Legend Capsules use their own tickets. Enter how many you have (0 to skip them)."
 msgstr "플래티넘 뽑기와 레전드 뽑기는 전용 티켓을 씁니다. 가진 장수를 입력하세요(0이면 건너뜀)."
 
-#: .\templates\planner\planner.html:100
+#: .\templates\planner\planner.html:99
 msgid "Advanced"
 msgstr "고급 설정"
 
-#: .\templates\planner\planner.html:106
+#: .\templates\planner\planner.html:105
 #, python-format
 msgid "1 rare ticket is worth %(field)s catfood"
 msgstr "레어 티켓 1장 = 고양이 통조림 %(field)s개"
 
-#: .\templates\planner\planner.html:107
+#: .\templates\planner\planner.html:106
 msgid ""
 "One draw is 150 catfood, and the planner spends tickets first. Raise the ticket value above 150 if rare tickets are precious to you &mdash; the planner will then spend catfood to save them."
 msgstr ""
 "1회는 고양이 통조림 150개이며, 플래너는 티켓을 먼저 씁니다. 레어 티켓을 아끼고 싶다면 가치를 150보다 높이세요 &mdash; 플래너가 통조림을 써서 티켓을 남깁니다."
 
-#: .\templates\planner\planner.html:112
+#: .\templates\planner\planner.html:111
 msgid "Find plan"
 msgstr "플랜 찾기"
 
-#: .\templates\planner\planner.html:113
+#: .\templates\planner\planner.html:112
 msgid ""
 "Copy a link that reopens this seed and Rolls view (rolls shown, names/icons, form, details)"
 msgstr "이 시드와 배열 화면(횟수, 이름/아이콘, 형태, 상세)을 다시 여는 링크 복사"
 
-#: .\templates\planner\planner.html:113
+#: .\templates\planner\planner.html:112
 msgid "Copy link"
 msgstr "링크 복사"
 
-#: .\templates\planner\planner.html:119
+#: .\templates\planner\planner.html:118
 msgid "Finding your plan…"
 msgstr "플랜을 찾는 중…"
 
-#: .\templates\planner\planner.html:130
+#: .\templates\planner\planner.html:129
 msgid "Show each roll cell as the cat's name, its form icon, or both"
 msgstr "각 칸을 캐릭터 이름, 형태 아이콘, 둘 다 중 무엇으로 표시할지"
 
-#: .\templates\planner\planner.html:141
+#: .\templates\planner\planner.html:140
 msgid ""
 "Reveal each cell's rarity and slot seed, for cross-checking against godfat"
 msgstr "godfat과 대조할 수 있도록 각 칸의 레어도와 슬롯 시드를 표시"
 
-#: .\templates\planner\planner.html:141
+#: .\templates\planner\planner.html:140
 msgid "Details"
 msgstr "상세"
 
-#: .\templates\planner\planner.html:142
+#: .\templates\planner\planner.html:141
 msgid ""
 "Force a guaranteed multi of this size onto every banner, to preview the uber each cell's guaranteed draw would give"
 msgstr "모든 뽑기에 이 횟수의 확정 뽑기를 적용해, 각 칸에서 확정으로 어떤 울슈레가 나오는지 미리 보기"
 
-#: .\templates\planner\planner.html:144
+#: .\templates\planner\planner.html:143
 msgid "None"
 msgstr "없음"
 
-#: .\templates\planner\planner.html:151
+#: .\templates\planner\planner.html:150
 msgid ""
 "When a guaranteed multi is in play, ignore the guaranteed column when finding cats - so Find next lists only normal-roll positions"
 msgstr "확정 뽑기가 있을 때 캐릭터 찾기에서 확정 열을 무시합니다 - 「다음 찾기」가 일반 뽑기 위치만 보여 줍니다"
 
-#: .\templates\planner\planner.html:151
+#: .\templates\planner\planner.html:150
 msgid "Skip guaranteed in Find"
 msgstr "찾기에서 확정 제외"
 
-#: .\templates\planner\planner.html:158
+#: .\templates\planner\planner.html:157
 msgid "Back to rolls"
 msgstr "배열로 돌아가기"
 

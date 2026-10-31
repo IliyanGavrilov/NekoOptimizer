@@ -163,7 +163,7 @@ def tier_badges(doc=None) -> dict[int, dict]:
 
     badges = {}
     for unit_id, tier in base.items():
-        badge = {"tier": tier, "up": None, "up_note": ""}
+        badge = {"tier": tier, "up": None, "up_note": "", "uid": unit_id}
         up = boosted.get(unit_id)
         if up is not None and _TIER_RANK[up[0]] < _TIER_RANK[tier]:
             badge["up"] = up[0]

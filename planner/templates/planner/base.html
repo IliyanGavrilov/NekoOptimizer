@@ -42,6 +42,7 @@
   {% if vercel_analytics %}<script defer src="/_vercel/insights/script.js"></script>{% endif %}
 </head>
 <body data-unit-info-url="{% url 'unit_info' %}" data-unit-forms-url="{% url 'unit_forms' %}"
+      data-tier-url="{% url 'tier_list' %}"
       data-icon-base="{{ icon_base }}">
   {% comment %}Icon sprite. Only the seed-jump dice so far, and only because the Rolls
   table draws one per cell - see _dice_icon.html.{% endcomment %}
@@ -138,11 +139,13 @@
         Neko Optimizer is a free, fan-made tool for <em>The Battle Cats</em> and is not
         affiliated with PONOS.
       {% endblocktranslate %}
-      &middot; <a href="{% url 'guides' %}">{% translate "Guides" %}</a>
+    </p>
+    <nav class="footer-links" aria-label="{% translate "More" %}">
+      <a href="{% url 'guides' %}">{% translate "Guides" %}</a>
       &middot; <a href="{% url 'whats_new' %}">{% translate "What's new" %}</a>
       &middot; <a href="{% url 'about' %}">{% translate "About" %}</a>
       &middot; <a href="https://github.com/IliyanGavrilov/NekoOptimizer" target="_blank" rel="noopener">{% translate "Source" %} &#8599;</a>
-    </p>
+    </nav>
   </footer>
   {% comment %}One shared popup for any cat name: its forms (icons from ICON_BASE), the
   selected form's stats and abilities, and links to the unit's page on the wiki and the

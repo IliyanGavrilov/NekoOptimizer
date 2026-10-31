@@ -58,6 +58,7 @@ ENGINE_TEXT = (
         "own dice)"
     ),
     gettext_noop("Search for %(label)s on %(banners)s"),
+    gettext_noop("See it in the tier list"),
     gettext_noop("Stop searching for this future uber"),
     gettext_noop("Targets"),
     gettext_noop(

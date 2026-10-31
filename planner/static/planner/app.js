@@ -1843,6 +1843,50 @@ if (welcome) {
   });
 }
 
+// The pages' "New here?" guide links, for visitors who still are: they stop showing once
+// a guide has been opened, or after a couple of dozen page views.
+(() => {
+  const VISITS_KEY = "neko:visits";
+  const GUIDED_KEY = "neko:guided";
+  let visits = 0;
+  let guided = false;
+  try {
+    visits = Number(localStorage.getItem(VISITS_KEY)) + 1;
+    if (document.querySelector(".guide, .guide-list")) localStorage.setItem(GUIDED_KEY, "1");
+    guided = localStorage.getItem(GUIDED_KEY) === "1";
+    localStorage.setItem(VISITS_KEY, String(visits));
+  } catch {
+    visits = 0;
+  }
+  const isNew = !guided && visits <= 20;
+  document.querySelectorAll(".new-here").forEach((el) => (el.hidden = !isNew));
+})();
+
+// A tier badge anywhere (Rolls cells, picker and collection chips, the cat popup) opens
+// the tier list at that cat. Caught on the way down, so the chip it sits on doesn't also
+// toggle.
+document.addEventListener(
+  "click",
+  (e) => {
+    const badge = e.target.closest(".tier-badge[data-uid]");
+    if (!badge) return;
+    e.preventDefault();
+    e.stopPropagation();
+    location.href = `${document.body.dataset.tierUrl}#unit-${badge.dataset.uid}`;
+  },
+  true,
+);
+
+// The tier list opened at a cat (#unit-<id>): scroll to its first entry and mark it.
+const tierFocus = /^#unit-(\d+)$/.exec(location.hash);
+if (tierFocus) {
+  const entry = document.querySelector(`.tier-unit[data-uid="${tierFocus[1]}"]`);
+  if (entry) {
+    entry.classList.add("is-focused");
+    entry.scrollIntoView({ block: "center" });
+  }
+}
+
 // A picker that is a whole form (the header's language select): choosing submits it.
 document.querySelectorAll("select[data-autosubmit]").forEach((select) => {
   select.addEventListener("change", () => select.form.submit());
@@ -1928,10 +1972,11 @@ if (catPopup) {
     return cache.get(key);
   };
 
-  const chip = (text, kind) => {
+  const chip = (text, kind, trait) => {
     const span = document.createElement("span");
     span.className = kind ? `cat-chip ${kind}` : "cat-chip";
     span.textContent = text;
+    if (trait) span.dataset.trait = trait; // in-game colour, by the English trait name
     return span;
   };
 
@@ -1970,7 +2015,9 @@ if (catPopup) {
       statCell(gettext("Cost"), fmt(form.cost)),
     );
     chipsEl.replaceChildren();
-    form.targets.forEach((trait) => chipsEl.appendChild(chip(trait, "target")));
+    form.targets.forEach((trait, i) => {
+      chipsEl.appendChild(chip(trait, "target", (form.trait_keys || [])[i]));
+    });
     form.effects.forEach((effect) => chipsEl.appendChild(chip(effect)));
     if (form.immune.length) {
       chipsEl.appendChild(chip(interpolate(gettext("Immune: %s"), [form.immune.join(", ")]), "immune"));
@@ -1990,6 +2037,8 @@ if (catPopup) {
     tierEl.hidden = !info.tier;
     if (info.tier) {
       tierEl.dataset.band = info.tier.tier[0];
+      tierEl.dataset.uid = info.unit_id;
+      tierEl.title = gettext("See it in the tier list");
       tierEl.textContent = info.tier.up
         ? `${interpolate(gettext("Tier %s"), [info.tier.tier])} · ${info.tier.up_note}`
         : interpolate(gettext("Tier %s"), [info.tier.tier]);

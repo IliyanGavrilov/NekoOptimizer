@@ -102,6 +102,7 @@ if (seekForm) {
     for (let i = 0; i < START_ROWS; i++) appendRow();
     pickHint.hidden = true;
     entry.hidden = false;
+    recheck(); // a new banner starts a fresh entry
   });
 
   // ---- Pull pickers: a dropdown per pull, with a search box inside -----------
@@ -156,7 +157,7 @@ if (seekForm) {
     const pick = (row) => {
       hidden.value = row.dataset.value;
       hidden.dataset.name = row.querySelector(".combo-cat").textContent;
-      checked = false; // the entry changed: look it over again before searching
+      recheck(); // the entry changed: look it over again
       label.innerHTML = row.innerHTML; // rarity chip + name, exactly as listed
       label.classList.remove("roll-placeholder");
       panel.hidden = true;
@@ -323,10 +324,10 @@ if (seekForm) {
     render(data);
   };
 
-  // ---- Look the entry over before searching: the classic mistakes ----------------
-  // Each is a warning, not a block - "Search anyway" goes ahead once they're read.
+  // ---- Look the entry over as it's typed: the classic mistakes ----------------
+  // Each is a warning, not a block: it shows the moment a pick makes it true, and the
+  // search button says "Search anyway" while any is up.
   const checkEl = document.getElementById("seekCheck");
-  let checked = false;
   const RARE = "0";
   const UBERISH = new Set(["2", "3"]); // Uber Super Rare, Legend Rare
   const preflight = (picks) => {
@@ -355,23 +356,21 @@ if (seekForm) {
     return notes;
   };
 
+  function recheck() {
+    const picks = [...rollsEl.querySelectorAll(".seek-roll")].filter((h) => h.value);
+    const notes = preflight(picks);
+    checkEl.hidden = !notes.length;
+    checkEl.innerHTML = notes.length
+      ? `<p>${gettext("Quick check before searching:")}</p><ul>${notes
+          .map((n) => `<li>${n}</li>`)
+          .join("")}</ul><p>${gettext("Fix it above, or search anyway if it's right.")}</p>`
+      : "";
+    goBtn.textContent = notes.length ? gettext("Search anyway") : gettext("Find my seed");
+  }
+
   seekForm.addEventListener("submit", async (e) => {
     e.preventDefault();
     setError("");
-
-    const picks = [...rollsEl.querySelectorAll(".seek-roll")].filter((h) => h.value);
-    const notes = checked ? [] : preflight(picks);
-    checkEl.hidden = !notes.length;
-    if (notes.length) {
-      checkEl.innerHTML = `<p>${gettext("Quick check before searching:")}</p><ul>${notes
-        .map((n) => `<li>${n}</li>`)
-        .join("")}</ul><p>${gettext("Fix it above, or search anyway if it's right.")}</p>`;
-      goBtn.textContent = gettext("Search anyway");
-      checked = true;
-      return;
-    }
-    goBtn.textContent = gettext("Find my seed");
-    checked = false;
 
     const values = [...rollsEl.querySelectorAll(".seek-roll")].map((h) => h.value);
     const last = values.length - 1 - [...values].reverse().findIndex(Boolean);

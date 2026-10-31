@@ -464,3 +464,7 @@ msgstr "まだ完全一致なし — 最初の1回が引き直しだった場合
 #: static/planner/seek.js static/planner/normal.js
 msgid "No exact match yet — checking if your first pull was a reroll (step 3 of 3)…"
 msgstr "まだ完全一致なし — 最初の1回が引き直しだった場合を確認中(3段階中3)…"
+
+#: static/planner/app.js
+msgid "See it in the tier list"
+msgstr "ティア表で見る"

@@ -177,6 +177,8 @@ def stat_forms(forms: list[dict]) -> list[dict]:
                 for key, word in chips.items()
                 if key in form
             },
+            # The traits by their English names too, which the page colours them by.
+            **({"trait_keys": form["targets"]} if "targets" in form else {}),
         }
         for form in forms
     ]
