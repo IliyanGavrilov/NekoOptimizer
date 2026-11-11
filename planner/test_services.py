@@ -344,7 +344,30 @@ def test_banner_titles_map_pools_to_series_names():
         unit_id=42, name="Ice Cat", rarity="Uber Super Rare", set_name="The Dynamites"
     )
     events = [_run(date(2026, 1, 1), date(2026, 1, 5), 7, "Dynamites!")]
-    titles = banner_titles(events=events, pools={7: [42]}, series={7: 1}, tickets={})
+    titles = banner_titles(events=events, pools={7: [42]}, series={7: 1}, tickets={}, official={})
+    assert titles == {7: "The Dynamites"}
+
+
+@pytest.mark.django_db
+def test_banner_titles_fall_back_to_the_official_title():
+    events = [_run(date(2026, 11, 2), date(2026, 11, 16), 1080, "Featuring Ryuichi! Tap banner!")]
+    official = {1080: "River City Cat Clash: Dark Team"}
+    titles = banner_titles(
+        events=events, pools={1080: [42]}, series={}, tickets={}, official=official
+    )
+    assert titles == official
+
+
+@pytest.mark.django_db
+def test_banner_titles_prefer_the_set_name_to_the_official_title():
+    Unit.objects.create(
+        unit_id=42, name="Ice Cat", rarity="Uber Super Rare", set_name="The Dynamites"
+    )
+    events = [_run(date(2026, 1, 1), date(2026, 1, 5), 7, "Dynamites!")]
+    official = {7: "The Dynamites Rare Cat Capsule Event"}
+    titles = banner_titles(
+        events=events, pools={7: [42]}, series={7: 1}, tickets={}, official=official
+    )
     assert titles == {7: "The Dynamites"}
 
 

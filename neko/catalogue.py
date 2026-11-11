@@ -11,7 +11,7 @@ from neko.region import DEFAULT_REGION, spec
 _RARITY_COL = 13
 
 # 0/1 (Normal/Special) are non-gacha units that never appear in a roll.
-_RARITY_BY_CODE = {
+RARITY_BY_CODE = {
     0: Rarity.NORMAL,
     1: Rarity.SPECIAL,
     2: Rarity.RARE,
@@ -43,9 +43,14 @@ def parse_forms(text: str, region: str = DEFAULT_REGION) -> tuple[str, ...]:
     named) here yet - a placeholder row, not a real form - so it's dropped."""
     separator = spec(region).separator
 
+    return form_names(line.split(separator, 1)[0] for line in text.splitlines())
+
+
+def form_names(names: Iterable[str]) -> tuple[str, ...]:
+    """Form names in order, blanks and repeats of the one before dropped."""
     forms = []
-    for line in text.splitlines():
-        name = line.split(separator, 1)[0].strip()
+    for name in names:
+        name = name.strip()
         if name and (not forms or name != forms[-1]):
             forms.append(name)
 
@@ -64,7 +69,7 @@ def parse_rarities(unitbuy_text: str) -> dict[int, Rarity]:
         except ValueError:
             continue
 
-        rarity = _RARITY_BY_CODE.get(code)
+        rarity = RARITY_BY_CODE.get(code)
         if rarity is not None:
             rarities[unit_id] = rarity
 

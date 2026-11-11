@@ -8364,6 +8364,36 @@
     "set": ""
   },
   {
+    "id": 866,
+    "name": "PAC-MAN",
+    "rarity": "Special",
+    "forms": [
+      "PAC-MAN",
+      "PAC-MAN貓"
+    ],
+    "set": ""
+  },
+  {
+    "id": 867,
+    "name": "Blinky貓",
+    "rarity": "Special",
+    "forms": [
+      "Blinky貓",
+      "Blinky貓CC"
+    ],
+    "set": ""
+  },
+  {
+    "id": 868,
+    "name": "Inky貓",
+    "rarity": "Special",
+    "forms": [
+      "Inky貓",
+      "Inky貓CC"
+    ],
+    "set": ""
+  },
+  {
     "id": 869,
     "name": "鐵腕女孩東雲寺茜",
     "rarity": "Uber Super Rare",
@@ -8416,11 +8446,40 @@
     "set": ""
   },
   {
+    "id": 874,
+    "name": "龍一",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "龍一",
+      "龍一＆龍二"
+    ],
+    "set": ""
+  },
+  {
     "id": 875,
     "name": "735_1",
     "rarity": "Uber Super Rare",
     "forms": [
       "735_1"
+    ],
+    "set": ""
+  },
+  {
+    "id": 876,
+    "name": "756-1",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "756-1"
+    ],
+    "set": ""
+  },
+  {
+    "id": 877,
+    "name": "因幡的白兔",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "因幡的白兔",
+      "巨鯊戰白兔"
     ],
     "set": ""
   }

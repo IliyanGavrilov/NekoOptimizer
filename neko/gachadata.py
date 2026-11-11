@@ -2,9 +2,12 @@
 # rates and the schedule from godfat's curated event TSVs (Apache-2.0).
 
 import csv
+import html
 import io
 import json
+import re
 import tarfile
+import urllib.error
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 from datetime import date
@@ -27,6 +30,13 @@ _EVENTS_ARCHIVE = (
 EVENTS_FILE = "gacha_events.json"
 POOLS_FILE = "gacha_pools.json"
 SERIES_FILE = "gacha_series.json"
+TITLES_FILE = "gacha_titles.json"
+
+# PONOS's own page for each rare gacha, titled with the banner's official name in the
+# version's language - where godfat's schedule only has the run's marketing line.
+_TITLE_PAGE = "https://ponosgames.com/information/appli/battlecats/gacha/rare/{lang}R{pool}.html"
+_TITLE_LANG = {"en": "en/", "jp": "", "tw": "tw/", "kr": "kr/"}
+_TITLE = re.compile(r"<title>(.*?)</title>", re.S)
 
 
 def events_path(region: str | None = None) -> Path:
@@ -42,6 +52,11 @@ def pools_path(region: str | None = None) -> Path:
 def series_path(region: str | None = None) -> Path:
     """Where one region's committed pool-to-series map lives."""
     return data_path(SERIES_FILE, region)
+
+
+def titles_path(region: str | None = None) -> Path:
+    """Where one region's committed official banner titles live."""
+    return data_path(TITLES_FILE, region)
 
 
 _POOL_OFFSET = 9  # godfat tsv_reader PoolOffset: event fields end, pool blocks follow
@@ -292,6 +307,37 @@ def pool_records(pools: Mapping[int, list[int]], event_rows: Iterable[GachaEvent
     return {str(pid): pools[pid] for pid in sorted(referenced) if pid in pools}
 
 
+def parse_title(page: str) -> str:
+    """A gacha page's official title; '' where it only carries the site's own (the pages
+    of old gachas)."""
+    match = _TITLE.search(page)
+    title = html.unescape(match.group(1)).strip() if match else ""
+
+    return "" if title.startswith("PONOS") else title
+
+
+def download_titles(
+    region: str, event_rows: Iterable[GachaEventRow], known: Mapping[str, str], today: date
+) -> dict:
+    """Every scheduled pool's official title as {str(pool_id): title} for gacha_titles.json
+    ('' when PONOS has none). Only pools new to *known* or still running are fetched - a
+    title can appear once a banner is announced, but never changes after it ends."""
+    rows = list(event_rows)
+    live = {e.pool_id for e in rows if e.end >= today}
+    titles = {}
+    for pool in sorted({e.pool_id for e in rows}):
+        if pool in live or str(pool) not in known:
+            url = _TITLE_PAGE.format(lang=_TITLE_LANG[region], pool=pool)
+            try:
+                titles[str(pool)] = parse_title(_get(url).decode("utf-8", "replace"))
+            except urllib.error.HTTPError:
+                titles[str(pool)] = ""
+        else:
+            titles[str(pool)] = known[str(pool)]
+
+    return titles
+
+
 def series_records(series: Mapping[int, list[int]], event_rows: Iterable[GachaEventRow]) -> dict:
     """Only the referenced pools' entries, as {str(pool_id): [series_id, ticket_id]}."""
     referenced = {e.pool_id for e in event_rows}
@@ -347,6 +393,17 @@ def load_pools(region: str | None = None) -> dict[int, list[int]]:
     return _read_pools(pools_path(region))
 
 
+@cache
+def _read_titles(path: Path) -> dict[str, str]:
+    """The committed official titles, memoized like the others; none before a refresh."""
+    return json.loads(path.read_text(encoding="utf-8")) if path.exists() else {}
+
+
+def load_titles(region: str | None = None) -> dict[int, str]:
+    """One region's official banner titles, as {pool_id: title}, untitled pools left out."""
+    return {int(k): v for k, v in _read_titles(titles_path(region)).items() if v}
+
+
 def load_series(region: str | None = None) -> dict[int, int]:
     """Read the committed series map back as {pool_id: series_id}."""
     return {int(k): v[0] for k, v in _read_series(series_path(region)).items()}
@@ -358,8 +415,9 @@ def load_tickets(region: str | None = None) -> dict[int, int]:
 
 
 def refresh(region: str = DEFAULT_REGION, tarball: bytes | None = None) -> tuple[int, int]:
-    """Fetch the live schedule + pools + series and rewrite one region's committed data
-    files (network). Pass pre-downloaded BCData bytes via *tarball* to skip that TLS fetch."""
+    """Fetch the live schedule + pools + series + official titles and rewrite one region's
+    committed data files (network). Pass pre-downloaded BCData bytes via *tarball* to skip
+    that TLS fetch."""
     events = download_events(region)
     pools, series = download_gatya(region, tarball=tarball)
     kept = pool_records(pools, events)
@@ -369,5 +427,8 @@ def refresh(region: str = DEFAULT_REGION, tarball: bytes | None = None) -> tuple
     schedule.write_text(json.dumps(event_records(events), ensure_ascii=False), encoding="utf-8")
     pools_path(region).write_text(json.dumps(kept), encoding="utf-8")
     series_path(region).write_text(json.dumps(series_records(series, events)), encoding="utf-8")
+    known = _read_titles(titles_path(region))
+    titles = download_titles(region, events, known, date.today())
+    titles_path(region).write_text(json.dumps(titles, ensure_ascii=False), encoding="utf-8")
 
     return len(events), len(kept)

@@ -8112,6 +8112,36 @@
     "set": ""
   },
   {
+    "id": 866,
+    "name": "PAC-MAN",
+    "rarity": "Special",
+    "forms": [
+      "PAC-MAN",
+      "Cat PAC-MAN"
+    ],
+    "set": ""
+  },
+  {
+    "id": 867,
+    "name": "Blinky Cat",
+    "rarity": "Special",
+    "forms": [
+      "Blinky Cat",
+      "Blinky Cat CC"
+    ],
+    "set": ""
+  },
+  {
+    "id": 868,
+    "name": "Inky Cat",
+    "rarity": "Special",
+    "forms": [
+      "Inky Cat",
+      "Inky Cat CC"
+    ],
+    "set": ""
+  },
+  {
     "id": 869,
     "name": "Akane Tounji",
     "rarity": "Uber Super Rare",
@@ -8164,11 +8194,40 @@
     "set": ""
   },
   {
+    "id": 874,
+    "name": "Ryuichi",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Ryuichi",
+      "Ryuichi & Ryuji"
+    ],
+    "set": ""
+  },
+  {
     "id": 875,
     "name": "735_1",
     "rarity": "Uber Super Rare",
     "forms": [
       "735_1"
+    ],
+    "set": ""
+  },
+  {
+    "id": 876,
+    "name": "756-1",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "756-1"
+    ],
+    "set": ""
+  },
+  {
+    "id": 877,
+    "name": "Hare of Inaba",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "Hare of Inaba",
+      "Mega Shark vs. The White Hare"
     ],
     "set": ""
   }

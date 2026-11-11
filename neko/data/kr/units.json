@@ -8269,6 +8269,36 @@
     "set": ""
   },
   {
+    "id": 866,
+    "name": "PAC-MAN",
+    "rarity": "Special",
+    "forms": [
+      "PAC-MAN",
+      "PAC-MAN 고양이"
+    ],
+    "set": ""
+  },
+  {
+    "id": 867,
+    "name": "고양이 Blinky",
+    "rarity": "Special",
+    "forms": [
+      "고양이 Blinky",
+      "고양이 Blinky CC"
+    ],
+    "set": ""
+  },
+  {
+    "id": 868,
+    "name": "고양이 Inky",
+    "rarity": "Special",
+    "forms": [
+      "고양이 Inky",
+      "고양이 Inky CC"
+    ],
+    "set": ""
+  },
+  {
     "id": 869,
     "name": "변신소녀 단",
     "rarity": "Uber Super Rare",
@@ -8321,11 +8351,40 @@
     "set": ""
   },
   {
+    "id": 874,
+    "name": "류이치",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "류이치",
+      "류이치 & 류지"
+    ],
+    "set": ""
+  },
+  {
     "id": 875,
     "name": "735_1",
     "rarity": "Uber Super Rare",
     "forms": [
       "735_1"
+    ],
+    "set": ""
+  },
+  {
+    "id": 876,
+    "name": "756-1",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "756-1"
+    ],
+    "set": ""
+  },
+  {
+    "id": 877,
+    "name": "이나바의 흰 토끼",
+    "rarity": "Uber Super Rare",
+    "forms": [
+      "이나바의 흰 토끼",
+      "메가 샤크 VS 흰 토끼"
     ],
     "set": ""
   }
