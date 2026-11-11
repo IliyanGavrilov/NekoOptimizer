@@ -851,6 +851,16 @@ def test_tier_list_page_renders_a_ranked_unit(client, monkeypatch):
     assert b"Bahamut" in body and b"SS" in body
 
 
+@pytest.mark.django_db
+def test_tier_list_page_names_units_in_its_versions_language(client, monkeypatch):
+    Unit.all_regions.create(
+        region="jp", unit_id=25, name="ネコ", rarity="Uber Super Rare", forms=["ネコ", "ネコ2"]
+    )
+    monkeypatch.setattr("planner.views.load_tiers", lambda: _tier_doc(25))
+    body = client.get("/jp/tiers/").content.decode()
+    assert 'tier-unit-name">ネコ<' in body and "Bahamut" not in body
+
+
 def _set_list_doc():
     doc = _tier_doc(25)
     entry = {
