@@ -28,6 +28,7 @@ from neko.gachadata import (
     load_pools,
     load_series,
     load_tickets,
+    load_titles,
 )
 from neko.gamedata import (
     CANNON_MATERIALS,
@@ -1163,14 +1164,18 @@ def series_names(units, events=None, pools=None, series=None, tickets=None) -> d
     return names
 
 
-def banner_titles(units=None, events=None, pools=None, series=None, tickets=None) -> dict[int, str]:
+def banner_titles(
+    units=None, events=None, pools=None, series=None, tickets=None, official=None
+) -> dict[int, str]:
     """{pool_id: display title} for picker rows - the pool's series name where one is
-    known; pools without one keep their marketing text as the title."""
+    known, else PONOS's official title for it (collabs, one-off specials); pools with
+    neither keep their marketing text as the title."""
     units = units if units is not None else Unit.objects.exclude(set_name="")
     series = series if series is not None else load_series()
+    official = official if official is not None else load_titles()
     names = series_names(units, events, pools, series, tickets)
 
-    return {pid: names[sid] for pid, sid in series.items() if sid in names}
+    return {**official, **{pid: names[sid] for pid, sid in series.items() if sid in names}}
 
 
 def display_titles(events=None) -> dict[str, str]:

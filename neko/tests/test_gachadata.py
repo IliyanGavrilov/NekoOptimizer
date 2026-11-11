@@ -8,6 +8,7 @@ from neko.gachadata import (
     GachaEventRow,
     build_banner,
     download_events,
+    download_titles,
     event_records,
     events_path,
     load_events,
@@ -15,6 +16,7 @@ from neko.gachadata import (
     parse_events,
     parse_gacha_pools,
     parse_series,
+    parse_title,
 )
 from neko.models import Rarity
 
@@ -134,3 +136,35 @@ def test_event_records_roundtrip(tmp_path, monkeypatch):
     path.parent.mkdir()
     path.write_text(json.dumps(event_records([event])), encoding="utf-8")
     assert load_events("jp") == [event]
+
+
+def _ending(pool, end):
+    return GachaEventRow("e", "B", date(2026, 1, 1), end, pool, 7000, 2500, 500, 0, False, False)
+
+
+def test_parse_title_reads_the_pages_title():
+    page = "<html><head><title>River City Cat Clash: Dark Team</title></head></html>"
+    assert parse_title(page) == "River City Cat Clash: Dark Team"
+
+
+def test_parse_title_drops_the_sites_own_title():
+    assert parse_title("<title>PONOS | The Battle Cats</title>") == ""
+
+
+def test_download_titles_refetches_only_new_or_running_pools(monkeypatch):
+    fetched = []
+
+    def page(url):
+        fetched.append(url.rsplit("/", 1)[1])
+        return b"<title>Fresh</title>"
+
+    monkeypatch.setattr("neko.gachadata._get", page)
+    events = [
+        _ending(1, date(2026, 1, 5)),
+        _ending(2, date(2026, 2, 1)),
+        _ending(3, date(2026, 1, 5)),
+    ]
+    known = {"1": "Old", "2": "Old"}
+    titles = download_titles("en", events, known, today=date(2026, 1, 20))
+    assert fetched == ["R2.html", "R3.html"]
+    assert titles == {"1": "Old", "2": "Fresh", "3": "Fresh"}
