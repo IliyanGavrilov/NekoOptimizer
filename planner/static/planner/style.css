@@ -1307,11 +1307,17 @@ td.cell.flash-locate {
   max-height: calc(100vh - var(--header-h, 56px) - 1.5rem);
   overflow: auto;
 }
+/* The browse Rolls and Normal Capsules tables are the same pane: a few banners or
+   machines already outgrow a narrow window. A normal plan brings panes of its own. */
+#trackHost, #normalTracks:has(> table.track) {
+  max-height: calc(100vh - var(--header-h, 56px) - 1.5rem);
+  overflow: auto;
+}
 /* Inside the pane, "under the site header" means under the pane's own top edge: the
    sticky thead is measured against --header-h, so zero it there (not for .plan-track
    itself, whose max-height still needs the real height). Without this it pins a
    site-header's height down INTO the pane and overlaps the first rows. */
-.plan-track table.track { --header-h: 0px; }
+.plan-track table.track, #trackHost table.track, #normalTracks table.track { --header-h: 0px; }
 @media (max-width: 760px) {
   .plan-follow { flex-direction: column; }
   .plan-steps { flex-basis: auto; width: 100%; position: static; max-height: none; }
@@ -2238,35 +2244,7 @@ table.track th.guaranteed-col, table.track td.guaranteed-col {
   .site-footer { padding: 1rem 0.9rem 1.75rem; }
   h1 { font-size: 1.6rem; }
 
-  button { width: 100%; margin: 0.3rem 0; }
-
-  /* Collapse each table row into a stacked card */
-  table, tbody, tr, td { display: block; width: 100%; }
-  table tr:first-child { display: none; }   /* hide the header row */
-
-  table tr {
-    background: var(--panel-2);
-    border: 1px solid var(--line);
-    border-radius: var(--radius);
-    padding: 0.4rem 0.7rem;
-    margin: 0.5rem 0;
-  }
-
-  td {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 1rem;
-    border: 0;
-    padding: 0.3rem 0;
-  }
-
-  td::before {
-    content: attr(data-label);
-    color: var(--muted);
-    font-size: 0.8rem;
-    font-family: var(--head-font);
-  }
+  button[type="submit"] { width: 100%; margin: 0.3rem 0; }
 }
 
 /* Full-page overlay shown while a plan computes (the form is a blocking POST). */

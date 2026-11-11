@@ -1146,11 +1146,15 @@ def tier_list(request, category="", name=""):
         raise Http404(f"No tier list at {category}/{name}.")
 
     rows = tier_list_rows(shown)
-    # The form picker renames entries client-side; ship each unit's form names along.
+    # The form picker renames entries client-side; ship each unit's form names along, and
+    # render the version's own base-form name so the page reads in its language unscripted.
     forms = dict(Unit.objects.values_list("unit_id", "forms"))
     for row in rows:
         for entry in row["entries"]:
-            entry["forms"] = "|".join(forms.get(entry["unit_id"], []))
+            names = forms.get(entry["unit_id"], [])
+            entry["forms"] = "|".join(names)
+            if names:
+                entry["name"] = names[0]
     context = {
         "rows": rows,
         "source": shown["source"],
