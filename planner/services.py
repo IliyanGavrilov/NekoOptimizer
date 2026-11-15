@@ -80,6 +80,7 @@ from neko.search import astar, beam_search, obtainable
 from neko.statsdata import load_stats
 from neko.subsets import SubsetPlan, solve_subsets
 from neko.tierdata import TIER_ORDER, load_tiers
+from planner.catalogue_cache import bump_catalogue, catalogue_cached
 from planner.engine_text import engine_text
 from planner.forms import MAX_TRACK_LENGTH
 from planner.models import Banner, CannonPlan, Cat, Profile, TalentPlan, Unit, UnitPlan
@@ -935,6 +936,7 @@ def resources_board(profile: Profile) -> dict:
     }
 
 
+@catalogue_cached
 def cat_options() -> list[dict]:
     """The cat picker's catalogue: every named unit with something to grind for, with
     its form names so the search matches on any of them."""
@@ -1170,7 +1172,7 @@ def banner_titles(
     """{pool_id: display title} for picker rows - the pool's series name where one is
     known, else PONOS's official title for it (collabs, one-off specials); pools with
     neither keep their marketing text as the title."""
-    units = units if units is not None else Unit.objects.exclude(set_name="")
+    units = units if units is not None else set_units()
     series = series if series is not None else load_series()
     official = official if official is not None else load_titles()
     names = series_names(units, events, pools, series, tickets)
@@ -1399,19 +1401,58 @@ def _future_number(name: str) -> str:
     return future_uber_label(name).removeprefix("Future Uber ")
 
 
+@catalogue_cached
+def picker_cats() -> list[Cat]:
+    """Every cat with its unit joined, as the target picker lists them."""
+    return list(Cat.objects.select_related("unit"))
+
+
+@catalogue_cached
+def guide_units() -> list[Unit]:
+    """The named units this region's Cat Guide lists, as the collection shows them."""
+    return list(Unit.objects.named().in_guide())
+
+
+@catalogue_cached
+def set_units() -> list[Unit]:
+    """The units that belong to a Cat Guide set."""
+    return list(Unit.objects.exclude(set_name=""))
+
+
+@catalogue_cached
+def unit_form_names() -> dict[int, list[str]]:
+    """{unit_id: its form names} for every catalogued unit."""
+    return dict(Unit.objects.values_list("unit_id", "forms"))
+
+
+@catalogue_cached
+def units_by_name() -> dict[str, tuple[int, list[str]]]:
+    """{unit name: (unit_id, form names)} for every catalogued unit."""
+    return {
+        name: (uid, forms)
+        for name, uid, forms in Unit.objects.values_list("name", "unit_id", "forms")
+    }
+
+
+@catalogue_cached
+def banners_by_name() -> dict[str, Banner]:
+    """Every banner, by name."""
+    return {banner.name: banner for banner in Banner.objects.all()}
+
+
+@catalogue_cached
 def cat_banner_names() -> dict[int, list[str]]:
     """{cat pk: its banners' names}, read straight off the membership table.
 
     picker_groups only ever needs the names, and hydrating the m2m the ordinary way turns
     every one of the ~20k pairings into a Banner instance (dates parsed and all), which cost
     more than the whole rest of the picker put together."""
-    rows = Cat.banners.through.objects.filter(
-        cat__region=active_region(), banner__region=active_region()
-    ).values_list("cat_id", "banner__name")
-
+    region = active_region()
+    links = Cat.banners.through.objects.filter(cat__region=region, banner__region=region)
+    titles = dict(Banner.objects.values_list("pk", "name"))
     names: dict[int, list[str]] = {}
-    for cat_id, name in rows:
-        names.setdefault(cat_id, []).append(name)
+    for cat_id, banner_id in links.values_list("cat_id", "banner_id"):
+        names.setdefault(cat_id, []).append(titles[banner_id])
 
     return names
 
@@ -1483,7 +1524,7 @@ def picker_groups(
 
     # DB-dated banners the schedule doesn't know (old godfat-era names) still get a row.
     scheduled = {event.name for event, _start, _end in runs}
-    banners = {b.name: b for b in Banner.objects.filter(name__in=by_name)}
+    banners = {name: banner for name, banner in banners_by_name().items() if name in by_name}
     past += [
         row(name, Run(banner.start, banner.end))
         for name, banner in banners.items()
@@ -3008,6 +3049,7 @@ def import_units(records: Iterable[Mapping]) -> int:
         )
         if was_created:
             created.append(unit)
+    bump_catalogue()
 
     gacha = [unit for unit in created if unit.rarity in GACHA_RARITIES]
     if seeded and gacha:
@@ -3226,6 +3268,7 @@ def reconcile_provisional_units() -> tuple[int, list[str]]:
 
         prov.delete()
         merged += 1
+    bump_catalogue()
 
     return merged, orphaned
 
@@ -3303,6 +3346,7 @@ def import_cats(
     link.objects.bulk_create(
         [link(banner_id=b, cat_id=c) for b, c in pairs - linked], batch_size=_BATCH
     )
+    bump_catalogue()
 
     return len(new)
 
@@ -3468,10 +3512,7 @@ def build_normal_tracks(
     # reaches them exactly like the rare tracks' cells. Items show by the version's own
     # names; the English ones stay the item's identity (the dupe memory posts them).
     names = normal_names()
-    catalogue = {
-        name: (uid, forms)
-        for name, uid, forms in Unit.objects.values_list("name", "unit_id", "forms")
-    }
+    catalogue = units_by_name()
     units = {item: catalogue[label] for item, label in _normal_labels(names) if label in catalogue}
     columns = []
     for tag, banner in enumerate(banners, start=1):
@@ -3624,10 +3665,7 @@ def normal_request(
     # Cat items get their catalogue id and form names, so the page's form/icon picker
     # reaches them exactly like the rare tracks' cells.
     names = normal_names()
-    units = {
-        name: (uid, "|".join(forms))
-        for name, uid, forms in Unit.objects.values_list("name", "unit_id", "forms")
-    }
+    units = {name: (uid, "|".join(forms)) for name, (uid, forms) in units_by_name().items()}
     labels = [names.get(name, name) for name in table.names]
     request["normal"] = {
         "units": [units.get(label) for label in labels],
