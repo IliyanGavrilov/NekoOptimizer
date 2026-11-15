@@ -1,4 +1,5 @@
 import json
+from copy import copy
 from dataclasses import asdict, dataclass
 from urllib.parse import urlsplit
 
@@ -78,6 +79,7 @@ from planner.services import (
     fetch_for_banners,
     find_cats,
     guide_pages,
+    guide_units,
     import_collection,
     live_run_debuts,
     normal_banner_choices,
@@ -87,6 +89,7 @@ from planner.services import (
     normal_request,
     normal_seek_banner,
     normal_seek_pools,
+    picker_cats,
     picker_groups,
     plan_request,
     plannable_form,
@@ -106,6 +109,7 @@ from planner.services import (
     tier_set_label,
     trace_marks,
     tracks_request,
+    unit_form_names,
     unit_stats,
 )
 
@@ -118,8 +122,9 @@ def _picker_cats(profile):
 
     The chip is rendered here, once per cat, because the picker repeats it on every banner
     row that carries the cat - ~20k chips over ~500 cats, and rendering per appearance was
-    most of the Past fragment's cost."""
-    cats = list(Cat.objects.select_related("unit"))
+    most of the Past fragment's cost. The rows are shared across requests (picker_cats),
+    so each visitor's marks go on copies."""
+    cats = [copy(cat) for cat in picker_cats()]
     owned, wanted = profile.marks()
     badges = tier_badges()
     chip = get_template("planner/_picker_chip.html")
@@ -792,7 +797,7 @@ def unit_info(request):
 def unit_forms(request):
     """{unit_id: form names} for every catalogued unit, in one payload: the Rolls form
     picker renames the cells client-side, without refetching the table."""
-    return JsonResponse(dict(Unit.objects.values_list("unit_id", "forms")))
+    return JsonResponse(unit_form_names())
 
 
 def seed_finder(request):
@@ -1094,7 +1099,7 @@ def collection(request):
     by rarity or by gacha set. A unit can sit in several set sections (fests repeat their
     cats) - the marks are per unit, so every copy stays in step. Units this region's Cat
     Guide doesn't list are left out: the catalogue ships them, the region can't get them."""
-    units = list(Unit.objects.named().in_guide())
+    units = [copy(unit) for unit in guide_units()]
     owned, wanted = request.profile.marks()
     badges = tier_badges()
     # Each unit's chip is rendered once and reused: the page lays the whole catalogue out
@@ -1148,7 +1153,7 @@ def tier_list(request, category="", name=""):
     rows = tier_list_rows(shown)
     # The form picker renames entries client-side; ship each unit's form names along, and
     # render the version's own base-form name so the page reads in its language unscripted.
-    forms = dict(Unit.objects.values_list("unit_id", "forms"))
+    forms = unit_form_names()
     for row in rows:
         for entry in row["entries"]:
             names = forms.get(entry["unit_id"], [])

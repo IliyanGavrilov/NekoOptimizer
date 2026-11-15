@@ -5,8 +5,15 @@ from pathlib import Path
 import pytest
 from wasmtime import Func, FuncType, Instance, Module, Store, ValType
 
+from planner.catalogue_cache import forget_catalogue
 from planner.middleware import PROFILE_COOKIE
 from planner.models import Profile
+
+
+@pytest.fixture(autouse=True)
+def _fresh_catalogue():
+    """Each test builds its own catalogue: none may read another's from the cache."""
+    forget_catalogue()
 
 
 @pytest.fixture

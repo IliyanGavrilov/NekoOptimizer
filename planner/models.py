@@ -288,3 +288,14 @@ class Seed(models.Model):
             return None
 
         return cls.objects.filter(profile=profile, region=active_region(), kind=kind).first()
+
+
+class CatalogueVersion(models.Model):
+    """A counter per game version that every catalogue import bumps, so each server
+    process knows when the units, cats and banners it keeps in memory went stale."""
+
+    region = models.CharField(max_length=2, unique=True)
+    number = models.PositiveIntegerField(default=0)
+
+    def __str__(self) -> str:
+        return f"{self.region} v{self.number}"
