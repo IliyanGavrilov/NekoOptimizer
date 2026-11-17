@@ -1,0 +1,121 @@
+# One-off setup, run on every new image: bring the schema up to date, then load the game
+# data baked into the image (neko/data/) into the database. It runs as a Job - run to
+# completion, retried on failure - rather than inside the web pods: two web replicas
+# starting together would run migrations twice at once and race each other.
+#
+# Its pod runs three containers IN ORDER. Init containers each have to exit 0 before the
+# next starts: (1) wait until Postgres answers, (2) migrate; then the main container (3)
+# imports. The web pods' readiness probe holds traffic off until (2) is done.
+#
+# A Job's pod template can't be changed once created: to re-run it (new image), delete
+# it first - `kubectl -n neko delete job setup` - or let ttlSecondsAfterFinished remove
+# it. The Helm chart does this for you with a hook.
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: setup
+  namespace: neko
+  labels:
+    app.kubernetes.io/name: neko-optimizer
+    app.kubernetes.io/component: setup
+spec:
+  backoffLimit: 3 # retries before the Job counts as failed
+  activeDeadlineSeconds: 1800 # and a hard stop, however many retries are left
+  ttlSecondsAfterFinished: 86400 # deleted a day after it finishes
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: neko-optimizer
+        app.kubernetes.io/component: setup
+        neko-optimizer/db-access: "true" # the NetworkPolicy lets these reach Postgres
+    spec:
+      restartPolicy: Never # a failed pod is replaced (up to backoffLimit), not restarted
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10001
+        runAsGroup: 10001
+        seccompProfile:
+          type: RuntimeDefault
+      initContainers:
+        - name: wait-for-db
+          image: postgres:17-alpine # only for its pg_isready client
+          command: ["sh", "-c", 'until pg_isready -h "$POSTGRES_HOST" -p 5432 -U "$POSTGRES_USER"; do sleep 2; done']
+          envFrom:
+            - configMapRef: { name: neko-config }
+          resources:
+            requests: { cpu: 10m, memory: 16Mi }
+            limits: { cpu: 100m, memory: 64Mi }
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+        - name: migrate
+          image: neko-optimizer:local
+          imagePullPolicy: IfNotPresent
+          command: ["python", "manage.py", "migrate", "--no-input"]
+          envFrom:
+            - configMapRef: { name: neko-config }
+          env:
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef: { name: postgres, key: POSTGRES_PASSWORD }
+            - name: DJANGO_SECRET_KEY
+              valueFrom:
+                secretKeyRef: { name: django, key: DJANGO_SECRET_KEY }
+            # Built from the variables above: Kubernetes expands $(NAME) from the
+            # container's earlier variables, so the password lives in one Secret only.
+            - name: DATABASE_URL
+              value: postgres://$(POSTGRES_USER):$(POSTGRES_PASSWORD)@$(POSTGRES_HOST):5432/$(POSTGRES_DB)
+          resources:
+            requests: { cpu: 100m, memory: 256Mi }
+            limits: { cpu: "1", memory: 512Mi }
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+      containers:
+        - name: import
+          image: neko-optimizer:local
+          imagePullPolicy: IfNotPresent
+          # The same three steps per game version as the GitHub import workflow.
+          command:
+            - sh
+            - -c
+            - |
+              set -e
+              for region in en jp tw kr; do
+                python manage.py import_units --region "$region"
+                python manage.py import_catalogue --region "$region"
+                python manage.py reconcile_units --region "$region"
+              done
+          envFrom:
+            - configMapRef: { name: neko-config }
+          env:
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef: { name: postgres, key: POSTGRES_PASSWORD }
+            - name: DJANGO_SECRET_KEY
+              valueFrom:
+                secretKeyRef: { name: django, key: DJANGO_SECRET_KEY }
+            - name: DATABASE_URL
+              value: postgres://$(POSTGRES_USER):$(POSTGRES_PASSWORD)@$(POSTGRES_HOST):5432/$(POSTGRES_DB)
+          resources:
+            requests: { cpu: 200m, memory: 384Mi }
+            limits: { cpu: "1", memory: 768Mi }
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: tmp
+          emptyDir: {}

@@ -1,0 +1,96 @@
+# Who may talk to whom inside the namespace. By default every pod can reach every other
+# pod (and the internet); these turn that into "nothing, except what's listed". They
+# only take effect on a network plugin that enforces them - hence minikube's
+# --cni=calico; the default plugin accepts them and silently ignores them.
+#
+# 1. Deny everything, both directions, for every pod in the namespace...
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny
+  namespace: neko
+spec:
+  podSelector: {} # every pod
+  policyTypes: [Ingress, Egress]
+---
+# 2. ...then let every pod look names up in the cluster DNS (kube-dns in kube-system),
+#    or "postgres" wouldn't even resolve.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-dns
+  namespace: neko
+spec:
+  podSelector: {}
+  policyTypes: [Egress]
+  egress:
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+          podSelector:
+            matchLabels:
+              k8s-app: kube-dns
+      ports:
+        - { protocol: UDP, port: 53 }
+        - { protocol: TCP, port: 53 }
+---
+# 3. The web pods take traffic only from the ingress controller, on the app port.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: web-from-ingress
+  namespace: neko
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/component: web
+  policyTypes: [Ingress]
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: ingress-nginx
+      ports:
+        - { protocol: TCP, port: 8000 }
+---
+# 4. Postgres takes connections only from pods labelled neko-optimizer/db-access=true
+#    (the web pods and the setup/prune Jobs)...
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: db-from-app
+  namespace: neko
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/component: database
+  policyTypes: [Ingress]
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              neko-optimizer/db-access: "true"
+      ports:
+        - { protocol: TCP, port: 5432 }
+---
+# 5. ...and those pods may connect out to Postgres - and nowhere else. The app needs no
+#    internet at runtime (icons and data are baked into the image), so a compromised pod
+#    can't send anything out.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: app-to-db
+  namespace: neko
+spec:
+  podSelector:
+    matchLabels:
+      neko-optimizer/db-access: "true"
+  policyTypes: [Egress]
+  egress:
+    - to:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/component: database
+      ports:
+        - { protocol: TCP, port: 5432 }

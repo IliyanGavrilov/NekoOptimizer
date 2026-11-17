@@ -1,0 +1,114 @@
+# The database: Postgres in a StatefulSet with its own persistent volume. (The public
+# site uses a managed Postgres, Neon; inside the cluster we run our own, so the whole
+# stack is self-contained.)
+#
+# Headless Service (clusterIP: None): no load-balanced virtual IP, the DNS name
+# "postgres" resolves straight to the pod. A StatefulSet needs one to give its pods
+# stable network names (postgres-0.postgres.neko.svc.cluster.local).
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres
+  namespace: neko
+  labels:
+    app.kubernetes.io/name: neko-optimizer
+    app.kubernetes.io/component: database
+spec:
+  clusterIP: None
+  selector:
+    app.kubernetes.io/name: neko-optimizer
+    app.kubernetes.io/component: database
+  ports:
+    - name: postgres
+      port: 5432
+      targetPort: postgres
+---
+# StatefulSet, not Deployment: the pod keeps a fixed name (postgres-0) and its OWN
+# volume across restarts and rescheduling - a Deployment's pods are interchangeable and
+# would all fight over one volume. One replica: plain Postgres doesn't replicate itself.
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: postgres
+  namespace: neko
+  labels:
+    app.kubernetes.io/name: neko-optimizer
+    app.kubernetes.io/component: database
+spec:
+  serviceName: postgres
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: neko-optimizer
+      app.kubernetes.io/component: database
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: neko-optimizer
+        app.kubernetes.io/component: database
+    spec:
+      automountServiceAccountToken: false # it never talks to the Kubernetes API
+      securityContext:
+        # The alpine image's "postgres" user. fsGroup makes the mounted volume writable
+        # for that group, so the server never needs root to set up its data directory.
+        runAsUser: 70
+        runAsGroup: 70
+        fsGroup: 70
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: postgres
+          image: postgres:17-alpine
+          ports:
+            - name: postgres
+              containerPort: 5432
+          env:
+            - name: POSTGRES_DB
+              valueFrom:
+                configMapKeyRef: { name: neko-config, key: POSTGRES_DB }
+            - name: POSTGRES_USER
+              valueFrom:
+                configMapKeyRef: { name: neko-config, key: POSTGRES_USER }
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef: { name: postgres, key: POSTGRES_PASSWORD }
+            # A subfolder of the mount: a fresh volume's root may hold lost+found, and
+            # initdb refuses a non-empty directory.
+            - name: PGDATA
+              value: /var/lib/postgresql/data/pgdata
+          # pg_isready asks the server itself whether it accepts connections.
+          readinessProbe:
+            exec:
+              command: ["sh", "-c", 'pg_isready -U "$POSTGRES_USER" -d "$POSTGRES_DB"']
+            periodSeconds: 5
+          livenessProbe:
+            exec:
+              command: ["sh", "-c", 'pg_isready -U "$POSTGRES_USER" -d "$POSTGRES_DB"']
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            failureThreshold: 6
+          resources:
+            requests: { cpu: 100m, memory: 256Mi }
+            limits: { cpu: "1", memory: 512Mi }
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/postgresql/data
+  # One PersistentVolumeClaim per pod, created from this template and kept even if the
+  # StatefulSet is deleted - data outlives the pods that use it. minikube's default
+  # StorageClass provisions the volume automatically.
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+        labels:
+          app.kubernetes.io/name: neko-optimizer
+          app.kubernetes.io/component: database
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        resources:
+          requests:
+            storage: 1Gi

@@ -1,0 +1,74 @@
+{{- /*
+Migrate + import, once per release revision. The revision number in the name makes every
+`helm upgrade` create a NEW Job (a Job's pod template can't be edited, so reusing one name
+would fail), and ttlSecondsAfterFinished clears the old ones away.
+
+Why not a Helm hook (post-install / pre-upgrade)? With `helm install --wait`, Helm waits
+for the web pods to be Ready before running post-install hooks - but they only become
+Ready once this Job has migrated the database. Each would wait for the other forever. As
+a plain resource the Job runs alongside the rollout, and the readiness probe already keeps
+new pods out of traffic until it's done.
+*/ -}}
+{{- $name := include "neko.name" . -}}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ $name }}-setup-{{ .Release.Revision }}
+  labels:
+    {{- include "neko.labels" . | nindent 4 }}
+    app.kubernetes.io/component: setup
+spec:
+  backoffLimit: 3
+  activeDeadlineSeconds: 1800
+  ttlSecondsAfterFinished: 86400
+  template:
+    metadata:
+      labels:
+        {{- include "neko.labels" . | nindent 8 }}
+        app.kubernetes.io/component: setup
+        neko-optimizer/db-access: "true"
+    spec:
+      restartPolicy: Never
+      automountServiceAccountToken: false
+      securityContext:
+        {{- include "neko.podSecurity" . | nindent 8 }}
+      initContainers:
+        {{- include "neko.waitForDb" . | nindent 8 }}
+        - name: migrate
+          image: {{ include "neko.image" . }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command: ["python", "manage.py", "migrate", "--no-input"]
+          {{- include "neko.appEnv" . | nindent 10 }}
+          resources:
+            requests: { cpu: 100m, memory: 256Mi }
+            limits: { cpu: "1", memory: 512Mi }
+          securityContext:
+            {{- include "neko.containerSecurity" . | nindent 12 }}
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+      containers:
+        - name: import
+          image: {{ include "neko.image" . }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command:
+            - sh
+            - -c
+            - |
+              set -e
+              for region in {{ join " " .Values.setup.regions }}; do
+                python manage.py import_units --region "$region"
+                python manage.py import_catalogue --region "$region"
+                python manage.py reconcile_units --region "$region"
+              done
+          {{- include "neko.appEnv" . | nindent 10 }}
+          resources:
+            {{- toYaml .Values.setup.resources | nindent 12 }}
+          securityContext:
+            {{- include "neko.containerSecurity" . | nindent 12 }}
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: tmp
+          emptyDir: {}

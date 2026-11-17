@@ -1,0 +1,26 @@
+{{- if .Values.ingress.enabled -}}
+{{- $name := include "neko.name" . -}}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ $name }}-web
+  labels:
+    {{- include "neko.labels" . | nindent 4 }}
+    app.kubernetes.io/component: web
+spec:
+  ingressClassName: {{ .Values.ingress.className }}
+  tls:
+    - hosts: [{{ .Values.host | quote }}]
+      secretName: {{ .Values.ingress.tlsSecret | default (printf "%s-tls" $name) }}
+  rules:
+    - host: {{ .Values.host | quote }}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ $name }}-web
+                port:
+                  name: http
+{{- end }}
