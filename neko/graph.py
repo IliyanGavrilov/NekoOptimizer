@@ -180,6 +180,10 @@ class BannerGraph:
     def guaranteed_positions(self, duped: bool = False) -> list[int]:
         return sorted(self._guaranteed_rerolls if duped else self._guaranteed)
 
+    def end(self) -> int:
+        """One past the highest stream index rolled: no pull starts at or beyond it."""
+        return max(self._pulls, default=-1) + 1
+
     def max_advance(self) -> int:
         """The farthest one pull can move the position: +2 nominal, +2+steps on a dupe."""
         return 2 + max((reroll.steps or 1 for reroll in self._rerolls.values()), default=1)
