@@ -1364,8 +1364,10 @@ def _posted_from(request, code: str) -> str:
     here = region_path(reverse(match.view_name, args=match.args, kwargs=match.kwargs), code)
     target = f"{here}?{parts.query}" if parts.query else here
 
-    # Already ours by construction; re-checking the final URL lets scanners see it too.
-    return target if url_has_allowed_host_and_scheme(target, allowed_hosts=None) else home
+    # Already a path on this site by construction. Pinning it under one leading "/" makes
+    # that hold whatever reverse() returned (no "//host", no "scheme:") - and it's the form
+    # CodeQL can verify, since it can't see through reverse().
+    return "/" + target.lstrip("/")
 
 
 @require_POST
