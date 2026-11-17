@@ -1851,9 +1851,9 @@ msgstr "已存到你的帳號,任何裝置都能使用。"
 #: .\templates\planner\_seed_keep.html:14
 #, python-format
 msgid ""
-"Saved in this browser only &mdash; <a href=\"%(signup_url)s?next=%(next)s\">sign up</a> (free, no email) to keep it on every device."
+"Saved in this browser only &mdash; <a href=\"%(signup_url)s?next=%(next)s\" rel=\"nofollow\">sign up</a> (free, no email) to keep it on every device."
 msgstr ""
-"只存在這個瀏覽器中 &mdash; <a href=\"%(signup_url)s?next=%(next)s\">註冊</a>(免費、不需電子郵件)即可在任何裝置使用。"
+"只存在這個瀏覽器中 &mdash; <a href=\"%(signup_url)s?next=%(next)s\" rel=\"nofollow\">註冊</a>(免費、不需電子郵件)即可在任何裝置使用。"
 
 #: .\templates\planner\_seed_keep.html:15
 msgid ""

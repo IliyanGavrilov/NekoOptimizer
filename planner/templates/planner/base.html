@@ -118,8 +118,8 @@
             </div>
           </details>
           {% else %}
-          <a href="{% url 'login' %}?next={{ request.path|urlencode }}">{% translate "Log in" %}</a>
-          <a class="signup" href="{% url 'signup' %}?next={{ request.path|urlencode }}">{% translate "Sign up" %}</a>
+          <a href="{% url 'login' %}?next={{ request.path|urlencode }}" rel="nofollow">{% translate "Log in" %}</a>
+          <a class="signup" href="{% url 'signup' %}?next={{ request.path|urlencode }}" rel="nofollow">{% translate "Sign up" %}</a>
           {% endif %}
         </div>
       </div>

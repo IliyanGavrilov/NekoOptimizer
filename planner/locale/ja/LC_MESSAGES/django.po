@@ -1860,9 +1860,9 @@ msgstr "アカウントに保存され、どの端末でも使えます。"
 #: .\templates\planner\_seed_keep.html:14
 #, python-format
 msgid ""
-"Saved in this browser only &mdash; <a href=\"%(signup_url)s?next=%(next)s\">sign up</a> (free, no email) to keep it on every device."
+"Saved in this browser only &mdash; <a href=\"%(signup_url)s?next=%(next)s\" rel=\"nofollow\">sign up</a> (free, no email) to keep it on every device."
 msgstr ""
-"このブラウザにだけ保存されています &mdash; <a href=\"%(signup_url)s?next=%(next)s\">新規登録</a>(無料・メール不要)すると、どの端末でも使えます。"
+"このブラウザにだけ保存されています &mdash; <a href=\"%(signup_url)s?next=%(next)s\" rel=\"nofollow\">新規登録</a>(無料・メール不要)すると、どの端末でも使えます。"
 
 #: .\templates\planner\_seed_keep.html:15
 msgid ""

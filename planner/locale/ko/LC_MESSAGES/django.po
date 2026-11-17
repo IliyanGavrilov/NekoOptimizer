@@ -1861,9 +1861,9 @@ msgstr "계정에 저장되어 어느 기기에서나 쓸 수 있습니다."
 #: .\templates\planner\_seed_keep.html:14
 #, python-format
 msgid ""
-"Saved in this browser only &mdash; <a href=\"%(signup_url)s?next=%(next)s\">sign up</a> (free, no email) to keep it on every device."
+"Saved in this browser only &mdash; <a href=\"%(signup_url)s?next=%(next)s\" rel=\"nofollow\">sign up</a> (free, no email) to keep it on every device."
 msgstr ""
-"이 브라우저에만 저장되어 있습니다 &mdash; <a href=\"%(signup_url)s?next=%(next)s\">회원가입</a>(무료, 이메일 불필요)하면 어느 기기에서나 쓸 수 있습니다."
+"이 브라우저에만 저장되어 있습니다 &mdash; <a href=\"%(signup_url)s?next=%(next)s\" rel=\"nofollow\">회원가입</a>(무료, 이메일 불필요)하면 어느 기기에서나 쓸 수 있습니다."
 
 #: .\templates\planner\_seed_keep.html:15
 msgid ""

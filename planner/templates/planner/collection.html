@@ -28,7 +28,7 @@
     <label class="ctrl" title="{% translate "Star every new gacha cat for you as soon as it's added to the game" %}"><input type="checkbox" id="autoWishlist" data-url="{% url 'collection_auto_wishlist' %}"{% if request.profile.auto_wishlist %} checked{% endif %}> {% translate "Wishlist new cats" %}</label>
     <span id="collectionTotal" class="collection-total" aria-live="polite"></span>
     <span class="collection-io">
-      <a class="io-btn" href="{% url 'collection_export' %}" download>{% translate "Export" %}</a>
+      <a class="io-btn" href="{% url 'collection_export' %}" rel="nofollow" download>{% translate "Export" %}</a>
       <button type="button" class="io-btn" id="collectionImport">{% translate "Import" %}</button>
       <input type="file" id="collectionImportFile" accept="application/json,.json" hidden>
       <button type="button" class="io-btn" id="guideImport" data-url="{% url 'collection_guide_import' %}" data-wasm-url="{% static 'planner/neko.wasm' %}" title="{% translate "Screenshot every page of the in-game Cat Guide (filter off, first page to last) and pick them all: the cats you have get marked owned, the gray ? ones unmarked" %}">{% translate "From Cat Guide" %}</button>

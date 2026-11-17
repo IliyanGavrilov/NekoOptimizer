@@ -10,7 +10,7 @@ of the two seeds this is, and ``finder`` where to look it up.{% endcomment %}
     {% blocktranslate trimmed %}Don't know it? <a href="{{ finder }}" class="seed-find">Find it</a>.{% endblocktranslate %}
   </p>
   <p class="seed-status muted">
-    {% if user.is_authenticated %}{% translate "Saved to your account, on every device." %}{% else %}{% url 'signup' as signup_url %}{% blocktranslate trimmed with next=request.path|urlencode %}Saved in this browser only &mdash; <a href="{{ signup_url }}?next={{ next }}">sign up</a> (free, no email) to keep it on every device.{% endblocktranslate %}{% endif %}
+    {% if user.is_authenticated %}{% translate "Saved to your account, on every device." %}{% else %}{% url 'signup' as signup_url %}{% blocktranslate trimmed with next=request.path|urlencode %}Saved in this browser only &mdash; <a href="{{ signup_url }}?next={{ next }}" rel="nofollow">sign up</a> (free, no email) to keep it on every device.{% endblocktranslate %}{% endif %}
     {% blocktranslate trimmed %}Keep a backup: <button type="button" class="link-btn seed-copy">copy a link</button> that brings this seed back, and paste it into your notes.{% endblocktranslate %}
   </p>
   <div class="seed-held" hidden>

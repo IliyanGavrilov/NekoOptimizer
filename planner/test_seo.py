@@ -85,6 +85,15 @@ def test_the_login_page_stays_out_of_the_index(client):
     assert b'<meta name="robots" content="noindex">' in client.get("/accounts/login/").content
 
 
+def test_crawlers_are_not_sent_down_the_login_links(client):
+    body = client.get("/about/").content.decode()
+    assert 'href="/accounts/login/?next=/about/" rel="nofollow"' in body
+
+
+def test_the_collection_export_stays_out_of_the_index(client):
+    assert client.get("/collection/export/")["X-Robots-Tag"] == "noindex"
+
+
 def test_the_about_page_is_indexable(client):
     assert b'name="robots"' not in client.get("/about/").content
 
