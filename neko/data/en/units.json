@@ -3706,7 +3706,8 @@
     "forms": [
       "Voli",
       "Volta",
-      "Gigavolta"
+      "Gigavolta",
+      "Teravolta"
     ],
     "set": "Elemental Pixies"
   },
@@ -7073,7 +7074,8 @@
     "rarity": "Uber Super Rare",
     "forms": [
       "Akechi Mitsuhide",
-      "Wargod Mitsuhide"
+      "Wargod Mitsuhide",
+      "Immortal Mitsuhide"
     ],
     "set": "Sengoku Wargods Vajiras"
   },
