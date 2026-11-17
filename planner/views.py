@@ -1602,6 +1602,8 @@ def collection_export(request):
     to another install."""
     resp = JsonResponse(export_collection(request.profile), json_dumps_params={"indent": 2})
     resp["Content-Disposition"] = 'attachment; filename="neko-collection.json"'
+    # A player's own backup, not a page: keep crawlers from filing it.
+    resp["X-Robots-Tag"] = "noindex"
 
     return resp
 

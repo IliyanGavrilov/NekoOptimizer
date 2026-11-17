@@ -27,8 +27,8 @@
     <button type="submit">{% if signup %}{% translate "Create account" %}{% else %}{% translate "Log in" %}{% endif %}</button>
   </form>
   {% if signup %}
-  <p class="muted">{% translate "Already have one?" %} <a href="{% url 'login' %}?next={{ next|urlencode }}">{% translate "Log in" %}</a></p>
+  <p class="muted">{% translate "Already have one?" %} <a href="{% url 'login' %}?next={{ next|urlencode }}" rel="nofollow">{% translate "Log in" %}</a></p>
   {% else %}
-  <p class="muted">{% translate "No account yet?" %} <a href="{% url 'signup' %}?next={{ next|urlencode }}">{% translate "Sign up" %}</a></p>
+  <p class="muted">{% translate "No account yet?" %} <a href="{% url 'signup' %}?next={{ next|urlencode }}" rel="nofollow">{% translate "Sign up" %}</a></p>
   {% endif %}
 {% endblock %}
