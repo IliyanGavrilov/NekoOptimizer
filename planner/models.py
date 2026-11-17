@@ -133,6 +133,23 @@ def _new_key() -> str:
     return secrets.token_urlsafe(32)
 
 
+class ProfileQuerySet(models.QuerySet):
+    def empty_guests(self) -> ProfileQuerySet:
+        """Guest profiles holding nothing: no account, marks, plans, seed or settings - what
+        a visitor leaves behind when they undo the one change that saved their profile."""
+        return self.filter(
+            user=None,
+            owned=None,
+            wanted=None,
+            unit_plans=None,
+            talent_plans=None,
+            cannon_plans=None,
+            seeds=None,
+            avatar_unit=None,
+            auto_wishlist=False,
+        )
+
+
 class Profile(models.Model):
     """One player's own state - their collection, plans, seed and game version - while the
     catalogue stays shared. It starts anonymous, on a visitor's first change, and a cookie
@@ -154,6 +171,8 @@ class Profile(models.Model):
     avatar_unit = models.PositiveIntegerField(null=True, blank=True)
     avatar_form = models.PositiveSmallIntegerField(default=0)
     created = models.DateTimeField(auto_now_add=True)
+
+    objects = ProfileQuerySet.as_manager()
 
     def __str__(self) -> str:
         return str(self.user) if self.user else f"Guest {self.pk}"
