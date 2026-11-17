@@ -45,7 +45,6 @@ ConfigMap neko-config · Secrets postgres, django, neko-tls · NetworkPolicies (
 | `k8s/70-cronjobs.yaml` | CronJob: weekly `prune_guests` |
 | `k8s/helm/neko-optimizer/` | All of the above as one Helm chart |
 | `.github/workflows/image.yml` | CI: build the image on every PR, push to ghcr.io from main |
-| `k8s/DEFENSE.md` | Every decision explained, as questions and answers |
 
 ## One-time setup (Windows)
 
@@ -151,7 +150,7 @@ Undo the last change:
 helm rollback neko -n neko-helm
 ```
 
-## Things to show (each one is a topic from the CKAD exercises)
+## Things to try
 
 **Self-healing.** Delete a web pod: the Deployment notices it's one short and starts a new one.
 ```bash
