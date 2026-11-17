@@ -198,3 +198,23 @@ def test_the_plan_request_carries_the_budget_and_scoped_targets(client, catalogu
     names = {request["names"][i] for i in request["plan"]["targets"]}
     assert "Nowhere Cat" not in names and len(names) == 2
     assert (request["plan"]["tickets"], request["plan"]["catfood"]) == (20, 4500)
+
+
+# Explore mode over five banners hunting six cats. Every split of the budget between
+# tickets and catfood used to be a search state of its own: this took 2.8 trillion wasm
+# instructions (minutes, or out of memory in the browser). Now it's 30 billion.
+_CROWDED_BANNERS = [
+    "2019-02-25|★ Vajiras Wargods ★ Tactical Master Uber Cats, with a new mystery general?!",
+    "2021-12-15|NEW hero Hevijak arises, effective vs Red and Aku! ★Tap banner for info!",
+    "2024-02-14|Lunar New Year Capsules full of appreciation! Tap the banner for details!",
+    "2022-01-06|NEW hero Summoner Satoru, effective vs Aku! ★Tap banner for info!",
+    "2022-11-10|Take down Colossal prey with NEW hero Huntress Terun! ★ Tap for info!",
+]
+_CROWDED_TARGETS = ["Cat Machine", "Coppermine", "Kuu", "Nurse Cat", "Uesugi Kenshin", "Vars"]
+
+
+def test_explore_over_many_banners_and_targets_stays_cheap(client, engine_on_budget, catalogue):  # noqa: F811
+    targets = [Cat.objects.create(name=name).pk for name in _CROWDED_TARGETS]
+    data = _form(3676231681, _CROWDED_BANNERS, targets, explore="on", horizon="1000")
+    html = engine_on_budget(client.post("/plan/", data).json(), fuel=150 * 10**9)
+    assert "apply-plan" in html

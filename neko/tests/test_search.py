@@ -1,6 +1,10 @@
-from neko.graph import BannerGraph
+import pytest
+
+from neko.gachadata import load_events
+from neko.graph import BannerGraph, build_graphs
 from neko.models import CATFOOD_PER_DRAW, Path, Rarity, State, TrackPull
-from neko.search import Multi, astar, beam_search, obtainable
+from neko.roller import prepare_selected, roll_selected
+from neko.search import Multi, _Plenty, astar, beam_search, obtainable
 
 R = Rarity.RARE
 U = Rarity.UBER_SUPER_RARE
@@ -354,3 +358,28 @@ def test_prefers_single_banner_when_cost_is_equal():
     y = banner("y", (1, "A", "Aqua", U), (2, "A", "Bora", U))
     result = astar([x, y], {"Aqua", "Bora"}, start(tickets=2))
     assert len(result.legs) == 1
+
+
+def _explore_case(seed, count):
+    """Real rolls on the schedule's first two banners with a guaranteed multi on offer, the
+    explore budget the plan view hands out, and three cats from deep in the rolls."""
+    runs = [e.name for e in load_events() if e.guaranteed]
+    runs = [name for name in dict.fromkeys(runs) if prepare_selected([name])[name].multis][:2]
+    rolled = roll_selected(seed, runs, count=count)
+    graphs = build_graphs(
+        {key: r.pulls for key, r in rolled.banners.items()},
+        {key: r.guaranteed for key, r in rolled.banners.items()},
+        {key: r.rerolls for key, r in rolled.banners.items()},
+        {key: r.guaranteed_rerolls for key, r in rolled.banners.items()},
+    )
+    deep = [p.cat for r in rolled.banners.values() for p in r.pulls if p.position > count // 2]
+    targets = list(dict.fromkeys(deep))[:3]
+    return graphs, targets, start(tickets=count, catfood=count), rolled.multis
+
+
+@pytest.mark.parametrize("seed", [1893568593, 7, 2026])
+def test_an_explore_budget_finds_the_same_plan_as_tracking_every_ticket(monkeypatch, seed):
+    graphs, targets, budget, multis = _explore_case(seed, 60)
+    folded = astar(graphs, targets, budget, multis=multis)
+    monkeypatch.setattr(_Plenty, "settle", lambda self, state: state)
+    assert folded == astar(graphs, targets, budget, multis=multis)
