@@ -10,6 +10,7 @@ from itertools import count
 from pathlib import Path
 
 from neko.bcdata import METADATA_URL, _get, _member, latest_version, release_url
+from neko.bcinfo import download_evolve, fill_evolve
 from neko.region import DEFAULT_REGION, data_path, spec
 
 COMBOS_FILE = "combos.json"
@@ -286,12 +287,15 @@ def build_gamedata(tarball: bytes, region: str = DEFAULT_REGION) -> dict[str, di
 
 def refresh(tarball: bytes | None = None, region: str = DEFAULT_REGION) -> dict[str, int]:
     """Rebuild one region's five gamedata JSONs from the live mirror (or a pre-downloaded
-    tarball); returns record counts per file name."""
+    tarball), with the evolutions the mirror hasn't caught up on from battlecatsinfo;
+    returns record counts per file name."""
     if tarball is None:
         metadata = json.loads(_get(METADATA_URL))
         tarball = _get(release_url(metadata, latest_version(metadata, region), region))
 
     documents = build_gamedata(tarball, region)
+    evolve = documents[EVOLVE_FILE]
+    evolve["units"] = fill_evolve(evolve["units"], download_evolve(region))
     counts = {}
     for name, document in documents.items():
         path = data_path(name, region)
