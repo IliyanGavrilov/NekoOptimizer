@@ -1,0 +1,55 @@
+# Every knob of the chart, with the defaults for the local minikube cluster. Override any
+# of them per install: `helm upgrade --install neko k8s/helm/neko-optimizer -n neko
+# --create-namespace -f my-values.yaml` or `--set web.replicas=3`.
+
+image:
+  # The image built into minikube (`minikube image build -t neko-optimizer:local .`).
+  # For the one CI publishes: repository ghcr.io/<owner>/neko-optimizer, tag sha-<commit>.
+  repository: neko-optimizer
+  tag: local
+  pullPolicy: IfNotPresent
+
+host: neko.localhost
+
+ingress:
+  enabled: true
+  className: nginx
+  # With no secret named here, the chart generates a self-signed certificate once and
+  # keeps reusing it.
+  tlsSecret: ""
+
+web:
+  replicas: 2
+  resources:
+    requests: { cpu: 100m, memory: 256Mi }
+    limits: { cpu: "1", memory: 512Mi }
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 5
+    targetCPUUtilizationPercentage: 70
+
+postgres:
+  image: postgres:17-alpine
+  database: neko
+  user: neko
+  storage: 1Gi
+  resources:
+    requests: { cpu: 100m, memory: 256Mi }
+    limits: { cpu: "1", memory: 512Mi }
+
+setup:
+  # The game versions whose data the setup Job imports.
+  regions: [en, jp, tw, kr]
+  resources:
+    requests: { cpu: 200m, memory: 384Mi }
+    limits: { cpu: "1", memory: 768Mi }
+
+pruneGuests:
+  enabled: true
+  schedule: "17 4 * * 1"
+
+networkPolicies:
+  enabled: true
+  # The namespace the ingress controller runs in (minikube's addon: ingress-nginx).
+  ingressNamespace: ingress-nginx

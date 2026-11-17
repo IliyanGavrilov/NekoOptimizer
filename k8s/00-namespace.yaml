@@ -1,0 +1,44 @@
+# The namespace every Neko Optimizer object lives in, and the resource rules that hold
+# inside it. `kubectl apply -f k8s/` applies the files in name order, so this comes first.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: neko
+  labels:
+    app.kubernetes.io/part-of: neko-optimizer
+---
+# Defaults for any container that doesn't state its own requests/limits (e.g. a quick
+# `kubectl run` debug pod), and a ceiling no single container may exceed.
+apiVersion: v1
+kind: LimitRange
+metadata:
+  name: container-defaults
+  namespace: neko
+spec:
+  limits:
+    - type: Container
+      defaultRequest:
+        cpu: 50m
+        memory: 64Mi
+      default:
+        cpu: 500m
+        memory: 256Mi
+      max:
+        cpu: "2"
+        memory: 1Gi
+---
+# The most the whole namespace may claim, so a runaway autoscaler or Job can't starve
+# the rest of the cluster.
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: neko-quota
+  namespace: neko
+spec:
+  hard:
+    requests.cpu: "4"
+    requests.memory: 4Gi
+    limits.cpu: "8"
+    limits.memory: 8Gi
+    pods: "20"
+    persistentvolumeclaims: "4"

@@ -1,0 +1,6 @@
+apiVersion: v2
+name: neko-optimizer
+description: Neko Optimizer (Django + Postgres) on Kubernetes - the k8s/*.yaml manifests as one installable, configurable package.
+type: application
+version: 0.1.0 # the chart's own version: bump when the templates change
+appVersion: "1.0" # the version of the app it deploys (informational)

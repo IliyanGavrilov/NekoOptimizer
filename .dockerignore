@@ -1,0 +1,34 @@
+# What `docker build .` leaves out of the build context: local state, tooling, secrets,
+# and everything the site itself never runs.
+.git
+.github
+.claude
+.idea
+.vscode
+.venv
+**/__pycache__
+.pytest_cache
+.ruff_cache
+.coverage
+graphify-out
+rollcache
+db.sqlite3*
+staticfiles
+.env
+.envrc
+
+# Fetched fresh inside the build.
+planner/static/planner/icons
+
+# The Rust source: the compiled neko.wasm is already committed under planner/static.
+wasm
+
+# Tests and their fixtures.
+**/test_*.py
+**/conftest.py
+**/tests
+planner/fixtures
+planner/reference_urls.py
+
+# Deploy tooling for the cluster, not part of the app.
+k8s

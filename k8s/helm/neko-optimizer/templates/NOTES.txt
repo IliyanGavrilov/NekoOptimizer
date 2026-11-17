@@ -1,0 +1,10 @@
+Neko Optimizer is installed as release "{{ .Release.Name }}" in namespace "{{ .Release.Namespace }}".
+
+Watch it come up (the setup Job migrates and imports; the web pods turn Ready after it):
+  kubectl -n {{ .Release.Namespace }} get pods -w
+
+{{- if .Values.ingress.enabled }}
+
+Then open https://{{ .Values.host }} - with `minikube tunnel` running in another terminal.
+The certificate is self-signed, so the browser asks you to accept it once.
+{{- end }}

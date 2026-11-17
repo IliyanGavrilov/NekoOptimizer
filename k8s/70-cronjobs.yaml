@@ -1,0 +1,67 @@
+# Housekeeping on a schedule: every Monday 04:17 UTC, delete guest profiles that hold
+# nothing (manage.py prune_guests). A CronJob creates a Job at each scheduled time, and
+# that Job creates the pod - the same machinery as k8s/30-setup-job.yaml, on a timer.
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: prune-guests
+  namespace: neko
+  labels:
+    app.kubernetes.io/name: neko-optimizer
+    app.kubernetes.io/component: prune-guests
+spec:
+  schedule: "17 4 * * 1" # minute hour day-of-month month day-of-week
+  timeZone: Etc/UTC
+  concurrencyPolicy: Forbid # never two at once if one runs long
+  startingDeadlineSeconds: 3600 # cluster was down at 04:17? still run within the hour
+  successfulJobsHistoryLimit: 3 # keep the last few runs to read their logs
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 2
+      activeDeadlineSeconds: 600
+      template:
+        metadata:
+          labels:
+            app.kubernetes.io/name: neko-optimizer
+            app.kubernetes.io/component: prune-guests
+            neko-optimizer/db-access: "true"
+        spec:
+          restartPolicy: Never
+          automountServiceAccountToken: false
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 10001
+            runAsGroup: 10001
+            seccompProfile:
+              type: RuntimeDefault
+          containers:
+            - name: prune
+              image: neko-optimizer:local
+              imagePullPolicy: IfNotPresent
+              command: ["python", "manage.py", "prune_guests"]
+              envFrom:
+                - configMapRef: { name: neko-config }
+              env:
+                - name: POSTGRES_PASSWORD
+                  valueFrom:
+                    secretKeyRef: { name: postgres, key: POSTGRES_PASSWORD }
+                - name: DJANGO_SECRET_KEY
+                  valueFrom:
+                    secretKeyRef: { name: django, key: DJANGO_SECRET_KEY }
+                - name: DATABASE_URL
+                  value: postgres://$(POSTGRES_USER):$(POSTGRES_PASSWORD)@$(POSTGRES_HOST):5432/$(POSTGRES_DB)
+              resources:
+                requests: { cpu: 50m, memory: 192Mi }
+                limits: { cpu: 500m, memory: 384Mi }
+              securityContext:
+                allowPrivilegeEscalation: false
+                readOnlyRootFilesystem: true
+                capabilities:
+                  drop: ["ALL"]
+              volumeMounts:
+                - name: tmp
+                  mountPath: /tmp
+          volumes:
+            - name: tmp
+              emptyDir: {}
