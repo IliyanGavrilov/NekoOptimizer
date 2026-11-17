@@ -1,0 +1,20 @@
+# Settings that aren't secret. Every app container loads all of these as environment
+# variables (envFrom), which is how nekosite/settings.py reads its configuration.
+# Secrets (passwords, the Django key) are NOT here - see k8s/scripts/secrets.sh.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: neko-config
+  namespace: neko
+  labels:
+    app.kubernetes.io/name: neko-optimizer
+data:
+  # The host the Ingress serves. Browsers resolve any *.localhost name to this machine,
+  # so no DNS or hosts-file entry is needed.
+  DJANGO_ALLOWED_HOSTS: neko.localhost
+  SITE_URL: https://neko.localhost
+  # The database the postgres StatefulSet creates on first start, and who owns it.
+  POSTGRES_DB: neko
+  POSTGRES_USER: neko
+  # The Service name in front of the database: cluster DNS resolves it to the pod.
+  POSTGRES_HOST: postgres

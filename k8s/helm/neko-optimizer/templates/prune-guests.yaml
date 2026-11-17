@@ -1,0 +1,48 @@
+{{- if .Values.pruneGuests.enabled -}}
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: {{ include "neko.name" . }}-prune-guests
+  labels:
+    {{- include "neko.labels" . | nindent 4 }}
+    app.kubernetes.io/component: prune-guests
+spec:
+  schedule: {{ .Values.pruneGuests.schedule | quote }}
+  timeZone: Etc/UTC
+  concurrencyPolicy: Forbid
+  startingDeadlineSeconds: 3600
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 2
+      activeDeadlineSeconds: 600
+      template:
+        metadata:
+          labels:
+            {{- include "neko.labels" . | nindent 12 }}
+            app.kubernetes.io/component: prune-guests
+            neko-optimizer/db-access: "true"
+        spec:
+          restartPolicy: Never
+          automountServiceAccountToken: false
+          securityContext:
+            {{- include "neko.podSecurity" . | nindent 12 }}
+          containers:
+            - name: prune
+              image: {{ include "neko.image" . }}
+              imagePullPolicy: {{ .Values.image.pullPolicy }}
+              command: ["python", "manage.py", "prune_guests"]
+              {{- include "neko.appEnv" . | nindent 14 }}
+              resources:
+                requests: { cpu: 50m, memory: 192Mi }
+                limits: { cpu: 500m, memory: 384Mi }
+              securityContext:
+                {{- include "neko.containerSecurity" . | nindent 16 }}
+              volumeMounts:
+                - name: tmp
+                  mountPath: /tmp
+          volumes:
+            - name: tmp
+              emptyDir: {}
+{{- end }}

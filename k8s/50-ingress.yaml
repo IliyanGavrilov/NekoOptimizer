@@ -1,0 +1,29 @@
+# The way in from outside the cluster: the ingress-nginx controller (minikube's ingress
+# addon) reads this and routes https://neko.localhost to the neko-web Service. It
+# terminates HTTPS with the certificate in the neko-tls Secret and passes the request on
+# as plain HTTP with X-Forwarded-Proto: https - which Django trusts (settings.py:
+# SECURE_PROXY_SSL_HEADER), so it knows the visitor is on HTTPS.
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: neko-web
+  namespace: neko
+  labels:
+    app.kubernetes.io/name: neko-optimizer
+    app.kubernetes.io/component: web
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts: [neko.localhost]
+      secretName: neko-tls
+  rules:
+    - host: neko.localhost
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: neko-web
+                port:
+                  name: http

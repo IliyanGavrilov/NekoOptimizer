@@ -81,6 +81,7 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    "planner.health.probes",  # first: Kubernetes probes by pod IP over plain HTTP
     "django.middleware.security.SecurityMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",  # ahead of gzip: static files come precompressed
     "django.middleware.gzip.GZipMiddleware",  # the picker/collection pages are large and repetitive

@@ -1,0 +1,196 @@
+# The site itself: gunicorn + Django, as many identical replicas as the load needs.
+#
+# Its own ServiceAccount with no API token mounted: the app never talks to the Kubernetes
+# API, so a compromised pod gets no credentials to try.
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: neko-web
+  namespace: neko
+  labels:
+    app.kubernetes.io/name: neko-optimizer
+    app.kubernetes.io/component: web
+automountServiceAccountToken: false
+---
+# Deployment: keeps `replicas` copies of the pod running, replaces ones that die, and
+# rolls a new image out pod by pod. It works through ReplicaSets - one per version of
+# the pod template - which is what `kubectl rollout undo` switches back to.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: neko-web
+  namespace: neko
+  labels:
+    app.kubernetes.io/name: neko-optimizer
+    app.kubernetes.io/component: web
+spec:
+  # No `replicas:` - the HorizontalPodAutoscaler below owns the count (2 to 5). Stating
+  # one here would reset whatever it had scaled to on every `kubectl apply`.
+  revisionHistoryLimit: 5 # old ReplicaSets kept for rollback
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: neko-optimizer
+      app.kubernetes.io/component: web
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1 # start one new pod at a time...
+      maxUnavailable: 0 # ...and remove an old one only once a new one is Ready
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: neko-optimizer
+        app.kubernetes.io/component: web
+        neko-optimizer/db-access: "true"
+    spec:
+      serviceAccountName: neko-web
+      automountServiceAccountToken: false
+      terminationGracePeriodSeconds: 30 # gunicorn finishes in-flight requests on SIGTERM
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10001
+        runAsGroup: 10001
+        seccompProfile:
+          type: RuntimeDefault
+      # Spread replicas over nodes when there are several, so one node going down
+      # doesn't take every copy with it. (minikube has one node: this is a no-op there.)
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: ScheduleAnyway
+          labelSelector:
+            matchLabels:
+              app.kubernetes.io/name: neko-optimizer
+              app.kubernetes.io/component: web
+      initContainers:
+        # Don't start the app before its database exists (first boot of the cluster).
+        - name: wait-for-db
+          image: postgres:17-alpine
+          command: ["sh", "-c", 'until pg_isready -h "$POSTGRES_HOST" -p 5432 -U "$POSTGRES_USER"; do sleep 2; done']
+          envFrom:
+            - configMapRef: { name: neko-config }
+          resources:
+            requests: { cpu: 10m, memory: 16Mi }
+            limits: { cpu: 100m, memory: 64Mi }
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+      containers:
+        - name: web
+          image: neko-optimizer:local
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 8000
+          envFrom:
+            - configMapRef: { name: neko-config }
+          env:
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef: { name: postgres, key: POSTGRES_PASSWORD }
+            - name: DJANGO_SECRET_KEY
+              valueFrom:
+                secretKeyRef: { name: django, key: DJANGO_SECRET_KEY }
+            - name: DATABASE_URL
+              value: postgres://$(POSTGRES_USER):$(POSTGRES_PASSWORD)@$(POSTGRES_HOST):5432/$(POSTGRES_DB)
+          # Three probes, all answered by planner/health.py:
+          # startup  - give a cold start up to 60s before the other two begin;
+          # liveness - process stuck? Kubernetes restarts the container;
+          # readiness - DB unreachable or not migrated yet? No traffic, but no restart.
+          startupProbe:
+            httpGet: { path: /livez, port: http }
+            periodSeconds: 2
+            failureThreshold: 30
+          livenessProbe:
+            httpGet: { path: /livez, port: http }
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 3
+          readinessProbe:
+            httpGet: { path: /readyz, port: http }
+            periodSeconds: 5
+            timeoutSeconds: 3
+            failureThreshold: 2
+          resources:
+            # requests: what the scheduler reserves, and the base the autoscaler's
+            # percentage is taken against. limits: the most it may use - past the memory
+            # limit the container is OOM-killed, past the CPU limit it is throttled.
+            requests: { cpu: 100m, memory: 256Mi }
+            limits: { cpu: "1", memory: 512Mi }
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true # the code can't be altered inside a running pod
+            capabilities:
+              drop: ["ALL"]
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        # The one writable place, in case a library wants a temp file. Gone with the pod.
+        - name: tmp
+          emptyDir:
+            sizeLimit: 64Mi
+---
+# A stable name and virtual IP in front of whichever web pods are Ready right now.
+# ClusterIP: reachable only inside the cluster - the Ingress is the way in from outside.
+apiVersion: v1
+kind: Service
+metadata:
+  name: neko-web
+  namespace: neko
+  labels:
+    app.kubernetes.io/name: neko-optimizer
+    app.kubernetes.io/component: web
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: neko-optimizer
+    app.kubernetes.io/component: web
+  ports:
+    - name: http
+      port: 80
+      targetPort: http
+---
+# Scale the web pods between 2 and 5 on CPU: aim for 70% of their CPU request on
+# average. Needs metrics-server (`minikube addons enable metrics-server`).
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: neko-web
+  namespace: neko
+  labels:
+    app.kubernetes.io/name: neko-optimizer
+    app.kubernetes.io/component: web
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: neko-web
+  minReplicas: 2
+  maxReplicas: 5
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 70
+---
+# Voluntary disruptions (draining a node for maintenance, an upgrade) may never take the
+# site below one Ready web pod.
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: neko-web
+  namespace: neko
+  labels:
+    app.kubernetes.io/name: neko-optimizer
+    app.kubernetes.io/component: web
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: neko-optimizer
+      app.kubernetes.io/component: web
