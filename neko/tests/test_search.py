@@ -252,6 +252,19 @@ def test_guaranteed_multi_lands_one_step_past_its_final_roll():
     assert (forced.guaranteed, forced.position) == (True, 0)
 
 
+def test_a_budget_bigger_than_the_window_still_reports_what_the_plan_spends():
+    g = BannerGraph(
+        "x",
+        [TrackPull(1, "A", "Cat", R), TrackPull(2, "A", "Dog", R), TrackPull(3, "B", "Kasli", U)],
+        [TrackPull(1, "A", "Mecha", U)],
+    )
+    result = astar(
+        [g], {"Mecha", "Kasli"}, start(tickets=99, catfood=99), multis={"x": [Multi(3, 450)]}
+    )
+    assert result.cats == ("Cat", "Dog", "Mecha", "Kasli")
+    assert (result.tickets_used, result.catfood_draws_used) == (1, 3)
+
+
 def test_plain_multi_rolls_normal_cats_for_fixed_cost():
     g = banner("x", (1, "A", "Cat", R), (2, "A", "Dog", R), (3, "A", "Bahamut", U))
     multi = {"x": [Multi(3, 300, guaranteed=False)]}

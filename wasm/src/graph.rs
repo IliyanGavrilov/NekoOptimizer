@@ -49,6 +49,11 @@ impl<'a> Graph<'a> {
         self.pulls.get(index).copied().flatten()
     }
 
+    /// One past the highest stream index rolled: no pull starts at or beyond it.
+    pub fn end(&self) -> usize {
+        self.pulls.len()
+    }
+
     /// The highest stream index rolled, if any.
     pub fn last_index(&self) -> Option<usize> {
         self.pulls.iter().rposition(Option::is_some)

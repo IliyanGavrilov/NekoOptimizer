@@ -567,7 +567,57 @@ fn add(a: Cost, b: Cost) -> Cost {
     (a.0 + b.0, a.1 + b.1, a.2 + b.2)
 }
 
-fn reconstruct(goal: &State, came_from: &HashMap<State, (State, Leg)>, start: &State) -> Path {
+/// What a state's budget turns into once it can't run out: see Plenty.
+const PLENTY: i64 = i64::MAX / 4;
+
+/// When a state holds more tickets and draws than the rest of the rolled window could ever
+/// spend, how many it holds no longer changes what it can do - so A* folds all of them
+/// into one state. Otherwise every split of the same spend between tickets and catfood
+/// is a state of its own, and explore mode (a budget as big as the window) drowns in
+/// them. The ones folded away all cost strictly more, so the plan found is the same.
+struct Plenty {
+    end: usize,
+    rate: (i64, i64), // most draws per stream index any move can spend, as a fraction
+    slack: i64,       // most draws one move spends: the last may run past the window
+}
+
+impl Plenty {
+    fn new(world: &World) -> Self {
+        let end = world.graphs.iter().map(Graph::end).max().unwrap_or(0);
+        // A catfood single spends 1 draw and moves at least 2 indexes; a multi of n rolls
+        // at least 2n - 1 (its guaranteed uber moves one). Singles never touch catfood
+        // while tickets are on hand and worth no more than a draw - and a folded state
+        // holds a ticket for every single left.
+        let singles = world.ticket_value > DRAW;
+        let mut rate = if singles { (1, 2) } else { (0, 1) };
+        let mut slack = i64::from(singles);
+        for multi in world.multis.iter().flatten() {
+            let draws = multi.cost / DRAW;
+            let span = (2 * multi.rolls as i64 - 1).max(1);
+            if draws * rate.1 > rate.0 * span {
+                rate = (draws, span);
+            }
+            slack = slack.max(draws);
+        }
+        Plenty { end, rate, slack }
+    }
+
+    /// ``state`` with its tickets and draws folded to PLENTY when neither can run out:
+    /// singles start at least 2 indexes apart before ``end``, and draws go no faster than
+    /// ``rate``.
+    fn settle(&self, mut state: State) -> State {
+        let left = self.end.saturating_sub(state.position) as i64;
+        let tickets = (left + 1) / 2;
+        let draws = (left * self.rate.0 + self.rate.1 - 1) / self.rate.1 + self.slack;
+        if state.tickets >= tickets && state.draws >= draws {
+            state.tickets = PLENTY;
+            state.draws = PLENTY;
+        }
+        state
+    }
+}
+
+fn reconstruct(goal: &State, came_from: &HashMap<State, (State, Leg)>) -> Path {
     let mut legs = Vec::new();
     let mut state = *goal;
     while let Some((previous, leg)) = came_from.get(&state) {
@@ -575,14 +625,25 @@ fn reconstruct(goal: &State, came_from: &HashMap<State, (State, Leg)>, start: &S
         state = *previous;
     }
     legs.reverse();
-    Path {
+    // Counted from the legs, not the end state's budget: A* may have folded that.
+    let mut path = Path {
         pulls: legs.iter().flat_map(|l| l.pulls.iter().copied()).collect(),
-        tickets_used: start.tickets - goal.tickets,
-        draws_used: start.draws - goal.draws,
-        moves: legs,
-        platinum_used: start.platinum - goal.platinum,
-        legend_used: start.legend - goal.legend,
+        tickets_used: 0,
+        draws_used: 0,
+        moves: Vec::new(),
+        platinum_used: 0,
+        legend_used: 0,
+    };
+    for leg in &legs {
+        match (leg.currency, leg.kind) {
+            (Currency::Platinum, _) => path.platinum_used += 1,
+            (Currency::Legend, _) => path.legend_used += 1,
+            (Currency::None, Kind::Single) if leg.cost == 0 => path.tickets_used += 1,
+            (Currency::None, _) => path.draws_used += leg.cost / DRAW,
+        }
     }
+    path.moves = legs;
+    path
 }
 
 /// A heap entry, popped smallest (priority, then insertion order) first.
@@ -634,6 +695,7 @@ pub fn astar(world: &World, cats: &[u32], start: &State, upper_bound: f64) -> Op
         .map(Graph::max_advance)
         .max()
         .unwrap_or(3);
+    let plenty = Plenty::new(world);
     let mut g_score: HashMap<State, Cost> = HashMap::from([(*start, (0, 0, 0))]);
     let mut came_from: HashMap<State, (State, Leg)> = HashMap::new();
     let mut order = 0;
@@ -650,12 +712,13 @@ pub fn astar(world: &World, cats: &[u32], start: &State, upper_bound: f64) -> Op
             continue;
         }
         if state.found.covers(&targets.all) {
-            return Some(reconstruct(&state, &came_from, start));
+            return Some(reconstruct(&state, &came_from));
         }
         for gi in 0..world.graphs.len() {
             for (next, leg) in moves(world, &targets, &state, gi) {
                 let next = canon(world, next);
                 let new_g = add(g, step_cost(world, &state, &next, &leg));
+                let next = plenty.settle(next);
                 if below(new_g, g_score.get(&next)) {
                     let h = heuristic(&targets, &next, world.ticket_value, floor, advance);
                     if h == INF || new_g.0 as f64 + h > upper_bound {
@@ -688,7 +751,7 @@ pub fn beam_search(
 ) -> Option<Path> {
     let targets = Targets::new(world, cats);
     if start.found.covers(&targets.all) {
-        return Some(reconstruct(start, &HashMap::new(), start));
+        return Some(reconstruct(start, &HashMap::new()));
     }
     if !partial && !targets.all_ahead(&start.found, start.position) {
         return None;
@@ -752,9 +815,9 @@ pub fn beam_search(
     }
 
     if let Some((goal, _)) = best_goal {
-        return Some(reconstruct(&goal, &came_from, start));
+        return Some(reconstruct(&goal, &came_from));
     }
-    best_haul.map(|(state, _)| reconstruct(&state, &came_from, start))
+    best_haul.map(|(state, _)| reconstruct(&state, &came_from))
 }
 
 /// A plan's price in catfood-equivalent (subsets._spent).

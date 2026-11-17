@@ -1,7 +1,7 @@
 import heapq
 from bisect import bisect_left
 from collections.abc import Iterable, Mapping, Sequence
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from itertools import count
 
 from neko.graph import BannerGraph
@@ -253,7 +253,53 @@ def _node_h(
     )
 
 
-def _reconstruct(goal: State, came_from: dict, start: State) -> Path:
+PLENTY = 2**62  # what a state's budget turns into once it can't run out: see _Plenty
+
+
+@dataclass(frozen=True, slots=True)
+class _Plenty:
+    """When a state holds more tickets and draws than the rest of the rolled window could
+    ever spend, how many it holds no longer changes what it can do - so astar folds all of
+    them into one state. Otherwise every split of the same spend between tickets and
+    catfood is a state of its own, and explore mode (a budget as big as the window) drowns
+    in them. The ones folded away all cost strictly more, so the plan found is the same."""
+
+    end: int
+    rate: tuple[int, int]  # most draws per stream index any move can spend, as a fraction
+    slack: int  # most draws one move spends: the last may run past the window
+
+    @classmethod
+    def of(cls, graphs, multis, ticket_value: int) -> _Plenty:
+        # A catfood single spends 1 draw and moves at least 2 indexes; a multi of n rolls at
+        # least 2n - 1 (its guaranteed uber moves one). Singles never touch catfood while
+        # tickets are on hand and worth no more than a draw - and a folded state holds a
+        # ticket for every single left.
+        singles = ticket_value > CATFOOD_PER_DRAW
+        rate = (1, 2) if singles else (0, 1)
+        slack = int(singles)
+        for multi in (m for ms in (multis or {}).values() for m in ms):
+            draws = multi.cost // CATFOOD_PER_DRAW
+            span = max(2 * multi.rolls - 1, 1)
+            if draws * rate[1] > rate[0] * span:
+                rate = (draws, span)
+            slack = max(slack, draws)
+
+        return cls(max((graph.end() for graph in graphs), default=0), rate, slack)
+
+    def settle(self, state: State) -> State:
+        """``state`` with its tickets and draws folded to PLENTY when neither can run out:
+        singles start at least 2 indexes apart before ``end``, and draws go no faster than
+        ``rate``."""
+        left = max(self.end - state.position, 0)
+        tickets = (left + 1) // 2
+        draws = -(-left * self.rate[0] // self.rate[1]) + self.slack
+        if state.tickets_left >= tickets and state.catfood_draws >= draws:
+            return replace(state, tickets_left=PLENTY, catfood_draws=PLENTY)
+
+        return state
+
+
+def _reconstruct(goal: State, came_from: dict) -> Path:
     legs: list[Leg] = []
     state = goal
 
@@ -264,14 +310,16 @@ def _reconstruct(goal: State, came_from: dict, start: State) -> Path:
 
     legs.reverse()
     pulls = tuple(pull for leg in legs for pull in leg.pulls)
+    # Counted from the legs, not the end state's budget: astar may have folded that.
+    paid = [leg for leg in legs if not leg.currency]
 
     return Path(
         pulls,
-        start.tickets_left - goal.tickets_left,
-        start.catfood_draws - goal.catfood_draws,
+        sum(leg.kind == "Single pull" and leg.cost == 0 for leg in paid),
+        sum(leg.cost // CATFOOD_PER_DRAW for leg in paid),
         tuple(legs),
-        start.platinum_left - goal.platinum_left,
-        start.legend_left - goal.legend_left,
+        sum(leg.currency == "platinum" for leg in legs),
+        sum(leg.currency == "legend" for leg in legs),
     )
 
 
@@ -475,6 +523,7 @@ def astar(
 
     floor = _multi_floor(multis)
     advance = max((graph.max_advance() for graph in graphs), default=3)
+    plenty = _Plenty.of(graphs, multis, ticket_value)
     # g is a 3-tuple compared field by field (catfood-equivalent, switches, catfood
     # spent): cheapest first, then fewest banner switches, then least catfood (catfood
     # also pays for multis, so it's worth keeping).
@@ -489,7 +538,7 @@ def astar(
         if g > g_score[state]:
             continue
         if targets <= state.found:
-            return _reconstruct(state, came_from, start)
+            return _reconstruct(state, came_from)
 
         for graph in graphs:
             moves = _candidate_moves(state, graph, targets, multis, banner_currency, ticket_value)
@@ -497,6 +546,7 @@ def astar(
                 nxt = _canon(nxt, graphs)
                 dc, ds, dd = _step_cost(state, nxt, leg, ticket_value)
                 new_g = (g[0] + dc, g[1] + ds, g[2] + dd)
+                nxt = plenty.settle(nxt)
                 if new_g < g_score.get(nxt, (INF, INF, INF)):
                     h = _node_h(nxt, targets, occurrences, ticket_value, floor, advance)
                     if h == INF or new_g[0] + h > upper_bound:
@@ -531,7 +581,7 @@ def beam_search(
     targets = frozenset(targets)
 
     if targets <= start.found:
-        return _reconstruct(start, {}, start)
+        return _reconstruct(start, {})
 
     occurrences = _occurrences(graphs, targets)
     # Only the cheap "does every target still show up ahead" check here, not the full
@@ -592,6 +642,6 @@ def beam_search(
         frontier = [state for *_, state in ranked[:width]]
 
     if best_goal is not None:
-        return _reconstruct(best_goal, came_from, start)
+        return _reconstruct(best_goal, came_from)
 
-    return _reconstruct(best_haul, came_from, start) if best_haul is not None else None
+    return _reconstruct(best_haul, came_from) if best_haul is not None else None
