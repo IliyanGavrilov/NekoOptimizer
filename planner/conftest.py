@@ -3,7 +3,7 @@ import os
 from pathlib import Path
 
 import pytest
-from wasmtime import Func, FuncType, Instance, Module, Store, ValType
+from wasmtime import Config, Engine, Func, FuncType, Instance, Module, Store, ValType
 
 from planner.catalogue_cache import forget_catalogue
 from planner.middleware import PROFILE_COOKIE
@@ -29,20 +29,20 @@ def profile(db, client):
 WASM = Path(os.environ.get("NEKO_WASM", Path(__file__).parent / "static/planner/neko.wasm"))
 
 
+def _instance(store):
+    """neko.wasm's exports in ``store``, its progress import a no-op."""
+    noop = Func(store, FuncType([ValType.i32(), ValType.f64()], []), lambda run, done: None)
+    return Instance(store, Module.from_file(store.engine, str(WASM)), [noop]).exports(store)
+
+
 @pytest.fixture(scope="session")
 def neko_wasm():
-    """(store, exports) of one neko.wasm instance, its progress import a no-op."""
+    """(store, exports) of one neko.wasm instance."""
     store = Store()
-    noop = Func(store, FuncType([ValType.i32(), ValType.f64()], []), lambda run, done: None)
-    exports = Instance(store, Module.from_file(store.engine, str(WASM)), [noop]).exports(store)
-    return store, exports
+    return store, _instance(store)
 
 
-@pytest.fixture(scope="session")
-def engine(neko_wasm):
-    """Call the page's engine the way the page does: a JSON request in, its response out."""
-    store, ex = neko_wasm
-
+def _caller(store, ex):
     def call(request):
         data = json.dumps(request).encode()
         ptr = ex["alloc"](store, len(data))
@@ -53,3 +53,26 @@ def engine(neko_wasm):
         return bytes(ex["memory"].read(store, out, out + size)).decode()
 
     return call
+
+
+@pytest.fixture(scope="session")
+def engine(neko_wasm):
+    """Call the page's engine the way the page does: a JSON request in, its response out."""
+    return _caller(*neko_wasm)
+
+
+@pytest.fixture
+def engine_on_budget():
+    """The engine in a fresh instance that may run only ``fuel`` wasm instructions per
+    call (wasmtime fuel) and traps past it: work bounded the same on every machine."""
+    config = Config()
+    config.consume_fuel = True
+    store = Store(Engine(config))
+    store.set_fuel(10**9)  # instantiating runs the module's start code
+    call = _caller(store, _instance(store))
+
+    def run(request, fuel):
+        store.set_fuel(fuel)
+        return call(request)
+
+    return run
