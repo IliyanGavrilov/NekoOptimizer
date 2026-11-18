@@ -73,7 +73,7 @@ they sit under their own grind's table.{% endcomment %}
             {% for form in cat.forms %}
               <label class="res-row{% if form.checked %} on{% endif %}">
                 <span class="res-row-name">{% translate form.label %}</span>
-                <input type="checkbox" class="switch" data-unit="{{ cat.unit.unit_id }}" data-kind="form" data-value="{{ form.key }}"{% if form.checked %} checked{% endif %}>
+                <input type="checkbox" data-unit="{{ cat.unit.unit_id }}" data-kind="form" data-value="{{ form.key }}"{% if form.checked %} checked{% endif %}>
                 <span class="res-row-cost">
                   {% for item in form.cost %}{% include "planner/_res_item.html" %}{% endfor %}
                   {% if form.xp %}<span class="res-counter">{{ form.xp|intcomma }} XP</span>{% endif %}
@@ -92,7 +92,7 @@ they sit under their own grind's table.{% endcomment %}
                   <input type="range" class="res-level" min="0" max="{{ slot.max }}" value="{{ slot.level }}" data-steps="{{ slot.steps }}"
                          data-unit="{{ cat.unit.unit_id }}" data-kind="slot" data-value="{{ slot.index }}">
                 {% else %}
-                  <input type="checkbox" class="switch" value="1" data-unit="{{ cat.unit.unit_id }}" data-kind="slot" data-value="{{ slot.index }}"{% if slot.checked %} checked{% endif %}>
+                  <input type="checkbox" value="1" data-unit="{{ cat.unit.unit_id }}" data-kind="slot" data-value="{{ slot.index }}"{% if slot.checked %} checked{% endif %}>
                 {% endif %}
                 <span class="res-row-cost">
                   <span class="res-lv"><output>{{ slot.level }}</output>/{{ slot.max }}</span>
@@ -138,7 +138,7 @@ they sit under their own grind's table.{% endcomment %}
           <div class="res-pick{% if part.on %} on{% else %} off{% endif %}">
             {% if part.addon %}
               <label class="res-pick-label res-addon">
-                <input type="checkbox" class="switch" data-unit="{{ dev.id }}" data-part="{{ part.key }}" data-addon="1"{% if part.on %} checked{% endif %}>
+                <input type="checkbox" data-unit="{{ dev.id }}" data-part="{{ part.key }}" data-addon="1"{% if part.on %} checked{% endif %}>
                 {% translate part.label %}
               </label>
             {% else %}

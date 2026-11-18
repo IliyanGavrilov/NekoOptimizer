@@ -1433,6 +1433,74 @@ function catFilters(onChange) {
   };
 }
 
+// Kana file under their gojuon row, Hangul under its initial consonant (doubled ones
+// under their base); anything that isn't a letter, kanji included, goes under "#".
+const KANA_ROWS = [
+  "アイウエオァィゥェォ", "カキクケコヵヶ", "サシスセソ", "タチツテトッ", "ナニヌネノ",
+  "ハヒフヘホ", "マミムメモ", "ヤユヨャュョ", "ラリルレロ", "ワヰヱヲンヮ",
+];
+const HANGUL_INITIALS = "ㄱㄱㄴㄷㄷㄹㅁㅂㅂㅅㅅㅇㅈㅈㅊㅋㅌㅍㅎ";
+function firstLetter(name) {
+  const code = name.codePointAt(0);
+  if (code >= 0xac00 && code <= 0xd7a3) return HANGUL_INITIALS[Math.floor((code - 0xac00) / 588)];
+  let ch = name.normalize("NFKD").charAt(0).toUpperCase();
+  if (/[A-Z]/.test(ch)) return ch;
+  if (ch >= "ぁ" && ch <= "ゖ") ch = String.fromCharCode(ch.charCodeAt(0) + 0x60);
+  const row = KANA_ROWS.find((kana) => kana.includes(ch));
+  return row ? row[0] : "#";
+}
+
+// Splits the Collection's A-Z card into one row per first letter, with a jump bar on
+// top. The server renders one plain sorted row; its chips move into letter rows built
+// here. Returns the re-bucketing pass, which takes the name each chip shows.
+function splitByLetter(section) {
+  const collator = new Intl.Collator(document.documentElement.lang || undefined);
+  const chips = section.rows.flatMap((row) => row.chips);
+  section.rows[0].el.remove();
+  const jumpBar = document.createElement("nav");
+  jumpBar.className = "alpha-jump";
+  jumpBar.setAttribute("aria-label", gettext("Jump to a letter"));
+  section.el.querySelector("h3").after(jumpBar);
+  const letterRows = new Map();
+  const letterRow = (letter) => {
+    if (!letterRows.has(letter)) {
+      const el = document.createElement("div");
+      el.className = "rarity-row alpha-row";
+      const head = document.createElement("h4");
+      head.className = "alpha-letter";
+      const count = document.createElement("span");
+      count.className = "owned-count muted";
+      head.append(letter, count);
+      const box = document.createElement("div");
+      box.className = "chips";
+      el.append(head, box);
+      const jump = document.createElement("button");
+      jump.type = "button";
+      jump.textContent = letter;
+      jump.addEventListener("click", () => el.scrollIntoView({ behavior: "smooth" }));
+      letterRows.set(letter, { el, box, count, jump, chips: [] });
+    }
+    return letterRows.get(letter);
+  };
+  return (nameOf) => {
+    const sorted = chips.map((chip) => [nameOf(chip), chip]).sort(([a], [b]) => collator.compare(a, b));
+    for (const row of letterRows.values()) {
+      row.chips = [];
+      row.el.remove();
+    }
+    const rows = [];
+    for (const [name, chip] of sorted) {
+      const row = letterRow(firstLetter(name));
+      if (!row.chips.length) rows.push(row);
+      row.chips.push(chip);
+    }
+    for (const row of rows) row.box.append(...row.chips.map((chip) => chip.el));
+    section.el.append(...rows.map((row) => row.el));
+    jumpBar.replaceChildren(...rows.map((row) => row.jump));
+    section.rows = rows;
+  };
+}
+
 // ---- Collection: views, filters, instant owned / wishlist toggles ----
 const collectionBrowser = document.getElementById("collectionBrowser");
 if (collectionBrowser) {
@@ -1505,6 +1573,7 @@ if (collectionBrowser) {
     views.map((v) => [v, [...v.querySelectorAll(".collection-section")].map(indexSection)]),
   );
   const allSections = [...viewSections.values()].flat();
+  const [alphaSection] = viewSections.get(views.find((v) => v.dataset.view === "alpha"));
   const allChips = allSections.flatMap((section) => section.rows.flatMap((row) => row.chips));
 
   function applyFilters() {
@@ -1532,6 +1601,7 @@ if (collectionBrowser) {
           shown += hit;
         }
         row.el.hidden = shown === 0;
+        if (row.jump) row.jump.hidden = row.el.hidden;
         anyRow = anyRow || shown > 0;
       }
       section.el.hidden = !anyRow;
@@ -1555,6 +1625,10 @@ if (collectionBrowser) {
         owned,
         total: section.chips.length,
       }, true);
+    }
+    for (const row of alphaSection?.rows ?? []) {
+      const owned = row.chips.filter((chip) => chip.el.classList.contains("owned")).length;
+      row.count.textContent = `${owned} / ${row.chips.length}`;
     }
     const owned = rarityChips.filter((c) => c.classList.contains("owned")).length;
     document.getElementById("collectionBar").style.width = `${(100 * owned) / (rarityChips.length || 1)}%`;
@@ -1689,22 +1763,19 @@ if (collectionBrowser) {
   const formSel = document.getElementById("collectionForm");
   restorePick(displaySel, DISPLAY_KEY);
   restorePick(formSel, FORM_KEY);
-  // The A-Z view's one row sorts by the name each chip shows, so it follows the form.
-  const alphaRows = viewSections.get(views.find((v) => v.dataset.view === "alpha")).flatMap((s) => s.rows);
-  const collator = new Intl.Collator(document.documentElement.lang || undefined);
+  const shownName = (chip, form) =>
+    chip.forms.length ? chip.forms[Math.min(form, chip.forms.length - 1)] : chip.name;
   const applyDisplay = () => {
     const form = Number(formSel.value);
-    for (const chip of allChips) {
-      chip.catname.textContent = chip.forms.length
-        ? chip.forms[Math.min(form, chip.forms.length - 1)]
-        : chip.name;
-    }
-    for (const row of alphaRows) {
-      row.chips.sort((a, b) => collator.compare(a.catname.textContent, b.catname.textContent));
-      row.el.querySelector(".chips").append(...row.chips.map((chip) => chip.el));
-    }
+    for (const chip of allChips) chip.catname.textContent = shownName(chip, form);
     syncCatDisplay(collectionBrowser, displaySel.value, form, views.find((v) => !v.hidden));
   };
+
+  // The A-Z view sorts by the name each chip shows, so a form switch re-buckets it.
+  const sortAlpha = alphaSection ? splitByLetter(alphaSection) : () => {};
+  const alphaName = (chip) => shownName(chip, Number(formSel.value));
+  sortAlpha(alphaName);
+
   displaySel.addEventListener("change", () => {
     localStorage.setItem(DISPLAY_KEY, displaySel.value);
     applyDisplay();
@@ -1712,6 +1783,9 @@ if (collectionBrowser) {
   formSel.addEventListener("change", () => {
     localStorage.setItem(FORM_KEY, formSel.value);
     applyDisplay();
+    sortAlpha(alphaName);
+    applyFilters();
+    updateCounts();
   });
 
   updateCounts();
@@ -2301,7 +2375,7 @@ if (resBoard) {
   });
 
   resBoard.addEventListener("change", (e) => {
-    // Base controls carry data-part: a level picker, or an add-on's on/off switch.
+    // Base controls carry data-part: a level picker, or an add-on's tick box.
     const part = e.target.closest("[data-part]");
     if (part) {
       post(resBoard.dataset.baseUrl, {
@@ -2323,7 +2397,7 @@ if (resBoard) {
       }, 250);
       return;
     }
-    const box = e.target.closest("input.switch");
+    const box = e.target.closest("input[type=checkbox]");
     if (!box) return;
     const on = box.checked ? "1" : "0";
     post(resBoard.dataset.catUrl, {
