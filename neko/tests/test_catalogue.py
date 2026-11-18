@@ -1,6 +1,13 @@
 from pathlib import Path
 
-from neko.catalogue import build_catalogue, parse_forms, parse_pools, parse_rarities, parse_sets
+from neko.catalogue import (
+    build_catalogue,
+    parse_eggs,
+    parse_forms,
+    parse_pools,
+    parse_rarities,
+    parse_sets,
+)
 from neko.models import Rarity
 
 FIXTURES = Path(__file__).parent / "fixtures" / "bcdata"
@@ -90,6 +97,15 @@ def test_catalogue_carries_the_set_name():
         {1: Rarity.UBER_SUPER_RARE}, {1: ("Ice Cat",)}, {1: "The Dynamites"}
     )
     assert catalogue[1].set_name == "The Dynamites"
+
+
+def test_an_ancient_egg_row_gives_its_sprite_per_form():
+    egg_row = ",".join(["0"] * 61 + ["3", "7"])
+    assert parse_eggs("\n".join([UNITBUY.splitlines()[0], egg_row])) == {1: (3, 7)}
+
+
+def test_units_that_are_not_eggs_have_no_sprites():
+    assert parse_eggs(UNITBUY) == {}
 
 
 def test_unit_without_rarity_is_dropped():

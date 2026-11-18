@@ -9,7 +9,14 @@ from collections.abc import Mapping
 from functools import cache
 from pathlib import Path
 
-from neko.catalogue import Unit, build_catalogue, parse_forms, parse_rarities, parse_sets
+from neko.catalogue import (
+    Unit,
+    build_catalogue,
+    parse_eggs,
+    parse_forms,
+    parse_rarities,
+    parse_sets,
+)
 from neko.region import DEFAULT_REGION, data_path, spec
 
 # fieryhenry's maintained game-data mirror. The old GitHub BCData repo is archived and
@@ -43,7 +50,8 @@ def catalogue_from_tarball(raw: bytes, region: str = DEFAULT_REGION) -> dict[int
     """Build the unit catalogue from a BCData version tarball (xz-compressed)."""
     locale = spec(region).locale
     with tarfile.open(fileobj=io.BytesIO(raw), mode="r:xz") as tar:
-        rarities = parse_rarities(_member(tar, "DataLocal/unitbuy.csv"))
+        unitbuy = _member(tar, "DataLocal/unitbuy.csv")
+        rarities = parse_rarities(unitbuy)
         picture_book = _member(tar, f"resLocal/nyankoPictureBook_{locale}.csv", optional=True)
         sets = parse_sets(picture_book, region) if picture_book else {}
 
@@ -54,7 +62,7 @@ def catalogue_from_tarball(raw: bytes, region: str = DEFAULT_REGION) -> dict[int
             if text is not None:
                 forms[unit_id] = parse_forms(text, region)
 
-    return build_catalogue(rarities, forms, sets)
+    return build_catalogue(rarities, forms, sets, parse_eggs(unitbuy))
 
 
 def _member(tar: tarfile.TarFile, path: str, optional: bool = False) -> str | None:
@@ -82,6 +90,7 @@ def catalogue_records(catalogue: Mapping[int, Unit]) -> list[dict]:
             "forms": list(unit.forms),
             "set": unit.set_name,
         }
+        | ({"eggs": list(unit.eggs)} if unit.eggs else {})
         for unit in sorted(catalogue.values(), key=lambda unit: unit.unit_id)
     ]
 

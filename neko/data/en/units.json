@@ -6102,7 +6102,11 @@
       "Mystic Egg: N001",
       "Haniwa Cat"
     ],
-    "set": ""
+    "set": "",
+    "eggs": [
+      0,
+      1
+    ]
   },
   {
     "id": 657,
@@ -6123,7 +6127,11 @@
       "Cinnabar Egg: N101",
       "Courier Cat"
     ],
-    "set": ""
+    "set": "",
+    "eggs": [
+      0,
+      2
+    ]
   },
   {
     "id": 659,
@@ -6134,7 +6142,11 @@
       "Teal Egg: N102",
       "Catarzan"
     ],
-    "set": ""
+    "set": "",
+    "eggs": [
+      0,
+      7
+    ]
   },
   {
     "id": 660,
@@ -6177,7 +6189,11 @@
       "Dark Egg: N103",
       "Gas Mask Cat"
     ],
-    "set": ""
+    "set": "",
+    "eggs": [
+      0,
+      4
+    ]
   },
   {
     "id": 664,
@@ -6188,7 +6204,11 @@
       "Green Egg: N104",
       "Surgeon Cat"
     ],
-    "set": ""
+    "set": "",
+    "eggs": [
+      0,
+      3
+    ]
   },
   {
     "id": 665,
@@ -6199,7 +6219,11 @@
       "Dark Egg: N201",
       "Exorcist Cat"
     ],
-    "set": ""
+    "set": "",
+    "eggs": [
+      0,
+      9
+    ]
   },
   {
     "id": 666,
@@ -6242,7 +6266,11 @@
       "Evil Egg: N003",
       "Cat Cactus"
     ],
-    "set": ""
+    "set": "",
+    "eggs": [
+      0,
+      9
+    ]
   },
   {
     "id": 670,
@@ -6253,7 +6281,11 @@
       "Cinnabar Egg: N202",
       "Armored Firefly Cat"
     ],
-    "set": ""
+    "set": "",
+    "eggs": [
+      0,
+      2
+    ]
   },
   {
     "id": 671,
@@ -6304,7 +6336,11 @@
       "Teal Egg: N105",
       "Racquet Cat"
     ],
-    "set": ""
+    "set": "",
+    "eggs": [
+      0,
+      7
+    ]
   },
   {
     "id": 676,
@@ -6315,7 +6351,11 @@
       "Amber Egg: N106",
       "Mushroom Cat"
     ],
-    "set": ""
+    "set": "",
+    "eggs": [
+      0,
+      6
+    ]
   },
   {
     "id": 677,
@@ -6409,7 +6449,11 @@
       "Mystic Egg: N004",
       "Supercar Cat"
     ],
-    "set": ""
+    "set": "",
+    "eggs": [
+      0,
+      1
+    ]
   },
   {
     "id": 686,
@@ -6471,7 +6515,11 @@
       "Elder Egg: N000",
       "Ape Lord Luza"
     ],
-    "set": ""
+    "set": "",
+    "eggs": [
+      0,
+      10
+    ]
   },
   {
     "id": 692,
@@ -6534,7 +6582,11 @@
       "Violet Egg: N107",
       "Cat Chief"
     ],
-    "set": ""
+    "set": "",
+    "eggs": [
+      0,
+      8
+    ]
   },
   {
     "id": 698,
@@ -6566,7 +6618,11 @@
       "Mystic Egg: N005",
       "Hitman Cat"
     ],
-    "set": ""
+    "set": "",
+    "eggs": [
+      0,
+      1
+    ]
   },
   {
     "id": 705,
@@ -6587,7 +6643,11 @@
       "Teal Egg: N108",
       "Soap Cat"
     ],
-    "set": ""
+    "set": "",
+    "eggs": [
+      0,
+      7
+    ]
   },
   {
     "id": 707,
@@ -6598,7 +6658,11 @@
       "Dark Egg: N109",
       "Barrel Cat"
     ],
-    "set": ""
+    "set": "",
+    "eggs": [
+      0,
+      9
+    ]
   },
   {
     "id": 708,
@@ -6660,7 +6724,11 @@
       "Violet Egg: N203",
       "Clown Cat"
     ],
-    "set": ""
+    "set": "",
+    "eggs": [
+      0,
+      8
+    ]
   },
   {
     "id": 714,
@@ -6692,7 +6760,11 @@
       "Mystic Egg: N111",
       "Cop Cat"
     ],
-    "set": "Iron Legion"
+    "set": "Iron Legion",
+    "eggs": [
+      0,
+      1
+    ]
   },
   {
     "id": 717,
@@ -6703,7 +6775,11 @@
       "Amber Egg: N110",
       "Farmboy Cat"
     ],
-    "set": ""
+    "set": "",
+    "eggs": [
+      0,
+      6
+    ]
   },
   {
     "id": 718,
@@ -6735,7 +6811,11 @@
       "Devil Egg: N006",
       "Fallen Bear Cat"
     ],
-    "set": ""
+    "set": "",
+    "eggs": [
+      0,
+      9
+    ]
   },
   {
     "id": 721,
@@ -6777,7 +6857,11 @@
       "Mystic Egg: N112",
       "Cat Egg Pod"
     ],
-    "set": ""
+    "set": "",
+    "eggs": [
+      0,
+      1
+    ]
   },
   {
     "id": 725,
@@ -6838,7 +6922,11 @@
       "Cinnabar Egg: N204",
       "Lion Dancer Cat"
     ],
-    "set": ""
+    "set": "",
+    "eggs": [
+      0,
+      2
+    ]
   },
   {
     "id": 731,
@@ -7107,7 +7195,11 @@
       "Violet Egg: N205",
       "Bride Cat"
     ],
-    "set": ""
+    "set": "",
+    "eggs": [
+      0,
+      8
+    ]
   },
   {
     "id": 758,
@@ -7176,7 +7268,11 @@
       "Cinnabar Egg: N206",
       "Clam Cat"
     ],
-    "set": ""
+    "set": "",
+    "eggs": [
+      0,
+      2
+    ]
   },
   {
     "id": 766,
@@ -8162,7 +8258,11 @@
       "Onyx Egg: N207",
       "Tycoon Cat"
     ],
-    "set": ""
+    "set": "",
+    "eggs": [
+      0,
+      4
+    ]
   },
   {
     "id": 871,
@@ -8173,7 +8273,11 @@
       "Green Egg: N208",
       "Combat Crawfish Cat"
     ],
-    "set": ""
+    "set": "",
+    "eggs": [
+      0,
+      3
+    ]
   },
   {
     "id": 872,
