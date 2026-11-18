@@ -471,3 +471,6 @@ msgstr "ティア表で見る"
 
 msgid "Nothing to grind: this cat has no catfruit evolution or talents"
 msgstr "育成するものなし：このキャラにはマタタビ進化も本能もありません"
+
+msgid "Jump to a letter"
+msgstr "頭文字へ移動"

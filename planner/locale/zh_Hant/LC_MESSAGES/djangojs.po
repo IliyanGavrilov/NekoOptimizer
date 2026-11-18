@@ -469,3 +469,6 @@ msgstr "在強度排行中查看"
 
 msgid "Nothing to grind: this cat has no catfruit evolution or talents"
 msgstr "沒有可培養的項目：這隻角色沒有貓薄荷進化，也沒有本能"
+
+msgid "Jump to a letter"
+msgstr "跳到首字"

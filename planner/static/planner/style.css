@@ -648,7 +648,6 @@ button.res-name { background: none; border: 0; padding: 0; margin: 0; font: inhe
   margin-top: 0.35rem;
 }
 label.res-pick { cursor: pointer; }
-.res-addon .switch { flex: none; }
 .res-pick-label { font-weight: 600; flex: 0 0 auto; min-width: 5.5rem; }
 /* An add-on the development doesn't have switched on: listed, so you can see it's there
    to add, but dimmed and priceless. */
@@ -677,7 +676,7 @@ label.res-pick { cursor: pointer; }
 .res-item.no-icon .item-name { display: inline; }
 
 /* A cat's evolutions and talents: one row each - name, control, price - wrapping onto a
-   second line when the card narrows. Yes-or-no picks are switches; a talent with levels
+   second line when the card narrows. Yes-or-no picks are tick boxes; a talent with levels
    is a slider from 0 (skip) to its max. */
 .res-group { margin-top: 0.55rem; }
 .res-group > .pop-label { display: block; margin-bottom: 0.15rem; }
@@ -693,7 +692,6 @@ label.res-pick { cursor: pointer; }
 }
 .res-row.on { color: var(--ink); }
 .res-row-name { flex: 1 1 7rem; font-weight: 600; min-width: 0; overflow-wrap: anywhere; }
-.res-row > .switch { flex: none; }
 .res-row-cost {
   flex: 1 1 10rem;
   display: flex;
@@ -704,35 +702,6 @@ label.res-pick { cursor: pointer; }
 }
 .res-lv { min-width: 2.6rem; }
 .res-level { flex: 1 1 6rem; max-width: 10rem; margin: 0; accent-color: var(--accent); cursor: pointer; }
-
-/* An on/off switch, drawn over a plain checkbox (the type selector outranks the plain
-   checkbox sizing further down). */
-input.switch[type="checkbox"] {
-  appearance: none;
-  position: relative;
-  width: 2.2rem;
-  height: 1.2rem;
-  margin: 0;
-  border: 1px solid var(--line);
-  border-radius: var(--pill);
-  background: var(--bg);
-  cursor: pointer;
-  transition: background 0.15s, border-color 0.15s;
-}
-input.switch::after {
-  content: "";
-  position: absolute;
-  top: 50%;
-  left: 0.15rem;
-  width: 0.85rem;
-  height: 0.85rem;
-  border-radius: 50%;
-  background: var(--muted);
-  transform: translateY(-50%);
-  transition: left 0.15s, background 0.15s;
-}
-input.switch:checked { background: var(--accent); border-color: var(--accent); }
-input.switch:checked::after { left: calc(100% - 1rem); background: var(--accent-ink); }
 
 /* Resources, softened to the site's newer look: rounder cards and sidebar, pill buttons
    and search, and evolution / talent / part rows that light up under the pointer. */
@@ -803,10 +772,35 @@ input.switch:checked::after { left: calc(100% - 1rem); background: var(--accent-
 }
 .section-toggle:hover { color: var(--accent); filter: none; }
 .collection-section.collapsed .section-toggle { transform: rotate(-90deg); }
-.collection-section.collapsed .rarity-row,
-.collection-section.collapsed .section-note { display: none; }
-.cat-browser.filtering .collection-section.collapsed .rarity-row,
-.cat-browser.filtering .collection-section.collapsed .section-note { display: revert; }
+.collection-section.collapsed :is(.rarity-row, .section-note, .alpha-jump) { display: none; }
+.cat-browser.filtering .collection-section.collapsed :is(.rarity-row, .section-note) { display: revert; }
+
+/* A-Z: a gold letter divider with its owned count over each letter's cats, and a row
+   of letters on top that jumps to one. */
+.alpha-jump { display: flex; flex-wrap: wrap; gap: 0.15rem; margin: 0 0 0.3rem; }
+.alpha-jump button {
+  min-width: 1.6rem;
+  margin: 0;
+  padding: 0.1rem 0.35rem;
+  border: 0;
+  border-radius: 6px;
+  background: none;
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+.alpha-jump button:hover { color: var(--accent); background: color-mix(in srgb, var(--accent) 12%, transparent); filter: none; }
+.alpha-row { display: block; border-top: 0; scroll-margin-top: 5rem; }
+.alpha-letter {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin: 0.2rem 0 0.5rem;
+  color: var(--accent);
+  font-size: 1rem;
+}
+.alpha-letter::after { content: ""; flex: 1; height: 1px; background: var(--line); }
+.alpha-letter .owned-count { order: 1; }
 
 /* Section-header bulk marks: own-all (✓) and wishlist-all (★) for the whole card. */
 .bulk-buttons { display: inline-flex; gap: 0.3rem; margin-left: auto; }
@@ -869,12 +863,34 @@ input:focus-visible, select:focus-visible, button:focus-visible {
   outline-offset: 2px;
 }
 
+/* Every checkbox is a rounded tick box: gold with a dark tick when on. */
 input[type="checkbox"] {
-  width: 1.15rem;
-  height: 1.15rem;
-  accent-color: var(--accent);
+  appearance: none;
+  flex: none;
+  display: inline-grid;
+  place-content: center;
+  width: 1.1rem;
+  height: 1.1rem;
+  margin: 0;
+  border: 1.5px solid color-mix(in srgb, var(--muted) 70%, transparent);
+  border-radius: 5px;
+  background: var(--bg);
+  vertical-align: -0.2em;
   cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
 }
+input[type="checkbox"]::after {
+  content: "";
+  width: 0.3rem;
+  height: 0.58rem;
+  border: solid var(--accent-ink);
+  border-width: 0 2px 2px 0;
+  transform: translateY(-0.05rem) rotate(45deg) scale(0);
+  transition: transform 0.12s;
+}
+input[type="checkbox"]:hover { border-color: var(--accent); }
+input[type="checkbox"]:checked { background: var(--accent); border-color: var(--accent); }
+input[type="checkbox"]:checked::after { transform: translateY(-0.05rem) rotate(45deg) scale(1); }
 
 button {
   background: var(--accent);
@@ -2180,7 +2196,15 @@ table.track th.guaranteed-col, table.track td.guaranteed-col {
   line-height: 1.25;
   overflow-wrap: anywhere;
 }
-.cat-browser:is(.rolls-icons, .rolls-both) .own-chip .tier-badge { margin-left: 0; }
+/* The tier badge sits on the icon's bottom-right corner, so ranked cats keep the tile size. */
+.cat-browser:is(.rolls-icons, .rolls-both) .own-chip .tier-badge {
+  position: absolute;
+  top: calc(0.7rem + 64px);
+  left: calc(50% + 32px);
+  margin: 0;
+  transform: translate(-65%, -85%);
+  background: color-mix(in srgb, var(--band) 14%, var(--panel));
+}
 .cat-browser:is(.rolls-icons, .rolls-both) .own-chip,
 .cat-browser:is(.rolls-icons, .rolls-both) .own-chip:is(.owned, .wanted) {
   border-color: transparent;

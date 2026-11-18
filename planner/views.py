@@ -1127,7 +1127,7 @@ def collection(request):
         "set_sections": [
             (label, notes.get(label, ""), rarities) for label, rarities in set_sections(units)
         ],
-        # One row with no rarity; app.js re-sorts it by the form the picker shows.
+        # One row with no rarity; app.js splits it by first letter of the form shown.
         "alpha_sections": [(ALPHA_LABEL, "", [("", sorted(units, key=lambda unit: unit.name))])]
         if units
         else [],

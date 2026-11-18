@@ -33,7 +33,6 @@ class PlannerForm(forms.Form):
     use_wishlist = forms.BooleanField(
         required=False,
         label=_("Also search my wishlist (unowned cats I marked wanted)"),
-        widget=forms.CheckboxInput(attrs={"class": "switch"}),
     )
     # The future-uber placeholders toggled as targets: a JSON list of qualified names posted
     # by the legend chips. Not a real model field (they're pool padding, not catalogue units),
