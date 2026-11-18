@@ -315,6 +315,17 @@ def test_planner_opens_on_the_stored_seed(client, profile):
 
 
 @pytest.mark.django_db
+def test_planner_shows_a_stored_zero_seed_as_no_seed(client, profile):
+    Seed.store(profile, 0)
+    assert b'name="seed" value=' not in client.get("/").content
+
+
+@pytest.mark.django_db
+def test_planner_starts_a_first_visit_with_no_seed(client):
+    assert b'name="seed" value=' not in client.get("/").content
+
+
+@pytest.mark.django_db
 def test_planner_ignores_the_normal_seed(client, profile):
     Seed.store(profile, 42, Seed.NORMAL)
     assert b'name="seed" value="42"' not in client.get("/").content

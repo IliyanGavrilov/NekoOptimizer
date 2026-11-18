@@ -159,7 +159,8 @@ def planner(request):
 
     saved = Seed.saved(request.profile)
     context = {
-        "form": PlannerForm(initial={"seed": saved.value} if saved else None),
+        # 0 is xorshift's fixed point - every pull alike - so a saved 0 shows as no seed.
+        "form": PlannerForm(initial={"seed": saved.value} if saved and saved.value else None),
         "saved_seed": saved,
         "target_groups": groups,
         "past_count": past_count,

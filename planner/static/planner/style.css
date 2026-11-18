@@ -429,6 +429,8 @@ input[type="search"]::-webkit-search-cancel-button { appearance: none; -webkit-a
 .owned-bar { flex: 0 1 10rem; height: 6px; border-radius: var(--pill); background: var(--bg-2); overflow: hidden; }
 .owned-bar i { display: block; width: 0; height: 100%; background: var(--accent); transition: width 0.2s; }
 .head-tools { display: inline-flex; gap: 0.5rem; margin-left: auto; }
+/* The same bar, smaller, beside each section's own owned count. */
+.section-bar { flex: 0 1 7rem; height: 5px; }
 
 /* The cat toolbar (Collection, avatar picker): search, then labeled drop-downs, each
    showing what it's set to. A set filter turns the button accent. The facet panel opens
@@ -2926,10 +2928,42 @@ button, .chip, .entry, .banner-group, .banner-include, .step-card, .site-header 
 .guide li { margin: 0.35rem 0; }
 .guide .guide-cta { font-weight: 600; }
 .guide-more { max-width: 44rem; margin: 2rem 0 0; border-top: 1px solid var(--line); padding-top: 1rem; }
-.guide-list { list-style: none; padding: 0; max-width: 44rem; }
-.guide-list li { margin: 0 0 1rem; }
+/* The guides index: each guide a card, clickable anywhere (its link stretches over it). */
+.guide-list { display: grid; gap: 0.7rem; list-style: none; padding: 0; max-width: 44rem; }
+.guide-list li {
+  position: relative;
+  margin: 0;
+  padding: 0.9rem 1.1rem;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  transition: border-color 0.15s;
+}
+.guide-list li:hover { border-color: var(--accent); }
 .guide-list a { font-weight: 600; font-size: 1.05rem; }
+.guide-list a::after { content: ""; position: absolute; inset: 0; border-radius: 12px; }
 .guide-list p { margin: 0.2rem 0 0; }
+/* Inside a guide: the closing call to action as a gold pill, the other guides as pills. */
+.guide .guide-cta a {
+  display: inline-block;
+  padding: 0.5rem 1.2rem;
+  border-radius: 999px;
+  background: var(--accent);
+  color: var(--accent-ink);
+  text-decoration: none;
+}
+.guide .guide-cta a:hover { filter: brightness(1.07); text-decoration: none; }
+.guide-more { border-top: 0; padding-top: 0; }
+.guide-more .about-list { display: flex; flex-wrap: wrap; gap: 0.5rem; list-style: none; padding: 0; }
+.guide-more .about-list li { margin: 0; }
+.guide-more .about-list a {
+  display: inline-block;
+  padding: 0.35rem 0.9rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--bg-2);
+}
+.guide-more .about-list a:hover { border-color: var(--accent); text-decoration: none; }
 
 /* The interface-language picker, sized to sit beside the version switcher. */
 .lang-switch { margin: 0; }

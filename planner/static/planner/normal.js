@@ -95,7 +95,7 @@ if (normalForm) {
     if (shown.length === 1) stored.superfeline = shown[0] === "np";
     else if (shown.length) pickFlavor(normalKey());
   }
-  seedEl.value = stored.seed || "0"; // a first visit starts the tracks from seed 0
+  seedEl.value = stored.seed || ""; // a first visit asks for the seed (normalHint)
 
   const checkedMachines = () => machineEls.filter((el) => el.checked).map((el) => el.value);
 
@@ -116,7 +116,8 @@ if (normalForm) {
     stored.machines = machines;
     save();
     syncLink();
-    if (!/^\d+$/.test(seed)) {
+    // 0 is xorshift's fixed point (every pull alike), so it asks for a real seed too.
+    if (!/^\d+$/.test(seed) || Number(seed) === 0) {
       hint.hidden = false;
       tracksHost.innerHTML = "";
       return;
@@ -265,7 +266,7 @@ if (normalForm) {
   planGo.addEventListener("click", async () => {
     planError.textContent = "";
     const seed = seedEl.value.trim();
-    if (!/^\d+$/.test(seed)) {
+    if (!/^\d+$/.test(seed) || Number(seed) === 0) {
       planError.textContent = gettext("Enter (or find) your normal seed first.");
       return;
     }

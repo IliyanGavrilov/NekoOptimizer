@@ -2794,3 +2794,6 @@ msgstr "稀有度"
 msgid "Missing"
 msgstr "未擁有"
 
+#, python-format
+msgid "Enter your seed above to see your rolls &mdash; or <a href=\"%(finder_url)s\">find it</a> from a few pulls you've just made."
+msgstr "在上方輸入種子碼即可看到抽數 &mdash; 或用剛抽的幾次結果<a href=\"%(finder_url)s\">找出它</a>。"
