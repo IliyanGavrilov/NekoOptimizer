@@ -90,13 +90,16 @@ PAGE_META = {
     ),
     "whats_new": PageMeta(
         _("What's New in Neko Optimizer"),
-        _("The latest changes to Neko Optimizer, the Battle Cats gacha planner, newest first."),
+        _(
+            "Every update to Neko Optimizer, the free Battle Cats gacha planner and seed "
+            "tracker, newest first: new tools, guides, game versions, features and fixes."
+        ),
     ),
     "about": PageMeta(
         _("About"),
         _(
-            "Who built Neko Optimizer, the tech behind its Battle Cats gacha planner, and the "
-            "community tools and data it credits."
+            "Who built Neko Optimizer, the free Battle Cats gacha planner and seed tracker, what "
+            "it is built with, and the community tools and data it credits."
         ),
     ),
     "signup": PageMeta(_("Sign up"), DEFAULT_META.description, noindex=True),
@@ -108,8 +111,8 @@ GUIDES = {
     "gacha-terms": PageMeta(
         _("Battle Cats Gacha Words, Explained Simply"),
         _(
-            "What seeds, tracks A and B, rerolls, guaranteed draws and the other Battle Cats "
-            "gacha words mean, in a sentence or two each."
+            "What seeds, rolls, 11-draws, guaranteed draws, banners, tracks A and B, rerolls, "
+            "Ubers and Legend Rares mean in the Battle Cats gacha, in a sentence or two each."
         ),
     ),
     "find-your-seed": PageMeta(
@@ -173,6 +176,39 @@ HREFLANG = {"en": "en", "jp": "ja", "tw": "zh-Hant", "kr": "ko"}
 
 # The pages worth a search listing, by URL name, for the sitemap.
 INDEXED_PAGES = tuple(name for name, meta in PAGE_META.items() if not meta.noindex)
+
+# What robots.txt keeps crawlers off: the endpoints the pages call and the account forms,
+# which every page links with its own ?next= - one URL per page, all noindex.
+CRAWL_BLOCKED = (
+    "picker_past",
+    "tracks_engine",
+    "seed_backtrack",
+    "save_seed",
+    "seek_pool",
+    "seek_start",
+    "normal_tracks",
+    "normal_plan",
+    "normal_seek_start",
+    "find_plan",
+    "plan_row",
+    "apply_plan",
+    "unit_info",
+    "unit_forms",
+    "resources_cat",
+    "resources_base",
+    "set_region",
+    "set_language",
+    "collection_toggle",
+    "collection_bulk",
+    "collection_auto_wishlist",
+    "collection_export",
+    "collection_import",
+    "collection_guide_import",
+    "signup",
+    "login",
+    "logout",
+    "avatar",
+)
 
 
 def page_meta(url_name: str | None) -> PageMeta:

@@ -3,6 +3,8 @@ import json
 import pytest
 from django.core.management import CommandError, call_command
 
+from planner.models import SubmittedPage
+
 SITE = "https://neko.example"
 
 
@@ -21,7 +23,7 @@ def _pages():
 
 
 @pytest.fixture
-def sent(monkeypatch, settings):
+def sent(monkeypatch, settings, db):
     """The JSON body of every request the command sends, with the network stubbed out."""
     settings.SITE_URL = SITE
     settings.INDEXNOW_KEY = "abc123key"
@@ -51,3 +53,22 @@ def test_nothing_is_sent_without_a_key(sent, settings):
     settings.INDEXNOW_KEY = ""
     with pytest.raises(CommandError):
         call_command("indexnow")
+
+
+def test_a_page_already_submitted_unchanged_is_left_out(sent):
+    SubmittedPage.objects.create(loc="/")
+    call_command("indexnow")
+    assert sent[0]["urlList"] == [f"{SITE}/jp/tiers/"]
+
+
+def test_a_page_whose_lastmod_moved_is_submitted_again(sent):
+    SubmittedPage.objects.create(loc="/")
+    SubmittedPage.objects.create(loc="/jp/tiers/", lastmod="2026-09-01")
+    call_command("indexnow")
+    assert sent[0]["urlList"] == [f"{SITE}/jp/tiers/"]
+
+
+def test_a_second_run_with_nothing_changed_sends_nothing(sent):
+    call_command("indexnow")
+    call_command("indexnow")
+    assert len(sent) == 1

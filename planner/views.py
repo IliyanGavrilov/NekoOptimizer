@@ -43,6 +43,7 @@ from planner.middleware import adopt_guest, owner, region_path, split_region
 from planner.models import Banner, CannonPlan, Cat, Seed, TalentPlan, Unit, UnitPlan
 from planner.seo import (
     BRAND,
+    CRAWL_BLOCKED,
     GUIDES,
     INDEXED_PAGES,
     REGION_PAGES,
@@ -1263,9 +1264,13 @@ def sitemap(request):
 
 
 def robots(request):
-    """Crawl everything but the admin, and say where the sitemap is."""
+    """Crawl the pages, not the admin or the endpoints behind them, and say where the
+    sitemap is."""
+    blocked = ["/admin/"]
+    blocked += [region_path(reverse(name), code) for code in CODES for name in CRAWL_BLOCKED]
+    rules = "".join(f"Disallow: {path}\n" for path in blocked)
     sitemap_url = f"{settings.SITE_URL}{reverse('sitemap')}"
-    body = f"User-agent: *\nDisallow: /admin/\n\nSitemap: {sitemap_url}\n"
+    body = f"User-agent: *\n{rules}\nSitemap: {sitemap_url}\n"
 
     return HttpResponse(body, content_type="text/plain")
 

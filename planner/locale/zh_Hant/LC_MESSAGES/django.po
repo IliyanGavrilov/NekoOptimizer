@@ -1102,7 +1102,8 @@ msgstr "DPS與相剋圖。"
 #: .\seo.py:36
 msgid ""
 "Free Battle Cats gacha planner: track your seed, see every upcoming roll and get the cheapest path in tickets and catfood to the Ubers you want."
-msgstr "免費的貓咪大戰爭轉蛋規劃工具:追蹤你的種子碼、查看接下來每一抽的結果,並找出用最少稀有券和貓罐頭抽到想要超激的路線。"
+msgstr ""
+"免費的貓咪大戰爭轉蛋規劃工具:追蹤你的種子碼,事先查看A線與B線接下來每一抽會抽到什麼,並找出用最少的稀有券和貓罐頭抽到想要的超激稀有角色、最省資源的抽法。支援台版,免費使用,不需要註冊,打開瀏覽器就能用。"
 
 #: .\seo.py:43
 msgid "Battle Cats Gacha Planner & Seed Tracker"
@@ -1111,7 +1112,8 @@ msgstr "貓咪大戰爭 轉蛋規劃與種子碼追蹤"
 #: .\seo.py:45
 msgid ""
 "Plan your Battle Cats rare gacha pulls from your seed: every upcoming roll on both tracks, and the cheapest path in tickets and catfood to the Ubers you want."
-msgstr "用種子碼規劃貓咪大戰爭的稀有轉蛋:A線、B線接下來的每一抽,以及用最少稀有券和貓罐頭抽到想要超激的方法。"
+msgstr ""
+"用種子碼規劃貓咪大戰爭的稀有轉蛋:列出A線與B線接下來的每一抽結果,並找出用最少的稀有券和貓罐頭抽到想要的超激稀有角色的抽法,不再浪費任何一張券。支援台版,完全免費、不需要註冊,打開瀏覽器就能使用。"
 
 #: .\seo.py:50
 msgid "Battle Cats Normal Capsule Seed Tracker"
@@ -1120,7 +1122,8 @@ msgstr "貓咪大戰爭 貓咪轉蛋 種子碼追蹤"
 #: .\seo.py:52
 msgid ""
 "Predict the Battle Cats Normal Cat Capsule from your normal seed: the Catfruit, Catseye and Lucky Ticket machines in one table, with the pulls worth taking."
-msgstr "用貓咪轉蛋的種子碼預測結果:貓薄荷、貓眼石與招福轉蛋整合在同一張表,並標出值得抽的抽數。"
+msgstr ""
+"用種子碼預測貓咪大戰爭的貓咪轉蛋:把貓薄荷、貓眼石與招福轉蛋接下來的結果整合在同一張表裡,並標出值得用貓咪轉蛋券抽的抽數,一眼就知道該在什麼時候抽、什麼時候先留著券。支援台版,免費使用,不需要註冊。"
 
 #: .\seo.py:57
 msgid "Battle Cats Cat Guide & Collection Tracker"
@@ -1129,7 +1132,8 @@ msgstr "貓咪大戰爭 貓咪圖鑑與收藏管理"
 #: .\seo.py:59
 msgid ""
 "Track every Battle Cats unit you own and want in Cat Guide order. Import your collection from in-game screenshots and filter by abilities, combos and talents."
-msgstr "依貓咪圖鑑順序管理你擁有與想要的每隻貓咪大戰爭角色。可從遊戲截圖匯入收藏,並依能力、聯組與本能篩選。"
+msgstr ""
+"依照貓咪圖鑑的順序管理你在貓咪大戰爭中擁有與想要的每一隻角色。可以從遊戲內貓咪圖鑑的截圖一次匯入整個收藏,並依能力、聯組與本能篩選,快速找出還沒入手的角色。支援台版,免費使用,不需要註冊帳號也能保存。"
 
 #: .\seo.py:64
 msgid "Battle Cats Evolution, Talent & Cannon Calculator"
@@ -1138,7 +1142,8 @@ msgstr "貓咪大戰爭 進化、本能與貓咪砲計算器"
 #: .\seo.py:66
 msgid ""
 "Total the catfruit, behemoth stones, XP, NP and cannon materials you need to evolve your Battle Cats units, unlock their talents and build your Cat Base cannons."
-msgstr "計算貓咪大戰爭角色進化、解放本能與開發貓咪砲所需的貓薄荷、獸石、XP、NP與素材總量。"
+msgstr ""
+"一次計算貓咪大戰爭角色進化、解放本能與開發貓咪砲所需的貓薄荷、獸石、XP、NP與素材總量。只要選好想培養的角色,就能立刻知道總共需要多少素材,省去自己一個一個查表加總的麻煩。支援台版,免費使用,不需要註冊。"
 
 #: .\seo.py:71
 msgid "Battle Cats Uber Tier List: Best Ubers & Legend Rares"
@@ -1147,7 +1152,8 @@ msgstr "貓咪大戰爭 超激稀有強度排行:最強超激與傳說稀有"
 #: .\seo.py:73
 msgid ""
 "Every permanent Battle Cats Uber and Legend Rare ranked tier by tier, with Ultra Form and Ultra Talent placements - plus a tier list for every gacha set."
-msgstr "貓咪大戰爭常駐超激稀有與傳說稀有的分級排名,附第4進化與超本能的評價,還有每個轉蛋系列的排行。"
+msgstr ""
+"貓咪大戰爭所有常駐超激稀有與傳說稀有角色的強度分級排名,附上第4進化與解放超本能後的評價,還有每個轉蛋系列各自的強度排行,幫你在下次轉蛋前決定該抽哪個轉蛋、該追哪一隻角色。支援台版的角色與轉蛋名稱。"
 
 #: .\seo.py:78
 msgid "Battle Cats Seed Finder: Find Your Gacha Seed"
@@ -1156,7 +1162,8 @@ msgstr "貓咪大戰爭 種子碼查詢:找出你的轉蛋種子碼"
 #: .\seo.py:80
 msgid ""
 "Don't know your Battle Cats seed? Enter the cats from a few rolls and the finder checks all 4.3 billion seeds in your browser for the one that matches."
-msgstr "不知道你的貓咪大戰爭種子碼?輸入幾抽抽到的角色,系統會在瀏覽器中檢查全部約43億組種子碼,找出相符的那組。"
+msgstr ""
+"不知道你的貓咪大戰爭種子碼?輸入最近幾抽抽到的角色,系統就會直接在瀏覽器中檢查全部約43億組種子碼,找出與你的結果相符的那一組。支援台版,免費使用,不需要註冊,幾分鐘內就能找回你的種子碼。"
 
 #: .\seo.py:85
 msgid "Battle Cats Gacha Guides: Seeds, Tracks & Planning"
@@ -1165,7 +1172,8 @@ msgstr "貓咪大戰爭 轉蛋攻略:種子碼、A線B線與規劃"
 #: .\seo.py:87
 msgid ""
 "Step-by-step Battle Cats guides: find your gacha seed, read the A/B roll tracks, plan your pulls for the Ubers you want and predict the Normal Capsules."
-msgstr "貓咪大戰爭逐步攻略:找出轉蛋種子碼、看懂A線B線、規劃抽到想要超激的方法,以及預測貓咪轉蛋。"
+msgstr ""
+"貓咪大戰爭的逐步攻略:如何找出轉蛋種子碼、看懂A線與B線、規劃稀有券與貓罐頭的用法來抽到想要的超激,以及如何預測貓咪轉蛋,一步一步帶你上手,第一次使用種子碼的新手也能輕鬆看懂,每篇都只要幾分鐘就能讀完。"
 
 #: .\seo.py:92
 msgid "What's New in Neko Optimizer"
@@ -1173,8 +1181,9 @@ msgstr "Neko Optimizer 更新內容"
 
 #: .\seo.py:93
 msgid ""
-"The latest changes to Neko Optimizer, the Battle Cats gacha planner, newest first."
-msgstr "貓咪大戰爭轉蛋規劃工具 Neko Optimizer 的最新變更,由新到舊。"
+"Every update to Neko Optimizer, the free Battle Cats gacha planner and seed tracker, newest first: new tools, guides, game versions, features and fixes."
+msgstr ""
+"免費的貓咪大戰爭轉蛋規劃工具與種子碼追蹤器 Neko Optimizer 的每一次更新,由新到舊:新的工具與攻略、支援的遊戲版本、新功能以及錯誤修正,想知道最近改了什麼、多了哪些功能,都可以在這裡查看。"
 
 #: .\seo.py:96 .\templates\planner\base.html:64
 #: .\templates\planner\base.html:148
@@ -1183,8 +1192,9 @@ msgstr "關於本站"
 
 #: .\seo.py:98
 msgid ""
-"Who built Neko Optimizer, the tech behind its Battle Cats gacha planner, and the community tools and data it credits."
-msgstr "Neko Optimizer的作者、這個貓咪大戰爭轉蛋規劃工具背後的技術,以及我們致謝的社群工具與資料。"
+"Who built Neko Optimizer, the free Battle Cats gacha planner and seed tracker, what it is built with, and the community tools and data it credits."
+msgstr ""
+"關於免費的貓咪大戰爭轉蛋規劃工具與種子碼追蹤器 Neko Optimizer:這個工具能做什麼、作者是誰、使用了哪些技術,以及我們致謝、讓這個工具得以完成的社群工具與遊戲資料,以及原始碼公開在哪裡。"
 
 #: .\seo.py:102 .\templates\planner\account.html:6
 #: .\templates\planner\account.html:32 .\templates\planner\base.html:104
@@ -1203,8 +1213,9 @@ msgstr "貓咪大戰爭 轉蛋用語簡單說明"
 
 #: .\seo.py:111
 msgid ""
-"What seeds, tracks A and B, rerolls, guaranteed draws and the other Battle Cats gacha words mean, in a sentence or two each."
-msgstr "種子碼、A線與B線、重抽、確定等貓咪大戰爭轉蛋用語,每個用一兩句話說明。"
+"What seeds, rolls, 11-draws, guaranteed draws, banners, tracks A and B, rerolls, Ubers and Legend Rares mean in the Battle Cats gacha, in a sentence or two each."
+msgstr ""
+"種子碼、抽、11連抽、確定、轉蛋活動、A線與B線、重抽、超激稀有與傳說稀有等貓咪大戰爭轉蛋用語,每個都用一兩句話簡單說明它的意思,剛開始研究種子碼的新手也能馬上看懂,讀其他攻略前先看這篇。"
 
 #: .\seo.py:116
 msgid "How to Find Your Battle Cats Seed (Step by Step)"
@@ -1213,7 +1224,8 @@ msgstr "如何找出貓咪大戰爭的種子碼(逐步教學)"
 #: .\seo.py:118
 msgid ""
 "Find your Battle Cats gacha seed from a few rolls: which banner to use, how to record your cats, the guaranteed-Uber trap, and what to do when several seeds match."
-msgstr "從幾抽結果找出轉蛋種子碼:該用哪個轉蛋、怎麼記錄抽到的角色、確定超激的陷阱,以及多組種子碼相符時怎麼辦。"
+msgstr ""
+"只用幾抽的結果就找出貓咪大戰爭種子碼的方法:該用哪個轉蛋、怎麼記錄抽到的角色、確定超激的陷阱,以及同時有多組種子碼相符時該怎麼辦,都有一步一步的詳細說明,照著做就能在幾分鐘內找到自己的種子碼。"
 
 #: .\seo.py:123
 msgid "Battle Cats Seed Tracker: How to Read Tracks A and B"
@@ -1222,7 +1234,8 @@ msgstr "貓咪大戰爭 種子碼追蹤:如何看懂A線與B線"
 #: .\seo.py:125
 msgid ""
 "How Battle Cats rare gacha rolls work from your seed: tracks A and B, duplicate rerolls that switch tracks, guaranteed 11-draws and how to step to the cat you want."
-msgstr "種子碼如何決定稀有轉蛋:A線與B線、會換線的稀有重複、確定11連抽,以及如何前進到想要的角色。"
+msgstr ""
+"說明貓咪大戰爭的稀有轉蛋如何由種子碼決定:A線與B線的運作方式、會讓你換線的稀有重複、確定11連抽怎麼算,以及如何一步一步前進到你想要的角色,看完就能自己讀懂種子碼追蹤表,知道下一抽該用哪一條線。"
 
 #: .\seo.py:130
 msgid "How to Plan Battle Cats Gacha Rolls for the Ubers You Want"
@@ -1231,7 +1244,8 @@ msgstr "如何為想要的超激稀有規劃轉蛋"
 #: .\seo.py:132
 msgid ""
 "Use your seed to get the Ubers you want for the fewest tickets and catfood: pick targets and banners, set your budget, follow the plan and apply it when you've rolled."
-msgstr "用種子碼以最少的稀有券與貓罐頭抽到想要的超激:選擇目標與轉蛋、設定預算、照計畫抽,抽完後套用。"
+msgstr ""
+"用貓咪大戰爭的種子碼,以最少的稀有券與貓罐頭抽到想要的超激稀有角色:選擇目標角色與轉蛋、設定預算、照著計畫抽,抽完之後再把結果套用到規劃工具上,讓種子碼保持在正確的位置,下次規劃時依然準確。"
 
 #: .\seo.py:137
 msgid "Battle Cats Normal Capsule Seed Guide: Catfruit & Catseyes"
@@ -1240,7 +1254,8 @@ msgstr "貓咪轉蛋種子碼攻略:貓薄荷與貓眼石"
 #: .\seo.py:139
 msgid ""
 "The Battle Cats Normal Capsules run on their own seed. Find it, predict the Catfruit, Catseye and Lucky Ticket machines, and plan your normal tickets."
-msgstr "貓咪轉蛋使用自己的種子碼。找出它、預測貓薄荷、貓眼石與招福轉蛋,並規劃貓咪轉蛋券的用法。"
+msgstr ""
+"貓咪大戰爭的貓咪轉蛋使用跟稀有轉蛋不同的專屬種子碼。找出這組種子碼,就能預測貓薄荷、貓眼石與招福轉蛋的結果,並事先規劃貓咪轉蛋券該在什麼時候用,不再浪費任何一張券,把每一張都用在值得的時候。"
 
 #: .\seo.py:144
 msgid "Never Lose Your Battle Cats Seed"
@@ -1249,7 +1264,8 @@ msgstr "永遠不再遺失你的貓咪大戰爭種子碼"
 #: .\seo.py:146
 msgid ""
 "Where Neko Optimizer keeps your Battle Cats seeds, how to carry them to another device, and the one-minute backup that makes losing them impossible."
-msgstr "Neko Optimizer把你的種子碼存在哪裡、如何帶到其他裝置,以及讓你絕不遺失的一分鐘備份。"
+msgstr ""
+"Neko Optimizer把你的貓咪大戰爭種子碼存在哪裡、如何把它帶到其他裝置或瀏覽器,以及只要一分鐘就能完成、讓你再也不會遺失種子碼的備份方法,換手機或清除瀏覽器資料時也不用擔心。"
 
 #: .\seo.py:186
 #, python-format
@@ -1260,7 +1276,8 @@ msgstr "貓咪大戰爭 %(label)s 強度排行"
 #, python-format
 msgid ""
 "The Battle Cats %(label)s tier list: every unit in the set ranked tier by tier, with Ultra Form and Ultra Talent placements and each cat's forms."
-msgstr "貓咪大戰爭 %(label)s 強度排行:系列中每隻角色的分級排名,附第4進化、超本能評價與各型態。"
+msgstr ""
+"貓咪大戰爭 %(label)s 強度排行:這個系列中每一隻角色的分級排名,附上第4進化與解放超本能後的評價,以及每隻角色的各個型態,幫你判斷這個系列中哪隻角色最值得抽、哪隻可以先放著。"
 
 #: .\services.py:139 .\services.py:759
 msgid "Ultra Form"

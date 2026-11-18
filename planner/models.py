@@ -320,3 +320,14 @@ class CatalogueVersion(models.Model):
 
     def __str__(self) -> str:
         return f"{self.region} v{self.number}"
+
+
+class SubmittedPage(models.Model):
+    """A page already sent to IndexNow, and the lastmod it had then, so a deploy only
+    sends the pages that are new or changed since."""
+
+    loc = models.CharField(max_length=255, unique=True)
+    lastmod = models.CharField(max_length=10, blank=True)
+
+    def __str__(self) -> str:
+        return self.loc
