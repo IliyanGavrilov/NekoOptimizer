@@ -214,7 +214,7 @@ p a:hover { text-decoration-color: currentColor; }
   padding: 0.6rem 0.75rem;
   background: var(--panel);
   border: 1px solid var(--line);
-  border-radius: var(--radius);
+  border-radius: 12px;
   box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
 }
 .header-pop .muted { font-size: 0.78rem; }
@@ -223,9 +223,9 @@ p a:hover { text-decoration-color: currentColor; }
 .prefs-button {
   gap: 0.3rem;
   height: 1.9rem;
-  padding: 0 0.55rem;
+  padding: 0 0.7rem;
   border: 1px solid var(--line);
-  border-radius: var(--pill);
+  border-radius: 999px;
   color: var(--muted);
   font-size: 0.78rem;
   font-weight: 700;
@@ -241,18 +241,25 @@ p a:hover { text-decoration-color: currentColor; }
 
 /* Nav links and the account links share one size. */
 .site-header nav a, .account > a {
-  padding: 0.35rem 0.5rem;
+  padding: 0.35rem 0.65rem;
   font-size: 1rem;
-  border-radius: var(--pill);
+  border-radius: 999px;
   color: var(--muted);
   white-space: nowrap;
 }
 
+/* Hover lifts a link onto a soft pill; the page you're on is underlined in gold. */
 .site-header nav a:hover {
+  color: var(--ink);
+  text-decoration: none;
+  background: color-mix(in srgb, var(--ink) 8%, transparent);
+}
+.site-header nav a[aria-current="page"] {
   color: var(--ink);
   text-decoration: underline;
   text-decoration-color: var(--accent);
-  text-underline-offset: 6px;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 7px;
 }
 
 /* Theme switch: light / dark / follow the device. */
@@ -319,15 +326,14 @@ p a:hover { text-decoration-color: currentColor; }
 .account { display: flex; align-items: center; gap: 0.3rem; }
 .account > a:not(.signup):hover {
   color: var(--ink);
-  text-decoration: underline;
-  text-decoration-color: var(--accent);
-  text-underline-offset: 6px;
+  text-decoration: none;
+  background: color-mix(in srgb, var(--ink) 8%, transparent);
 }
 .account > a.signup {
   background: var(--accent);
   color: var(--accent-ink);
   font-weight: 600;
-  padding: 0.3rem 0.8rem;
+  padding: 0.3rem 0.95rem;
 }
 .account > a.signup:hover { text-decoration: none; filter: brightness(1.1); }
 /* A cat icon is a 104x79 framed sprite with the cat off-centre, so a circle would cut
@@ -408,23 +414,76 @@ input, button, select {
 input[type="number"], input[type="search"], input[type="text"], select {
   background: var(--bg-2);
   border: 1px solid var(--line);
-  border-radius: var(--radius);
+  border-radius: 10px;
   padding: 0.5rem 0.7rem;
   max-width: 100%;
 }
 
-input[type="search"] { width: 100%; }
+input[type="search"] { width: 100%; border-radius: 999px; padding-inline: 1rem; }
 input[type="search"]::-webkit-search-cancel-button { appearance: none; -webkit-appearance: none; }
 
-.collection-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem; margin-bottom: 0.75rem; }
-.collection-controls input[type="search"] { flex: 1 1 240px; width: auto; }
-.collection-controls button { margin: 0; white-space: nowrap; }
+/* Collection heading: the owned count and a progress bar beside the title. */
+.collection-head { display: flex; flex-wrap: wrap; align-items: center; gap: 0.3rem 0.9rem; }
+.collection-head h1 { margin-right: 0.2rem; }
+.collection-total { font-weight: 600; white-space: nowrap; color: var(--muted); }
+.owned-bar { flex: 0 1 10rem; height: 6px; border-radius: var(--pill); background: var(--bg-2); overflow: hidden; }
+.owned-bar i { display: block; width: 0; height: 100%; background: var(--accent); transition: width 0.2s; }
+.head-tools { display: inline-flex; gap: 0.5rem; margin-left: auto; }
 
-/* Grand owned/total, sitting to the right of the collection controls. */
-.collection-total { margin-left: auto; font-weight: 700; white-space: nowrap; color: var(--ink); }
+/* The cat toolbar (Collection, avatar picker): search, then labeled drop-downs, each
+   showing what it's set to. A set filter turns the button accent. The facet panel opens
+   under the whole bar, the rest under their own button. */
+.cat-toolbar { position: relative; display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem; margin-bottom: 0.9rem; }
+.cat-toolbar input[type="search"] { flex: 1 1 240px; width: auto; }
+.pick-btn {
+  gap: 0.35rem;
+  height: 2.1rem;
+  padding: 0 0.85rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--bg-2);
+  color: var(--muted);
+  font-size: 0.85rem;
+  white-space: nowrap;
+}
+.pick-btn b { color: var(--ink); font-weight: 600; }
+.pick-btn .btn-icon { flex: none; }
+.pick-btn:hover, .header-menu[open] > .pick-btn { color: var(--ink); border-color: var(--accent); }
+.pick-btn .chevron { font-size: 0.7rem; transition: transform 0.15s; }
+.header-menu[open] > .pick-btn .chevron { transform: rotate(180deg); }
+.is-set > .pick-btn { background: color-mix(in srgb, var(--accent) 16%, transparent); border-color: var(--accent); }
+.is-set > .pick-btn b, .is-set > .pick-btn #facetCount { color: var(--accent); }
+.pick-pop { left: 0; right: auto; min-width: 10rem; gap: 0.1rem; padding: 0.35rem; }
+.pick-pop button {
+  display: block;
+  width: 100%;
+  margin: 0;
+  padding: 0.35rem 0.6rem;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--ink);
+  font: inherit;
+  font-size: 0.88rem;
+  text-align: left;
+  cursor: pointer;
+}
+.pick-pop button:hover { background: var(--bg-2); filter: none; }
+.pick-pop button[aria-pressed="true"], .pick-pop button.is-active {
+  background: color-mix(in srgb, var(--accent) 16%, transparent);
+  color: var(--accent);
+  font-weight: 700;
+}
+.cat-toolbar .facet-panel { position: static; }
+.facet-pop { left: 0; right: 0; top: calc(100% + 0.4rem); display: block; padding: 0.7rem 0.9rem; }
+
+/* The Display and Import / export drop-downs: labeled fields stacked in a panel. */
+.tool-pop { gap: 0.35rem; justify-items: start; width: max-content; max-width: min(19rem, 90vw); }
+.tool-pop select { width: 100%; }
+.tool-pop .muted { white-space: normal; }
+.tool-pop-row { display: inline-flex; gap: 0.4rem; }
 
 /* Back up / restore the marks: quiet secondary actions, like the plan "Copy link". */
-.collection-io { display: inline-flex; gap: 0.4rem; }
 .io-btn {
   display: inline-block;
   background: var(--bg-2);
@@ -438,23 +497,6 @@ input[type="search"]::-webkit-search-cancel-button { appearance: none; -webkit-a
 .io-btn:hover { color: var(--accent); border-color: var(--accent); filter: none; }
 .io-msg { color: var(--muted); font-weight: 600; margin: 0 0 0.75rem; }
 .io-msg ul { margin: 0.25rem 0 0; padding-left: 1.2rem; font-weight: 400; }
-
-/* Ownership + rarity pills: one pressed at a time, "All" by default. */
-.rarity-filter, .status-filter { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-bottom: 0.5rem; }
-.rarity-filter button, .status-filter button {
-  background: var(--bg-2);
-  color: var(--muted);
-  border: 1px solid var(--line);
-  padding: 0.3rem 0.8rem;
-  font-weight: 600;
-  margin: 0;
-}
-.rarity-filter button:hover, .status-filter button:hover { color: var(--ink); border-color: var(--accent); filter: none; }
-.rarity-filter button[aria-pressed="true"], .status-filter button[aria-pressed="true"] {
-  background: var(--accent);
-  color: var(--accent-ink);
-  border-color: var(--accent);
-}
 
 /* Resources page: a running total that stays on screen while you tick, then one card
    per cat and per base upgrade. Every row wraps rather than clipping - the cost lists
@@ -533,6 +575,7 @@ input[type="search"]::-webkit-search-cancel-button { appearance: none; -webkit-a
 .res-picker input[type="search"] { width: 100%; }
 .res-matches { margin-top: 0.4rem; max-height: 9rem; overflow-y: auto; }
 .res-match.on { opacity: 0.45; }
+.res-match:disabled { opacity: 0.45; border-style: dashed; cursor: not-allowed; }
 .res-hint { font-size: 0.78rem; margin: 0.25rem 0 0; }
 
 /* The eight Cat Base developments: a row of switches, like the rarity/facet pills -
@@ -603,7 +646,7 @@ button.res-name { background: none; border: 0; padding: 0; margin: 0; font: inhe
   margin-top: 0.35rem;
 }
 label.res-pick { cursor: pointer; }
-.res-pick input[type="checkbox"] { margin: 0; }
+.res-addon .switch { flex: none; }
 .res-pick-label { font-weight: 600; flex: 0 0 auto; min-width: 5.5rem; }
 /* An add-on the development doesn't have switched on: listed, so you can see it's there
    to add, but dimmed and priceless. */
@@ -631,34 +674,91 @@ label.res-pick { cursor: pointer; }
 .res-item.no-icon .item-icon { display: none; }
 .res-item.no-icon .item-name { display: inline; }
 
-/* Talents are toggle pills - eight of them per cat, so a row of chips keeps the card
-   short where eight checkbox lines would not. */
-.res-talents { display: flex; flex-wrap: wrap; gap: 0.3rem; margin-top: 0.4rem; }
-.res-talent {
-  display: inline-flex;
-  align-items: baseline;
-  gap: 0.35rem;
-  max-width: 100%;
+/* A cat's evolutions and talents: one row each - name, control, price - wrapping onto a
+   second line when the card narrows. Yes-or-no picks are switches; a talent with levels
+   is a slider from 0 (skip) to its max. */
+.res-group { margin-top: 0.55rem; }
+.res-group > .pop-label { display: block; margin-bottom: 0.15rem; }
+.res-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.2rem 0.75rem;
+  padding: 0.2rem 0;
+  border-top: 1px solid var(--line);
+  color: var(--muted);
+  cursor: pointer;
+}
+.res-row.on { color: var(--ink); }
+.res-row-name { flex: 1 1 7rem; font-weight: 600; min-width: 0; overflow-wrap: anywhere; }
+.res-row > .switch { flex: none; }
+.res-row-cost {
+  flex: 1 1 10rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.1rem 0.55rem;
+  font-size: 0.82rem;
+  font-variant-numeric: tabular-nums;
+}
+.res-lv { min-width: 2.6rem; }
+.res-level { flex: 1 1 6rem; max-width: 10rem; margin: 0; accent-color: var(--accent); cursor: pointer; }
+
+/* An on/off switch, drawn over a plain checkbox (the type selector outranks the plain
+   checkbox sizing further down). */
+input.switch[type="checkbox"] {
+  appearance: none;
+  position: relative;
+  width: 2.2rem;
+  height: 1.2rem;
+  margin: 0;
   border: 1px solid var(--line);
   border-radius: var(--pill);
   background: var(--bg);
-  color: var(--muted);
-  font-size: 0.8rem;
-  padding: 0.12rem 0.6rem;
   cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
 }
-.res-talent input { position: absolute; opacity: 0; pointer-events: none; }
-.res-talent:hover { border-color: var(--accent); }
-.res-talent:has(input:focus-visible) { outline: 2px solid var(--accent); outline-offset: 1px; }
-.res-talent.on { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
-.res-talent.ultra { border-style: dashed; }
-.res-talent-name { font-weight: 600; min-width: 0; overflow-wrap: anywhere; }
-.res-talent-np { white-space: nowrap; opacity: 0.75; }
+input.switch::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 0.15rem;
+  width: 0.85rem;
+  height: 0.85rem;
+  border-radius: 50%;
+  background: var(--muted);
+  transform: translateY(-50%);
+  transition: left 0.15s, background 0.15s;
+}
+input.switch:checked { background: var(--accent); border-color: var(--accent); }
+input.switch:checked::after { left: calc(100% - 1rem); background: var(--accent-ink); }
 
-/* Facet panel: multi-select pills per group, folded away until wanted. */
-.facet-panel { margin-bottom: 0.5rem; border: 1px solid var(--line); border-radius: 6px; padding: 0.3rem 0.6rem; background: var(--bg-2); }
-.facet-panel > summary { cursor: pointer; font-weight: 600; color: var(--muted); }
-.facet-panel[open] > summary { margin-bottom: 0.5rem; color: var(--ink); }
+/* Resources, softened to the site's newer look: rounder cards and sidebar, pill buttons
+   and search, and evolution / talent / part rows that light up under the pointer. */
+.res-section, .res-overview { border-radius: 12px; }
+.res-overview { border-color: color-mix(in srgb, var(--accent) 55%, var(--line)); padding: 0.8rem 1rem; }
+.res-card { border-radius: 12px; padding: 0.7rem 0.95rem; margin-bottom: 0.6rem; transition: border-color 0.15s; }
+.res-card:hover { border-color: color-mix(in srgb, var(--accent) 45%, var(--line)); }
+.res-card-head .res-name { font-size: 1rem; }
+.res-picker input[type="search"] { border-radius: 999px; padding-inline: 1rem; }
+.res-matches .chip, .res-switch, .count-pill { border-radius: 999px; }
+.res-all { border-radius: 999px; padding: 0.2rem 0.75rem; }
+.res-remove {
+  display: grid;
+  place-items: center;
+  width: 1.7rem;
+  height: 1.7rem;
+  padding: 0;
+  border-radius: 50%;
+}
+.res-remove:hover { background: color-mix(in srgb, var(--accent) 12%, transparent); }
+.res-pick-level select { border-radius: 999px; padding-inline: 0.5rem; }
+.res-row, .res-pick { border-top-color: color-mix(in srgb, var(--line) 70%, transparent); }
+.res-row { padding-inline: 0.4rem; border-radius: 8px; }
+.res-row:hover { background: color-mix(in srgb, var(--panel-2) 70%, transparent); }
+.res-grid th, .res-grid td { padding-block: 0.2rem; }
+.res-grid tbody tr + tr > * { border-top: 1px solid color-mix(in srgb, var(--line) 60%, transparent); }
+
+/* Facet panel: multi-select pills per group. */
 .facet-controls { display: flex; flex-wrap: wrap; gap: 0.6rem; align-items: center; margin-bottom: 0.5rem; }
 .facet-filter { display: flex; flex-wrap: wrap; gap: 0.3rem; align-items: baseline; margin-bottom: 0.4rem; }
 .facet-label { min-width: 5.5rem; font-size: 0.85rem; font-weight: 600; color: var(--muted); }
@@ -721,6 +821,11 @@ label.res-pick { cursor: pointer; }
   margin: 0;
 }
 .bulk-buttons button:hover { border-color: var(--accent); color: var(--accent); filter: none; }
+/* With a mouse they wait for the header to be pointed at; touch screens keep them shown. */
+@media (hover: hover) {
+  .bulk-buttons { opacity: 0; transition: opacity 0.15s; }
+  .collection-section > h3:hover .bulk-buttons, .bulk-buttons:focus-within { opacity: 1; }
+}
 
 /* Cat search: an explicit clear (x) + hint so it's obvious how to get back to the
    banner menu, without forcing you to delete the query (selections stay put). */
@@ -773,7 +878,7 @@ button {
   background: var(--accent);
   color: var(--accent-ink);
   border: 0;
-  border-radius: var(--pill);
+  border-radius: 999px;
   padding: 0.55rem 1.2rem;
   font-weight: 700;
   cursor: pointer;
@@ -785,7 +890,7 @@ button:active { transform: translateY(1px); }
 
 fieldset {
   border: 1px solid var(--line);
-  border-radius: var(--radius);
+  border-radius: 12px;
   background: var(--panel);
   margin: 1rem 0;
   padding: 1rem;
@@ -831,7 +936,7 @@ details.group-drop[open] > summary::before { transform: rotate(90deg); }
 section, .banner-group {
   background: var(--panel);
   border: 1px solid var(--line);
-  border-radius: var(--radius);
+  border-radius: 12px;
   padding: 0.9rem 1.1rem 1.1rem;
   margin: 0.9rem 0;
 }
@@ -959,8 +1064,8 @@ section > h3, .banner-group > summary {
   color: var(--accent);
   background: color-mix(in srgb, var(--accent) 10%, transparent);
   border: 1px solid color-mix(in srgb, var(--accent) 45%, transparent);
-  border-radius: var(--pill);
-  padding: 0.1rem 0.6rem;
+  border-radius: 999px;
+  padding: 0.1rem 0.7rem;
   margin: 0;
   width: auto;
   cursor: pointer;
@@ -1682,6 +1787,27 @@ table.track .reseed:hover, table.track .reseed:focus-visible {
   filter: none;
 }
 
+/* The roll tables, softened: rounded outer corners, quieter grid lines, a hover band on
+   the row under the pointer, and rounder highlights. Borders stay per cell (see above),
+   so the sticky header still rides clean. */
+table.track { --grid: color-mix(in srgb, var(--line) 70%, transparent); }
+table.track th, table.track td { border-color: var(--grid); padding: 0.34rem 0.6rem; }
+table.track tr:not(.legend-row) > :last-child { border-right-color: var(--grid); }
+table.track thead tr:not(.legend-row) > th { border-top-color: var(--grid); }
+table.track thead tr:not(.legend-row) > th:first-child { border-top-left-radius: 12px; }
+table.track thead tr:not(.legend-row) > th:last-child { border-top-right-radius: 12px; }
+table.track tbody tr:last-child > :first-child { border-bottom-left-radius: 12px; }
+table.track tbody tr:last-child > :last-child { border-bottom-right-radius: 12px; }
+table.track tbody tr:hover > td { background: color-mix(in srgb, var(--panel-2) 60%, transparent); }
+table.track .entry { margin: 0 -0.6rem; padding: 0.12rem 0.6rem; }
+table.track .entry, .entry.on-path, .entry.next, .entry.shared { border-radius: 8px; }
+.catlink.target { border-radius: 999px; }
+table.track .rarity { border-radius: 999px; }
+table.track .reseed { border-radius: 999px; }
+
+/* The controls above the table: number boxes and selects as rounded fields. */
+.rolls-controls .ctrl :is(input[type="number"], select) { border-radius: 999px; padding-inline: 0.6rem; }
+
 /* Details view: each cell's raw RNG seeds (the rarity seed it rolled from and the
    slot seed that indexes the pool). Off by default; the "Show seeds" toggle adds
    .details to the results region to reveal them. Monospace and dim so the numbers
@@ -1811,15 +1937,34 @@ table.track th.guaranteed-col, table.track td.guaranteed-col {
 .advanced .opt { display: flex; flex-direction: column; gap: 0.2rem; color: var(--ink); }
 
 .advanced { align-self: flex-end; }
-.advanced > summary { cursor: pointer; color: var(--accent); width: max-content; }
+/* The summary is a pill button with a chevron that turns as the panel opens. */
+.advanced > summary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  width: max-content;
+  max-width: 100%;
+  padding: 0.3rem 0.9rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--bg-2);
+  color: var(--accent);
+  font-weight: 600;
+  list-style: none;
+  cursor: pointer;
+}
+.advanced > summary::-webkit-details-marker { display: none; }
+.advanced > summary::before { content: "▸"; font-size: 0.75rem; transition: transform 0.15s; }
+.advanced[open] > summary::before { transform: rotate(90deg); }
+.advanced > summary:hover { border-color: var(--accent); }
+.advanced[open] > summary { margin-bottom: 0.6rem; }
 .advanced[open] {
   flex-basis: 100%;
   background: var(--panel);
   border: 1px solid var(--line);
-  border-radius: var(--radius);
+  border-radius: 12px;
   padding: 0.75rem 1rem;
 }
-.advanced[open] > summary { margin-bottom: 0.6rem; }
 .advanced p { margin: 0.4rem 0 0; font-size: 0.9rem; }
 .apply-plan { margin: 0.1rem 0 0.6rem; font-size: 0.9rem; padding: 0.4rem 0.85rem; }
 .apply-plan:disabled { opacity: 0.6; cursor: default; }
@@ -1834,8 +1979,8 @@ table.track th.guaranteed-col, table.track td.guaranteed-col {
   padding: 0.75rem 0.9rem;
   margin: 0.75rem 0;
   background: var(--bg-2);
-  border: 1px solid var(--accent);
-  border-radius: var(--radius);
+  border: 1px solid color-mix(in srgb, var(--accent) 55%, var(--line));
+  border-radius: 12px;
 }
 .resources-title { font-family: var(--head-font); font-size: 0.95rem; color: var(--accent); }
 .budget-fields,
@@ -1942,27 +2087,44 @@ table.track th.guaranteed-col, table.track td.guaranteed-col {
 .chip.owned.selected { opacity: 1; }
 
 /* ---- Collection chips (owned / wishlist) ----------------------------- */
+/* Names mode: each cat is just its name in a pill - click it to own it. Owned fills gold
+   and leads with a check. The star and info buttons wait for the pointer (or focus);
+   a wishlisted cat keeps its gold star showing. Touch screens can't hover, so there
+   both stay visible, small and faint. */
 .own-chip {
   display: inline-flex;
-  align-items: stretch;
-  border-radius: var(--pill);
-  overflow: hidden;
+  align-items: center;
   border: 1px solid var(--line);
+  border-radius: 999px;
   background: var(--bg-2);
 }
 .own-chip .chip {
   border: 0;
-  border-radius: 0;
+  border-radius: 999px;
   background: transparent;
+  padding: 0.3rem 0.85rem;
 }
-.own-chip .chip-star {
+.own-chip :is(.chip-star, .catinfo) {
+  display: none;
+  align-items: center;
   font: inherit;
+  font-size: 0.85em;
+  line-height: 1;
   border: 0;
-  border-left: 1px solid var(--line);
   background: transparent;
   color: var(--muted);
-  padding: 0.25rem 0.55rem;
+  padding: 0.3rem 0.25rem;
   cursor: pointer;
+}
+.own-chip .catinfo { padding-right: 0.65rem; }
+.own-chip :is(.chip-star, .catinfo):hover { color: var(--accent); filter: none; }
+.own-chip:is(:hover, :has(:focus-visible)) :is(.chip-star, .catinfo),
+.own-chip.wanted .chip-star { display: flex; }
+.own-chip:is(:hover, :has(:focus-visible)) .chip,
+.own-chip.wanted .chip { padding-right: 0.2rem; }
+@media (hover: none) {
+  .own-chip :is(.chip-star, .catinfo) { display: flex; opacity: 0.5; }
+  .own-chip .chip { padding-right: 0.2rem; }
 }
 .own-chip:hover { border-color: var(--accent); }
 
@@ -1971,12 +2133,76 @@ table.track th.guaranteed-col, table.track td.guaranteed-col {
   border-color: var(--accent);
 }
 .own-chip.owned .chip { color: var(--accent); font-weight: 700; }
-.own-chip.wanted .chip-star { color: var(--r-super); text-shadow: 0 0 6px color-mix(in srgb, var(--r-super) 60%, transparent); }
-/* A cat you still want (wishlisted, not yet owned) gets a star-coloured rim so it
-   stands out from the plain unowned crowd at a glance. */
-.own-chip.wanted:not(.owned) {
-  border-color: var(--r-super);
-  background: color-mix(in srgb, var(--r-super) 12%, transparent);
+.own-chip.owned .chip-own::before { content: "✓"; margin-right: 0.35em; }
+.own-chip.wanted .chip-star { color: var(--r-super); opacity: 1; }
+.own-chip.wanted:not(.owned) { border-color: var(--r-super); }
+.collection-section { border-radius: 12px; }
+
+/* Icon modes: Cat Guide tiles, all one size - icon on top, the name under it cut to two
+   lines, no frame. Cats you don't own are faded; owned ones are in full colour with a
+   gold name.
+   The star and info buttons float in the top corner on hover; a wishlisted cat shows a
+   gold star in the other corner. */
+.cat-browser:is(.rolls-icons, .rolls-both) .rarity-row > .chips {
+  flex: 1;
+  min-width: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(7rem, 1fr));
+  gap: 0.5rem;
+}
+.cat-browser:is(.rolls-icons, .rolls-both) .own-chip {
+  position: relative;
+  display: block;
+  border-radius: 12px;
+}
+.cat-browser:is(.rolls-icons, .rolls-both) .own-chip .chip-own {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.3rem;
+  width: 100%;
+  padding: 0.7rem 0.4rem 0.5rem;
+  border-radius: 12px;
+  text-align: center;
+}
+.cat-browser:is(.rolls-icons, .rolls-both) .own-chip .cat-icon { width: 64px; margin: 0 auto; }
+.cat-browser:is(.rolls-icons, .rolls-both) .own-chip:not(.owned) .cat-icon { opacity: 0.4; filter: grayscale(0.6); }
+.cat-browser:is(.rolls-icons, .rolls-both) .own-chip:not(.owned) .catname { color: var(--muted); }
+.cat-browser.rolls-both .own-chip .catname {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  min-height: 2.5em;
+  font-size: 0.78rem;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+.cat-browser:is(.rolls-icons, .rolls-both) .own-chip .tier-badge { margin-left: 0; }
+.cat-browser:is(.rolls-icons, .rolls-both) .own-chip,
+.cat-browser:is(.rolls-icons, .rolls-both) .own-chip:is(.owned, .wanted) {
+  border-color: transparent;
+  background: transparent;
+}
+.cat-browser:is(.rolls-icons, .rolls-both) .own-chip:hover {
+  border-color: transparent;
+  background: color-mix(in srgb, var(--panel-2) 70%, transparent);
+}
+.cat-browser:is(.rolls-icons, .rolls-both) .own-chip.owned .chip-own::before { content: none; }
+.cat-browser:is(.rolls-icons, .rolls-both) .own-chip :is(.chip-star, .catinfo) {
+  position: absolute;
+  top: 0.3rem;
+  padding: 0.25rem 0.35rem;
+  border-radius: 999px;
+  background: var(--panel);
+  font-size: 0.85rem;
+}
+.cat-browser:is(.rolls-icons, .rolls-both) .own-chip .catinfo { right: 0.3rem; }
+.cat-browser:is(.rolls-icons, .rolls-both) .own-chip .chip-star { right: 1.85rem; }
+.cat-browser:is(.rolls-icons, .rolls-both) .own-chip.wanted:not(:hover, :has(:focus-visible)) .chip-star {
+  right: auto;
+  left: 0.3rem;
+  background: transparent;
 }
 
 /* ---- Tier-list badges + page ------------------------------------------ */
@@ -2061,6 +2287,14 @@ table.track th.guaranteed-col, table.track td.guaranteed-col {
   border-radius: 5px;
   padding: 0 0.3em;
 }
+/* Softened like Collection: rounder rows, and each cat just its icon and name - no box,
+   a soft band under the pointer. */
+.tier-row { border-radius: 12px; }
+.tier-units { gap: 0.25rem 0.4rem; }
+.tier-unit { border-color: transparent; background: transparent; border-radius: 999px; padding: 0.2rem 0.7rem 0.2rem 0.35rem; }
+.tier-unit[data-name]:hover { border-color: transparent; background: color-mix(in srgb, var(--panel-2) 80%, transparent); }
+.tier-unit .boost { border-radius: 999px; padding: 0 0.45em; }
+.tier-controls select { border-radius: 999px; padding-inline: 0.75rem; }
 
 /* ---- Cat name -> forms + wiki popup ---------------------------------- */
 /* A cat name in a track cell: plain text that opens the popup on click. */
@@ -2120,15 +2354,6 @@ table.track th.guaranteed-col, table.track td.guaranteed-col {
   cursor: pointer;
 }
 .catinfo:hover { color: var(--accent); filter: none; }
-
-/* Collection: a third stitched segment of the own-chip, matching the star. */
-.own-chip .catinfo {
-  display: flex;
-  align-items: center;
-  border-left: 1px solid var(--line);
-  border-radius: 0;
-  padding: 0.25rem 0.55rem;
-}
 
 .cat-popup {
   border: 1px solid var(--line);
@@ -2212,6 +2437,14 @@ table.track th.guaranteed-col, table.track td.guaranteed-col {
 .cat-chip.target { border-color: var(--warn); color: var(--warn); }
 .cat-chip.immune { color: var(--muted); }
 .cat-stats-note { margin: 0.55rem 0 0; font-size: 0.7rem; color: var(--muted); }
+.cat-popup-banners { margin: 0 0 0.6rem; }
+.cat-popup-banners ul {
+  max-height: 7.5rem;
+  overflow-y: auto;
+  margin: 0.2rem 0 0;
+  padding-left: 1.1rem;
+  font-size: 0.8rem;
+}
 .cat-popup-links { display: flex; flex-wrap: wrap; gap: 0.15rem 0.9rem; font-weight: 600; }
 
 /* ---- Outbound links to community tools -------------------------------- */
@@ -2448,6 +2681,19 @@ table.track th.guaranteed-col, table.track td.guaranteed-col {
   color: var(--muted);
 }
 .seek-add:hover { color: var(--ink); border-color: var(--accent); filter: none; }
+/* Softened like the rest of the site: rounder panels and banner bars (the selected bar
+   tinted gold rather than outlined), pill pick boxes, search and buttons. */
+.seek-panel, .seek-picker, .seek-match, .combo-list { border-radius: 12px; }
+.seek-run { border-left-width: 1px; border-radius: 10px; }
+.seek-run.selected {
+  outline: 0;
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 12%, var(--panel));
+}
+.seek-panel .search-wrap input[type="search"], .pick-search { border-radius: 999px; padding-inline: 1rem; }
+.roll-trigger { border-radius: 999px; padding-inline: 1rem; }
+.combo-row { border-radius: 8px; }
+.seek-actions button { border-radius: 999px; padding-inline: 1.1rem; }
 .seek-progress { margin-top: 1.2rem; max-width: 26rem; }
 .seek-progress progress { width: 100%; accent-color: var(--accent); }
 .seek-results { margin-top: 1.2rem; display: grid; gap: 0.8rem; max-width: 34rem; }
@@ -2473,13 +2719,28 @@ table.track th.guaranteed-col, table.track td.guaranteed-col {
   gap: 0.35rem 0.9rem;
   align-items: center;
 }
+/* Each machine a pill switch: gold while its columns are on the table. The checkbox
+   stays in the label (it's what app.js reads), just out of sight. */
+.normal-machines { gap: 0.4rem; }
 .machine-toggle {
+  position: relative;
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
+  padding: 0.25rem 0.85rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--bg-2);
+  color: var(--muted);
+  font-size: 0.85rem;
+  font-weight: 600;
   white-space: nowrap;
   cursor: pointer;
 }
+.machine-toggle input { position: absolute; opacity: 0; pointer-events: none; }
+.machine-toggle:hover { color: var(--ink); border-color: var(--accent); }
+.machine-toggle:has(input:checked) { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.machine-toggle:has(input:focus-visible) { outline: 2px solid var(--accent); outline-offset: 2px; }
 
 .normal-track .item[data-pool="2"] { color: var(--r-super); }
 .normal-track .item[data-pool="3"] { color: var(--r-legend); }
@@ -2577,18 +2838,17 @@ table.track th.guaranteed-col, table.track td.guaranteed-col {
 /* ---- Motion: small and quick, never on a theme switch - and none at all for anyone
    who asks for less ---- */
 .theme-switching *, .theme-switching *::before, .theme-switching *::after { transition: none !important; }
-/* Banners, the table legend and the filter panel slide open and shut (a browser without
+/* Banners and the table legend slide open and shut (a browser without
    ::details-content just snaps). The picker's big groups and the plan rows snap on purpose:
    sliding them would re-lay out hundreds of rows a frame. Panels with a search dropdown
    stay out too - the slide clips its overflow. */
 :root { interpolate-size: allow-keywords; }
-.banner-group::details-content, .track-guide::details-content, .facet-panel::details-content {
+.banner-group::details-content, .track-guide::details-content {
   block-size: 0;
   overflow-y: clip;
   transition: block-size 0.15s ease-out, content-visibility 0.15s allow-discrete;
 }
-.banner-group[open]::details-content, .track-guide[open]::details-content,
-.facet-panel[open]::details-content { block-size: auto; }
+.banner-group[open]::details-content, .track-guide[open]::details-content { block-size: auto; }
 /* Closing drops [open] at once, so the closed summary's negative margin snapped in and
    pulled the still-sliding cats up over the bar: ease it with the slide, bar on top. */
 @supports selector(::details-content) {

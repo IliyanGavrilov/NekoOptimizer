@@ -67,27 +67,41 @@ they sit under their own grind's table.{% endcomment %}
                   title="{% if cat.maxed %}{% translate "Untick everything on this cat" %}{% else %}{% translate "Tick every evolution and talent this cat has" %}{% endif %}">{% if cat.maxed %}{% translate "Clear" %}{% else %}{% translate "Max out" %}{% endif %}</button>
           <button type="button" class="res-remove" data-unit="{{ cat.unit.unit_id }}" title="{% blocktranslate with name=cat.unit.name %}Take {{ name }} off the list{% endblocktranslate %}" aria-label="{% blocktranslate with name=cat.unit.name %}Remove {{ name }}{% endblocktranslate %}">&times;</button>
         </header>
-        {% for form in cat.forms %}
-          <label class="res-pick{% if form.checked %} on{% endif %}">
-            <input type="checkbox" data-unit="{{ cat.unit.unit_id }}" data-kind="form" data-value="{{ form.key }}"{% if form.checked %} checked{% endif %}>
-            <span class="res-pick-label">{% translate form.label %}</span>
-            <span class="res-pick-cost">
-              {% for item in form.cost %}{% include "planner/_res_item.html" %}{% endfor %}
-              {% if form.xp %}<span class="res-counter">{{ form.xp|intcomma }} XP</span>{% endif %}
-            </span>
-          </label>
-        {% endfor %}
-        {% if cat.slots %}
-          <div class="res-talents" role="group" aria-label="{% blocktranslate with name=cat.unit.name %}{{ name }} talents{% endblocktranslate %}">
-            {% for slot in cat.slots %}
-              <label class="res-talent{% if slot.checked %} on{% endif %}{% if slot.ultra %} ultra{% endif %}" title="{{ slot.title }}">
-                <input type="checkbox" data-unit="{{ cat.unit.unit_id }}" data-kind="slot" data-value="{{ slot.index }}"{% if slot.checked %} checked{% endif %}>
-                <span class="res-talent-name">{{ slot.label }}</span>
-                <span class="res-talent-np">{% blocktranslate with max=slot.max np=slot.np %}Lv {{ max }} &middot; {{ np }} NP{% endblocktranslate %}</span>
+        {% if cat.forms %}
+          <div class="res-group">
+            <span class="pop-label">{% translate "Evolutions" %}</span>
+            {% for form in cat.forms %}
+              <label class="res-row{% if form.checked %} on{% endif %}">
+                <span class="res-row-name">{% translate form.label %}</span>
+                <input type="checkbox" class="switch" data-unit="{{ cat.unit.unit_id }}" data-kind="form" data-value="{{ form.key }}"{% if form.checked %} checked{% endif %}>
+                <span class="res-row-cost">
+                  {% for item in form.cost %}{% include "planner/_res_item.html" %}{% endfor %}
+                  {% if form.xp %}<span class="res-counter">{{ form.xp|intcomma }} XP</span>{% endif %}
+                </span>
               </label>
             {% endfor %}
           </div>
         {% endif %}
+        {% for label, slots in cat.talent_groups %}
+          <div class="res-group">
+            <span class="pop-label">{% translate label %}</span>
+            {% for slot in slots %}
+              <label class="res-row{% if slot.checked %} on{% endif %}" title="{{ slot.title }}">
+                <span class="res-row-name">{{ slot.label }}</span>
+                {% if slot.max > 1 %}
+                  <input type="range" class="res-level" min="0" max="{{ slot.max }}" value="{{ slot.level }}" data-steps="{{ slot.steps }}"
+                         data-unit="{{ cat.unit.unit_id }}" data-kind="slot" data-value="{{ slot.index }}">
+                {% else %}
+                  <input type="checkbox" class="switch" value="1" data-unit="{{ cat.unit.unit_id }}" data-kind="slot" data-value="{{ slot.index }}"{% if slot.checked %} checked{% endif %}>
+                {% endif %}
+                <span class="res-row-cost">
+                  <span class="res-lv"><output>{{ slot.level }}</output>/{{ slot.max }}</span>
+                  <span class="res-counter"><output>{{ slot.np|intcomma }}</output> / {{ slot.full_np|intcomma }} NP</span>
+                </span>
+              </label>
+            {% endfor %}
+          </div>
+        {% endfor %}
       </article>
     {% empty %}
       <p class="muted res-empty">{% blocktranslate trimmed %}No cats yet. Search above and the cat&rsquo;s evolutions and
@@ -124,7 +138,7 @@ they sit under their own grind's table.{% endcomment %}
           <div class="res-pick{% if part.on %} on{% else %} off{% endif %}">
             {% if part.addon %}
               <label class="res-pick-label res-addon">
-                <input type="checkbox" data-unit="{{ dev.id }}" data-part="{{ part.key }}" data-addon="1"{% if part.on %} checked{% endif %}>
+                <input type="checkbox" class="switch" data-unit="{{ dev.id }}" data-part="{{ part.key }}" data-addon="1"{% if part.on %} checked{% endif %}>
                 {% translate part.label %}
               </label>
             {% else %}

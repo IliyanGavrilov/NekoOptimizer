@@ -4,17 +4,19 @@ from neko.gamedata import load_cannons, load_evolve, load_talents
 from planner.models import CannonPlan, Profile, TalentPlan, Unit, UnitPlan
 from planner.services import (
     EVOLVE_FAMILIES,
+    cat_options,
     part_cost,
     plannable_form,
     resources_board,
     talent_label,
-    talent_np,
+    talent_np_steps,
 )
 
 # Stable committed-data anchors: unit 16 has a True Form cost only, unit 59 has both
 # True and Ultra Form costs, unit 9 has talents. Cannon 0 (Enhance Base) has no
 # foundation/style parts; cannon 1 is the Slow Beam.
 _TF_ONLY, _TF_AND_UF, _TALENTED = 16, 59, 9
+_NOTHING_TO_GRIND = 0  # the basic Cat: no catfruit evolution, no talents
 _BASE_CANNON, _SLOW_BEAM = 0, 1
 
 
@@ -37,12 +39,12 @@ def test_talent_label_falls_back_to_the_first_line_without_markup():
     )
 
 
-def test_talent_np_sums_the_curve_up_to_max_level():
-    assert talent_np({"curve": 1, "max": 3}, {"1": [25, 5, 5, 5]}) == 35
+def test_talent_np_steps_run_the_curve_up_to_max_level():
+    assert talent_np_steps({"curve": 1, "max": 3}, {"1": [25, 5, 5, 5]}) == [0, 25, 30, 35]
 
 
-def test_talent_np_without_a_curve_is_free():
-    assert talent_np({"curve": 99, "max": 10}, {"1": [25]}) == 0
+def test_talent_np_steps_without_a_curve_are_free():
+    assert talent_np_steps({"curve": 99, "max": 2}, {"1": [25]}) == [0, 0, 0]
 
 
 def test_plannable_form_drops_costless_and_missing_forms():
@@ -96,8 +98,63 @@ def test_removing_a_cat_drops_its_talents_too(client, profile):
 @pytest.mark.django_db
 def test_cat_toggle_rejects_a_slot_the_unit_lacks(client):
     unit = _unit(_TALENTED)
-    response = client.post("/resources/cat/", {"unit_id": unit.unit_id, "slot": "99", "on": "1"})
+    response = client.post("/resources/cat/", {"unit_id": unit.unit_id, "slot": "99", "level": "1"})
     assert response.status_code == 400 and not TalentPlan.objects.exists()
+
+
+def _leveled_slot():
+    """The index and max of the talented unit's first slot with more than one level."""
+    slots = load_talents()["units"][str(_TALENTED)]
+    return next((index, slot["max"]) for index, slot in enumerate(slots) if slot["max"] > 1)
+
+
+@pytest.mark.django_db
+def test_setting_a_talent_level_plans_that_level(client):
+    unit = _unit(_TALENTED)
+    slot, _ = _leveled_slot()
+    client.post("/resources/cat/", {"unit_id": unit.unit_id, "slot": slot, "level": "1"})
+    client.post("/resources/cat/", {"unit_id": unit.unit_id, "slot": slot, "level": "2"})
+    assert list(TalentPlan.objects.values_list("slot", "level")) == [(slot, 2)]
+
+
+@pytest.mark.django_db
+def test_a_talent_level_of_zero_drops_the_talent(client, profile):
+    unit = _unit(_TALENTED)
+    slot, _ = _leveled_slot()
+    TalentPlan.objects.create(profile=profile, unit=unit, slot=slot, level=2)
+    client.post("/resources/cat/", {"unit_id": unit.unit_id, "slot": slot, "level": "0"})
+    assert not TalentPlan.objects.exists()
+
+
+@pytest.mark.django_db
+def test_cat_toggle_rejects_a_level_past_the_talents_max(client):
+    unit = _unit(_TALENTED)
+    slot, top = _leveled_slot()
+    response = client.post(
+        "/resources/cat/", {"unit_id": unit.unit_id, "slot": slot, "level": top + 1}
+    )
+    assert response.status_code == 400 and not TalentPlan.objects.exists()
+
+
+@pytest.mark.django_db
+def test_a_talent_costs_the_np_up_to_its_target_level(profile):
+    unit = _unit(_TALENTED)
+    UnitPlan.objects.create(profile=profile, unit=unit)
+    slot, _ = _leveled_slot()
+    TalentPlan.objects.create(profile=profile, unit=unit, slot=slot, level=2)
+    talents = load_talents()
+    steps = talent_np_steps(talents["units"][str(_TALENTED)][slot], talents["curves"])
+    card = _card(profile, _TALENTED)
+    assert card["np"] == steps[2] and not card["maxed"]
+
+
+@pytest.mark.django_db
+def test_a_talent_planned_before_levels_wants_its_max(profile):
+    unit = _unit(_TALENTED)
+    UnitPlan.objects.create(profile=profile, unit=unit)
+    slot, top = _leveled_slot()
+    TalentPlan.objects.create(profile=profile, unit=unit, slot=slot)
+    assert _card(profile, _TALENTED)["slots"][slot]["level"] == top
 
 
 @pytest.mark.django_db
@@ -269,3 +326,13 @@ def test_the_board_shows_only_the_visitors_own_plans(profile):
 @pytest.mark.django_db
 def test_a_first_visit_sees_an_empty_board():
     assert resources_board(Profile())["cats"] == []
+
+
+@pytest.mark.django_db
+def test_the_cat_picker_offers_a_cat_with_nothing_to_grind_as_such():
+    _unit(_TALENTED)
+    _unit(_NOTHING_TO_GRIND)
+    assert {option["id"]: option["grind"] for option in cat_options()} == {
+        _TALENTED: True,
+        _NOTHING_TO_GRIND: False,
+    }

@@ -52,16 +52,16 @@
   <header class="site-header">
     <div class="bar">
       <a class="brand" href="{% url 'planner' %}">🐾 Neko Optimizer</a>
-      <nav>
-        <a href="{% url 'planner' %}">{% translate "Planner" %}</a>
-        <a href="{% url 'normal_capsules' %}">{% translate "Normal Capsules" %}</a>
-        <a href="{% url 'collection' %}">{% translate "Collection" %}</a>
-        <a href="{% url 'resources' %}">{% translate "Resources" %}</a>
-        <a href="{% url 'tier_list' %}">{% translate "Tier List" %}</a>
-        <a href="{% url 'seed_finder' %}">{% translate "Seed Finder" %}</a>
-        <a href="{% url 'guides' %}">{% translate "Guides" %}</a>
-        <a href="{% url 'about' %}">{% translate "About" %}</a>
-      </nav>
+      {% with page=request.resolver_match.url_name %}<nav>
+        <a href="{% url 'planner' %}"{% if page == "planner" %} aria-current="page"{% endif %}>{% translate "Planner" %}</a>
+        <a href="{% url 'normal_capsules' %}"{% if page == "normal_capsules" %} aria-current="page"{% endif %}>{% translate "Normal Capsules" %}</a>
+        <a href="{% url 'collection' %}"{% if page == "collection" %} aria-current="page"{% endif %}>{% translate "Collection" %}</a>
+        <a href="{% url 'resources' %}"{% if page == "resources" %} aria-current="page"{% endif %}>{% translate "Resources" %}</a>
+        <a href="{% url 'tier_list' %}"{% if page == "tier_list" or page == "tier_list_page" %} aria-current="page"{% endif %}>{% translate "Tier List" %}</a>
+        <a href="{% url 'seed_finder' %}"{% if page == "seed_finder" %} aria-current="page"{% endif %}>{% translate "Seed Finder" %}</a>
+        <a href="{% url 'guides' %}"{% if page == "guides" or page == "guide" %} aria-current="page"{% endif %}>{% translate "Guides" %}</a>
+        <a href="{% url 'about' %}"{% if page == "about" %} aria-current="page"{% endif %}>{% translate "About" %}</a>
+      </nav>{% endwith %}
       {# Brand left, nav centred; at the right edge one menu holds the version, language and #}
       {# theme, and the account sits beside it. #}
       <div class="header-tools">
@@ -176,6 +176,10 @@
       <div class="cat-stats-grid"></div>
       <div class="cat-popup-chips"></div>
       <p class="cat-stats-note"></p>
+    </div>
+    <div class="cat-popup-banners" hidden>
+      <span class="pop-label">{% translate "On banners" %}</span>
+      <ul></ul>
     </div>
     <div class="cat-popup-links"></div>
   </dialog>

@@ -792,6 +792,17 @@ def test_unit_info_falls_back_to_the_name_when_the_opener_carries_no_id(client):
 
 
 @pytest.mark.django_db
+def test_unit_info_lists_the_banners_a_cat_drops_from_newest_first(client):
+    cat = cat_with_unit("Bahamut")
+    cat.banners.add(
+        Banner.objects.create(name="Epicfest", start="2026-06-01"),
+        Banner.objects.create(name="Uberfest", start="2026-09-01"),
+    )
+    info = client.get("/unit/info/", {"uid": cat.unit.unit_id}).json()
+    assert info["banners"] == ["Uberfest", "Epicfest"]
+
+
+@pytest.mark.django_db
 def test_unit_forms_maps_every_unit_in_one_payload(client):
     Unit.objects.create(unit_id=25, name="Bahamut", forms=["Bahamut", "Aqua Bahamut"])
     Unit.objects.create(unit_id=44, name="Kasa Jizo", forms=["Kasa Jizo"])

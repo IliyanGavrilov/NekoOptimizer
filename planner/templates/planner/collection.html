@@ -2,41 +2,48 @@
 {% load i18n static %}
 
 {% block content %}
-  <h1>{% translate "Collection" %}</h1>
+  <div class="collection-head">
+    <h1>{% translate "Collection" %}</h1>
+    <span id="collectionTotal" class="collection-total" aria-live="polite"></span>
+    <span class="owned-bar" aria-hidden="true"><i id="collectionBar"></i></span>
+    <span class="head-tools">
+      {% include "planner/_display_menu.html" with display_id="collectionDisplay" form_id="collectionForm" %}
+      <details class="header-menu">
+        <summary class="pick-btn"><svg class="btn-icon" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 3 4 7l4 4"/><path d="M4 7h16"/><path d="m16 21 4-4-4-4"/><path d="M20 17H4"/></svg> {% translate "Import / export" %} <span class="chevron" aria-hidden="true">&#9662;</span></summary>
+        <div class="header-pop tool-pop">
+          <span class="pop-label">{% translate "From the game" %}</span>
+          <button type="button" class="io-btn" id="guideImport" data-url="{% url 'collection_guide_import' %}" data-wasm-url="{% static 'planner/neko.wasm' %}">{% translate "From Cat Guide" %}</button>
+          <input type="file" id="guideImportFiles" accept="image/*" multiple hidden>
+          <span class="muted">{% translate "Screenshot every page of the in-game Cat Guide (filter off, first page to last) and pick them all: the cats you have get marked owned, the gray ? ones unmarked" %}</span>
+          <span class="pop-label">{% translate "Backup" %}</span>
+          <span class="tool-pop-row">
+            <a class="io-btn" href="{% url 'collection_export' %}" rel="nofollow" download>{% translate "Export" %}</a>
+            <button type="button" class="io-btn" id="collectionImport">{% translate "Import" %}</button>
+          </span>
+          <input type="file" id="collectionImportFile" accept="application/json,.json" hidden>
+          <span class="pop-label">{% translate "New cats" %}</span>
+          <label class="ctrl" title="{% translate "Star every new gacha cat for you as soon as it's added to the game" %}"><input type="checkbox" id="autoWishlist" data-url="{% url 'collection_auto_wishlist' %}"{% if request.profile.auto_wishlist %} checked{% endif %}> {% translate "Wishlist new cats" %}</label>
+        </div>
+      </details>
+    </span>
+  </div>
   <p class="muted">{% blocktranslate trimmed %}Every cat in the game. Click one to mark it <strong>owned</strong>; tap the star to add it to your <strong>wishlist</strong>. Saved instantly.{% endblocktranslate %}</p>
 
   <input type="hidden" id="csrfToken" value="{{ csrf_token }}">
-  <div class="collection-controls">
-    <div class="view-toggle" id="collectionViews" role="tablist">
-      <button type="button" class="view-btn is-active" data-view="dictionary" aria-selected="true" title="{% translate "The in-game Cat Guide arrangement" %}">{% translate "Dictionary" %}</button>
-      <button type="button" class="view-btn" data-view="rarity" aria-selected="false">{% translate "By rarity" %}</button>
-      <button type="button" class="view-btn" data-view="sets" aria-selected="false">{% translate "By gacha set" %}</button>
-      <button type="button" class="view-btn" data-view="alpha" aria-selected="false" title="{% translate "Every cat in alphabetical order of the form shown" %}">{% translate "A–Z" %}</button>
-    </div>
+  <div class="cat-toolbar">
     <input type="search" id="collectionSearch" placeholder="{% translate "Search cats & sets…" %}">
-    <label class="ctrl" title="{% translate "Show each cat as its name, its form icon, or both" %}"><select id="collectionDisplay">
-        <option value="text">{% translate "Names" %}</option>
-        <option value="icons">{% translate "Icons" %}</option>
-        <option value="both">{% translate "Both" %}</option>
-      </select></label>
-    <label class="ctrl" title="{% translate "Show each cat as this form - name and icon; a unit without that form shows the last one it has" %}"><select id="collectionForm">
-        <option value="0">{% translate "Base" %}</option>
-        <option value="1">{% translate "Evolved" %}</option>
-        <option value="2">{% translate "True" %}</option>
-        <option value="3">{% translate "Ultra" %}</option>
-      </select></label>
-    <label class="ctrl" title="{% translate "Star every new gacha cat for you as soon as it's added to the game" %}"><input type="checkbox" id="autoWishlist" data-url="{% url 'collection_auto_wishlist' %}"{% if request.profile.auto_wishlist %} checked{% endif %}> {% translate "Wishlist new cats" %}</label>
-    <span id="collectionTotal" class="collection-total" aria-live="polite"></span>
-    <span class="collection-io">
-      <a class="io-btn" href="{% url 'collection_export' %}" rel="nofollow" download>{% translate "Export" %}</a>
-      <button type="button" class="io-btn" id="collectionImport">{% translate "Import" %}</button>
-      <input type="file" id="collectionImportFile" accept="application/json,.json" hidden>
-      <button type="button" class="io-btn" id="guideImport" data-url="{% url 'collection_guide_import' %}" data-wasm-url="{% static 'planner/neko.wasm' %}" title="{% translate "Screenshot every page of the in-game Cat Guide (filter off, first page to last) and pick them all: the cats you have get marked owned, the gray ? ones unmarked" %}">{% translate "From Cat Guide" %}</button>
-      <input type="file" id="guideImportFiles" accept="image/*" multiple hidden>
-    </span>
+    <details class="header-menu pick-menu view-menu">
+      <summary class="pick-btn">{% translate "View" %} <b></b> <span class="chevron" aria-hidden="true">&#9662;</span></summary>
+      <div class="header-pop pick-pop" id="collectionViews" role="tablist">
+        <button type="button" class="view-btn is-active" data-view="dictionary" aria-selected="true" title="{% translate "The in-game Cat Guide arrangement" %}">{% translate "Dictionary" %}</button>
+        <button type="button" class="view-btn" data-view="rarity" aria-selected="false">{% translate "By rarity" %}</button>
+        <button type="button" class="view-btn" data-view="sets" aria-selected="false">{% translate "By gacha set" %}</button>
+        <button type="button" class="view-btn" data-view="alpha" aria-selected="false" title="{% translate "Every cat in alphabetical order of the form shown" %}">{% translate "A–Z" %}</button>
+      </div>
+    </details>
+    {% include "planner/_cat_filters.html" %}
   </div>
   <p id="collectionIoMsg" class="io-msg" role="status" aria-live="polite" hidden></p>
-  {% include "planner/_cat_filters.html" %}
 
   <div class="cat-browser" id="collectionBrowser"
        data-toggle-url="{% url 'collection_toggle' %}" data-bulk-url="{% url 'collection_bulk' %}"

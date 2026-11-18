@@ -26,12 +26,7 @@
           </optgroup>
         {% endfor %}
       </select></label>
-    <label class="ctrl" title="{% translate "Show each cat as this form - name and icon; a unit without that form shows the last one it has" %}"><select id="tierForm">
-        <option value="0">{% translate "Base" %}</option>
-        <option value="1">{% translate "Evolved" %}</option>
-        <option value="2">{% translate "True" %}</option>
-        <option value="3">{% translate "Ultra" %}</option>
-      </select></label>
+    {% include "planner/_display_menu.html" with form_id="tierForm" %}
   </div>
 
   <div class="tier-table">

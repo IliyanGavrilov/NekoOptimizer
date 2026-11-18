@@ -1405,7 +1405,8 @@ function catFilters(onChange) {
       .map((b) => ({ group: b.closest(".facet-filter").dataset.group, value: b.dataset.value }));
     if (comboSel.value) picks.push({ group: "c", value: Number(comboSel.value) });
     const mode = modeBtns.find((b) => b.classList.contains("is-active")).dataset.mode;
-    facetCount.textContent = picks.length ? `(${picks.length} active)` : "";
+    facetCount.textContent = picks.length || "";
+    facetPanel.classList.toggle("is-set", picks.length > 0);
     const test = (f, p) => (p.group === "k" ? !!f[p.value] : (f[p.group] || []).includes(p.value));
     const facetHit = (f) =>
       !picks.length || (!!f && (mode === "and" ? picks.every((p) => test(f, p)) : picks.some((p) => test(f, p))));
@@ -1415,7 +1416,13 @@ function catFilters(onChange) {
       // planner reads the wishlist (owned cats are never on it).
       keeps: (uid, catRarity, owned, wanted) =>
         (!rarity || catRarity === rarity) &&
-        (status === "owned" ? owned : status === "wishlist" ? wanted && !owned : true) &&
+        (status === "owned"
+          ? owned
+          : status === "missing"
+            ? !owned
+            : status === "wishlist"
+              ? wanted && !owned
+              : true) &&
         facetHit(facetData[uid]),
     };
   };
@@ -1543,6 +1550,7 @@ if (collectionBrowser) {
       }, true);
     }
     const owned = rarityChips.filter((c) => c.classList.contains("owned")).length;
+    document.getElementById("collectionBar").style.width = `${(100 * owned) / (rarityChips.length || 1)}%`;
     const wished = rarityChips.filter((c) => c.classList.contains("wanted") && !c.classList.contains("owned")).length;
     const total = interpolate(gettext("%(owned)s / %(total)s owned"), { owned, total: rarityChips.length }, true);
     totalEl.textContent = wished
@@ -1920,6 +1928,25 @@ document.addEventListener("keydown", (e) => {
   if (e.key === "Escape") for (const menu of headerMenus) menu.open = false;
 });
 
+// ---- Pick menus (view, ownership, rarity): the button names the current choice ----
+// Picking closes the menu. A filter set to anything but "All" turns its button accent;
+// the view menu never does, since every view shows every cat.
+const syncPick = (menu) => {
+  const options = [...menu.querySelectorAll(".header-pop button")];
+  const chosen =
+    options.find((b) => b.getAttribute("aria-pressed") === "true" || b.classList.contains("is-active")) ||
+    options[0];
+  menu.querySelector("summary b").textContent = chosen.textContent;
+  menu.classList.toggle("is-set", chosen !== options[0] && !menu.classList.contains("view-menu"));
+};
+document.querySelectorAll(".pick-menu").forEach(syncPick);
+document.addEventListener("click", (e) => {
+  const menu = e.target.closest(".pick-menu");
+  if (!menu || !e.target.closest(".header-pop button")) return;
+  syncPick(menu);
+  menu.open = false;
+});
+
 // ---- Avatar picker: every cat A-Z, filtered; pick one of its forms -----------
 // The search matches any form's name, on top of the Collection's filters. The matches
 // render a batch at a time, the next once you scroll near the end. Each form is a
@@ -1992,6 +2019,7 @@ if (catPopup) {
   const gridEl = catPopup.querySelector(".cat-stats-grid");
   const chipsEl = catPopup.querySelector(".cat-popup-chips");
   const noteEl = catPopup.querySelector(".cat-stats-note");
+  const bannersEl = catPopup.querySelector(".cat-popup-banners");
   // Keyed by catalogue id where the opener carries one: two units can share a name
   // (the Special and the Rare Cat Bros), and a name lookup always lands on the same one.
   const cache = new Map(); // "#id" or name -> Promise<info | null>
@@ -2093,6 +2121,15 @@ if (catPopup) {
         return a;
       }),
     );
+    const banners = info.banners || [];
+    bannersEl.hidden = !banners.length;
+    bannersEl.querySelector("ul").replaceChildren(
+      ...banners.map((name) => {
+        const li = document.createElement("li");
+        li.textContent = name;
+        return li;
+      }),
+    );
     formsEl.replaceChildren();
     (info.forms || []).forEach((form, i) => {
       const fig = document.createElement("figure");
@@ -2186,8 +2223,12 @@ if (resBoard) {
     const list = box.querySelector(".res-matches");
     const planned = new Set(box.dataset.planned.split(",").filter(Boolean));
     const form = Number(formSel.value);
+    // Cats with something to grind come first; the rest trail, greyed out.
     const hits = query
-      ? cats.filter((option) => option.search.includes(query)).slice(0, MAX_MATCHES)
+      ? cats
+          .filter((option) => option.search.includes(query))
+          .sort((a, b) => b.grind - a.grind)
+          .slice(0, MAX_MATCHES)
       : [];
     list.replaceChildren(
       ...hits.map((option) => {
@@ -2196,7 +2237,10 @@ if (resBoard) {
         chip.className = "chip res-match";
         chip.dataset.id = option.id;
         chip.textContent = option.forms[Math.min(form, option.forms.length - 1)] || option.name;
-        if (planned.has(String(option.id))) {
+        if (!option.grind) {
+          chip.disabled = true;
+          chip.title = gettext("Nothing to grind: this cat has no catfruit evolution or talents");
+        } else if (planned.has(String(option.id))) {
           chip.classList.add("on");
           chip.title = gettext("Already on your list");
         }
@@ -2209,10 +2253,15 @@ if (resBoard) {
 
   // The board re-renders on every change, so the picker you were typing in is replaced
   // under you - carry the query across and re-run it, and keep the focus where it was,
-  // so adding several cats in a row is one search and a few clicks.
+  // so adding several cats in a row is one search and a few clicks. A switch or level
+  // slider keeps its focus too, so the arrow keys can carry on from it.
   const post = async (url, data) => {
     const query = picker().querySelector(".res-search").value;
     const searching = !!document.activeElement.closest(".res-picker");
+    const control = document.activeElement.closest("[data-kind][data-value]");
+    const refocus =
+      control &&
+      `[data-unit="${control.dataset.unit}"][data-kind="${control.dataset.kind}"][data-value="${control.dataset.value}"]`;
     const resp = await fetch(url, {
       method: "POST",
       headers: { "X-CSRFToken": token },
@@ -2225,10 +2274,23 @@ if (resBoard) {
     search.value = query;
     showMatches();
     if (searching) search.focus();
+    else if (refocus) resBoard.querySelector(refocus)?.focus();
   };
+
+  // A talent's slider shows the level and its NP as it moves; the save waits for the
+  // slider to settle, so holding an arrow key down is one save, not one per level.
+  const showLevel = (slider) => {
+    const level = Number(slider.value);
+    const [lv, np] = slider.closest(".res-row").querySelectorAll("output");
+    lv.textContent = level;
+    np.textContent = Number(slider.dataset.steps.split(",")[level]).toLocaleString("en-US");
+    slider.closest(".res-row").classList.toggle("on", level > 0);
+  };
+  let levelSave;
 
   resBoard.addEventListener("input", (e) => {
     if (e.target.closest(".res-search")) showMatches();
+    if (e.target.matches(".res-level")) showLevel(e.target);
   });
 
   resBoard.addEventListener("change", (e) => {
@@ -2242,14 +2304,26 @@ if (resBoard) {
       });
       return;
     }
-    const box = e.target.closest("input[type=checkbox]");
-    if (box) {
-      post(resBoard.dataset.catUrl, {
-        unit_id: box.dataset.unit,
-        [box.dataset.kind]: box.dataset.value,
-        on: box.checked ? "1" : "0",
-      });
+    const slider = e.target.closest(".res-level");
+    if (slider) {
+      clearTimeout(levelSave);
+      levelSave = setTimeout(() => {
+        post(resBoard.dataset.catUrl, {
+          unit_id: slider.dataset.unit,
+          slot: slider.dataset.value,
+          level: slider.value,
+        });
+      }, 250);
+      return;
     }
+    const box = e.target.closest("input.switch");
+    if (!box) return;
+    const on = box.checked ? "1" : "0";
+    post(resBoard.dataset.catUrl, {
+      unit_id: box.dataset.unit,
+      [box.dataset.kind]: box.dataset.value,
+      ...(box.dataset.kind === "slot" ? { level: on } : { on }),
+    });
   });
 
   resBoard.addEventListener("click", (e) => {

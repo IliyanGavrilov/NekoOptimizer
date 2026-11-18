@@ -1,0 +1,22 @@
+{% load i18n %}{% comment %}The Display drop-down every cat list shares: names / icons / both (when the page passes
+display_id) and which form to show. The selects keep their page's ids, so app.js binds them as before.{% endcomment %}
+<details class="header-menu display-menu">
+  <summary class="pick-btn"><svg class="btn-icon" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0"/><circle cx="12" cy="12" r="3"/></svg> {% translate "Display" %} <span class="chevron" aria-hidden="true">&#9662;</span></summary>
+  <div class="header-pop tool-pop">
+    {% if display_id %}
+      <label class="pop-label" for="{{ display_id }}">{% translate "Show each cat as" %}</label>
+      <select id="{{ display_id }}">
+        <option value="text">{% translate "Names" %}</option>
+        <option value="icons">{% translate "Icons" %}</option>
+        <option value="both">{% translate "Both" %}</option>
+      </select>
+    {% endif %}
+    <label class="pop-label" for="{{ form_id }}">{% translate "Form" %}</label>
+    <select id="{{ form_id }}" title="{% translate "Show each cat as this form - name and icon; a unit without that form shows the last one it has" %}">
+      <option value="0">{% translate "Base" %}</option>
+      <option value="1">{% translate "Evolved" %}</option>
+      <option value="2">{% translate "True" %}</option>
+      <option value="3">{% translate "Ultra" %}</option>
+    </select>
+  </div>
+</details>

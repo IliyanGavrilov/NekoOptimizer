@@ -126,18 +126,8 @@
         <h2 class="results-h">{% translate "Rolls" %}</h2>
         <div class="rolls-controls">
           <label class="ctrl">{% translate "Show" %} <input type="number" id="id_track_length" value="100" min="1" max="999" title="{% translate "How many rolls the table shows (up to 999)" %}"> {% translate "rolls" %}</label>
-          <label class="ctrl" title="{% translate "Show each roll cell as the cat's name, its form icon, or both" %}"><select id="rollDisplay">
-              <option value="text">{% translate "Names" %}</option>
-              <option value="icons">{% translate "Icons" %}</option>
-              <option value="both">{% translate "Both" %}</option>
-            </select></label>
-          <label class="ctrl" title="{% translate "Show each cat as this form - name and icon; a unit without that form shows the last one it has" %}"><select id="rollForm">
-              <option value="0">{% translate "Base" %}</option>
-              <option value="1">{% translate "Evolved" %}</option>
-              <option value="2">{% translate "True" %}</option>
-              <option value="3">{% translate "Ultra" %}</option>
-            </select></label>
-          <label class="ctrl" title="{% translate "Reveal each cell's rarity and slot seed, for cross-checking against godfat" %}"><input type="checkbox" id="detailsToggle"> {% translate "Details" %}</label>
+          {% include "planner/_display_menu.html" with form_id="rollForm" display_id="rollDisplay" %}
+          <label class="ctrl" title="{% translate "Reveal each cell's rarity and slot seed, for cross-checking against godfat" %}"><input type="checkbox" class="switch" id="detailsToggle"> {% translate "Details" %}</label>
           <label class="ctrl" title="{% translate "Force a guaranteed multi of this size onto every banner, to preview the uber each cell's guaranteed draw would give" %}">{% translate "Guaranteed" %}
             <select id="simGuaranteed">
               <option value="">{% translate "None" %}</option>

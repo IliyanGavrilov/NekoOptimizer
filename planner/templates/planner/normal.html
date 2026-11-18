@@ -121,7 +121,7 @@
             </optgroup>
           </select>
         </label>
-        <label class="opt" title="{% translate "Which tickets pay for the pulls that only walk the track on to the next target" %}">{% translate "Pulls in between" %}
+        <label class="opt" title="{% translate "Which tickets pay for the pulls that only move you on to the next target" %}">{% translate "Pulls in between" %}
           <select id="normalMoves">
             <option value="lucky">{% translate "Lucky Tickets first" %}</option>
             <option value="normal">{% translate "Normal Cat Tickets first" %}</option>
@@ -144,17 +144,7 @@
       <h2 class="results-h">{% translate "Rolls" %}</h2>
       <div class="rolls-controls">
         <label class="ctrl">{% translate "Show" %} <input type="number" id="normalCount" value="100" min="1" max="999" title="{% translate "How many rolls the table shows (up to 999)" %}"> {% translate "rolls" %}</label>
-        <label class="ctrl" title="{% translate "Show each cat as its name, its form icon, or both" %}"><select id="normalDisplay">
-            <option value="text">{% translate "Names" %}</option>
-            <option value="icons">{% translate "Icons" %}</option>
-            <option value="both">{% translate "Both" %}</option>
-          </select></label>
-        <label class="ctrl" title="{% translate "Show each cat as this form - name and icon; a unit without that form shows the last one it has" %}"><select id="normalRollForm">
-            <option value="0">{% translate "Base" %}</option>
-            <option value="1">{% translate "Evolved" %}</option>
-            <option value="2">{% translate "True" %}</option>
-            <option value="3">{% translate "Ultra" %}</option>
-          </select></label>
+        {% include "planner/_display_menu.html" with form_id="normalRollForm" display_id="normalDisplay" %}
       </div>
     </div>
     {# Shown only while a plan is on screen, like the planner's: back to the plain table. #}

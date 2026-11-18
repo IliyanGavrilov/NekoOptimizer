@@ -301,10 +301,10 @@ fn tracks(
     let mut out = format!(
         "\n<details class=\"track-guide\">\n<summary>{}</summary>\n<ul class=\"symbol-legend\">\n<li><span class=\"sym\">A / B</span> {}</li>\n<li><span class=\"sym dice-sym\">{DICE}</span> {}</li>\n<li><span class=\"arrow sample\">&#8627; {}</span> {}</li>\n<li><span class=\"item sample\" data-pool=\"2\">{}</span> <span class=\"sep\">&middot;</span> <span class=\"item sample\" data-pool=\"3\">{}</span> <span class=\"sep\">&middot;</span> <span class=\"item sample\" data-pool=\"4\">{}</span> {}</li>\n<li><span class=\"item upgrade sample\">{}</span> {}</li>\n<li><span class=\"item dark-catseye sample\">{}</span> {}</li>\n<li><span class=\"entry on-path sample\">{}</span> {} <span class=\"sep\">&middot;</span> <span class=\"entry target sample\"><span class=\"item got\">{}</span></span> {}</li>\n</ul>\n</details>\n",
         t("Legend"),
-        t("alternate timelines; a dupe rerolls and switches track"),
-        t("&ldquo;I rolled this cell&rdquo; &mdash; jumps the seed to just after it"),
+        t("two tracks; a dupe rerolls and switches track"),
+        t("&ldquo;I rolled this&rdquo; &mdash; moves your seed past it"),
         t("if dupe"),
-        t("the reroll branch (its own dice &amp; landing)"),
+        t("what you get instead on a dupe"),
         t("gold"),
         t("red"),
         t("aqua"),

@@ -896,23 +896,23 @@ fn legend(req: &Request) -> String {
     format!(
         "<details class=\"track-guide\">\n<summary>{}</summary>\n<ul class=\"symbol-legend\">\n<li><span class=\"sym\">A / B</span> {}</li>\n<li><span class=\"sym dice-sym\">{DICE}</span> {}</li>\n<li><span class=\"arrow sample\">&#8627; {}</span> {}</li>\n<li><span class=\"entry on-path sample\">{}</span> {}</li>\n<li><span class=\"entry next sample\">{}</span> {}</li>\n<li><span class=\"entry new sample\"><span class=\"catlink\">{}</span></span> {}</li>\n<li><span class=\"entry owned sample\"><span class=\"catlink\"></span></span> {} <span class=\"sep\">&middot;</span> <span class=\"entry wanted sample\"><span class=\"catlink\"><span class=\"catname\">{}</span></span></span> {}</li>\n<li><span class=\"entry target sample\"><span class=\"catlink target\"><span class=\"catname\">{}</span></span></span> {}</li>\n<li><span class=\"debut\">{}</span> {}</li>\n",
         t("Legend"),
-        t("alternate timelines; a dupe rerolls and switches track"),
-        t("&ldquo;I rolled this cell&rdquo; &mdash; jumps the seed to just after it"),
+        t("two tracks; a dupe rerolls and switches track"),
+        t("&ldquo;I rolled this&rdquo; &mdash; moves your seed past it"),
         t("if dupe"),
-        t("the reroll branch (its own dice &amp; landing)"),
+        t("what you get instead on a dupe"),
         t("path"),
-        t("click a cell's name-free space: the rolls up to it light like a plan"),
+        t("click a cell's empty space to light up the pulls to it"),
         t("striped"),
-        t("you land here next &mdash; the first cat one more roll would give after the lit draws"),
+        t("where you are now &mdash; the cat your next pull gives (past any lit pulls)"),
         t("green name"),
-        t("Uber/Legend not in your collection"),
+        t("Uber/Legend you don't own"),
         t("owned"),
         t("cat"),
         t("wishlisted"),
         t("cat"),
-        t("a target you picked &mdash; gold here, and its next spot shows in <em>Targets</em> above"),
+        t("a cat you're searching for &mdash; its next spot is listed under <em>Targets</em> above"),
         t("new"),
-        t("Uber debuting with this banner (its first event anywhere)"),
+        t("Uber's first-ever banner"),
     )
 }
 
@@ -1053,7 +1053,7 @@ pub(crate) fn table(
             out,
             "<li><span class=\"entry new sample\"><span class=\"catlink future\">{}</span></span> {}</li>",
             req.tr("Future Uber %(n)s", &[("n", "1")]),
-            req.t("an expected-but-unreleased Uber padding the pool")
+            req.t("a stand-in for an Uber that isn't out yet")
         );
     }
     if has_guaranteed {
@@ -1081,7 +1081,7 @@ pub(crate) fn table(
             "<li><span class=\"capsule-tag platinum\">{}</span> / <span class=\"capsule-tag legend\">{}</span> {}</li>",
             req.t("platinum"),
             req.t("legend"),
-            req.t("a capsule banner &mdash; its pulls spend that scarce ticket, not rare tickets or catfood")
+            req.t("a capsule banner &mdash; rolls cost its own ticket, not catfood or rare tickets")
         );
     }
     out.push_str("</ul>\n<div class=\"rarity-legend\">\n");
@@ -1139,7 +1139,7 @@ pub(crate) fn table(
                 let _ = write!(
                     legend,
                     " <label class=\"future-ctl\" title=\"{}\">{} <input type=\"number\" class=\"future-ubers\" value=\"{count}\" min=\"0\" max=\"99\" data-names=\"{}\"></label>",
-                    req.t("Pad this banner's uber pool with expected-but-unreleased ubers (godfat's Count of future ubers) - its uber cells land as if those units were already in the pool; drag the box up/down to adjust"),
+                    req.t("How many unreleased ubers will join this banner's pool before you roll. Each one changes which uber its cells give, so match the game."),
                     req.t("Add future ubers"),
                     esc(&json_list(&keys))
                 );

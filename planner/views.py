@@ -8,6 +8,7 @@ from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.views import LoginView, RedirectURLMixin
+from django.db.models import F
 from django.http import Http404, HttpResponse, HttpResponseBadRequest, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.template.loader import get_template, render_to_string
@@ -39,7 +40,7 @@ from planner.forms import (
 from planner.labels import stat_forms
 from planner.links import TOOL_DIRECTORY, unit_links
 from planner.middleware import adopt_guest, owner, region_path, split_region
-from planner.models import CannonPlan, Cat, Seed, TalentPlan, Unit, UnitPlan
+from planner.models import Banner, CannonPlan, Cat, Seed, TalentPlan, Unit, UnitPlan
 from planner.seo import (
     BRAND,
     GUIDES,
@@ -790,6 +791,12 @@ def unit_info(request):
             "links": [asdict(link) for link in unit_links(unit.unit_id, unit.name, unit.rarity)],
             "tier": tier_badges().get(unit.unit_id),
             "stats": stats,
+            "banners": list(
+                Banner.objects.filter(cats__unit=unit)
+                .order_by(F("start").desc(nulls_last=True), "name")
+                .values_list("name", flat=True)
+                .distinct()
+            ),
         }
     )
 
@@ -1471,18 +1478,19 @@ def _plan_unit(request):
 
 
 def _set_talents(profile, unit, slots, on):
-    """Tick or clear every one of a unit's talent slots at once."""
+    """Max out or clear every one of a unit's talent slots at once."""
     profile.talent_plans.filter(unit=unit).delete()
     if on:
         TalentPlan.objects.bulk_create(
-            TalentPlan(profile=profile, unit=unit, slot=index) for index in slots
+            TalentPlan(profile=profile, unit=unit, slot=index, level=slot["max"])
+            for index, slot in enumerate(slots)
         )
 
 
 @require_POST
 def resources_cat(request):
-    """Put a cat on the list, tick one of its evolutions or talents, max it out, or drop
-    it; responds with the whole re-rendered board.
+    """Put a cat on the list, tick one of its evolutions, set a talent's target level,
+    max it out, or drop it; responds with the whole re-rendered board.
 
     A bare unit_id just adds the cat - nothing is ticked for you, since what you want off
     a cat is the whole question the page asks."""
@@ -1505,7 +1513,7 @@ def resources_cat(request):
         plan.tf = on and plannable_form(cost, "tf") is not None
         plan.uf = on and plannable_form(cost, "uf") is not None
         plan.save()
-        _set_talents(profile, unit, range(len(slots)), on)
+        _set_talents(profile, unit, slots, on)
     elif form is not None:
         if form not in {"tf", "uf"}:
             return HttpResponseBadRequest("form must be 'tf' or 'uf'")
@@ -1513,13 +1521,17 @@ def resources_cat(request):
         plan.save()
     elif raw_slot is not None:
         try:
-            slot = int(raw_slot)
+            slot, level = int(raw_slot), int(request.POST.get("level", ""))
         except ValueError:
-            return HttpResponseBadRequest("malformed slot")
+            return HttpResponseBadRequest("malformed slot or level")
         if not 0 <= slot < len(slots):
             return HttpResponseBadRequest("unknown slot")
-        if on:
-            TalentPlan.objects.get_or_create(profile=profile, unit=unit, slot=slot)
+        if not 0 <= level <= slots[slot]["max"]:
+            return HttpResponseBadRequest("level out of range")
+        if level:
+            TalentPlan.objects.update_or_create(
+                profile=profile, unit=unit, slot=slot, defaults={"level": level}
+            )
         else:
             profile.talent_plans.filter(unit=unit, slot=slot).delete()
 
