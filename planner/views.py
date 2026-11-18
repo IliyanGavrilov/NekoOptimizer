@@ -24,6 +24,7 @@ from neko.models import CATFOOD_PER_DRAW, GACHA_RARITIES, Rarity, is_future_uber
 from neko.normal import BANNERS_BY_KEY, NORMAL_BANNERS
 from neko.region import CODES
 from neko.region import current as active_region
+from neko.region import spec as region_spec
 from neko.rng import backtrack
 from neko.roller import DEFAULT_COUNT, GUARANTEED_OPTIONS, prepare_active, prepare_selected
 from neko.seekspec import MAX_MATCHES, normal_spec, seed_spec
@@ -1411,10 +1412,12 @@ def set_region(request):
     """Switch the game version the whole site shows: back to the same page at that
     version's URL. Each version ships its own catalogue, schedule and pools, and keeps
     its own collection - so this is a data switch, not a display language."""
-    code = request.POST.get("region", "")
-    if code not in CODES:
+    posted = request.POST.get("region", "")
+    if posted not in CODES:
         return HttpResponseBadRequest("unknown region")
 
+    # Our own copy of the code, not the posted string: it goes into the redirect URL.
+    code = region_spec(posted).code
     profile = owner(request)
     profile.region = code
     profile.save(update_fields=["region"])
