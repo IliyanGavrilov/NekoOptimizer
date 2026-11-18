@@ -9,6 +9,9 @@ from neko.region import DEFAULT_REGION, spec
 # Unit id = the row's 0-based index in unitbuy.csv (no header/id column); this column
 # holds the rarity code.
 _RARITY_COL = 13
+# An Ancient Egg's first two forms wear a shared egg sprite instead of their own; these
+# columns hold its id per form, -1 for every other unit.
+_EGG_COLS = slice(61, 63)
 
 # 0/1 (Normal/Special) are non-gacha units that never appear in a roll.
 RARITY_BY_CODE = {
@@ -23,13 +26,15 @@ RARITY_BY_CODE = {
 
 @dataclass(frozen=True, slots=True)
 class Unit:
-    """A catalogue unit: canonical PONOS id, its form names (base first), rarity, and the
-    official gacha set it belongs to ('' for units outside a recurring capsule set)."""
+    """A catalogue unit: canonical PONOS id, its form names (base first), rarity, the
+    official gacha set it belongs to ('' for units outside a recurring capsule set), and
+    for an Ancient Egg the egg sprite each of its first forms shows."""
 
     unit_id: int
     forms: tuple[str, ...]
     rarity: Rarity
     set_name: str = ""
+    eggs: tuple[int, ...] = ()
 
     @property
     def name(self) -> str:
@@ -74,6 +79,21 @@ def parse_rarities(unitbuy_text: str) -> dict[int, Rarity]:
             rarities[unit_id] = rarity
 
     return rarities
+
+
+def parse_eggs(unitbuy_text: str) -> dict[int, tuple[int, ...]]:
+    """Map each Ancient Egg's unit id (its unitbuy.csv row) to its egg sprite per form."""
+    eggs = {}
+    for unit_id, row in enumerate(csv.reader(unitbuy_text.splitlines())):
+        try:
+            sprites = tuple(int(cell) for cell in row[_EGG_COLS])
+        except ValueError:
+            continue
+
+        if sprites and min(sprites) >= 0:
+            eggs[unit_id] = sprites
+
+    return eggs
 
 
 # The Cat Guide names a unit's gacha set only for capsule units; for stage/collab units
@@ -146,16 +166,20 @@ def build_catalogue(
     rarities: Mapping[int, Rarity],
     forms: Mapping[int, tuple[str, ...]],
     sets: Mapping[int, str] | None = None,
+    eggs: Mapping[int, tuple[int, ...]] | None = None,
 ) -> dict[int, Unit]:
-    """Join rarities, form-names and set names into {unit_id: Unit}; a unit needs the
-    first two, set names are optional."""
+    """Join rarities, form-names, set names and egg sprites into {unit_id: Unit}; a unit
+    needs the first two, the rest are optional."""
     sets = sets or {}
+    eggs = eggs or {}
 
     catalogue: dict[int, Unit] = {}
     for unit_id, names in forms.items():
         rarity = rarities.get(unit_id)
         if rarity is not None and names:
-            catalogue[unit_id] = Unit(unit_id, tuple(names), rarity, sets.get(unit_id, ""))
+            catalogue[unit_id] = Unit(
+                unit_id, tuple(names), rarity, sets.get(unit_id, ""), eggs.get(unit_id, ())
+            )
 
     return catalogue
 

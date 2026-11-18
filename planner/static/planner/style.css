@@ -426,7 +426,7 @@ input[type="search"]::-webkit-search-cancel-button { appearance: none; -webkit-a
 .collection-head { display: flex; flex-wrap: wrap; align-items: center; gap: 0.3rem 0.9rem; }
 .collection-head h1 { margin-right: 0.2rem; }
 .collection-total { font-weight: 600; white-space: nowrap; color: var(--muted); }
-.owned-bar { flex: 0 1 10rem; height: 6px; border-radius: var(--pill); background: var(--bg-2); overflow: hidden; }
+.owned-bar { flex: 0 1 10rem; height: 6px; border-radius: var(--pill); background: color-mix(in srgb, var(--muted) 35%, transparent); overflow: hidden; }
 .owned-bar i { display: block; width: 0; height: 100%; background: var(--accent); transition: width 0.2s; }
 .head-tools { display: inline-flex; gap: 0.5rem; margin-left: auto; }
 /* The same bar, smaller, beside each section's own owned count. */

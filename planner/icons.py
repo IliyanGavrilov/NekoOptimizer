@@ -14,6 +14,8 @@ from neko.gamedata import load_cannons, load_evolve
 from neko.region import CODES
 
 SOURCE = "https://battlecatsinfo.github.io/img/u/{unit_id}/{form}.png"
+# An Ancient Egg's first forms show a shared egg sprite, kept apart from the units'.
+EGG_SOURCE = "https://battlecatsinfo.github.io/img/s/{egg}/{form}.png"
 ITEM_SOURCE = "https://battlecatsinfo.github.io/img/r/{item_id}.png"
 # settings serves these instead of hotlinking once they exist
 ICONS_DIR = settings.ICONS_DIR
@@ -21,15 +23,34 @@ ITEMS_DIR = settings.ITEMS_DIR
 _WORKERS = 8
 
 
-def wanted(records: Iterable[Mapping]) -> set[tuple[int, int]]:
-    """Every (unit id, form index) pair the catalogue can show an icon for."""
-    return {(record["id"], form) for record in records for form in range(len(record["forms"]))}
+def source(record: Mapping, form: int) -> str:
+    """Where one form's icon comes from: its egg sprite while it is still an egg, else
+    its own."""
+    eggs = record.get("eggs", ())
+    if form < len(eggs):
+        return EGG_SOURCE.format(egg=eggs[form], form=form)
+
+    return SOURCE.format(unit_id=record["id"], form=form)
 
 
-def catalogue_icons() -> set[tuple[int, int]]:
+def wanted(records: Iterable[Mapping]) -> dict[tuple[int, int], str]:
+    """Every (unit id, form index) pair the catalogue can show an icon for, and its
+    source."""
+    return {
+        (record["id"], form): source(record, form)
+        for record in records
+        for form in range(len(record["forms"]))
+    }
+
+
+def catalogue_icons() -> dict[tuple[int, int], str]:
     """The pairs across every region's committed catalogue - unit ids are shared, but a
     version can be a form ahead."""
-    return set().union(*(wanted(load_records(region)) for region in CODES))
+    icons = {}
+    for region in CODES:
+        icons |= wanted(load_records(region))
+
+    return icons
 
 
 def catalogue_materials() -> set[int]:
@@ -48,15 +69,15 @@ def catalogue_materials() -> set[int]:
     return items
 
 
-def fetch(unit_id: int, form: int, root: Path = ICONS_DIR) -> bool:
-    """Save one icon under *root*, skipping one already there (network). False when the
-    source has no such form."""
+def fetch(unit_id: int, form: int, url: str, root: Path = ICONS_DIR) -> bool:
+    """Save one icon from *url* under *root*, skipping one already there (network).
+    False when the source has no such form."""
     path = root / str(unit_id) / f"{form}.png"
     if path.exists():
         return True
 
     try:
-        data = _get(SOURCE.format(unit_id=unit_id, form=form))
+        data = _get(url)
     except urllib.error.HTTPError as error:
         if error.code == 404:
             return False
@@ -96,7 +117,7 @@ def _download(job, items: Iterable, workers: int) -> tuple[int, int]:
 
 
 def refresh(
-    icons: Iterable[tuple[int, int]] | None = None,
+    icons: Mapping[tuple[int, int], str] | None = None,
     root: Path = ICONS_DIR,
     workers: int = _WORKERS,
 ) -> tuple[int, int]:
@@ -104,7 +125,7 @@ def refresh(
     are in place and how many the source doesn't publish. Re-runs only fetch what's new."""
     icons = catalogue_icons() if icons is None else icons
 
-    return _download(lambda pair: fetch(*pair, root=root), icons, workers)
+    return _download(lambda item: fetch(*item[0], item[1], root=root), icons.items(), workers)
 
 
 def refresh_items(
