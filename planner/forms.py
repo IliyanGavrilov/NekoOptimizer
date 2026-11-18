@@ -22,7 +22,6 @@ class PlannerForm(forms.Form):
     seed = forms.IntegerField(
         label=_("Seed"),
         min_value=0,
-        initial=0,
         widget=forms.TextInput(attrs={"inputmode": "numeric", "pattern": "[0-9]*"}),
     )
     # Optional: explore mode hides the budget, and a blank field just means zero.

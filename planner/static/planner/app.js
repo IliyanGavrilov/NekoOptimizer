@@ -285,6 +285,9 @@ if (picker) {
   // NOT persisted; the collection persists server-side.
   const STORE_KEY = "nekoPlanner";
   const seedEl = document.getElementById("id_seed");
+  // 0 is xorshift's fixed point - every pull alike, never a real save's seed - so it
+  // counts as no seed at all.
+  const hasSeed = () => Number(seedEl.value.trim()) > 0;
   const ticketsEl = document.getElementById("id_tickets");
   const catfoodEl = document.getElementById("id_catfood");
   const wishlistEl = document.getElementById("id_use_wishlist");
@@ -745,6 +748,7 @@ if (picker) {
   const browseTrack = document.getElementById("browseTrack");
   const trackHost = document.getElementById("trackHost");
   const resultsRegion = document.getElementById("resultsRegion");
+  const seedHint = document.getElementById("seedHint");
   const planLoading = document.getElementById("planLoading");
   const backToRolls = document.getElementById("backToRolls");
 
@@ -1007,7 +1011,8 @@ if (picker) {
   async function refreshTracks(keepTrace = false) {
     // Any refresh besides a trace click means the rolls changed: drop the trace.
     if (!keepTrace) traceState = null;
-    if (!seedEl.value.trim() || !anyBanner()) {
+    seedHint.hidden = hasSeed();
+    if (!hasSeed() || !anyBanner()) {
       trackHost.innerHTML = "";
       resultsRegion.hidden = !solutions.firstElementChild;
       return;
@@ -1302,7 +1307,7 @@ if (picker) {
     e.preventDefault();
     // Client-side checks first, with an inline note + flash instead of the
     // browser's "Please fill out this field" popup.
-    if (!seedEl.value.trim()) return setError("seedError", gettext("Enter a seed to roll."), seedEl);
+    if (!hasSeed()) return setError("seedError", gettext("Enter a seed to roll."), seedEl);
     if (!anyBanner()) {
       return setError("targetsError", gettext("Select at least one banner to roll."), targetsSection);
     }
@@ -1492,6 +1497,7 @@ if (collectionBrowser) {
       rows,
       label: el.dataset.label.toLowerCase(),
       count: el.querySelector(".owned-count"),
+      bar: el.querySelector(".section-bar > i"),
       chips: rows.flatMap((row) => row.chips.map((chip) => chip.el)),
     };
   };
@@ -1544,6 +1550,7 @@ if (collectionBrowser) {
   function updateCounts() {
     for (const section of allSections) {
       const owned = section.chips.filter((c) => c.classList.contains("owned")).length;
+      section.bar.style.width = `${(100 * owned) / (section.chips.length || 1)}%`;
       section.count.textContent = interpolate(gettext("%(owned)s / %(total)s owned"), {
         owned,
         total: section.chips.length,

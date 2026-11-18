@@ -113,6 +113,9 @@
     <span class="field-error" id="submitError" aria-live="polite"></span>
   </form>
 
+  <p class="muted hint" id="seedHint" hidden>{% blocktranslate trimmed %}Enter your seed above to see your rolls &mdash; or
+    <a href="{{ finder_url }}">find it</a> from a few pulls you've just made.{% endblocktranslate %}</p>
+
   <div id="planLoading" class="loading-overlay" hidden role="status" aria-live="polite">
     <div class="spinner" aria-hidden="true"></div>
     <p>{% translate "Finding your plan…" %}</p>

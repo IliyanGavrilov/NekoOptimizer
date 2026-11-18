@@ -2816,3 +2816,6 @@ msgstr "レアリティ"
 msgid "Missing"
 msgstr "未所持"
 
+#, python-format
+msgid "Enter your seed above to see your rolls &mdash; or <a href=\"%(finder_url)s\">find it</a> from a few pulls you've just made."
+msgstr "上でシード値を入力すると結果が表示されます &mdash; または、引いたばかりの数回から<a href=\"%(finder_url)s\">調べる</a>こともできます。"
