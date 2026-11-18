@@ -96,9 +96,8 @@ msgstr "其中%(hits)s隻會出現在這段序列中"
 
 #: .\engine_text.py:11 .\templates\planner\_normal_tracks.html:6
 #: .\templates\planner\_tracks.html:38
-msgid ""
-"&ldquo;I rolled this cell&rdquo; &mdash; jumps the seed to just after it"
-msgstr "「我抽到了這格」 &mdash; 將種子碼推進到這格之後"
+msgid "&ldquo;I rolled this&rdquo; &mdash; moves your seed past it"
+msgstr "「我抽到了這個」 &mdash; 將種子碼推進到這格之後"
 
 #: .\engine_text.py:12 .\templates\planner\_normal_cell.html:11
 #: .\templates\planner\_track_cell.html:6
@@ -189,10 +188,8 @@ msgid ""
 msgstr "只有抵達的那一抽已經是這格的角色時(反彈路徑或你記住的上一抽):才會重抽成分支結果並換線"
 
 #: .\engine_text.py:45 .\templates\planner\_tracks.html:61
-msgid ""
-"Pad this banner's uber pool with expected-but-unreleased ubers (godfat's Count of future ubers) - its uber cells land as if those units were already in the pool; drag the box up/down to adjust"
-msgstr ""
-"在此轉蛋的超激池加入尚未實裝的超激(同godfat的「Count of future ubers」) - 超激格會當作這些角色已在池中來計算;上下拖曳方框即可調整"
+msgid "How many unreleased ubers will join this banner's pool before you roll. Each one changes which uber its cells give, so match the game."
+msgstr "抽之前會加入此轉蛋池的未推出超激數量。每多一隻,超激格的結果就會改變,請配合遊戲設定。"
 
 #: .\engine_text.py:49 .\templates\planner\_tracks.html:26
 #, python-format
@@ -257,12 +254,12 @@ msgid "Track B"
 msgstr "B線"
 
 #: .\engine_text.py:74 .\templates\planner\_tracks.html:45
-msgid "Uber debuting with this banner (its first event anywhere)"
-msgstr "在此轉蛋首次登場的超激稀有(遊戲中的第一個活動)"
+msgid "Uber's first-ever banner"
+msgstr "超激稀有首次登場的轉蛋"
 
 #: .\engine_text.py:75 .\templates\planner\_tracks.html:42
-msgid "Uber/Legend not in your collection"
-msgstr "收藏中沒有的超激/傳說"
+msgid "Uber/Legend you don't own"
+msgstr "未擁有的超激/傳說"
 
 #: .\engine_text.py:76 .\templates\planner\_tracks.html:22
 msgid "Won't drop on the selected banners"
@@ -280,23 +277,21 @@ msgid ""
 msgstr "下一抽在這裡:亮起的抽數之後,再抽一次此轉蛋會得到的第一隻角色"
 
 #: .\engine_text.py:86 .\templates\planner\_tracks.html:49
-msgid ""
-"a capsule banner &mdash; its pulls spend that scarce ticket, not rare tickets or catfood"
-msgstr "專用券轉蛋 &mdash; 這裡的抽數使用那種稀少的券,而不是稀有券或貓罐頭"
+msgid "a capsule banner &mdash; rolls cost its own ticket, not catfood or rare tickets"
+msgstr "專用券轉蛋 &mdash; 用它自己的券來抽,不是貓罐頭或稀有券"
 
 #: .\engine_text.py:89 .\templates\planner\_tracks.html:44
-msgid ""
-"a target you picked &mdash; gold here, and its next spot shows in <em>Targets</em> above"
-msgstr "你選的目標 &mdash; 這裡顯示為金色,下一個位置會顯示在上方<em>目標</em>中"
+msgid "a cat you're searching for &mdash; its next spot is listed under <em>Targets</em> above"
+msgstr "你在找的角色 &mdash; 下一個位置列在上方<em>目標</em>中"
 
 #: .\engine_text.py:91 .\templates\planner\_normal_tracks.html:5
 #: .\templates\planner\_tracks.html:37
-msgid "alternate timelines; a dupe rerolls and switches track"
-msgstr "兩條平行的路線;稀有重複會重抽並換線"
+msgid "two tracks; a dupe rerolls and switches track"
+msgstr "兩條路線;重複時會重抽並換線"
 
 #: .\engine_text.py:92 .\templates\planner\_tracks.html:46
-msgid "an expected-but-unreleased Uber padding the pool"
-msgstr "填入轉蛋池的未實裝超激稀有"
+msgid "a stand-in for an Uber that isn't out yet"
+msgstr "尚未推出的超激稀有的佔位"
 
 #: .\engine_text.py:93 .\templates\planner\_tracks.html:48
 msgid "another banner this plan step can roll on instead"
@@ -308,8 +303,8 @@ msgid "cat"
 msgstr "角色"
 
 #: .\engine_text.py:95 .\templates\planner\_tracks.html:40
-msgid "click a cell's name-free space: the rolls up to it light like a plan"
-msgstr "點擊格子中名字以外的地方:到那裡為止的抽數會像計畫一樣亮起"
+msgid "click a cell's empty space to light up the pulls to it"
+msgstr "點擊格子空白處,到那格為止的抽數會亮起"
 
 #: .\engine_text.py:96 .\templates\planner\_tracks.html:48
 msgid "dashed"
@@ -366,17 +361,16 @@ msgstr "從該格開始確定連抽時會獲得的超激稀有"
 
 #: .\engine_text.py:108 .\templates\planner\_normal_tracks.html:7
 #: .\templates\planner\_tracks.html:39
-msgid "the reroll branch (its own dice &amp; landing)"
-msgstr "重抽的分支(有自己的骰子與落點)"
+msgid "what you get instead on a dupe"
+msgstr "重複時改為獲得的角色"
 
 #: .\engine_text.py:109 .\templates\planner\_tracks.html:43
 msgid "wishlisted"
 msgstr "願望清單"
 
 #: .\engine_text.py:111 .\templates\planner\_tracks.html:41
-msgid ""
-"you land here next &mdash; the first cat one more roll would give after the lit draws"
-msgstr "下一抽在這裡 &mdash; 亮起的抽數之後再抽一次會得到的第一隻角色"
+msgid "where you are now &mdash; the cat your next pull gives (past any lit pulls)"
+msgstr "目前位置 &mdash; 下一抽會得到的角色(在亮起的抽數之後)"
 
 #: .\engine_text.py:114 .\labels.py:13 .\templates\planner\_tracks.html:52
 msgid "Rare"
@@ -2749,8 +2743,8 @@ msgstr "目前的頭像"
 msgid "Search cats…"
 msgstr "搜尋角色…"
 
-msgid "Which tickets pay for the pulls that only walk the track on to the next target"
-msgstr "只為走到下一個目標而抽的那幾抽,要用哪種券"
+msgid "Which tickets pay for the pulls that only move you on to the next target"
+msgstr "只為前往下一個目標而抽時要用的券"
 
 msgid "Pulls in between"
 msgstr "中間的抽"
@@ -2766,3 +2760,37 @@ msgstr "依名稱"
 
 msgid "Every cat in alphabetical order of the form shown"
 msgstr "依目前顯示形態的名稱排序所有貓咪"
+
+msgid "Display"
+msgstr "顯示"
+
+msgid "Show each cat as"
+msgstr "角色顯示方式"
+
+msgid "Form"
+msgstr "型態"
+
+msgid "Import / export"
+msgstr "匯入 / 匯出"
+
+msgid "From the game"
+msgstr "從遊戲"
+
+msgid "Backup"
+msgstr "備份"
+
+msgid "New cats"
+msgstr "新角色"
+
+msgid "On banners"
+msgstr "出現的轉蛋"
+
+msgid "View"
+msgstr "檢視"
+
+msgid "Rarity"
+msgstr "稀有度"
+
+msgid "Missing"
+msgstr "未擁有"
+

@@ -1,19 +1,27 @@
-{% load i18n %}{% comment %}The cat filters Collection and the avatar picker share: ownership, rarity and the
-facet panel. app.js's catFilters() binds them.{% endcomment %}
-<div class="status-filter" id="statusFilter" role="group" aria-label="{% translate "Filter by ownership" %}">
-  <button type="button" data-status="" aria-pressed="true">{% translate "All" %}</button>
-  <button type="button" data-status="owned" aria-pressed="false">{% translate "Owned" %}</button>
-  <button type="button" data-status="wishlist" aria-pressed="false">{% translate "Wishlisted" %}</button>
-</div>
-<div class="rarity-filter" id="rarityFilter" role="group" aria-label="{% translate "Filter by rarity" %}">
-  <button type="button" data-rarity="" aria-pressed="true">{% translate "All" %}</button>
-  {% for label in filter_rarities %}
-    <button type="button" data-rarity="{{ label }}" aria-pressed="false">{% translate label %}</button>
-  {% endfor %}
-</div>
+{% load i18n %}{% comment %}The cat filters Collection and the avatar picker share: ownership and rarity
+drop-downs and the facet panel, each opening under its button. app.js's catFilters() binds them.{% endcomment %}
+<details class="header-menu pick-menu">
+  <summary class="pick-btn">{% translate "Show" %} <b></b> <span class="chevron" aria-hidden="true">&#9662;</span></summary>
+  <div class="header-pop pick-pop status-filter" id="statusFilter" role="group" aria-label="{% translate "Filter by ownership" %}">
+    <button type="button" data-status="" aria-pressed="true">{% translate "All" %}</button>
+    <button type="button" data-status="owned" aria-pressed="false">{% translate "Owned" %}</button>
+    <button type="button" data-status="missing" aria-pressed="false">{% translate "Missing" %}</button>
+    <button type="button" data-status="wishlist" aria-pressed="false">{% translate "Wishlisted" %}</button>
+  </div>
+</details>
+<details class="header-menu pick-menu">
+  <summary class="pick-btn">{% translate "Rarity" %} <b></b> <span class="chevron" aria-hidden="true">&#9662;</span></summary>
+  <div class="header-pop pick-pop rarity-filter" id="rarityFilter" role="group" aria-label="{% translate "Filter by rarity" %}">
+    <button type="button" data-rarity="" aria-pressed="true">{% translate "All" %}</button>
+    {% for label in filter_rarities %}
+      <button type="button" data-rarity="{{ label }}" aria-pressed="false">{% translate label %}</button>
+    {% endfor %}
+  </div>
+</details>
 
-<details class="facet-panel" id="facetPanel">
-  <summary>{% translate "Filters" %} <span id="facetCount" class="muted"></span></summary>
+<details class="header-menu facet-panel" id="facetPanel">
+  <summary class="pick-btn"><svg class="btn-icon" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 4h-7M10 4H3M21 12h-9M8 12H3M21 20h-5M12 20H3M14 2v4M8 10v4M16 18v4"/></svg> {% translate "Filters" %} <span id="facetCount"></span></summary>
+  <div class="header-pop facet-pop">
   <div class="facet-controls">
     <div class="view-toggle" id="facetMode" role="group" aria-label="{% translate "Combine selected filters with" %}">
       <button type="button" class="view-btn is-active" data-mode="and" title="{% translate "Show cats matching every selected filter" %}">{% translate "Match all" %}</button>
@@ -51,6 +59,7 @@ facet panel. app.js's catFilters() binds them.{% endcomment %}
     <span class="facet-label">{% translate "Talents" %}</span>
     <button type="button" data-value="n" aria-pressed="false">{% translate "Has Talents" %}</button>
     <button type="button" data-value="u" aria-pressed="false">{% translate "Has Ultra Talents" %}</button>
+  </div>
   </div>
 </details>
 {{ facets|json_script:"catFacets" }}

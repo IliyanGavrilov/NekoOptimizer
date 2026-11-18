@@ -96,9 +96,8 @@ msgstr "うち%(hits)s体がこのガチャテーブル内に登場"
 
 #: .\engine_text.py:11 .\templates\planner\_normal_tracks.html:6
 #: .\templates\planner\_tracks.html:38
-msgid ""
-"&ldquo;I rolled this cell&rdquo; &mdash; jumps the seed to just after it"
-msgstr "「このセルを引いた」 &mdash; シード値をその直後へ進めます"
+msgid "&ldquo;I rolled this&rdquo; &mdash; moves your seed past it"
+msgstr "「これを引いた」 &mdash; シード値をその先へ進めます"
 
 #: .\engine_text.py:12 .\templates\planner\_normal_cell.html:11
 #: .\templates\planner\_track_cell.html:6
@@ -189,10 +188,8 @@ msgid ""
 msgstr "到着した1回がすでにこのセルのキャラを持っている時だけ(バウンス経路か、記憶している直前の1回):分岐先に引き直されて列移動します"
 
 #: .\engine_text.py:45 .\templates\planner\_tracks.html:61
-msgid ""
-"Pad this banner's uber pool with expected-but-unreleased ubers (godfat's Count of future ubers) - its uber cells land as if those units were already in the pool; drag the box up/down to adjust"
-msgstr ""
-"このガチャの超激プールに未実装の超激を追加します(godfatの「Count of future ubers」と同じ) - そのキャラがすでにプールにいるものとして超激のセルが決まります。ボックスを上下にドラッグして調整できます"
+msgid "How many unreleased ubers will join this banner's pool before you roll. Each one changes which uber its cells give, so match the game."
+msgstr "引く前にこのガチャのプールに加わる未実装の超激の数。1体ごとに超激のセルの結果が変わるので、ゲームに合わせてください。"
 
 #: .\engine_text.py:49 .\templates\planner\_tracks.html:26
 #, python-format
@@ -257,12 +254,12 @@ msgid "Track B"
 msgstr "B列"
 
 #: .\engine_text.py:74 .\templates\planner\_tracks.html:45
-msgid "Uber debuting with this banner (its first event anywhere)"
-msgstr "このガチャで初登場する超激レア(ゲーム全体で初めてのイベント)"
+msgid "Uber's first-ever banner"
+msgstr "超激レアの初登場ガチャ"
 
 #: .\engine_text.py:75 .\templates\planner\_tracks.html:42
-msgid "Uber/Legend not in your collection"
-msgstr "コレクションにない超激/伝説"
+msgid "Uber/Legend you don't own"
+msgstr "持っていない超激/伝説"
 
 #: .\engine_text.py:76 .\templates\planner\_tracks.html:22
 msgid "Won't drop on the selected banners"
@@ -280,23 +277,21 @@ msgid ""
 msgstr "次はここ:光っている回のあと、このガチャをもう1回引くと出る最初のキャラです"
 
 #: .\engine_text.py:86 .\templates\planner\_tracks.html:49
-msgid ""
-"a capsule banner &mdash; its pulls spend that scarce ticket, not rare tickets or catfood"
-msgstr "チケット専用ガチャ &mdash; ここでの1回はレアチケットやネコカンではなく、その貴重なチケットを使います"
+msgid "a capsule banner &mdash; rolls cost its own ticket, not catfood or rare tickets"
+msgstr "チケット専用ガチャ &mdash; ネコカンやレアチケットではなく、専用のチケットで引きます"
 
 #: .\engine_text.py:89 .\templates\planner\_tracks.html:44
-msgid ""
-"a target you picked &mdash; gold here, and its next spot shows in <em>Targets</em> above"
-msgstr "選んだターゲット &mdash; ここでは金色で、次の位置は上の<em>ターゲット</em>に表示されます"
+msgid "a cat you're searching for &mdash; its next spot is listed under <em>Targets</em> above"
+msgstr "探しているキャラ &mdash; 次の位置は上の<em>ターゲット</em>に表示されます"
 
 #: .\engine_text.py:91 .\templates\planner\_normal_tracks.html:5
 #: .\templates\planner\_tracks.html:37
-msgid "alternate timelines; a dupe rerolls and switches track"
-msgstr "2本の分岐した流れ。レア被りで引き直され、列移動します"
+msgid "two tracks; a dupe rerolls and switches track"
+msgstr "2本の列。被ると引き直しになり、列が変わります"
 
 #: .\engine_text.py:92 .\templates\planner\_tracks.html:46
-msgid "an expected-but-unreleased Uber padding the pool"
-msgstr "プールを埋める未実装の超激レア"
+msgid "a stand-in for an Uber that isn't out yet"
+msgstr "まだ実装されていない超激レアの仮置き"
 
 #: .\engine_text.py:93 .\templates\planner\_tracks.html:48
 msgid "another banner this plan step can roll on instead"
@@ -308,8 +303,8 @@ msgid "cat"
 msgstr "キャラ"
 
 #: .\engine_text.py:95 .\templates\planner\_tracks.html:40
-msgid "click a cell's name-free space: the rolls up to it light like a plan"
-msgstr "セルの名前以外の部分をクリック:そこまでの回がプランのように光ります"
+msgid "click a cell's empty space to light up the pulls to it"
+msgstr "セルの空いている部分をクリックで、そこまでの回が光ります"
 
 #: .\engine_text.py:96 .\templates\planner\_tracks.html:48
 msgid "dashed"
@@ -366,17 +361,16 @@ msgstr "そのセルから確定ガチャを始めた時にもらえる超激レ
 
 #: .\engine_text.py:108 .\templates\planner\_normal_tracks.html:7
 #: .\templates\planner\_tracks.html:39
-msgid "the reroll branch (its own dice &amp; landing)"
-msgstr "引き直しの分岐(専用のサイコロと着地点つき)"
+msgid "what you get instead on a dupe"
+msgstr "被ったときに代わりに出るキャラ"
 
 #: .\engine_text.py:109 .\templates\planner\_tracks.html:43
 msgid "wishlisted"
 msgstr "ほしいもの"
 
 #: .\engine_text.py:111 .\templates\planner\_tracks.html:41
-msgid ""
-"you land here next &mdash; the first cat one more roll would give after the lit draws"
-msgstr "次はここ &mdash; 光っている回のあと、もう1回引くと出る最初のキャラ"
+msgid "where you are now &mdash; the cat your next pull gives (past any lit pulls)"
+msgstr "現在地 &mdash; 次に引くと出るキャラ(光っている回の先)"
 
 #: .\engine_text.py:114 .\labels.py:13 .\templates\planner\_tracks.html:52
 msgid "Rare"
@@ -2771,8 +2765,8 @@ msgstr "現在のアイコン"
 msgid "Search cats…"
 msgstr "キャラを検索…"
 
-msgid "Which tickets pay for the pulls that only walk the track on to the next target"
-msgstr "次の目当てまでトラックを進めるだけの回に、どのチケットを使うか"
+msgid "Which tickets pay for the pulls that only move you on to the next target"
+msgstr "次のターゲットへ進むためだけの回に使うチケット"
 
 msgid "Pulls in between"
 msgstr "つなぎの回"
@@ -2788,3 +2782,37 @@ msgstr "名前順"
 
 msgid "Every cat in alphabetical order of the form shown"
 msgstr "表示中の形態の名前順で、すべてのキャラを並べます"
+
+msgid "Display"
+msgstr "表示"
+
+msgid "Show each cat as"
+msgstr "キャラの表示"
+
+msgid "Form"
+msgstr "形態"
+
+msgid "Import / export"
+msgstr "インポート / エクスポート"
+
+msgid "From the game"
+msgstr "ゲームから"
+
+msgid "Backup"
+msgstr "バックアップ"
+
+msgid "New cats"
+msgstr "新キャラ"
+
+msgid "On banners"
+msgstr "出現するガチャ"
+
+msgid "View"
+msgstr "並び"
+
+msgid "Rarity"
+msgstr "レアリティ"
+
+msgid "Missing"
+msgstr "未所持"
+

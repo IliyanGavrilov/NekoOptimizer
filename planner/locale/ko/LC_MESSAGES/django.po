@@ -96,9 +96,8 @@ msgstr "그중 %(hits)s개가 이 배열 안에 등장"
 
 #: .\engine_text.py:11 .\templates\planner\_normal_tracks.html:6
 #: .\templates\planner\_tracks.html:38
-msgid ""
-"&ldquo;I rolled this cell&rdquo; &mdash; jumps the seed to just after it"
-msgstr "「이 칸을 뽑았다」 &mdash; 시드를 바로 다음으로 옮깁니다"
+msgid "&ldquo;I rolled this&rdquo; &mdash; moves your seed past it"
+msgstr "「이걸 뽑았다」 &mdash; 시드를 그다음으로 옮깁니다"
 
 #: .\engine_text.py:12 .\templates\planner\_normal_cell.html:11
 #: .\templates\planner\_track_cell.html:6
@@ -190,10 +189,8 @@ msgstr ""
 "도착한 뽑기가 이미 이 칸의 캐릭터를 가지고 있을 때만(바운스 경로나 기억된 직전 뽑기): 분기 결과로 다시 뽑히고 열을 이동합니다"
 
 #: .\engine_text.py:45 .\templates\planner\_tracks.html:61
-msgid ""
-"Pad this banner's uber pool with expected-but-unreleased ubers (godfat's Count of future ubers) - its uber cells land as if those units were already in the pool; drag the box up/down to adjust"
-msgstr ""
-"이 뽑기의 울슈레 풀에 미구현 울슈레를 추가합니다(godfat의 「Count of future ubers」와 같음) - 그 캐릭터가 이미 풀에 있는 것처럼 울슈레 칸이 정해집니다. 상자를 위아래로 드래그해 조정하세요"
+msgid "How many unreleased ubers will join this banner's pool before you roll. Each one changes which uber its cells give, so match the game."
+msgstr "뽑기 전에 이 뽑기의 풀에 추가될 미출시 울슈레 수. 하나마다 울슈레 칸의 결과가 바뀌니 게임에 맞춰 주세요."
 
 #: .\engine_text.py:49 .\templates\planner\_tracks.html:26
 #, python-format
@@ -258,12 +255,12 @@ msgid "Track B"
 msgstr "B열"
 
 #: .\engine_text.py:74 .\templates\planner\_tracks.html:45
-msgid "Uber debuting with this banner (its first event anywhere)"
-msgstr "이 뽑기로 첫 등장하는 울트라 슈퍼 레어(게임 전체에서 첫 이벤트)"
+msgid "Uber's first-ever banner"
+msgstr "울트라 슈퍼 레어의 첫 등장 뽑기"
 
 #: .\engine_text.py:75 .\templates\planner\_tracks.html:42
-msgid "Uber/Legend not in your collection"
-msgstr "컬렉션에 없는 울슈레/레전드"
+msgid "Uber/Legend you don't own"
+msgstr "없는 울슈레/레전드"
 
 #: .\engine_text.py:76 .\templates\planner\_tracks.html:22
 msgid "Won't drop on the selected banners"
@@ -281,23 +278,21 @@ msgid ""
 msgstr "다음은 여기: 빛나는 뽑기 다음에 이 뽑기를 한 번 더 돌리면 나오는 첫 캐릭터입니다"
 
 #: .\engine_text.py:86 .\templates\planner\_tracks.html:49
-msgid ""
-"a capsule banner &mdash; its pulls spend that scarce ticket, not rare tickets or catfood"
-msgstr "전용 티켓 뽑기 &mdash; 여기서의 뽑기는 레어 티켓이나 고양이 통조림이 아니라 그 귀한 티켓을 씁니다"
+msgid "a capsule banner &mdash; rolls cost its own ticket, not catfood or rare tickets"
+msgstr "전용 티켓 뽑기 &mdash; 고양이 통조림이나 레어 티켓이 아니라 전용 티켓으로 뽑습니다"
 
 #: .\engine_text.py:89 .\templates\planner\_tracks.html:44
-msgid ""
-"a target you picked &mdash; gold here, and its next spot shows in <em>Targets</em> above"
-msgstr "고른 목표 &mdash; 여기선 금색이고, 다음 위치는 위 <em>목표</em>에 표시됩니다"
+msgid "a cat you're searching for &mdash; its next spot is listed under <em>Targets</em> above"
+msgstr "찾고 있는 캐릭터 &mdash; 다음 위치는 위 <em>목표</em>에 표시됩니다"
 
 #: .\engine_text.py:91 .\templates\planner\_normal_tracks.html:5
 #: .\templates\planner\_tracks.html:37
-msgid "alternate timelines; a dupe rerolls and switches track"
-msgstr "두 갈래의 흐름. 레어 중복이면 다시 뽑히고 열을 이동합니다"
+msgid "two tracks; a dupe rerolls and switches track"
+msgstr "두 개의 열. 중복되면 다시 뽑히고 열이 바뀝니다"
 
 #: .\engine_text.py:92 .\templates\planner\_tracks.html:46
-msgid "an expected-but-unreleased Uber padding the pool"
-msgstr "풀을 채우는 미구현 울트라 슈퍼 레어"
+msgid "a stand-in for an Uber that isn't out yet"
+msgstr "아직 나오지 않은 울트라 슈퍼 레어의 자리"
 
 #: .\engine_text.py:93 .\templates\planner\_tracks.html:48
 msgid "another banner this plan step can roll on instead"
@@ -309,8 +304,8 @@ msgid "cat"
 msgstr "캐릭터"
 
 #: .\engine_text.py:95 .\templates\planner\_tracks.html:40
-msgid "click a cell's name-free space: the rolls up to it light like a plan"
-msgstr "칸의 이름 외 부분을 클릭: 거기까지의 뽑기가 플랜처럼 빛납니다"
+msgid "click a cell's empty space to light up the pulls to it"
+msgstr "칸의 빈 곳을 클릭하면 거기까지의 뽑기가 빛납니다"
 
 #: .\engine_text.py:96 .\templates\planner\_tracks.html:48
 msgid "dashed"
@@ -367,17 +362,16 @@ msgstr "그 칸에서 확정 뽑기를 시작하면 받는 울트라 슈퍼 레�
 
 #: .\engine_text.py:108 .\templates\planner\_normal_tracks.html:7
 #: .\templates\planner\_tracks.html:39
-msgid "the reroll branch (its own dice &amp; landing)"
-msgstr "재추첨 분기(전용 주사위와 도착 위치)"
+msgid "what you get instead on a dupe"
+msgstr "중복일 때 대신 나오는 캐릭터"
 
 #: .\engine_text.py:109 .\templates\planner\_tracks.html:43
 msgid "wishlisted"
 msgstr "위시리스트"
 
 #: .\engine_text.py:111 .\templates\planner\_tracks.html:41
-msgid ""
-"you land here next &mdash; the first cat one more roll would give after the lit draws"
-msgstr "다음은 여기 &mdash; 빛나는 뽑기 다음에 한 번 더 돌리면 나오는 첫 캐릭터"
+msgid "where you are now &mdash; the cat your next pull gives (past any lit pulls)"
+msgstr "현재 위치 &mdash; 다음 뽑기에서 나오는 캐릭터(빛나는 뽑기 다음)"
 
 #: .\engine_text.py:114 .\labels.py:13 .\templates\planner\_tracks.html:52
 msgid "Rare"
@@ -2775,8 +2769,8 @@ msgstr "현재 아바타"
 msgid "Search cats…"
 msgstr "캐릭터 검색…"
 
-msgid "Which tickets pay for the pulls that only walk the track on to the next target"
-msgstr "다음 목표까지 트랙만 진행하는 뽑기에 어떤 티켓을 쓸지"
+msgid "Which tickets pay for the pulls that only move you on to the next target"
+msgstr "다음 목표로 넘어가기만 하는 뽑기에 쓸 티켓"
 
 msgid "Pulls in between"
 msgstr "중간 뽑기"
@@ -2792,3 +2786,37 @@ msgstr "이름순"
 
 msgid "Every cat in alphabetical order of the form shown"
 msgstr "표시 중인 형태의 이름순으로 모든 캐릭터를 나열합니다"
+
+msgid "Display"
+msgstr "표시"
+
+msgid "Show each cat as"
+msgstr "캐릭터 표시 방식"
+
+msgid "Form"
+msgstr "형태"
+
+msgid "Import / export"
+msgstr "가져오기 / 내보내기"
+
+msgid "From the game"
+msgstr "게임에서"
+
+msgid "Backup"
+msgstr "백업"
+
+msgid "New cats"
+msgstr "새 캐릭터"
+
+msgid "On banners"
+msgstr "등장 뽑기"
+
+msgid "View"
+msgstr "보기"
+
+msgid "Rarity"
+msgstr "레어도"
+
+msgid "Missing"
+msgstr "미보유"
+

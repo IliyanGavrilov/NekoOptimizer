@@ -5,7 +5,7 @@ from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass, field
 from datetime import date, timedelta
 from functools import cache
-from itertools import combinations
+from itertools import accumulate, combinations
 from typing import NamedTuple
 from urllib.parse import quote
 
@@ -613,9 +613,10 @@ def talent_label(text: str) -> str:
     return label.strip().rstrip(".")
 
 
-def talent_np(slot: Mapping, curves: Mapping) -> int:
-    """The NP cost to fully level one talent slot from its cost curve."""
-    return sum(curves.get(str(slot["curve"]), [])[: slot["max"]])
+def talent_np_steps(slot: Mapping, curves: Mapping) -> list[int]:
+    """The NP to take one talent slot from nothing to each level, 0 up to its max."""
+    curve = curves.get(str(slot["curve"]), [])[: slot["max"]]
+    return [0, *accumulate(curve + [0] * (slot["max"] - len(curve)))]
 
 
 def plannable_form(cost: Mapping, key: str) -> dict | None:
@@ -752,10 +753,10 @@ def _spend_rows(
     return +spent, hours, peak, crew
 
 
-def _cat_card(plan: UnitPlan, evolve: Mapping, talents: Mapping, wanted: set[int]) -> dict:
+def _cat_card(plan: UnitPlan, evolve: Mapping, talents: Mapping, wanted: dict) -> dict:
     """One cat on the list: every evolution and talent it can be grinding for, which of
-    them are ticked, and what those ticks cost. ``spend`` is the card's item bill, which
-    the board folds into the overview."""
+    them are picked (``wanted`` maps a talent slot to its target level), and what those
+    cost. ``spend`` is the card's item bill, which the board folds into the overview."""
     key = str(plan.unit.unit_id)
     cost = evolve.get(key, {})
     spend: Counter = Counter()
@@ -784,35 +785,49 @@ def _cat_card(plan: UnitPlan, evolve: Mapping, talents: Mapping, wanted: set[int
     slots, np = [], 0
     for index, slot in enumerate(talents["units"].get(key, [])):
         text = talents["texts"].get(str(slot["text"]), "")
-        price = talent_np(slot, talents["curves"])
-        checked = index in wanted
+        steps = talent_np_steps(slot, talents["curves"])
+        level = wanted.get(index, 0)
+        level = slot["max"] if level is None else min(level, slot["max"])
         slots.append(
             {
                 "index": index,
                 "label": talent_label(text),
                 "title": " ".join(_TAG_MARKUP.sub(" ", text).split()),
                 "max": slot["max"],
-                "np": price,
+                "level": level,
+                "np": steps[level],
+                "full_np": steps[-1],
+                "steps": ",".join(map(str, steps)),
                 "ultra": slot["ultra"],
-                "checked": checked,
+                "checked": level > 0,
             }
         )
-        if checked:
-            np += price
+        np += steps[level]
 
     picked = sum(pick["checked"] for pick in forms + slots)
+    maxed = all(form["checked"] for form in forms) and all(
+        slot["level"] == slot["max"] for slot in slots
+    )
 
     return {
         "unit": plan.unit,
         "forms": forms,
         "slots": slots,
+        "talent_groups": [
+            (label, group)
+            for label, group in (
+                (gettext_noop("Talents"), [slot for slot in slots if not slot["ultra"]]),
+                (gettext_noop("Ultra Talents"), [slot for slot in slots if slot["ultra"]]),
+            )
+            if group
+        ],
         "cost": _named_items(spend),
         "spend": spend,
         "xp": xp,
         "np": np,
         "picked": picked,
         "offered": len(forms) + len(slots),
-        "maxed": picked == len(forms) + len(slots),
+        "maxed": maxed,
     }
 
 
@@ -878,14 +893,16 @@ def resources_board(profile: Profile) -> dict:
     evolve = load_evolve()["units"]
     talents = load_talents()
     mine = {"profile_id": profile.pk}  # a first visit's unsaved profile matches nothing
-    wanted: dict[int, set[int]] = {}
-    for unit_id, slot in TalentPlan.objects.filter(**mine).values_list("unit_id", "slot"):
-        wanted.setdefault(unit_id, set()).add(slot)
+    wanted: dict[int, dict] = {}
+    for unit_id, slot, level in TalentPlan.objects.filter(**mine).values_list(
+        "unit_id", "slot", "level"
+    ):
+        wanted.setdefault(unit_id, {})[slot] = level
 
     evolve_totals: Counter = Counter()
     cats, xp, np = [], 0, 0
     for plan in UnitPlan.objects.filter(**mine).select_related("unit").order_by("unit__name"):
-        card = _cat_card(plan, evolve, talents, wanted.get(plan.unit_id, set()))
+        card = _cat_card(plan, evolve, talents, wanted.get(plan.unit_id, {}))
         evolve_totals += card["spend"]
         xp += card["xp"]
         np += card["np"]
@@ -938,15 +955,21 @@ def resources_board(profile: Profile) -> dict:
 
 @catalogue_cached
 def cat_options() -> list[dict]:
-    """The cat picker's catalogue: every named unit with something to grind for, with
-    its form names so the search matches on any of them."""
-    ids = {int(uid) for uid in load_evolve()["units"]}
-    ids |= {int(uid) for uid in load_talents()["units"]}
+    """The cat picker's catalogue: every named unit, with its form names so the search
+    matches on any of them. ``grind`` is False for a cat with no catfruit evolution or
+    talents - the picker still finds it, to say so, rather than leave it missing."""
+    evolve = load_evolve()["units"]
+    talents = load_talents()["units"]
 
     return [
-        {"id": unit_id, "name": name, "forms": forms}
+        {
+            "id": unit_id,
+            "name": name,
+            "forms": forms,
+            "grind": str(unit_id) in talents
+            or any(plannable_form(evolve.get(str(unit_id), {}), key) for key in ("tf", "uf")),
+        }
         for unit_id, name, forms in Unit.objects.named()
-        .filter(unit_id__in=ids)
         .order_by("name")
         .values_list("unit_id", "name", "forms")
     ]

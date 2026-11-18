@@ -8,7 +8,7 @@ from django.utils.translation import gettext, gettext_noop, ngettext, pgettext
 ENGINE_TEXT = (
     # The Rolls table.
     gettext_noop("%(hits)s of them turn up in these rolls"),
-    gettext_noop("&ldquo;I rolled this cell&rdquo; &mdash; jumps the seed to just after it"),
+    gettext_noop("&ldquo;I rolled this&rdquo; &mdash; moves your seed past it"),
     gettext_noop(", jumps to %(to)s"),
     gettext_noop("Add future ubers"),
     gettext_noop("An uber not released yet - a stand-in for whatever joins the pool next"),
@@ -42,9 +42,8 @@ ENGINE_TEXT = (
         "remembered last pull): it rerolls into the branch value and jumps tracks"
     ),
     gettext_noop(
-        "Pad this banner's uber pool with expected-but-unreleased ubers (godfat's Count of "
-        "future ubers) - its uber cells land as if those units were already in the pool; drag "
-        "the box up/down to adjust"
+        "How many unreleased ubers will join this banner's pool before you roll. Each one "
+        "changes which uber its cells give, so match the game."
     ),
     gettext_noop("Remove %(name)s from your targets"),
     gettext_noop("Remove target"),
@@ -71,8 +70,8 @@ ENGINE_TEXT = (
     ),
     gettext_noop("Track A"),
     gettext_noop("Track B"),
-    gettext_noop("Uber debuting with this banner (its first event anywhere)"),
-    gettext_noop("Uber/Legend not in your collection"),
+    gettext_noop("Uber's first-ever banner"),
+    gettext_noop("Uber/Legend you don't own"),
     gettext_noop("Won't drop on the selected banners"),
     gettext_noop(
         "Won't drop on the selected banners: %(banners)s. Add a banner that carries it, or "
@@ -82,17 +81,15 @@ ENGINE_TEXT = (
         "You land here next: the first cat another roll on this banner would give after the "
         "highlighted draws"
     ),
+    gettext_noop("a capsule banner &mdash; rolls cost its own ticket, not catfood or rare tickets"),
     gettext_noop(
-        "a capsule banner &mdash; its pulls spend that scarce ticket, not rare tickets or catfood"
+        "a cat you're searching for &mdash; its next spot is listed under <em>Targets</em> above"
     ),
-    gettext_noop(
-        "a target you picked &mdash; gold here, and its next spot shows in <em>Targets</em> above"
-    ),
-    gettext_noop("alternate timelines; a dupe rerolls and switches track"),
-    gettext_noop("an expected-but-unreleased Uber padding the pool"),
+    gettext_noop("two tracks; a dupe rerolls and switches track"),
+    gettext_noop("a stand-in for an Uber that isn't out yet"),
     gettext_noop("another banner this plan step can roll on instead"),
     gettext_noop("cat"),
-    gettext_noop("click a cell's name-free space: the rolls up to it light like a plan"),
+    gettext_noop("click a cell's empty space to light up the pulls to it"),
     gettext_noop("dashed"),
     gettext_noop("green name"),
     gettext_noop("if dupe"),
@@ -105,11 +102,9 @@ ENGINE_TEXT = (
     gettext_noop("rarity %(rarity)s &middot; slot %(slot)s"),
     gettext_noop("striped"),
     gettext_noop("the Uber a guaranteed multi awards if started on that cell"),
-    gettext_noop("the reroll branch (its own dice &amp; landing)"),
+    gettext_noop("what you get instead on a dupe"),
     gettext_noop("wishlisted"),
-    gettext_noop(
-        "you land here next &mdash; the first cat one more roll would give after the lit draws"
-    ),
+    gettext_noop("where you are now &mdash; the cat your next pull gives (past any lit pulls)"),
     # Rarities, long and as the cells abbreviate them.
     gettext_noop("Rare"),
     gettext_noop("Super Rare"),

@@ -468,3 +468,6 @@ msgstr "まだ完全一致なし — 最初の1回が引き直しだった場合
 #: static/planner/app.js
 msgid "See it in the tier list"
 msgstr "ティア表で見る"
+
+msgid "Nothing to grind: this cat has no catfruit evolution or talents"
+msgstr "育成するものなし：このキャラにはマタタビ進化も本能もありません"

@@ -218,12 +218,14 @@ class UnitPlan(models.Model):
 
 
 class TalentPlan(models.Model):
-    """One talent the player wants to buy: the unit and the slot's index in the
-    committed talents document."""
+    """One talent the player wants to buy: the unit, the slot's index in the committed
+    talents document, and the level they're levelling it to."""
 
     profile = models.ForeignKey(Profile, on_delete=models.CASCADE, related_name="talent_plans")
     unit = models.ForeignKey(Unit, on_delete=models.CASCADE, related_name="talent_plans")
     slot = models.PositiveSmallIntegerField()
+    # Blank means the slot's max: every plan made before talents took a level wanted it whole.
+    level = models.PositiveSmallIntegerField(null=True, blank=True)
 
     objects = UnitPlanManager()
     all_regions = models.Manager()

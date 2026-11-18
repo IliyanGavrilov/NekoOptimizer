@@ -12,9 +12,11 @@
   time you scroll to the end; each has a button per form posting "<unit id>/<form>".{% endcomment %}
   <form method="post" id="avatarPicker" class="avatar-picker">
     {% csrf_token %}
-    <input type="search" id="avatarSearch" placeholder="{% translate "Search cats…" %}"
-           aria-label="{% translate "Search cats…" %}" autocomplete="off">
-    {% include "planner/_cat_filters.html" %}
+    <div class="cat-toolbar">
+      <input type="search" id="avatarSearch" placeholder="{% translate "Search cats…" %}"
+             aria-label="{% translate "Search cats…" %}" autocomplete="off">
+      {% include "planner/_cat_filters.html" %}
+    </div>
     <p class="muted hint" id="avatarHint" hidden>{% translate "No cats match." %}</p>
     <div id="avatarGrid" class="avatar-grid"></div>
     <div id="avatarMore" aria-hidden="true"></div>

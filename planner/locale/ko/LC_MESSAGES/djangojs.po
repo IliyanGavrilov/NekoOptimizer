@@ -469,3 +469,6 @@ msgstr "아직 정확히 일치하는 것 없음 — 첫 뽑기가 재추첨이�
 #: static/planner/app.js
 msgid "See it in the tier list"
 msgstr "티어표에서 보기"
+
+msgid "Nothing to grind: this cat has no catfruit evolution or talents"
+msgstr "육성할 것 없음: 이 캐릭터는 개다래 열매 진화도 본능도 없습니다"
