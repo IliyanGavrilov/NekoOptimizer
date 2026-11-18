@@ -1104,7 +1104,7 @@ msgstr "DPS와 상성 그래프."
 msgid ""
 "Free Battle Cats gacha planner: track your seed, see every upcoming roll and get the cheapest path in tickets and catfood to the Ubers you want."
 msgstr ""
-"무료 냥코 대전쟁 뽑기 플래너: 시드를 추적하고 앞으로의 모든 뽑기 결과를 보며, 원하는 울트라 슈퍼 레어까지 티켓과 통조림을 가장 적게 쓰는 길을 찾으세요."
+"무료 냥코 대전쟁 뽑기 플래너: 시드를 추적해 A열·B열에서 앞으로 나올 모든 뽑기 결과를 미리 확인하고, 원하는 울트라 슈퍼 레어까지 레어 티켓과 통조림을 가장 아낄 수 있는 뽑는 순서를 찾아 보세요."
 
 #: .\seo.py:43
 msgid "Battle Cats Gacha Planner & Seed Tracker"
@@ -1114,7 +1114,7 @@ msgstr "냥코 대전쟁 뽑기 플래너 & 시드 트래커"
 msgid ""
 "Plan your Battle Cats rare gacha pulls from your seed: every upcoming roll on both tracks, and the cheapest path in tickets and catfood to the Ubers you want."
 msgstr ""
-"시드로 냥코 대전쟁 레어 뽑기를 계획: A열·B열의 앞으로 모든 결과와, 원하는 울트라 슈퍼 레어까지 티켓·통조림을 가장 적게 쓰는 방법."
+"시드로 냥코 대전쟁 레어 뽑기를 계획: A열·B열에서 앞으로 나올 모든 결과를 한눈에 보여 주고, 원하는 울트라 슈퍼 레어까지 레어 티켓과 통조림을 가장 적게 쓰는 뽑는 순서를 찾아 줍니다. 무료입니다."
 
 #: .\seo.py:50
 msgid "Battle Cats Normal Capsule Seed Tracker"
@@ -1123,7 +1123,8 @@ msgstr "냥코 대전쟁 냥코 뽑기 시드 트래커"
 #: .\seo.py:52
 msgid ""
 "Predict the Battle Cats Normal Cat Capsule from your normal seed: the Catfruit, Catseye and Lucky Ticket machines in one table, with the pulls worth taking."
-msgstr "냥코 뽑기 시드로 결과를 예측: 개다래 열매·캣츠아이·럭키 뽑기를 한 표에서 보고, 돌릴 가치가 있는 뽑기를 알 수 있습니다."
+msgstr ""
+"냥코 대전쟁의 냥코 뽑기를 시드로 예측: 개다래 열매·캣츠아이·럭키 뽑기에서 앞으로 나올 결과를 한 표에 모아 보여 주고, 냥코 티켓으로 돌릴 가치가 있는 뽑기를 한눈에 알 수 있습니다."
 
 #: .\seo.py:57
 msgid "Battle Cats Cat Guide & Collection Tracker"
@@ -1133,7 +1134,7 @@ msgstr "냥코 대전쟁 냥코 도감 & 컬렉션 관리"
 msgid ""
 "Track every Battle Cats unit you own and want in Cat Guide order. Import your collection from in-game screenshots and filter by abilities, combos and talents."
 msgstr ""
-"냥코 대전쟁 보유·희망 캐릭터를 냥코 도감 순서로 관리. 게임 스크린샷으로 컬렉션을 가져오고 능력·냥콤보·본능으로 필터링하세요."
+"냥코 대전쟁에서 보유한 캐릭터와 원하는 캐릭터를 냥코 도감과 같은 순서로 관리하세요. 게임 속 냥코 도감 스크린샷으로 컬렉션을 한 번에 가져오고, 능력·냥콤보·본능으로 필터링할 수 있습니다."
 
 #: .\seo.py:64
 msgid "Battle Cats Evolution, Talent & Cannon Calculator"
@@ -1142,7 +1143,8 @@ msgstr "냥코 대전쟁 진화·본능·냥코 대포 계산기"
 #: .\seo.py:66
 msgid ""
 "Total the catfruit, behemoth stones, XP, NP and cannon materials you need to evolve your Battle Cats units, unlock their talents and build your Cat Base cannons."
-msgstr "냥코 대전쟁 캐릭터 진화, 본능 해방, 냥코 대포 개발에 필요한 개다래 열매·수석·XP·NP·재료 합계를 계산합니다."
+msgstr ""
+"냥코 대전쟁 캐릭터 진화, 본능 해방, 냥코 대포 개발에 필요한 개다래 열매·수석·XP·NP·재료를 한 번에 계산합니다. 키우고 싶은 캐릭터를 고르기만 하면 필요한 재료의 합계를 바로 알 수 있습니다."
 
 #: .\seo.py:71
 msgid "Battle Cats Uber Tier List: Best Ubers & Legend Rares"
@@ -1151,7 +1153,8 @@ msgstr "냥코 대전쟁 울슈레 티어표: 최강 울슈레 & 레전드 레�
 #: .\seo.py:73
 msgid ""
 "Every permanent Battle Cats Uber and Legend Rare ranked tier by tier, with Ultra Form and Ultra Talent placements - plus a tier list for every gacha set."
-msgstr "냥코 대전쟁 상시 울트라 슈퍼 레어·레전드 레어를 티어별로 순위 매김. 제4형태·초본능 평가와 뽑기 세트별 티어표도 있습니다."
+msgstr ""
+"냥코 대전쟁의 모든 상시 울트라 슈퍼 레어와 레전드 레어를 티어별로 순위를 매겼습니다. 제4형태와 초본능을 해방했을 때의 평가는 물론, 뽑기 세트마다 따로 정리한 티어표도 있습니다."
 
 #: .\seo.py:78
 msgid "Battle Cats Seed Finder: Find Your Gacha Seed"
@@ -1161,7 +1164,7 @@ msgstr "냥코 대전쟁 시드 찾기: 뽑기 시드 알아내기"
 msgid ""
 "Don't know your Battle Cats seed? Enter the cats from a few rolls and the finder checks all 4.3 billion seeds in your browser for the one that matches."
 msgstr ""
-"냥코 대전쟁 시드를 모르나요? 몇 번 뽑은 캐릭터를 입력하면 브라우저에서 약 43억 개의 시드를 모두 확인해 일치하는 것을 찾습니다."
+"냥코 대전쟁 시드를 모르나요? 몇 번 뽑아서 나온 캐릭터를 입력하면 브라우저에서 약 43억 개의 시드를 모두 확인해 일치하는 시드를 찾아 줍니다. 가입하지 않아도 바로 쓸 수 있습니다."
 
 #: .\seo.py:85
 msgid "Battle Cats Gacha Guides: Seeds, Tracks & Planning"
@@ -1170,7 +1173,8 @@ msgstr "냥코 대전쟁 뽑기 가이드: 시드·A열B열·계획"
 #: .\seo.py:87
 msgid ""
 "Step-by-step Battle Cats guides: find your gacha seed, read the A/B roll tracks, plan your pulls for the Ubers you want and predict the Normal Capsules."
-msgstr "냥코 대전쟁 단계별 가이드: 뽑기 시드 찾기, A열·B열 읽기, 원하는 울슈레를 위한 뽑기 계획, 냥코 뽑기 예측."
+msgstr ""
+"냥코 대전쟁 단계별 가이드: 뽑기 시드를 찾는 법, A열·B열 읽는 법, 원하는 울트라 슈퍼 레어를 위한 티켓과 통조림 사용 계획, 냥코 뽑기 예측까지 처음 하는 분도 따라 할 수 있게 차근차근 설명합니다."
 
 #: .\seo.py:92
 msgid "What's New in Neko Optimizer"
@@ -1178,8 +1182,9 @@ msgstr "Neko Optimizer 새 소식"
 
 #: .\seo.py:93
 msgid ""
-"The latest changes to Neko Optimizer, the Battle Cats gacha planner, newest first."
-msgstr "냥코 대전쟁 뽑기 플래너 Neko Optimizer의 최근 변경 사항(최신순)."
+"Every update to Neko Optimizer, the free Battle Cats gacha planner and seed tracker, newest first: new tools, guides, game versions, features and fixes."
+msgstr ""
+"무료 냥코 대전쟁 뽑기 플래너이자 시드 트래커인 Neko Optimizer의 모든 업데이트를 최신순으로 정리: 새 도구와 가이드, 지원하는 게임 버전, 새 기능과 버그 수정을 한곳에서 확인하세요."
 
 #: .\seo.py:96 .\templates\planner\base.html:64
 #: .\templates\planner\base.html:148
@@ -1188,8 +1193,9 @@ msgstr "소개"
 
 #: .\seo.py:98
 msgid ""
-"Who built Neko Optimizer, the tech behind its Battle Cats gacha planner, and the community tools and data it credits."
-msgstr "Neko Optimizer를 만든 사람, 냥코 대전쟁 뽑기 플래너의 기술, 그리고 출처로 밝힌 커뮤니티 도구와 데이터."
+"Who built Neko Optimizer, the free Battle Cats gacha planner and seed tracker, what it is built with, and the community tools and data it credits."
+msgstr ""
+"무료 냥코 대전쟁 뽑기 플래너이자 시드 트래커인 Neko Optimizer 소개: 이 도구로 할 수 있는 일, 만든 사람, 사용한 기술, 그리고 출처로 밝힌 커뮤니티 도구와 데이터."
 
 #: .\seo.py:102 .\templates\planner\account.html:6
 #: .\templates\planner\account.html:32 .\templates\planner\base.html:104
@@ -1208,8 +1214,9 @@ msgstr "냥코 대전쟁 뽑기 용어 쉽게 설명"
 
 #: .\seo.py:111
 msgid ""
-"What seeds, tracks A and B, rerolls, guaranteed draws and the other Battle Cats gacha words mean, in a sentence or two each."
-msgstr "시드, A열·B열, 재추첨, 확정 등 냥코 대전쟁 뽑기 용어를 한두 문장으로 설명합니다."
+"What seeds, rolls, 11-draws, guaranteed draws, banners, tracks A and B, rerolls, Ubers and Legend Rares mean in the Battle Cats gacha, in a sentence or two each."
+msgstr ""
+"시드, 뽑기, 11연 뽑기, 확정, 뽑기 종류, A열·B열, 재추첨, 울트라 슈퍼 레어와 레전드 레어 등 냥코 대전쟁 뽑기 용어가 무슨 뜻인지 한두 문장으로 알기 쉽게 설명합니다."
 
 #: .\seo.py:116
 msgid "How to Find Your Battle Cats Seed (Step by Step)"
@@ -1219,7 +1226,7 @@ msgstr "냥코 대전쟁 시드 찾는 법(단계별)"
 msgid ""
 "Find your Battle Cats gacha seed from a few rolls: which banner to use, how to record your cats, the guaranteed-Uber trap, and what to do when several seeds match."
 msgstr ""
-"몇 번의 뽑기 결과로 시드를 찾는 방법: 어떤 뽑기를 쓸지, 캐릭터 기록법, 확정 울슈레의 함정, 시드가 여러 개 일치할 때 대처법."
+"냥코 대전쟁 시드를 몇 번의 뽑기 결과로 찾는 방법: 어떤 뽑기를 쓸지, 나온 캐릭터를 기록하는 법, 확정 울트라 슈퍼 레어의 함정, 그리고 시드가 여러 개 일치할 때의 대처법까지 알려 드립니다."
 
 #: .\seo.py:123
 msgid "Battle Cats Seed Tracker: How to Read Tracks A and B"
@@ -1228,7 +1235,8 @@ msgstr "냥코 대전쟁 배열 보는 법: A열과 B열"
 #: .\seo.py:125
 msgid ""
 "How Battle Cats rare gacha rolls work from your seed: tracks A and B, duplicate rerolls that switch tracks, guaranteed 11-draws and how to step to the cat you want."
-msgstr "시드로 정해지는 레어 뽑기의 원리: A열과 B열, 열을 이동하는 레어 중복, 확정 11연 뽑기, 원하는 캐릭터까지 가는 법."
+msgstr ""
+"냥코 대전쟁 레어 뽑기가 시드로 어떻게 정해지는지 설명합니다: A열과 B열의 원리, 열을 이동하게 만드는 레어 중복, 확정 11연 뽑기, 그리고 원하는 캐릭터까지 한 걸음씩 다가가는 법."
 
 #: .\seo.py:130
 msgid "How to Plan Battle Cats Gacha Rolls for the Ubers You Want"
@@ -1238,7 +1246,7 @@ msgstr "원하는 울슈레를 위한 뽑기 계획 세우는 법"
 msgid ""
 "Use your seed to get the Ubers you want for the fewest tickets and catfood: pick targets and banners, set your budget, follow the plan and apply it when you've rolled."
 msgstr ""
-"시드를 이용해 원하는 울슈레를 가장 적은 티켓과 통조림으로 얻기: 목표와 뽑기를 고르고, 예산을 정하고, 플랜대로 뽑은 뒤 적용하세요."
+"냥코 대전쟁 시드를 이용해 원하는 울트라 슈퍼 레어를 가장 적은 레어 티켓과 통조림으로 얻는 방법: 목표와 뽑기를 고르고, 예산을 정하고, 플랜대로 뽑은 뒤 결과를 적용하세요."
 
 #: .\seo.py:137
 msgid "Battle Cats Normal Capsule Seed Guide: Catfruit & Catseyes"
@@ -1247,7 +1255,8 @@ msgstr "냥코 뽑기 시드 가이드: 개다래 열매 & 캣츠아이"
 #: .\seo.py:139
 msgid ""
 "The Battle Cats Normal Capsules run on their own seed. Find it, predict the Catfruit, Catseye and Lucky Ticket machines, and plan your normal tickets."
-msgstr "냥코 뽑기는 전용 시드로 돌아갑니다. 그 시드를 찾아 개다래 열매·캣츠아이·럭키 뽑기를 예측하고 냥코 티켓 사용을 계획하세요."
+msgstr ""
+"냥코 대전쟁의 냥코 뽑기는 레어 뽑기와 다른 전용 시드로 돌아갑니다. 그 시드를 찾아 개다래 열매·캣츠아이·럭키 뽑기의 결과를 예측하고, 냥코 티켓을 언제 쓸지 계획해 보세요."
 
 #: .\seo.py:144
 msgid "Never Lose Your Battle Cats Seed"
@@ -1257,7 +1266,7 @@ msgstr "냥코 대전쟁 시드를 다시는 잃어버리지 않는 법"
 msgid ""
 "Where Neko Optimizer keeps your Battle Cats seeds, how to carry them to another device, and the one-minute backup that makes losing them impossible."
 msgstr ""
-"Neko Optimizer가 시드를 어디에 저장하는지, 다른 기기로 옮기는 법, 그리고 절대 잃어버리지 않게 해 주는 1분 백업."
+"Neko Optimizer가 냥코 대전쟁 시드를 어디에 저장하는지, 다른 기기나 브라우저로 옮기는 방법, 그리고 시드를 절대 잃어버리지 않게 해 주는 1분이면 끝나는 백업 방법을 알려 드립니다."
 
 #: .\seo.py:186
 #, python-format
@@ -1268,7 +1277,8 @@ msgstr "냥코 대전쟁 %(label)s 티어표"
 #, python-format
 msgid ""
 "The Battle Cats %(label)s tier list: every unit in the set ranked tier by tier, with Ultra Form and Ultra Talent placements and each cat's forms."
-msgstr "냥코 대전쟁 %(label)s 티어표: 세트 안 모든 캐릭터를 티어별로 순위 매김. 제4형태·초본능 평가와 각 형태 포함."
+msgstr ""
+"냥코 대전쟁 %(label)s 티어표: 이 세트의 모든 캐릭터를 티어별로 순위를 매겼습니다. 제4형태와 초본능을 해방했을 때의 평가와 캐릭터별 각 형태도 함께 확인할 수 있습니다."
 
 #: .\services.py:139 .\services.py:759
 msgid "Ultra Form"

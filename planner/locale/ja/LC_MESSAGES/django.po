@@ -1103,7 +1103,7 @@ msgstr "DPSと相性のグラフ。"
 msgid ""
 "Free Battle Cats gacha planner: track your seed, see every upcoming roll and get the cheapest path in tickets and catfood to the Ubers you want."
 msgstr ""
-"無料のにゃんこ大戦争ガチャプランナー:シード値を追跡し、これから引くすべての結果を確認して、ほしい超激レアまでの最もお得なチケット・ネコカンの使い方を見つけられます。"
+"無料のにゃんこ大戦争ガチャプランナー:シード値を追跡して、A列・B列でこれから引くすべての結果を先に確認し、ほしい超激レアまでレアチケットとネコカンを最も節約できる引き方を見つけられます。日本版に対応、無料・登録不要。"
 
 #: .\seo.py:43
 msgid "Battle Cats Gacha Planner & Seed Tracker"
@@ -1113,7 +1113,7 @@ msgstr "にゃんこ大戦争 ガチャプランナー&シード値トラッカ�
 msgid ""
 "Plan your Battle Cats rare gacha pulls from your seed: every upcoming roll on both tracks, and the cheapest path in tickets and catfood to the Ubers you want."
 msgstr ""
-"シード値からにゃんこ大戦争のレアガチャを計画:A列・B列のこれから先の結果すべてと、ほしい超激レアまでのチケット・ネコカンが最も少なく済む引き方。"
+"シード値からにゃんこ大戦争のレアガチャを計画:A列・B列のこれから先の結果をすべて表示し、ほしい超激レアまでレアチケットとネコカンが最も少なく済む引き方を見つけます。日本版に対応し、無料・登録不要でブラウザからすぐ使えます。"
 
 #: .\seo.py:50
 msgid "Battle Cats Normal Capsule Seed Tracker"
@@ -1122,7 +1122,8 @@ msgstr "にゃんこ大戦争 にゃんこガチャ シード値トラッカー"
 #: .\seo.py:52
 msgid ""
 "Predict the Battle Cats Normal Cat Capsule from your normal seed: the Catfruit, Catseye and Lucky Ticket machines in one table, with the pulls worth taking."
-msgstr "にゃんこガチャのシード値から結果を予測:マタタビ・キャッツアイ・福引ガチャをひとつの表で確認し、引く価値のある回がわかります。"
+msgstr ""
+"にゃんこ大戦争のにゃんこガチャをシード値から予測:マタタビ・キャッツアイ・福引ガチャのこの先の結果をひとつの表にまとめて表示し、にゃんこチケットで引く価値のある回がひと目でわかります。日本版対応、無料・登録不要。"
 
 #: .\seo.py:57
 msgid "Battle Cats Cat Guide & Collection Tracker"
@@ -1132,7 +1133,7 @@ msgstr "にゃんこ大戦争 にゃんこ図鑑&コレクション管理"
 msgid ""
 "Track every Battle Cats unit you own and want in Cat Guide order. Import your collection from in-game screenshots and filter by abilities, combos and talents."
 msgstr ""
-"にゃんこ大戦争の所持キャラ・ほしいキャラを、にゃんこ図鑑の順番で管理。ゲーム画面のスクリーンショットから取り込み、能力・にゃんコンボ・本能で絞り込めます。"
+"にゃんこ大戦争の所持キャラ・ほしいキャラを、にゃんこ図鑑と同じ順番で管理。ゲーム内のにゃんこ図鑑のスクリーンショットからまとめて取り込み、能力・にゃんコンボ・本能で絞り込めます。日本版に対応、無料・登録不要。"
 
 #: .\seo.py:64
 msgid "Battle Cats Evolution, Talent & Cannon Calculator"
@@ -1141,7 +1142,8 @@ msgstr "にゃんこ大戦争 進化・本能・にゃんこ砲 計算ツール"
 #: .\seo.py:66
 msgid ""
 "Total the catfruit, behemoth stones, XP, NP and cannon materials you need to evolve your Battle Cats units, unlock their talents and build your Cat Base cannons."
-msgstr "にゃんこ大戦争のキャラ進化、本能の解放、にゃんこ砲の開発に必要なマタタビ・獣石・XP・NP・素材の合計を計算します。"
+msgstr ""
+"にゃんこ大戦争のキャラ進化、本能の解放、にゃんこ砲の開発に必要なマタタビ・獣石・XP・NP・素材をまとめて計算。育てたいキャラを選ぶだけで、必要な素材の合計がすぐにわかります。日本版に対応、無料・登録不要。"
 
 #: .\seo.py:71
 msgid "Battle Cats Uber Tier List: Best Ubers & Legend Rares"
@@ -1150,7 +1152,8 @@ msgstr "にゃんこ大戦争 超激レアティア表:最強の超激・伝説�
 #: .\seo.py:73
 msgid ""
 "Every permanent Battle Cats Uber and Legend Rare ranked tier by tier, with Ultra Form and Ultra Talent placements - plus a tier list for every gacha set."
-msgstr "にゃんこ大戦争の恒常超激レア・伝説レアをティアごとにランク付け。第4形態・超本能の評価と、ガチャのセットごとのティア表も。"
+msgstr ""
+"にゃんこ大戦争の恒常超激レア・伝説レアを全キャラ、ティアごとにランク付け。第4形態・超本能を解放したときの評価に加えて、ガチャのセットごとのティア表もそろっていて、次に引くガチャ選びに役立ちます。"
 
 #: .\seo.py:78
 msgid "Battle Cats Seed Finder: Find Your Gacha Seed"
@@ -1160,7 +1163,7 @@ msgstr "にゃんこ大戦争 シード値検索:ガチャのシード値を調�
 msgid ""
 "Don't know your Battle Cats seed? Enter the cats from a few rolls and the finder checks all 4.3 billion seeds in your browser for the one that matches."
 msgstr ""
-"にゃんこ大戦争のシード値がわからない?数回引いたキャラを入力すると、ブラウザ上で約43億通りのシード値をすべて調べて一致するものを見つけます。"
+"にゃんこ大戦争のシード値がわからない?数回引いたガチャで出たキャラを入力すると、ブラウザ上で約43億通りのシード値をすべて調べて一致するものを見つけます。見つかったシード値はそのままガチャプランナーで使えます。日本版に対応、無料・登録不要。"
 
 #: .\seo.py:85
 msgid "Battle Cats Gacha Guides: Seeds, Tracks & Planning"
@@ -1169,7 +1172,8 @@ msgstr "にゃんこ大戦争 ガチャ攻略ガイド:シード値・A列B列�
 #: .\seo.py:87
 msgid ""
 "Step-by-step Battle Cats guides: find your gacha seed, read the A/B roll tracks, plan your pulls for the Ubers you want and predict the Normal Capsules."
-msgstr "にゃんこ大戦争のステップ別ガイド:ガチャのシード値の調べ方、A列・B列の読み方、ほしい超激レアのための引き方、にゃんこガチャの予測。"
+msgstr ""
+"にゃんこ大戦争のステップ別ガイド:ガチャのシード値の調べ方、A列・B列の読み方、ほしい超激レアのためのチケットとネコカンの使い方、にゃんこガチャの予測まで、初めての人にもわかるように順を追って解説します。"
 
 #: .\seo.py:92
 msgid "What's New in Neko Optimizer"
@@ -1177,8 +1181,9 @@ msgstr "Neko Optimizerの更新情報"
 
 #: .\seo.py:93
 msgid ""
-"The latest changes to Neko Optimizer, the Battle Cats gacha planner, newest first."
-msgstr "にゃんこ大戦争のガチャプランナー、Neko Optimizerの最新の変更点(新しい順)。"
+"Every update to Neko Optimizer, the free Battle Cats gacha planner and seed tracker, newest first: new tools, guides, game versions, features and fixes."
+msgstr ""
+"にゃんこ大戦争の無料ガチャプランナー・シード値トラッカー、Neko Optimizerのすべての更新を新しい順に掲載:新しいツールやガイド、対応バージョン、機能の追加と不具合の修正をまとめています。"
 
 #: .\seo.py:96 .\templates\planner\base.html:64
 #: .\templates\planner\base.html:148
@@ -1187,8 +1192,9 @@ msgstr "このサイトについて"
 
 #: .\seo.py:98
 msgid ""
-"Who built Neko Optimizer, the tech behind its Battle Cats gacha planner, and the community tools and data it credits."
-msgstr "Neko Optimizerの作者、にゃんこ大戦争ガチャプランナーを支える技術、そしてクレジットしているコミュニティのツールとデータ。"
+"Who built Neko Optimizer, the free Battle Cats gacha planner and seed tracker, what it is built with, and the community tools and data it credits."
+msgstr ""
+"にゃんこ大戦争の無料ガチャプランナー・シード値トラッカー、Neko Optimizerについて:できること、作者、使っている技術、そしてクレジットしているコミュニティのツールとデータを紹介します。"
 
 #: .\seo.py:102 .\templates\planner\account.html:6
 #: .\templates\planner\account.html:32 .\templates\planner\base.html:104
@@ -1207,8 +1213,9 @@ msgstr "にゃんこ大戦争 ガチャ用語をかんたん解説"
 
 #: .\seo.py:111
 msgid ""
-"What seeds, tracks A and B, rerolls, guaranteed draws and the other Battle Cats gacha words mean, in a sentence or two each."
-msgstr "シード値、A列・B列、レア被り、確定など、にゃんこ大戦争のガチャ用語をそれぞれ一言二言で解説します。"
+"What seeds, rolls, 11-draws, guaranteed draws, banners, tracks A and B, rerolls, Ubers and Legend Rares mean in the Battle Cats gacha, in a sentence or two each."
+msgstr ""
+"シード値、ガチャを引く、11連、確定、ガチャの種類、A列・B列、レア被り、超激レア・伝説レアなど、にゃんこ大戦争のガチャ用語の意味を、それぞれ一言二言でわかりやすく解説します。ほかのガイドを読む前にどうぞ。"
 
 #: .\seo.py:116
 msgid "How to Find Your Battle Cats Seed (Step by Step)"
@@ -1217,7 +1224,8 @@ msgstr "にゃんこ大戦争のシード値の調べ方(手順つき)"
 #: .\seo.py:118
 msgid ""
 "Find your Battle Cats gacha seed from a few rolls: which banner to use, how to record your cats, the guaranteed-Uber trap, and what to do when several seeds match."
-msgstr "数回のガチャ結果からシード値を調べる方法:使うガチャ、キャラの記録の仕方、確定超激の落とし穴、複数のシード値が一致した時の対処。"
+msgstr ""
+"にゃんこ大戦争のシード値を数回のガチャ結果から調べる方法:どのガチャを使うか、出たキャラの記録の仕方、確定超激の落とし穴、そして複数のシード値が一致した時の対処法まで、手順どおりに解説します。"
 
 #: .\seo.py:123
 msgid "Battle Cats Seed Tracker: How to Read Tracks A and B"
@@ -1226,7 +1234,8 @@ msgstr "にゃんこ大戦争 ガチャテーブルの見方:A列とB列"
 #: .\seo.py:125
 msgid ""
 "How Battle Cats rare gacha rolls work from your seed: tracks A and B, duplicate rerolls that switch tracks, guaranteed 11-draws and how to step to the cat you want."
-msgstr "シード値から決まるレアガチャの仕組み:A列とB列、列移動するレア被り、確定11連、ほしいキャラまでの進め方。"
+msgstr ""
+"にゃんこ大戦争のレアガチャの結果がシード値でどう決まるのか:A列とB列の仕組み、列が移動するレア被り、確定11連の扱い、そしてほしいキャラまで一歩ずつ進める引き方を解説します。読み終えればシード値の結果表を自分で読めるようになります。"
 
 #: .\seo.py:130
 msgid "How to Plan Battle Cats Gacha Rolls for the Ubers You Want"
@@ -1236,7 +1245,7 @@ msgstr "ほしい超激レアのためのガチャ計画の立て方"
 msgid ""
 "Use your seed to get the Ubers you want for the fewest tickets and catfood: pick targets and banners, set your budget, follow the plan and apply it when you've rolled."
 msgstr ""
-"シード値を使って、ほしい超激レアを最少のチケットとネコカンで手に入れる:ターゲットとガチャを選び、予算を入れ、プランどおりに引いて、引き終えたら適用します。"
+"にゃんこ大戦争のシード値を使って、ほしい超激レアを最少のレアチケットとネコカンで手に入れる方法:ターゲットとガチャを選び、予算を入れ、プランどおりに引いて、引き終えたら結果を適用して、シード値を最新の状態に保ちます。"
 
 #: .\seo.py:137
 msgid "Battle Cats Normal Capsule Seed Guide: Catfruit & Catseyes"
@@ -1246,7 +1255,7 @@ msgstr "にゃんこガチャ シード値ガイド:マタタビ&キャッツア
 msgid ""
 "The Battle Cats Normal Capsules run on their own seed. Find it, predict the Catfruit, Catseye and Lucky Ticket machines, and plan your normal tickets."
 msgstr ""
-"にゃんこガチャは専用のシード値で動いています。それを見つけて、マタタビ・キャッツアイ・福引ガチャを予測し、にゃんこチケットの使い道を計画しましょう。"
+"にゃんこ大戦争のにゃんこガチャは、レアガチャとは別の専用シード値で動いています。そのシード値を見つけて、マタタビ・キャッツアイ・福引ガチャを予測し、にゃんこチケットの使い道を計画しましょう。"
 
 #: .\seo.py:144
 msgid "Never Lose Your Battle Cats Seed"
@@ -1255,7 +1264,8 @@ msgstr "にゃんこ大戦争のシード値を二度となくさない方法"
 #: .\seo.py:146
 msgid ""
 "Where Neko Optimizer keeps your Battle Cats seeds, how to carry them to another device, and the one-minute backup that makes losing them impossible."
-msgstr "Neko Optimizerがシード値をどこに保存しているか、別の端末への引き継ぎ方、そして絶対になくさないための1分でできるバックアップ。"
+msgstr ""
+"Neko Optimizerがにゃんこ大戦争のシード値をどこに保存しているか、別の端末やブラウザへの引き継ぎ方、そしてシード値を絶対になくさないための1分でできるバックアップ方法。機種変更やブラウザのデータ削除の前にどうぞ。"
 
 #: .\seo.py:186
 #, python-format
@@ -1266,7 +1276,8 @@ msgstr "にゃんこ大戦争 %(label)s ティア表"
 #, python-format
 msgid ""
 "The Battle Cats %(label)s tier list: every unit in the set ranked tier by tier, with Ultra Form and Ultra Talent placements and each cat's forms."
-msgstr "にゃんこ大戦争 %(label)s のティア表:セット内の全キャラをティアごとにランク付け。第4形態・超本能の評価と各形態つき。"
+msgstr ""
+"にゃんこ大戦争 %(label)s のティア表:このセットの全キャラをティアごとにランク付け。第4形態・超本能を解放したときの評価と、各キャラの形態もあわせて確認でき、このガチャで誰を狙うか決めるのに役立ちます。"
 
 #: .\services.py:139 .\services.py:759
 msgid "Ultra Form"

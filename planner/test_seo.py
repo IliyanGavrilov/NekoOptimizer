@@ -114,6 +114,24 @@ def test_robots_points_crawlers_at_the_sitemap(client):
     assert f"Sitemap: {SITE}/sitemap.xml" in client.get("/robots.txt").content.decode()
 
 
+def _disallowed(client) -> list[str]:
+    lines = client.get("/robots.txt").content.decode().splitlines()
+    return [line.removeprefix("Disallow: ") for line in lines if line.startswith("Disallow: ")]
+
+
+def test_robots_blocks_an_endpoint_under_every_region_prefix(client):
+    assert {"/unit/info/", "/jp/unit/info/", "/tw/unit/info/", "/kr/unit/info/"} <= set(
+        _disallowed(client)
+    )
+
+
+@pytest.mark.django_db
+def test_robots_blocks_no_page_in_the_sitemap(client, tiers):
+    pages = re.findall(r"<loc>https://neko\.example(.*?)</loc>", client.get("/sitemap.xml").text)
+    blocked = _disallowed(client)
+    assert [page for page in pages if page.startswith(tuple(blocked))] == []
+
+
 def test_a_vercel_deployment_loads_web_analytics(client, settings):
     settings.VERCEL_ANALYTICS = True
     assert b"/_vercel/insights/script.js" in client.get("/about/").content
