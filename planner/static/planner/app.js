@@ -2009,6 +2009,17 @@ document.addEventListener("click", (e) => {
 document.addEventListener("keydown", (e) => {
   if (e.key === "Escape") for (const menu of headerMenus) menu.open = false;
 });
+// A pick menu's panel hangs from its button's left edge, or from its right edge where
+// that would run off the screen (a button near the right on a phone).
+for (const menu of document.querySelectorAll(".pick-menu")) {
+  const pop = menu.querySelector(".pick-pop");
+  if (!pop) continue;
+  menu.addEventListener("toggle", () => {
+    if (!menu.open) return;
+    pop.classList.remove("flip");
+    pop.classList.toggle("flip", pop.getBoundingClientRect().right > document.documentElement.clientWidth);
+  });
+}
 
 // ---- Pick menus (view, ownership, rarity): the button names the current choice ----
 // Picking closes the menu. A filter set to anything but "All" turns its button accent;

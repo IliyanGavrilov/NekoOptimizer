@@ -904,7 +904,7 @@ fn legend(req: &Request) -> String {
         t("click a cell's empty space to light up the pulls to it"),
         t("striped"),
         t("where you are now &mdash; the cat your next pull gives (past any lit pulls)"),
-        t("green name"),
+        t("green"),
         t("Uber/Legend you don't own"),
         t("owned"),
         t("cat"),

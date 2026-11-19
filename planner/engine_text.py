@@ -91,7 +91,7 @@ ENGINE_TEXT = (
     gettext_noop("cat"),
     gettext_noop("click a cell's empty space to light up the pulls to it"),
     gettext_noop("dashed"),
-    gettext_noop("green name"),
+    gettext_noop("green"),
     gettext_noop("if dupe"),
     gettext_noop("if dupe:"),
     gettext_noop("legend"),
