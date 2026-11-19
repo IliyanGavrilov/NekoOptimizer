@@ -529,13 +529,28 @@ def test_newly_added_ubers_are_the_ubers_debuting_with_a_banner_run():
 
 def test_run_debuts_name_every_rarity_a_run_brings_first_rarest_first():
     events = [
+        _gacha_event("start", date(2024, 1, 1), 9),
         _gacha_event("base", date(2025, 1, 1), 10),
         _gacha_event("collab", date(2025, 3, 1), 11),
     ]
-    pools = {10: [1], 11: [1, 2, 3]}
+    pools = {9: [], 10: [1], 11: [1, 2, 3]}
     units = {1: ("Old Uber", U.value), 2: ("Collab Rare", "Rare"), 3: ("Collab Uber", U.value)}
     added = run_debuts(events=events, pools=pools, units=units)
     assert added == {"base": ["Old Uber"], "collab": ["Collab Uber", "Collab Rare"]}
+
+
+def test_run_debuts_skip_the_first_year_of_history():
+    # The history opens with an old uber and an old seasonal one coming round months
+    # later: neither is new. A cat first seen past the first year is.
+    events = [
+        _gacha_event("first", date(2018, 6, 6), 10),
+        _gacha_event("xmas", date(2018, 12, 10), 11),
+        _gacha_event("debut", date(2019, 7, 1), 12),
+    ]
+    pools = {10: [1], 11: [2], 12: [3]}
+    units = {1: ("Old Uber", U.value), 2: ("Xmas Uber", U.value), 3: ("New Uber", U.value)}
+    added = run_debuts(events=events, pools=pools, units=units)
+    assert added == {"debut": ["New Uber"]}
 
 
 def test_run_debuts_skip_capsules_starting_the_same_day():
@@ -545,7 +560,8 @@ def test_run_debuts_skip_capsules_starting_the_same_day():
         _gacha_event("Get an Uber Rare Cat!! PLATINUM CAPSULES!", start, 11),
     ]
     units = {1: ("Akane", U.value)}
-    added = run_debuts(events=events, pools={10: [1], 11: [1]}, units=units)
+    history = _gacha_event("start", date(2025, 1, 1), 9)
+    added = run_debuts(events=[history, *events], pools={9: [], 10: [1], 11: [1]}, units=units)
     assert added == {"New unit Akane added!": ["Akane"]}
 
 
