@@ -2044,7 +2044,7 @@ msgstr "소스"
 
 #: .\templates\planner\collection.html:6
 msgid ""
-"Every cat in the game. Click one to mark it <strong>owned</strong>; tap the star to add it to your <strong>wishlist</strong>. Saved instantly."
+"Every cat in the game. Click one to mark it <strong>owned</strong>; click the star to add it to your <strong>wishlist</strong>. Saved instantly."
 msgstr ""
 "게임의 모든 캐릭터. 누르면 <strong>보유</strong>로, 별을 누르면 <strong>위시리스트</strong>에 추가. 바로 저장됩니다."
 
@@ -2450,7 +2450,7 @@ msgstr "목표를 고르거나 「위시리스트도 검색」을 체크"
 
 #: .\templates\planner\planner.html:25
 msgid ""
-"Tap <span class=\"key\">&plus;</span> to roll a banner. Click a banner's name to see its cats."
+"Click <span class=\"key\">&plus;</span> to roll a banner. Click a banner's name to see its cats."
 msgstr "<span class=\"key\">&plus;</span>로 그 뽑기를 돌립니다. 뽑기 이름을 누르면 캐릭터가 보입니다."
 
 #: .\templates\planner\planner.html:25
