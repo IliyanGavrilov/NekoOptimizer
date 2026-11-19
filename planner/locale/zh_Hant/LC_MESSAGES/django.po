@@ -311,8 +311,8 @@ msgid "dashed"
 msgstr "虛線"
 
 #: .\engine_text.py:97 .\templates\planner\_tracks.html:42
-msgid "green name"
-msgstr "綠色名字"
+msgid "green"
+msgstr "綠色"
 
 #: .\engine_text.py:98 .\templates\planner\_normal_tracks.html:7
 #: .\templates\planner\_tracks.html:39

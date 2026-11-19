@@ -125,6 +125,25 @@
       </div>
     </div>
   </header>
+  <script>
+    // Brand, nav and controls share one row only while they fit, which hangs on each
+    // language's label widths - so it's measured before the first paint, not a breakpoint.
+    (() => {
+      const header = document.querySelector(".site-header");
+      const bar = header.querySelector(".bar");
+      const fit = () => {
+        header.classList.remove("stacked");
+        header.classList.toggle("stacked", bar.scrollWidth > bar.clientWidth);
+      };
+      fit();
+      addEventListener("resize", fit);
+      document.fonts.ready.then(fit);
+      // On a phone the links swipe sideways: start with the page you're on in view.
+      const nav = header.querySelector("nav");
+      const here = nav.querySelector("[aria-current]");
+      if (here) nav.scrollLeft = here.offsetLeft - nav.offsetLeft - (nav.clientWidth - here.offsetWidth) / 2;
+    })();
+  </script>
   {% comment %}A first visit's welcome: a strip, not a pop-up, so it never covers the
   page. app.js shows it until its × is pressed, then remembers that.{% endcomment %}
   <aside class="welcome" id="welcome" hidden aria-label="{% translate "Welcome" %}">
