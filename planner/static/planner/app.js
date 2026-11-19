@@ -1444,7 +1444,7 @@ const HANGUL_INITIALS = "ㄱㄱㄴㄷㄷㄹㅁㅂㅂㅅㅅㅇㅈㅈㅊㅋㅌㅍ�
 function firstLetter(name) {
   const code = name.codePointAt(0);
   if (code >= 0xac00 && code <= 0xd7a3) return HANGUL_INITIALS[Math.floor((code - 0xac00) / 588)];
-  let ch = name.normalize("NFKD").charAt(0).toUpperCase();
+  let ch = name.normalize("NFKD").toUpperCase().charAt(0);
   if (/[A-Z]/.test(ch)) return ch;
   if (ch >= "ぁ" && ch <= "ゖ") ch = String.fromCharCode(ch.charCodeAt(0) + 0x60);
   const row = KANA_ROWS.find((kana) => kana.includes(ch));
