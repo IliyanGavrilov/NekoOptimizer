@@ -131,15 +131,22 @@
     (() => {
       const header = document.querySelector(".site-header");
       const bar = header.querySelector(".bar");
+      const nav = header.querySelector("nav");
       const fit = () => {
+        const swiped = nav.scrollLeft;
         header.classList.remove("stacked");
         header.classList.toggle("stacked", bar.scrollWidth > bar.clientWidth);
+        nav.scrollLeft = swiped;
       };
       fit();
-      addEventListener("resize", fit);
+      // Phones fire resize as the URL bar slides away on scroll: only a new width counts.
+      let width = innerWidth;
+      addEventListener("resize", () => {
+        if (innerWidth !== width) fit();
+        width = innerWidth;
+      });
       document.fonts.ready.then(fit);
       // On a phone the links swipe sideways: start with the page you're on in view.
-      const nav = header.querySelector("nav");
       const here = nav.querySelector("[aria-current]");
       if (here) nav.scrollLeft = here.offsetLeft - nav.offsetLeft - (nav.clientWidth - here.offsetWidth) / 2;
     })();

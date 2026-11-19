@@ -1920,7 +1920,8 @@ if (welcome) {
 }
 
 // The pages' "New here?" guide links, for visitors who still are: they stop showing once
-// a guide has been opened, or after a couple of dozen page views.
+// a guide has been opened, or after a couple of dozen page views - and wait while the
+// welcome strip says the same thing.
 (() => {
   const VISITS_KEY = "neko:visits";
   const GUIDED_KEY = "neko:guided";
@@ -1934,7 +1935,7 @@ if (welcome) {
   } catch {
     visits = 0;
   }
-  const isNew = !guided && visits <= 20;
+  const isNew = !guided && visits <= 20 && !(welcome && !welcome.hidden);
   document.querySelectorAll(".new-here").forEach((el) => (el.hidden = !isNew));
 })();
 
