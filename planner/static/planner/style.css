@@ -47,6 +47,8 @@
   --line: #2a2926;
   --overlay: rgba(15, 15, 14, 0.82);
   --radius: 6px;
+  --cat-icon: 64px;     /* a cat's icon in Collection tiles and Resources cards */
+  --cat-icon-row: 48px; /* the same icon inline in a roll-table line */
   --pill: 6px; /* buttons and chips: square-ish, like the rest of the ledger */
 
   /* The header bar is the ledger's own in both themes. */
@@ -701,7 +703,10 @@ label.res-pick { cursor: pointer; }
   font-variant-numeric: tabular-nums;
 }
 .res-lv { min-width: 2.6rem; }
-.res-level { flex: 1 1 6rem; max-width: 10rem; margin: 0; accent-color: var(--accent); cursor: pointer; }
+/* A slider or a tick box fills the same control column, so every row's price lines up. */
+.res-level, .res-tick { flex: 1 1 6rem; max-width: 10rem; }
+.res-level { margin: 0; accent-color: var(--accent); cursor: pointer; }
+.res-tick { display: flex; }
 
 /* Resources, softened to the site's newer look: rounder cards and sidebar, pill buttons
    and search, and evolution / talent / part rows that light up under the pointer. */
@@ -775,8 +780,8 @@ label.res-pick { cursor: pointer; }
 .collection-section.collapsed :is(.rarity-row, .section-note, .alpha-jump) { display: none; }
 .cat-browser.filtering .collection-section.collapsed :is(.rarity-row, .section-note) { display: revert; }
 
-/* A-Z: a gold letter divider with its owned count over each letter's cats, and a row
-   of letters on top that jumps to one. */
+/* A-Z: each letter's cats in a row, labelled with the gold letter and its owned count,
+   and a row of letters on top that jumps to one. */
 .alpha-jump { display: flex; flex-wrap: wrap; gap: 0.15rem; margin: 0 0 0.3rem; }
 .alpha-jump button {
   min-width: 1.6rem;
@@ -790,17 +795,16 @@ label.res-pick { cursor: pointer; }
   font-weight: 600;
 }
 .alpha-jump button:hover { color: var(--accent); background: color-mix(in srgb, var(--accent) 12%, transparent); filter: none; }
-.alpha-row { display: block; border-top: 0; scroll-margin-top: 5rem; }
+.alpha-row { scroll-margin-top: calc(var(--header-h, 0px) + 0.5rem); }
 .alpha-letter {
+  flex: 0 0 5rem;
   display: flex;
-  align-items: center;
+  align-items: baseline;
   gap: 0.6rem;
-  margin: 0.2rem 0 0.5rem;
+  margin: 0.2rem 0 0;
   color: var(--accent);
   font-size: 1rem;
 }
-.alpha-letter::after { content: ""; flex: 1; height: 1px; background: var(--line); }
-.alpha-letter .owned-count { order: 1; }
 
 /* Section-header bulk marks: own-all (✓) and wishlist-all (★) for the whole card. */
 .bulk-buttons { display: inline-flex; gap: 0.3rem; margin-left: auto; }
@@ -1376,7 +1380,7 @@ td.cell.flash-locate {
   padding: 0.3rem 1.1rem;
   cursor: pointer;
 }
-.view-btn + .view-btn { border-left: 1px solid var(--line); }
+.view-toggle .view-btn + .view-btn { border-left: 1px solid var(--line); }
 .view-btn.is-active { background: color-mix(in srgb, var(--accent) 16%, transparent); color: var(--accent); font-weight: 700; }
 /* Inset the focus ring; the pill's overflow:hidden would clip an outset one into
    a stray line at the divider. */
@@ -1690,7 +1694,7 @@ table.track td.cell:has(.entry.on-path) { background: var(--panel-2); }
    the target (``.catlink.target``), not every name in the cell - so a clean roll and its
    "if dupe" branch (each its own catlink) light up one at a time, marked separately. */
 .entry.target { color: var(--ink); font-weight: 700; }
-.catlink.target {
+.catlink.target, .rolls-both .catlink.icon-host.target:not(.no-icon) .catname {
   background: color-mix(in srgb, var(--accent) 22%, transparent);
   box-shadow: inset 0 0 0 1.5px var(--accent);
   border-radius: var(--pill);
@@ -1711,14 +1715,21 @@ table.track td.cell:has(.entry.on-path) { background: var(--panel-2); }
 }
 
 /* Another banner giving the identical cat at one of the plan's pulls: that step is
-   interchangeable - roll it on either. A dashed echo of the on-path stripe (border,
-   not box-shadow: shadows can't dash; the padding offsets the added width). */
+   interchangeable - roll it on either. A dashed echo of the on-path stripe, drawn on an
+   overlay (shadows can't dash) so the line's content stays put. */
 .entry.shared {
+  position: relative;
   color: var(--ink);
   background: color-mix(in srgb, var(--accent) 6%, transparent);
-  border-left: 3px dashed color-mix(in srgb, var(--accent) 60%, transparent);
-  padding-left: calc(0.5rem - 3px);
   border-radius: 2px;
+}
+.entry.shared::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-left: 3px dashed color-mix(in srgb, var(--accent) 60%, transparent);
+  border-radius: inherit;
+  pointer-events: none;
 }
 /* Click-to-trace renders as ordinary plan marks (on-path + target pill + shared);
    the cell's empty space is the click target (names/dice have their own). The guaranteed
@@ -1819,7 +1830,7 @@ table.track tbody tr:last-child > :last-child { border-bottom-right-radius: 12px
 table.track tbody tr:hover > td { background: color-mix(in srgb, var(--panel-2) 60%, transparent); }
 table.track .entry { margin: 0 -0.6rem; padding: 0.12rem 0.6rem; }
 table.track .entry, .entry.on-path, .entry.next, .entry.shared { border-radius: 8px; }
-.catlink.target { border-radius: 999px; }
+.catlink.target, .rolls-both .catlink.icon-host.target:not(.no-icon) .catname { border-radius: 999px; }
 table.track .rarity { border-radius: 999px; }
 table.track .reseed { border-radius: 999px; }
 
@@ -2174,16 +2185,17 @@ table.track th.guaranteed-col, table.track td.guaranteed-col {
   border-radius: 12px;
 }
 .cat-browser:is(.rolls-icons, .rolls-both) .own-chip .chip-own {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.3rem;
+  display: grid;
+  grid-template-columns: 1fr var(--cat-icon) 1fr;
+  justify-items: center;
+  row-gap: 0.3rem;
   width: 100%;
   padding: 0.7rem 0.4rem 0.5rem;
   border-radius: 12px;
   text-align: center;
 }
-.cat-browser:is(.rolls-icons, .rolls-both) .own-chip .cat-icon { width: 64px; margin: 0 auto; }
+.cat-browser:is(.rolls-icons, .rolls-both) .own-chip .cat-icon { grid-area: 1 / 2; margin: 0; }
+.cat-browser:is(.rolls-icons, .rolls-both) .own-chip .catname { grid-area: 2 / 1 / 3 / -1; }
 .cat-browser:is(.rolls-icons, .rolls-both) .own-chip:not(.owned) .cat-icon { opacity: 0.4; filter: grayscale(0.6); }
 .cat-browser:is(.rolls-icons, .rolls-both) .own-chip:not(.owned) .catname { color: var(--muted); }
 .cat-browser.rolls-both .own-chip .catname {
@@ -2196,13 +2208,13 @@ table.track th.guaranteed-col, table.track td.guaranteed-col {
   line-height: 1.25;
   overflow-wrap: anywhere;
 }
-/* The tier badge sits on the icon's bottom-right corner, so ranked cats keep the tile size. */
+/* The tier badge shares the icon's grid cell, hung on its bottom-right corner, so ranked
+   cats keep the tile size and never cover the name. */
 .cat-browser:is(.rolls-icons, .rolls-both) .own-chip .tier-badge {
-  position: absolute;
-  top: calc(0.7rem + 64px);
-  left: calc(50% + 32px);
+  grid-area: 1 / 2;
+  place-self: end;
   margin: 0;
-  transform: translate(-65%, -85%);
+  transform: translateX(50%); /* centred on the icon's right edge */
   background: color-mix(in srgb, var(--band) 14%, var(--panel));
 }
 .cat-browser:is(.rolls-icons, .rolls-both) .own-chip,
@@ -2344,14 +2356,13 @@ table.track th.guaranteed-col, table.track td.guaranteed-col {
 .catlink.future { cursor: default; font-style: italic; }
 .catlink.future:hover { color: inherit; text-decoration-color: transparent; }
 
-/* Display-mode toggle: a cat's form icon, hotlinked and injected by app.js only once an
-   icon mode is picked. Hidden by default (names mode); the mode class the page puts on
-   its container reveals every .icon-host's icon at the sprite's native size (104x79 -
-   godfat's), letting the rows and columns grow to fit. In "both" the name sits centred
-   under its icon. Shared by both Rolls tables, Collection and Resources. */
+/* Display-mode toggle: a cat's form icon, injected by app.js only once an icon mode is
+   picked. Hidden by default (names mode); the mode class the page puts on its container
+   reveals every .icon-host's icon at --cat-icon. In "both" the name sits centred under
+   its icon. Shared by both Rolls tables, Collection and Resources. */
 .cat-icon {
   display: none;
-  width: 104px;
+  width: var(--cat-icon);
   max-width: 100%;
   height: auto;
 }
@@ -2361,9 +2372,19 @@ table.track th.guaranteed-col, table.track td.guaranteed-col {
 /* Icons-only: drop the name, but keep it as a fallback when the icon 404s. */
 .rolls-icons .icon-host:not(.no-icon) .catname { display: none; }
 .rolls-icons .icon-host.no-icon .cat-icon { display: none; }
-/* Chips and tracker rows are laid out as text, not as a table of cells - a full-size
-   sprite would push them apart, so they take a thumbnail. */
-.own-chip .cat-icon, .res-card .cat-icon { width: 56px; }
+/* In the roll tables the icon sits beside its name at row size, so each line stays one
+   line and a cell grows by the icon's height only. */
+table.track .cat-icon { width: var(--cat-icon-row); }
+:is(.rolls-icons, .rolls-both) table.track .icon-host { display: inline-flex; align-items: center; gap: 0.4rem; }
+:is(.rolls-icons, .rolls-both) table.track .icon-host .cat-icon { margin: 0; }
+:is(.rolls-icons, .rolls-both) table.track .entry { align-items: center; }
+/* With icons the marks move onto the icon: a target is ringed gold (its name keeps the
+   pill in "both"), and in icons-only an uncollected Uber/Legend is ringed green, since
+   there's no name to colour. The button itself drops the pill, which would balloon round
+   the whole sprite. */
+:is(.rolls-icons, .rolls-both) .catlink.icon-host.target:not(.no-icon) { background: none; box-shadow: none; padding: 0; }
+.rolls-icons table.track .entry.new .cat-icon { border-radius: var(--radius); box-shadow: 0 0 0 2px var(--new); }
+:is(.rolls-icons, .rolls-both) table.track .catlink.target .cat-icon { border-radius: var(--radius); box-shadow: 0 0 0 2px var(--accent); }
 
 /* The small "ⓘ" opener on collection + picker chips (they toggle on their main click,
    so the forms/wiki popup gets its own affordance). */

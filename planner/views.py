@@ -176,7 +176,10 @@ def picker_past(request):
     """The Past picker rows, fetched when the group is first opened."""
     groups = dict(
         picker_groups(
-            _picker_cats(request.profile), titles=banner_titles(), banner_names=cat_banner_names()
+            _picker_cats(request.profile),
+            titles=banner_titles(),
+            banner_names=cat_banner_names(),
+            debuts=live_run_debuts(),
         )
     )
 

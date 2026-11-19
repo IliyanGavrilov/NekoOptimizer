@@ -547,6 +547,15 @@ def test_picker_groups_call_out_a_live_runs_debuts():
     assert groups["Available now"][0][4] == ["Vornado"]
 
 
+@pytest.mark.django_db
+def test_picker_groups_keep_a_past_runs_debuts():
+    today = date(2026, 8, 1)
+    events = [_run(date(2026, 6, 26), date(2026, 7, 10), 5, "Vornado added!")]
+    debuts = {"2026-06-26_5": ["Vornado"]}
+    groups = dict(picker_groups([], today=today, events=events, debuts=debuts))
+    assert groups["Past"][0][4] == ["Vornado"]
+
+
 def test_newly_added_ubers_keys_a_rerun_name_by_its_latest_run():
     # The banner reruns under the same name with the same pool: its January debuts
     # must not resurface as "new" on the June run.
