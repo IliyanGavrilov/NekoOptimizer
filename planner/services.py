@@ -392,6 +392,11 @@ def fetch_for_banners(
     )
 
 
+# The schedule starts years after launch, so in its first year every older cat still
+# shows up "for the first time" as its banner or season comes round again.
+DEBUT_WARMUP = timedelta(days=365)
+
+
 def _releases(events) -> list:
     """The runs that can bring a unit into the game: Platinum/Legend Capsules only reprint
     units released elsewhere (usually starting the same day), so they never count."""
@@ -414,15 +419,19 @@ def _debut_dates(events, pools, units) -> dict[str, date]:
 
 def run_debuts(events=None, pools=None, units=None) -> dict[str, list[str]]:
     """Per event id, the units that run brings to the game for the first time - any
-    rarity, rarest first - so a picker row can call out what's actually new on it."""
+    rarity, rarest first - so a picker row can call out what's actually new on it.
+    Runs in the history's first year claim none: their "new" cats are mostly older."""
     events = _releases(load_events() if events is None else events)
     pools = load_pools() if pools is None else pools
     units = units_from_records() if units is None else units
     debut = _debut_dates(events, pools, units)
     rank = {rarity.value: i for i, rarity in enumerate(GACHA_RARITIES)}
+    known_from = min((event.start for event in events), default=date.min) + DEBUT_WARMUP
 
     added: dict[str, list[str]] = {}
     for event in events:
+        if event.start < known_from:
+            continue
         new = {
             units[u]
             for u in pools.get(event.pool_id, ())
