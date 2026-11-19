@@ -641,9 +641,10 @@ if (picker) {
     searchClear.hidden = !searching;
     searchHint.hidden = !searching;
     if (searching && !pastLoaded) loadPast(); // a set's past runs must be findable too
+    // A banner matches on its set title or its in-game subtitle (the run's own text).
     grouped.querySelectorAll(".banner-group").forEach((group) => {
-      group.hidden =
-        searching && !(group.dataset.title || "").toLowerCase().includes(query);
+      const text = `${group.dataset.title || ""} ${group.querySelector(".banner-sub")?.textContent || ""}`;
+      group.hidden = searching && !text.toLowerCase().includes(query);
     });
     // Group headings collapse away when nothing under them matches; matching drops
     // open so the hits are visible without another click.

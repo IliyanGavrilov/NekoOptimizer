@@ -1499,7 +1499,7 @@ def picker_groups(
     without one fall back to the run's marketing text. ``banner_names`` (cat_banner_names)
     supplies each cat's banner names; left out, they're looked up in one go. ``debuts``
     (live_run_debuts) names the units each run brings to the game for the first time,
-    called out on the Available now and Upcoming rows. Returns
+    called out on every run's row, past ones included. Returns
     ``[(label, [PickerRow, ...])]``."""
     today = today or date.today()
 
@@ -1526,15 +1526,13 @@ def picker_groups(
         cats_here = _by_rarity(by_name.get(name, []), reverse=True) if with_cats else []
         return PickerRow(name, title or name, dates, cats_here, new)
 
-    def run_row(event, start, end, with_cats=True, new=()):
+    def run_row(event, start, end, with_cats=True):
+        new = debuts.get(event.event_id, ())
         return row(event.name, Run(start, end), titles.get(event.pool_id, ""), with_cats, new)
 
-    def live_row(event, start, end):
-        return run_row(event, start, end, new=debuts.get(event.event_id, ()))
-
     runs = _effective_runs(events)
-    now = [live_row(e, start, end) for e, start, end in runs if start <= today <= end]
-    upcoming = [live_row(e, start, end) for e, start, end in runs if start > today]
+    now = [run_row(e, start, end) for e, start, end in runs if start <= today <= end]
+    upcoming = [run_row(e, start, end) for e, start, end in runs if start > today]
     past_runs = sorted(
         (run for run in runs if run[2] < today), key=lambda run: run[1], reverse=True
     )
