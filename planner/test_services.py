@@ -538,6 +538,17 @@ def test_run_debuts_name_every_rarity_a_run_brings_first_rarest_first():
     assert added == {"base": ["Old Uber"], "collab": ["Collab Uber", "Collab Rare"]}
 
 
+def test_run_debuts_skip_capsules_starting_the_same_day():
+    start = date(2026, 10, 16)
+    events = [
+        _gacha_event("New unit Akane added!", start, 10),
+        _gacha_event("Get an Uber Rare Cat!! PLATINUM CAPSULES!", start, 11),
+    ]
+    units = {1: ("Akane", U.value)}
+    added = run_debuts(events=events, pools={10: [1], 11: [1]}, units=units)
+    assert added == {"New unit Akane added!": ["Akane"]}
+
+
 @pytest.mark.django_db
 def test_picker_groups_call_out_a_live_runs_debuts():
     today = date(2026, 7, 3)

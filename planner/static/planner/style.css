@@ -777,8 +777,7 @@ label.res-pick { cursor: pointer; }
 }
 .section-toggle:hover { color: var(--accent); filter: none; }
 .collection-section.collapsed .section-toggle { transform: rotate(-90deg); }
-.collection-section.collapsed :is(.rarity-row, .section-note, .alpha-jump) { display: none; }
-.cat-browser.filtering .collection-section.collapsed :is(.rarity-row, .section-note) { display: revert; }
+.cat-browser:not(.filtering) .collection-section.collapsed :is(.rarity-row, .section-note, .alpha-jump) { display: none; }
 
 /* A-Z: each letter's cats in a row, labelled with the gold letter and its owned count,
    and a row of letters on top that jumps to one. */
@@ -895,6 +894,7 @@ input[type="checkbox"]::after {
 input[type="checkbox"]:hover { border-color: var(--accent); }
 input[type="checkbox"]:checked { background: var(--accent); border-color: var(--accent); }
 input[type="checkbox"]:checked::after { transform: translateY(-0.05rem) rotate(45deg) scale(1); }
+input[type="checkbox"]:disabled { opacity: 0.5; cursor: not-allowed; }
 
 button {
   background: var(--accent);

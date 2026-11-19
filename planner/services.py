@@ -392,6 +392,13 @@ def fetch_for_banners(
     )
 
 
+def _releases(events) -> list:
+    """The runs that can bring a unit into the game: Platinum/Legend Capsules only reprint
+    units released elsewhere (usually starting the same day), so they never count."""
+    capsules = banner_currencies({event.name for event in events})
+    return [event for event in events if event.name not in capsules]
+
+
 def _debut_dates(events, pools, units) -> dict[str, date]:
     """Each gacha unit's first appearance: the earliest start of any event carrying it."""
     debut: dict[str, date] = {}
@@ -408,7 +415,7 @@ def _debut_dates(events, pools, units) -> dict[str, date]:
 def run_debuts(events=None, pools=None, units=None) -> dict[str, list[str]]:
     """Per event id, the units that run brings to the game for the first time - any
     rarity, rarest first - so a picker row can call out what's actually new on it."""
-    events = load_events() if events is None else events
+    events = _releases(load_events() if events is None else events)
     pools = load_pools() if pools is None else pools
     units = units_from_records() if units is None else units
     debut = _debut_dates(events, pools, units)
@@ -447,7 +454,7 @@ def newly_added_ubers(events=None, pools=None, units=None) -> dict[str, set[str]
     of that counts as new here. Keyed by run name via each name's latest run (how the
     roller keys banners), so a track cell can flag an uber that debuts on the banner
     it's rolled on."""
-    events = load_events() if events is None else events
+    events = _releases(load_events() if events is None else events)
     pools = load_pools() if pools is None else pools
     units = units_from_records() if units is None else units
 
