@@ -27,6 +27,18 @@ _EVENTS_ARCHIVE = (
     "battle-cats-rolls-master.tar.gz?path=data/{lang}/events"
 )
 
+# godfat's build of each version's gacha data, refreshed from the game's servers - so it
+# carries a pool as soon as its banner is scheduled, where BCData only gets it with the app
+# update that ships it. Its cat ids count from 1, ours from 0.
+_GODFAT_BUILD = "https://gitlab.com/godfat/battle-cats-rolls/-/raw/master/build/bc-{lang}.yaml"
+_GODFAT_GACHA = re.compile(r"^gacha:\n(.*?)^\S", re.M | re.S)
+_GODFAT_POOL = re.compile(r"^  (\d+):\n((?:    .*\n)+)", re.M)
+_GODFAT_FIELD = re.compile(r"^    (cats|series_id|rate): (.*)$", re.M)
+# godfat names a pool's rate where BCData names its ticket item; every rate but these two
+# special capsules is paid in rare tickets.
+_RATE_TICKETS = {"platinum": 29, "legend": 145}
+_RARE_TICKET = 21
+
 EVENTS_FILE = "gacha_events.json"
 POOLS_FILE = "gacha_pools.json"
 SERIES_FILE = "gacha_series.json"
@@ -279,6 +291,31 @@ def download_gatya(
     return parse_gacha_pools(r1), parse_series(opt.decode("utf-8", "replace"))
 
 
+def parse_godfat_gacha(build: str) -> tuple[dict[int, list[int]], dict[int, list[int]]]:
+    """The pools and pool->[series id, ticket item] map in godfat's build of a version,
+    in our unit ids - the same shapes download_gatya returns."""
+    block = _GODFAT_GACHA.search(build)
+    pools: dict[int, list[int]] = {}
+    series: dict[int, list[int]] = {}
+    for pool_id, body in _GODFAT_POOL.findall(block.group(1) if block else ""):
+        fields = dict(_GODFAT_FIELD.findall(body))
+        if "cats" not in fields or "series_id" not in fields:
+            continue
+
+        pools[int(pool_id)] = [int(cat) - 1 for cat in fields["cats"].strip("[]").split(",")]
+        ticket = _RATE_TICKETS.get(fields.get("rate", ""), _RARE_TICKET)
+        series[int(pool_id)] = [int(fields["series_id"]), ticket]
+
+    return pools, series
+
+
+def download_godfat_gacha(region: str) -> tuple[dict[int, list[int]], dict[int, list[int]]]:
+    """Fetch godfat's build of one version and parse its pools and series map (network)."""
+    build = _get(_GODFAT_BUILD.format(lang=region)).decode("utf-8")
+
+    return parse_godfat_gacha(build)
+
+
 def event_records(events: Iterable[GachaEventRow]) -> list[dict]:
     """Events as JSON records for gacha_events.json."""
     return [
@@ -416,10 +453,13 @@ def load_tickets(region: str | None = None) -> dict[int, int]:
 
 def refresh(region: str = DEFAULT_REGION, tarball: bytes | None = None) -> tuple[int, int]:
     """Fetch the live schedule + pools + series + official titles and rewrite one region's
-    committed data files (network). Pass pre-downloaded BCData bytes via *tarball* to skip
-    that TLS fetch."""
+    committed data files (network). Pools come from the game's own files, with godfat's
+    build filling in the scheduled ones the last app update didn't ship. Pass pre-downloaded
+    BCData bytes via *tarball* to skip that TLS fetch."""
     events = download_events(region)
     pools, series = download_gatya(region, tarball=tarball)
+    early_pools, early_series = download_godfat_gacha(region)
+    pools, series = {**early_pools, **pools}, {**early_series, **series}
     kept = pool_records(pools, events)
 
     schedule = events_path(region)
