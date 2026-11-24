@@ -15,6 +15,7 @@ from neko.gachadata import (
     merge_events,
     parse_events,
     parse_gacha_pools,
+    parse_godfat_gacha,
     parse_series,
     parse_title,
 )
@@ -168,3 +169,38 @@ def test_download_titles_refetches_only_new_or_running_pools(monkeypatch):
     titles = download_titles("en", events, known, today=date(2026, 1, 20))
     assert fetched == ["R2.html", "R3.html"]
     assert titles == {"1": "Old", "2": "Fresh", "3": "Fresh"}
+
+
+GODFAT_BUILD = """cats:
+  1:
+    name: [Cat]
+gacha:
+  1083:
+    cats: [878, 770, 31]
+    series_id: 6
+    name: Hare of Inaba added! Mythical fantasy Cat heroes!
+    rate: regular
+  1087:
+    cats: [878, 870]
+    series_id: 21
+    name: Get an Uber Rare Cat!!
+    rate: platinum
+  1088:
+    cats: [862]
+    series_id: 46
+    rate: legend
+    similarity: 99
+banners:
+  0:
+    event: 2026-12-07_1083
+"""
+
+
+def test_parse_godfat_gacha_reads_pools_in_our_unit_ids():
+    pools, _ = parse_godfat_gacha(GODFAT_BUILD)
+    assert pools == {1083: [877, 769, 30], 1087: [877, 869], 1088: [861]}
+
+
+def test_parse_godfat_gacha_tickets_the_special_capsules_by_their_rate():
+    _, series = parse_godfat_gacha(GODFAT_BUILD)
+    assert series == {1083: [6, 21], 1087: [21, 29], 1088: [46, 145]}
