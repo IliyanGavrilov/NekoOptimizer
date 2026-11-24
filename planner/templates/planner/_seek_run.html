@@ -3,6 +3,5 @@ banner bar (title, marketing subtitle, dates) as a plain button - no cat list to
 open, clicking it selects the run.{% endcomment %}
 <button type="button" class="seek-run" data-value="{{ value }}"
         data-search="{{ title|lower }} {{ name|lower }}">
-  <span class="banner-name">{{ title }}{% if title != name %} <span class="banner-sub">{{ name }}</span>{% endif %}</span>
-  <span class="dates">{{ dates.label }}</span>
+  <span class="banner-head"><span class="banner-name">{{ title }}{% if title != name %} <span class="banner-sub">{{ name }}</span>{% endif %}</span><span class="dates">{{ dates.label }}</span></span>
 </button>
