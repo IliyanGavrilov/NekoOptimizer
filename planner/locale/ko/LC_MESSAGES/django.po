@@ -2902,3 +2902,41 @@ msgstr "미보유"
 #, python-format
 msgid "Enter your seed above to see your rolls &mdash; or <a href=\"%(finder_url)s\">find it</a> from a few pulls you've just made."
 msgstr "위에 시드를 입력하면 뽑기 결과가 보입니다 &mdash; 또는 방금 뽑은 몇 번의 결과로 <a href=\"%(finder_url)s\">찾을</a> 수 있습니다."
+
+msgid "Step-up"
+msgstr "스텝업"
+
+#. Translators: a banner's days until it starts, short ("in 3d").
+#, python-format
+msgid "in %(n)dd"
+msgstr "%(n)d일 후"
+
+msgid "last day"
+msgstr "마지막 날"
+
+#. Translators: a live banner's days until it ends, short ("3d left").
+#, python-format
+msgid "%(n)dd left"
+msgstr "%(n)d일 남음"
+
+#. Translators: Django date format for the end day of a span within one month, e.g. the "27" of "Nov 23 – 27".
+msgid "j"
+msgstr "j일"
+
+msgid "Platinum ticket"
+msgstr "플래티넘 티켓"
+
+msgid "Legend ticket"
+msgstr "레전드 티켓"
+
+msgid "On your wishlist and not in your collection yet"
+msgstr "위시리스트에 있지만 아직 없는 캐릭터"
+
+msgid "Wanted:"
+msgstr "위시리스트:"
+
+msgid "Platinum Capsules"
+msgstr "플래티넘 뽑기"
+
+msgid "Legend Capsules"
+msgstr "레전드 뽑기"

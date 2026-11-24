@@ -2899,3 +2899,41 @@ msgstr "未所持"
 #, python-format
 msgid "Enter your seed above to see your rolls &mdash; or <a href=\"%(finder_url)s\">find it</a> from a few pulls you've just made."
 msgstr "上でシード値を入力すると結果が表示されます &mdash; または、引いたばかりの数回から<a href=\"%(finder_url)s\">調べる</a>こともできます。"
+
+msgid "Step-up"
+msgstr "ステップアップ"
+
+#. Translators: a banner's days until it starts, short ("in 3d").
+#, python-format
+msgid "in %(n)dd"
+msgstr "%(n)d日後"
+
+msgid "last day"
+msgstr "最終日"
+
+#. Translators: a live banner's days until it ends, short ("3d left").
+#, python-format
+msgid "%(n)dd left"
+msgstr "残り%(n)d日"
+
+#. Translators: Django date format for the end day of a span within one month, e.g. the "27" of "Nov 23 – 27".
+msgid "j"
+msgstr "j日"
+
+msgid "Platinum ticket"
+msgstr "プラチナチケット"
+
+msgid "Legend ticket"
+msgstr "レジェンドチケット"
+
+msgid "On your wishlist and not in your collection yet"
+msgstr "ほしいものに入っていて、まだ持っていないキャラ"
+
+msgid "Wanted:"
+msgstr "ほしいもの:"
+
+msgid "Platinum Capsules"
+msgstr "プラチナガチャ"
+
+msgid "Legend Capsules"
+msgstr "レジェンドガチャ"

@@ -2883,3 +2883,41 @@ msgstr "未擁有"
 #, python-format
 msgid "Enter your seed above to see your rolls &mdash; or <a href=\"%(finder_url)s\">find it</a> from a few pulls you've just made."
 msgstr "在上方輸入種子碼即可看到抽數 &mdash; 或用剛抽的幾次結果<a href=\"%(finder_url)s\">找出它</a>。"
+
+msgid "Step-up"
+msgstr "階段式"
+
+#. Translators: a banner's days until it starts, short ("in 3d").
+#, python-format
+msgid "in %(n)dd"
+msgstr "%(n)d天後"
+
+msgid "last day"
+msgstr "最後一天"
+
+#. Translators: a live banner's days until it ends, short ("3d left").
+#, python-format
+msgid "%(n)dd left"
+msgstr "剩%(n)d天"
+
+#. Translators: Django date format for the end day of a span within one month, e.g. the "27" of "Nov 23 – 27".
+msgid "j"
+msgstr "j日"
+
+msgid "Platinum ticket"
+msgstr "白金轉蛋券"
+
+msgid "Legend ticket"
+msgstr "傳說轉蛋券"
+
+msgid "On your wishlist and not in your collection yet"
+msgstr "在願望清單中、尚未擁有的角色"
+
+msgid "Wanted:"
+msgstr "願望清單:"
+
+msgid "Platinum Capsules"
+msgstr "白金轉蛋"
+
+msgid "Legend Capsules"
+msgstr "傳說轉蛋"
