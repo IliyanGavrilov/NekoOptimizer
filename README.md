@@ -161,11 +161,12 @@ secret); run it by hand to backfill. A failure in either opens an issue.
 6. **Apply plan** marks the obtained cats as owned and advances the stored seed,
    so you can plan the next stretch from where you left off.
 7. The **Collection** page (`/collection/`) is the full cat dictionary in the
-   in-game Cat Guide order (or by rarity / gacha set), where you manage owned /
-   wishlist marks and filter by targets, abilities, combos, and talents. Import
+   in-game Cat Guide order (or by rarity / gacha set / A-Z), where you manage owned /
+   wishlist marks and filter by missing cats, targets, abilities, combos, and talents. Import
    it from Cat Guide screenshots (read in the browser), or export / import it as a file.
 8. The **Resources** page (`/resources/`) tracks what to grind: pick cats to
-   evolve (catfruit / stones / gems + XP totals), talents to buy (NP totals),
+   evolve (catfruit / stones / gems + XP totals), talents to buy up to a chosen level
+   (NP totals),
    and cannons to develop (per-part level ranges with material / engineer /
    build-time totals).
 9. The **Normal Capsules** page (`/normal/`) predicts the normal-seed machines
@@ -176,6 +177,8 @@ secret); run it by hand to backfill. A failure in either opens an issue.
 12. The **EN / JP / TW / KR** switch in the header picks the game version. Each
    version has its own catalogue, schedule, pools and localized names, and keeps
    its own seed and collection - the roll mechanics are identical across all four.
+13. **Guides** (`/guides/`) walk through each tool step by step, and **What's new**
+    (`/whats-new/`) lists what changed on the site, newest first.
 
 ## Tech stack
 

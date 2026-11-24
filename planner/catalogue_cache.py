@@ -8,8 +8,9 @@ from neko.region import current as active_region
 from planner.models import CatalogueVersion
 
 # How long a process trusts the version it last read before asking again: an import shows
-# up within this, and a page view in between costs the database nothing at all.
-VERSION_TTL = 60.0
+# up within this, and a page view in between costs the database nothing at all. Longer than
+# Neon's 5 idle minutes, so steady anonymous traffic still lets the database suspend.
+VERSION_TTL = 10 * 60.0
 
 _versions: dict[str, tuple[float, int]] = {}  # region -> (when read, version)
 _reads: dict[tuple[str, str], tuple[int, object]] = {}  # (region, reader) -> (version, value)

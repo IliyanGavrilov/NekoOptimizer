@@ -6,7 +6,9 @@ set -o errexit
 python manage.py fetch_icons
 # Only the production build touches the live database: a preview never migrates it early.
 if [ "$VERCEL_ENV" = production ]; then
-  python manage.py migrate --no-input
+  # Neon now and then drops a connection mid-query (a compute restarting or waking up);
+  # one retry rides that out, and a migration that really fails still fails the build.
+  python manage.py migrate --no-input || { sleep 10; python manage.py migrate --no-input; }
   # A failed ping must never block a deploy: Bing still crawls the sitemap on its own.
   if [ -n "$INDEXNOW_KEY" ]; then
     python manage.py indexnow || echo "IndexNow ping failed; deploying anyway."
