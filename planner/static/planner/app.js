@@ -632,9 +632,20 @@ if (picker) {
   const searchHint = document.getElementById("targetSearchHint");
   const grouped = browser;
   const flat = document.getElementById("targetFlat");
+  // The browse view as you left it when a search took over - which sections were open
+  // and how far the list was scrolled. A search starts at the top of its results;
+  // clearing it puts the browse view back exactly.
+  let browseState = null;
+  let lastQuery = "";
   function applySearch() {
     const query = search.value.trim().toLowerCase();
     const searching = query !== "";
+    const drops = grouped.querySelectorAll("details.group-drop");
+    if (searching && !browseState) {
+      browseState = { open: new Map([...drops].map((drop) => [drop, drop.open])), scroll: picker.scrollTop };
+    } else if (!searching && browseState) {
+      browseState.open.forEach((open, drop) => (drop.open = open));
+    }
     flat.hidden = !searching;
     // While searching, surface a clear (x) button + hint so it's obvious how to
     // get back to the banner menu without manually deleting the query.
@@ -651,7 +662,7 @@ if (picker) {
     grouped.querySelectorAll("h2.group").forEach((h) => {
       h.hidden = searching;
     });
-    grouped.querySelectorAll("details.group-drop").forEach((drop) => {
+    drops.forEach((drop) => {
       const hasMatch = !!drop.querySelector(".banner-group:not([hidden])");
       drop.hidden = searching && !hasMatch;
       if (searching) drop.open = hasMatch;
@@ -662,6 +673,12 @@ if (picker) {
         chip.hidden = !(chip.dataset.forms || chip.dataset.name).toLowerCase().includes(query);
       });
     }
+    if (searching && query !== lastQuery) picker.scrollTop = 0;
+    if (!searching && browseState) {
+      picker.scrollTop = browseState.scroll; // after the sections reopened, so it lands right
+      browseState = null;
+    }
+    lastQuery = searching ? query : "";
   }
   search.addEventListener("input", () => {
     applySearch();

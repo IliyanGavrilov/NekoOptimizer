@@ -327,6 +327,16 @@ def test_series_names_pick_each_sets_smallest_carrier():
     assert names == {1: "The Dynamites", 19: "UBERFEST"}
 
 
+def test_series_names_skip_a_run_whose_pool_has_not_shipped():
+    dyna = [_uber(42, "The Dynamites"), _uber(43, "The Dynamites")]
+    events = [
+        _run(date(2026, 1, 1), date(2026, 1, 5), 1, "Dynamites!"),
+        _run(date(2026, 3, 1), date(2026, 3, 5), 9, "Dynamites!"),
+    ]
+    names = series_names(dyna, events, {1: [42, 43]}, {1: 1, 9: 1}, tickets={})
+    assert names == {1: "The Dynamites"}
+
+
 def test_series_names_label_the_fests():
     events = [_run(date(2026, 1, 1), date(2026, 1, 5), 7, "Lone Moon Lunos added!")]
     assert series_names([], events, {7: [500]}, {7: 42}, tickets={}) == {42: "SUPERFEST"}
@@ -376,7 +386,7 @@ def test_picker_groups_titles_rows_from_their_pool():
     today = date(2026, 7, 3)
     events = [_run(date(2026, 6, 26), date(2026, 7, 10), 5, "Brave new adventurers join!")]
     groups = dict(picker_groups([], today=today, events=events, titles={5: "The Dynamites"}))
-    assert [(n, t) for n, t, _d, _c, _new in groups["Available now"]] == [
+    assert [(r.name, r.title) for r in groups["Available now"]] == [
         ("Brave new adventurers join!", "The Dynamites")
     ]
 
@@ -411,12 +421,12 @@ def test_picker_groups_lists_each_scheduled_run_separately():
     cat = Cat.objects.create(name="Luno", rarity="Uber Super Rare")
     cat.banners.add(Banner.objects.create(name="Platinum"))
     groups = dict(picker_groups(Cat.objects.all(), today=today, events=events))
-    now = [(name, dates) for name, _title, dates, _, _new in groups["Available now"]]
+    now = [(r.name, r.dates) for r in groups["Available now"]]
     assert now == [
         ("Platinum", (date(2026, 4, 24), date(2026, 7, 10))),
         ("Trixi", (date(2026, 6, 26), date(2026, 7, 3))),
     ]
-    upcoming = [(n, d) for n, _t, d, _, _new in groups["Upcoming"]]
+    upcoming = [(r.name, r.dates) for r in groups["Upcoming"]]
     assert upcoming == [("Platinum", (date(2026, 7, 11), sentinel))]
     assert groups["Available now"][0][3] == [("Uber Super Rare", [cat])]
     assert groups["Upcoming"][0][3] == [("Uber Super Rare", [cat])]
@@ -427,7 +437,7 @@ def test_picker_groups_keeps_unscheduled_past_banners_db_dated():
     today = date(2026, 7, 3)
     _dated_banner("OldFest", date(2026, 5, 1), date(2026, 5, 4))
     groups = dict(picker_groups(Cat.objects.all(), today=today, events=[]))
-    assert [(n, d) for n, _t, d, _, _new in groups["Past"]] == [
+    assert [(r.name, r.dates) for r in groups["Past"]] == [
         ("OldFest", (date(2026, 5, 1), date(2026, 5, 4)))
     ]
 
@@ -442,13 +452,13 @@ def test_picker_groups_lists_every_past_rerun_with_cats_on_the_newest():
     cat = Cat.objects.create(name="Bahamut", rarity="Uber Super Rare")
     cat.banners.add(Banner.objects.create(name="Fest"))
     groups = dict(picker_groups(Cat.objects.all(), today=today, events=events))
-    assert [(n, d) for n, _t, d, _, _new in groups["Past"]] == [
+    assert [(r.name, r.dates) for r in groups["Past"]] == [
         ("Fest", (date(2026, 5, 1), date(2026, 5, 5))),
         ("Fest", (date(2026, 2, 1), date(2026, 2, 5))),
     ]
     newest, oldest = groups["Past"]
-    assert newest[3] == [("Uber Super Rare", [cat])]
-    assert oldest[3] == []
+    assert newest.rarities == [("Uber Super Rare", [cat])]
+    assert oldest.rarities == []
 
 
 def test_equivalent_banners_groups_identical_roll_sequences():

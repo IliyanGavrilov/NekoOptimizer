@@ -1022,7 +1022,7 @@ ADDONS_LABEL = gettext_noop("Rare Capsule Add-ons")
 _REGULAR_CARRY = 0.6
 
 # Ticket gachas by their ItemID_Ticket: their pools mix every set, so no set name fits.
-_TICKET_NAMES = {29: "Platinum Capsules", 145: "Legend Capsules"}
+_TICKET_NAMES = {29: gettext_noop("Platinum Capsules"), 145: gettext_noop("Legend Capsules")}
 
 # Display respellings over the Cat Guide's own set names, applied wherever a set name
 # becomes a label (collection sections, picker titles).
@@ -1167,7 +1167,9 @@ def _walk_series_pools(events, pools, series):
     for event in events:
         sid = series.get(event.pool_id)
         current = latest.get(sid)
-        if sid is not None and (current is None or event.start > current.start):
+        # A run whose pool hasn't shipped has no cats to speak for its series yet.
+        known = sid is not None and event.pool_id in pools
+        if known and (current is None or event.start > current.start):
             latest[sid] = event
 
     members = {sid: set(pools.get(event.pool_id, ())) for sid, event in latest.items()}
@@ -1205,7 +1207,7 @@ def series_names(units, events=None, pools=None, series=None, tickets=None) -> d
     for sid, event in latest.items():
         ticket = tickets.get(event.pool_id)
         if ticket in _TICKET_NAMES:
-            names[sid] = _TICKET_NAMES[ticket]
+            names[sid] = gettext(_TICKET_NAMES[ticket])
 
     return names
 
@@ -1417,6 +1419,22 @@ class Run(NamedTuple):
 
         return gettext("%(start)s – %(end)s") % {"start": start, "end": _day(self.end)}
 
+    @property
+    def short(self) -> str:
+        """The span without years, for a live or upcoming run where the year goes without
+        saying: "Nov 23 – 27", "Nov 30 – Dec 4", "Since Nov 27"."""
+        start = _day(self.start, year=False)
+        if self.end.year >= 2030:
+            return gettext("Since %(date)s") % {"date": start}
+        if (self.start.year, self.start.month) == (self.end.year, self.end.month):
+            # Translators: Django date format for the end day of a span within one month,
+            # e.g. the "27" of "Nov 23 – 27".
+            end = date_format(self.end, gettext("j"))
+        else:
+            end = _day(self.end, year=False)
+
+        return gettext("%(start)s – %(end)s") % {"start": start, "end": end}
+
 
 def _day(day: date, year: bool = True) -> str:
     """ "Oct 15, 2026" (or "Oct 15") in English; each language words the date its own way,
@@ -1431,13 +1449,87 @@ def _day(day: date, year: bool = True) -> str:
 
 class PickerRow(NamedTuple):
     """One banner row of the target picker: the run's name and display title, its dates
-    (None for an undated banner), its cats binned by rarity, and the units it debuts."""
+    (None for an undated banner), its cats binned by rarity, the units it debuts, what
+    sets the run apart (pills), its capsule ticket, the wished-for cats you don't own on
+    it, how long until it starts or ends, and its dates without the year it goes
+    without saying."""
 
     name: str
     title: str
     dates: Run | None
     rarities: list
     new: Sequence[str] = ()
+    pills: Sequence[tuple[str, str]] = ()
+    capsule: str = ""
+    wanted: Sequence[str] = ()
+    left: str = ""
+    ending: bool = False
+    span: str = ""
+    rates: Sequence[RunRate] = ()
+
+
+class RunRate(NamedTuple):
+    """One rarity's drop rate on a run, for the line an opened banner shows: the rarity,
+    the rate as printed ("5%"), and whether it beats a plain rare gacha's."""
+
+    rarity: str
+    rate: str
+    up: bool
+
+
+# A rare gacha's usual odds, in basis points: what a run's rates line compares against.
+_USUAL_RATES = {
+    Rarity.RARE: 7000,
+    Rarity.SUPER_RARE: 2500,
+    Rarity.UBER_SUPER_RARE: 500,
+    Rarity.LEGEND_RARE: 30,
+}
+# The schedule's stand-in end for a banner with no announced end.
+_OPEN_ENDED = date(2030, 1, 1)
+
+
+def run_pills(event: GachaEventRow) -> list[tuple[str, str]]:
+    """What sets a run's multi apart, as (kind, label) pairs: guaranteed or step-up."""
+    pills = []
+    if event.guaranteed:
+        pills.append(("guaranteed", gettext("Guaranteed")))
+    if event.step_up:
+        pills.append(("step-up", gettext("Step-up")))
+
+    return pills
+
+
+def run_rates(event: GachaEventRow) -> list[RunRate]:
+    """A run's drop rate per rarity, each flagged when it beats a plain rare gacha's - an
+    Uber or Legend boost - so the line can light just what's special."""
+    rates = {
+        Rarity.RARE: event.rare,
+        Rarity.SUPER_RARE: event.supa,
+        Rarity.UBER_SUPER_RARE: event.uber,
+        Rarity.LEGEND_RARE: event.legend,
+    }
+    boosted = (Rarity.UBER_SUPER_RARE, Rarity.LEGEND_RARE)
+
+    return [
+        RunRate(str(rarity), f"{rate / 100:g}%", rarity in boosted and rate > _USUAL_RATES[rarity])
+        for rarity, rate in rates.items()
+    ]
+
+
+def time_left(start: date, end: date, today: date) -> str:
+    """How long until a run starts, or until a live one ends; '' once it's over or when it
+    has no real end."""
+    if start > today:
+        # Translators: a banner's days until it starts, short ("in 3d").
+        return gettext("in %(n)dd") % {"n": (start - today).days}
+    if end < today or end >= _OPEN_ENDED:
+        return ""
+
+    days = (end - today).days
+    if days == 0:
+        return gettext("last day")
+    # Translators: a live banner's days until it ends, short ("3d left").
+    return gettext("%(n)dd left") % {"n": days}
 
 
 def _future_number(name: str) -> str:
@@ -1508,6 +1600,7 @@ def picker_groups(
     titles: Mapping[int, str] = (),
     banner_names: Mapping[int, list[str]] | None = None,
     debuts: Mapping[str, list[str]] | None = None,
+    pools: Mapping[int, list[int]] | None = None,
 ) -> list:
     """The target picker's banner sections, one row per SCHEDULED RUN, like godfat: every
     rerun of every gacha, past and future. A recurring name (Platinum/Legend Capsules,
@@ -1520,12 +1613,15 @@ def picker_groups(
     without one fall back to the run's marketing text. ``banner_names`` (cat_banner_names)
     supplies each cat's banner names; left out, they're looked up in one go. ``debuts``
     (live_run_debuts) names the units each run brings to the game for the first time,
-    called out on every run's row, past ones included. Returns
+    called out on every run's row, past ones included. ``pools`` (the committed gacha
+    pools) decide which wished-for cats a live or upcoming run can drop. Returns
     ``[(label, [PickerRow, ...])]``."""
     today = today or date.today()
 
     if events is None:
         events = load_events()
+    if pools is None:
+        pools = load_pools()
 
     titles = titles or {}
     debuts = debuts or {}
@@ -1549,7 +1645,30 @@ def picker_groups(
 
     def run_row(event, start, end, with_cats=True):
         new = debuts.get(event.event_id, ())
-        return row(event.name, Run(start, end), titles.get(event.pool_id, ""), with_cats, new)
+        base = row(event.name, Run(start, end), titles.get(event.pool_id, ""), with_cats, new)
+        base = base._replace(rates=run_rates(event))
+        if end < today:
+            return base
+
+        # The run's own pool, not the banner name's cats: reruns share a name, and a
+        # later run's new cat can't drop on this one.
+        pool = set(pools.get(event.pool_id, ()))
+        wanted = sorted(
+            cat.name
+            for cat in by_name.get(event.name, ())
+            if getattr(cat, "wanted", False)
+            and not getattr(cat, "owned", False)
+            and cat.unit is not None
+            and cat.unit.unit_id in pool
+        )
+        return base._replace(
+            pills=run_pills(event),
+            capsule=banner_currencies([event.name]).get(event.name, ""),
+            wanted=wanted,
+            left=time_left(start, end, today),
+            span=Run(start, end).short,
+            ending=start <= today and (end - today).days <= 1,
+        )
 
     runs = _effective_runs(events)
     now = [run_row(e, start, end) for e, start, end in runs if start <= today <= end]

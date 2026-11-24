@@ -74,7 +74,9 @@
   --badge-legend: #b3261e;
 
   /* Capsule ticket colours: platinum uses the Super Rare gold, legend uses the Legend red. */
-  --tkt-platinum: var(--r-super);
+  --tkt-platinum: #b4d2f0; /* platinum: cool, blue-white metal */
+  /* The Platinum Ticket's foil sheen, for the capsule's border and badge. */
+  --platinum-foil: linear-gradient(115deg, #a9c8ec, #e3d4f7 28%, #c6efe2 52%, #f3e6c4 76%, #a9c8ec);
   --tkt-legend: var(--r-legend);
 
   /* Tier-list bands (S..F), one colour per letter */
@@ -113,6 +115,8 @@
   --r-uber: #7b35c4;
   --r-legend: #b3261e;
   --new: #0a6e44;
+  --tkt-platinum: #3d6690;
+  --platinum-foil: linear-gradient(115deg, #3d6690, #7a52a8 28%, #2f7d66 52%, #8a6a1c 76%, #3d6690);
 
   --band-s: #d13a3a;
   --band-a: #c76a10;
@@ -926,7 +930,15 @@ fieldset {
 legend { color: var(--ink); padding: 0 0.4rem; }
 
 /* Keep the target picker compact so "Find plan" stays reachable */
-.picker-scroll { max-height: 55vh; overflow-y: auto; padding-right: 0.4rem; }
+/* Rows scrolled up out of view fade out under the search bar instead of being cut at it. */
+.picker-scroll {
+  max-height: 55vh;
+  overflow-y: auto;
+  padding-right: 0.4rem;
+  margin-top: 0.5rem;
+  padding-top: 0.5rem;
+  mask-image: linear-gradient(to bottom, transparent 0, #000 0.75rem);
+}
 #targetFlat.flat { padding: 0.25rem 0; }
 
 /* Older banners tucked behind one dropdown */
@@ -995,7 +1007,15 @@ section > h3, .banner-group > summary {
 
 .banner-group[open] > summary::before { transform: rotate(90deg); }
 
-.banner-group:not([open]) > summary { margin-bottom: -0.9rem; }
+/* A closed banner is all header: it fills the card to its bottom edge, so a tinted bar
+   (a capsule's, a picked banner's) colours the whole card, not all but a strip. */
+.banner-group:not([open]) > summary {
+  margin-bottom: -1.1rem;
+  border-bottom: 0;
+}
+/* The card's own rounding shapes its header, so a tinted header colours the corners too. */
+.banner-group { overflow: clip; }
+.banner-group > summary { border-radius: 0; }
 
 /* Title and dates share a line while the title keeps room to read; narrower, the dates
    drop to their own line under it instead of squeezing it. */
@@ -1026,11 +1046,11 @@ section > h3, .banner-group > summary {
   font-size: 0.75rem;
   font-weight: 500;
 }
-/* A closed bar keeps it to two lines; opening the banner shows it all. */
+/* A closed bar keeps it to one line; opening the banner shows it all. */
 .banner-group:not([open]) .banner-sub {
   display: -webkit-box;
   -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
+  -webkit-line-clamp: 1;
   overflow: hidden;
 }
 /* The units a run debuts, under its marketing text. */
@@ -1040,7 +1060,100 @@ section > h3, .banner-group > summary {
   font-size: 0.75rem;
   font-weight: 500;
 }
-.banner-new b { color: var(--new); font-weight: 700; }
+/* Gold, like the Rolls table's "new" badge: a debut. Green stays "you don't own it". */
+.banner-new b { color: var(--accent); font-weight: 700; }
+/* Wishlisted cats you don't own yet that this run can drop, starred like elsewhere. */
+.banner-name .banner-wanted {
+  display: block;
+  color: var(--muted);
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+.banner-wanted b { color: var(--ink); font-weight: 700; }
+.banner-wanted .wanted-star { color: var(--r-super); }
+.banner-group.has-wanted { border-color: color-mix(in srgb, var(--r-super) 45%, var(--line)); }
+
+/* What sets a run apart (Guaranteed, Step-up, better odds), beside its title. */
+.run-pill {
+  display: inline-block;
+  vertical-align: 0.12em;
+  font-family: var(--head-font);
+  font-size: 0.62rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  padding: 0.05rem 0.4rem;
+  border-radius: var(--pill);
+  border: 1px solid var(--line);
+  color: var(--muted);
+  line-height: 1.35;
+  white-space: nowrap;
+}
+.run-pill.guaranteed { color: var(--accent); border-color: color-mix(in srgb, var(--accent) 55%, transparent); }
+.run-pill.step-up { color: var(--r-rare); border-color: color-mix(in srgb, var(--r-rare) 55%, transparent); }
+
+/* An opened banner's odds, each rate in its rarity's colour; a boosted Uber or Legend
+   rate is lit so a fest's 9% or a 2x Legend run stands out. */
+.run-rates {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 0.9rem;
+  margin: 0 0 0.5rem;
+  font-size: 0.78rem;
+  color: var(--muted);
+}
+.run-rate[data-rarity="Rare"] b { color: var(--r-rare); }
+.run-rate[data-rarity="Super Rare"] b { color: var(--r-super); }
+.run-rate[data-rarity="Uber Super Rare"] b { color: var(--r-uber); }
+.run-rate[data-rarity="Legend Rare"] b { color: var(--r-legend); }
+.run-rate.none b { color: var(--muted); }
+.run-rate.up b {
+  padding: 0 0.3rem;
+  border-radius: var(--pill);
+  background: color-mix(in srgb, currentColor 18%, transparent);
+  box-shadow: 0 0 0 1px currentColor inset;
+}
+.run-pill.ticket { color: var(--tkt); border-color: var(--tkt); }
+.run-pill.ticket.platinum {
+  border-color: transparent;
+  background: linear-gradient(var(--panel-2), var(--panel-2)) padding-box, var(--platinum-foil) border-box;
+}
+
+/* The ticket capsules: always running, paid in their own scarce tickets - lit in their
+   ticket's colour so they stand apart from the rotating banners. */
+.banner-group.capsule.platinum { --tkt: var(--tkt-platinum); }
+.banner-group.capsule.legend { --tkt: var(--tkt-legend); }
+.banner-group.capsule {
+  border-color: color-mix(in srgb, var(--tkt) 70%, var(--line));
+  box-shadow: 0 0 14px -2px color-mix(in srgb, var(--tkt) 45%, transparent);
+}
+.banner-group.capsule > summary {
+  background: linear-gradient(
+    100deg,
+    color-mix(in srgb, var(--tkt) 16%, var(--panel-2)),
+    var(--panel-2) 70%
+  );
+}
+/* Platinum wears the ticket's foil: a pale rainbow sheen round its border. */
+.banner-group.capsule.platinum {
+  border-color: transparent;
+  background: linear-gradient(var(--panel), var(--panel)) padding-box, var(--platinum-foil) border-box;
+}
+.banner-group.capsule.platinum > summary {
+  background:
+    linear-gradient(
+      100deg,
+      color-mix(in srgb, var(--panel-2) 72%, transparent),
+      color-mix(in srgb, var(--panel-2) 88%, transparent)
+    ),
+    var(--platinum-foil);
+}
+
+/* Time to a run's start or end, after its dates - under them when the line runs out of
+   room; a live run's last day or two in warning colour. */
+.banner-head .dates:has(.time-left) { white-space: normal; }
+.dates .date-span, .dates .time-left { white-space: nowrap; }
+.time-left.ending { color: var(--warn); font-weight: 600; }
 
 /* Banner "include in roll" toggle */
 .banner-include {
@@ -2166,7 +2279,10 @@ table.track th.guaranteed-col, table.track td.guaranteed-col {
   cursor: pointer;
 }
 .own-chip .catinfo { padding-right: 0.65rem; }
-.own-chip :is(.chip-star, .catinfo):hover { color: var(--accent); filter: none; }
+.own-chip .catinfo:hover { color: var(--accent); filter: none; }
+/* An unstarred star lights white on hover, not gold: gold is what starred looks like, so
+   a cat you just unstarred must not keep looking starred under the cursor. */
+.own-chip .chip-star:hover { color: var(--ink); filter: none; }
 .own-chip:is(:hover, :has(:focus-visible)) :is(.chip-star, .catinfo),
 .own-chip.wanted .chip-star { display: flex; }
 .own-chip:is(:hover, :has(:focus-visible)) .chip,

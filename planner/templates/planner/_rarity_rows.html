@@ -1,0 +1,8 @@
+{% load i18n %}{% for rarity, cats in rarities %}
+  <div class="rarity-row" data-rarity-row>
+    <span class="rarity" data-rarity="{{ rarity }}">{% translate rarity %}</span>
+    <div class="chips">
+      {% for cat in cats %}{{ cat.chip }}{% endfor %}
+    </div>
+  </div>
+{% endfor %}
