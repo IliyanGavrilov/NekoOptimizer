@@ -53,6 +53,15 @@ def test_plannable_form_drops_costless_and_missing_forms():
 
 
 @pytest.mark.django_db
+def test_a_first_visits_board_asks_the_database_nothing(django_assert_num_queries):
+    """Crawlers are all first visits: a query per view would keep the database awake."""
+    with django_assert_num_queries(0):
+        board = resources_board(Profile())
+
+    assert board["cats"] == [] and board["base"] == []
+
+
+@pytest.mark.django_db
 def test_adding_a_cat_picks_nothing_for_you(client):
     unit = _unit(_TF_AND_UF)
     client.post("/resources/cat/", {"unit_id": unit.unit_id})

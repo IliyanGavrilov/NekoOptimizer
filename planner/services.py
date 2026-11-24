@@ -9,7 +9,7 @@ from itertools import accumulate, combinations
 from typing import NamedTuple
 from urllib.parse import quote
 
-from django.db import transaction
+from django.db import models, transaction
 from django.utils.formats import date_format
 from django.utils.translation import (
     gettext,
@@ -898,6 +898,14 @@ def _base_card(cannon: Mapping, plan: CannonPlan, material_ids: Mapping) -> dict
     }
 
 
+def _plans[M: models.Model](model: type[M], profile: Profile) -> models.QuerySet[M]:
+    """The profile's rows of a plan model; a first visit's unsaved profile has none, so
+    asking costs no query."""
+    rows = model.objects.filter(profile_id=profile.pk)
+
+    return rows if profile.pk else rows.none()
+
+
 def resources_board(profile: Profile) -> dict:
     """Everything the player's Resources page shows: a card per cat on the list, a card per Cat
     Base development being levelled, and the overview totalling the two. It renders whole
@@ -908,16 +916,13 @@ def resources_board(profile: Profile) -> dict:
     own counters (XP and NP for the cats, build time and engineers for the base)."""
     evolve = load_evolve()["units"]
     talents = load_talents()
-    mine = {"profile_id": profile.pk}  # a first visit's unsaved profile matches nothing
     wanted: dict[int, dict] = {}
-    for unit_id, slot, level in TalentPlan.objects.filter(**mine).values_list(
-        "unit_id", "slot", "level"
-    ):
+    for unit_id, slot, level in _plans(TalentPlan, profile).values_list("unit_id", "slot", "level"):
         wanted.setdefault(unit_id, {})[slot] = level
 
     evolve_totals: Counter = Counter()
     cats, xp, np = [], 0, 0
-    for plan in UnitPlan.objects.filter(**mine).select_related("unit").order_by("unit__name"):
+    for plan in _plans(UnitPlan, profile).select_related("unit").order_by("unit__name"):
         card = _cat_card(plan, evolve, talents, wanted.get(plan.unit_id, {}))
         evolve_totals += card["spend"]
         xp += card["xp"]
@@ -930,7 +935,7 @@ def resources_board(profile: Profile) -> dict:
         "base": doc["zmaterials"],
         "deco": doc["zmaterials"],
     }
-    plans = {plan.cannon_id: plan for plan in CannonPlan.objects.filter(**mine)}
+    plans = {plan.cannon_id: plan for plan in _plans(CannonPlan, profile)}
     build_totals: Counter = Counter()
     base, hours, peak, crew = [], 0, 0, 0
     for cannon in doc["cannons"]:

@@ -17,58 +17,127 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
 
+#: .\changelog.py:12
+msgid ""
+"On phones the header takes two short rows, and the page links swipe sideways."
+msgstr "手機上的頁首改為兩行，頁面連結可左右滑動。"
+
 #: .\changelog.py:13
+msgid ""
+"Collection's A-Z view has a section per letter, and a row of letters jumps to one."
+msgstr "收藏的 A-Z 檢視依首字母分段，可從字母列跳到該段。"
+
+#: .\changelog.py:14
+msgid "Every on/off option is now a tick box."
+msgstr "所有開關選項都改為勾選框。"
+
+#: .\changelog.py:15
+msgid "Platinum and Legend Capsules no longer mark their cats as new."
+msgstr "白金轉蛋與傳說轉蛋的角色不再標為首次登場。"
+
+#: .\changelog.py:16
+msgid "The banner search also matches a banner's subtitle."
+msgstr "轉蛋搜尋也會比對副標題。"
+
+#: .\changelog.py:23
+msgid ""
+"A new look across the site, and a simpler Collection: one toolbar of drop-downs, with a Missing filter."
+msgstr "全站換上新外觀，收藏也更簡潔：下拉選單集中在一列工具列，並新增未擁有篩選。"
+
+#: .\changelog.py:26
+msgid "A cat's popup lists the banners it drops from."
+msgstr "角色的彈出視窗會列出可抽到它的轉蛋。"
+
+#: .\changelog.py:28
+msgid ""
+"On Resources, a talent with levels takes a slider, so you can plan it short of its max."
+msgstr "資源頁中，有等級的本能改用滑桿設定，可規劃到未滿等級為止。"
+
+#: .\changelog.py:32
+msgid ""
+"The seed field starts empty instead of at 0, which rolled the same cats on every banner."
+msgstr "種子碼欄位改為空白開始，而不是 0；0 會讓每個轉蛋抽出相同角色。"
+
+#: .\changelog.py:40
+msgid ""
+"Explore mode no longer runs out of memory with many banners and targets."
+msgstr "探索模式在選取多個轉蛋與目標時不再記憶體不足。"
+
+#: .\changelog.py:41
+msgid ""
+"Forms the game data hadn't caught up on yet can now be planned on Resources."
+msgstr "遊戲資料尚未收錄的進化型態，現在也能在資源頁規劃。"
+
+#: .\changelog.py:47
+msgid ""
+"Collab and one-off banners show their official titles, in each version's language."
+msgstr "合作與單次轉蛋會以各版本的語言顯示官方標題。"
+
+#: .\changelog.py:48
+msgid "Cats too new for the main game data are now listed."
+msgstr "主要遊戲資料尚未收錄的新角色，現在也會列出。"
+
+#: .\changelog.py:54
+msgid "Each version's tier lists use that version's own cat names."
+msgstr "各版本的強度排行使用該版本自己的角色名稱。"
+
+#: .\changelog.py:55
+msgid ""
+"On narrow windows the Rolls and Normal Capsules tables scroll in their own pane."
+msgstr "在窄視窗中，轉蛋序列與貓咪轉蛋的表格會在各自的框內捲動。"
+
+#: .\changelog.py:62
 msgid ""
 "The site now speaks Japanese, Traditional Chinese and Korean. Each game version opens in its own language; pick another in the header."
 msgstr "網站現在支援日文、繁體中文與韓文。每個遊戲版本會用它自己的語言開啟;也可以在頁首選擇其他語言。"
 
-#: .\changelog.py:16
+#: .\changelog.py:65
 msgid "Each game version has its own pages: /jp/, /tw/ and /kr/."
 msgstr "每個遊戲版本都有自己的頁面:/jp/、/tw/ 與 /kr/。"
 
-#: .\changelog.py:18
+#: .\changelog.py:67
 msgid ""
 "Your first visit opens the version your browser's language points to: Japanese, Traditional Chinese or Korean, else English."
 msgstr "第一次造訪時,會依瀏覽器的語言開啟對應版本:日文、繁體中文或韓文,其他則為英文。"
 
-#: .\changelog.py:21
+#: .\changelog.py:70
 msgid "The Seed Finder's checks now show as you pick each cat."
 msgstr "種子碼查詢的檢查現在會在你選每隻角色時即時顯示。"
 
-#: .\changelog.py:22
+#: .\changelog.py:71
 msgid ""
 "Fest and set names use each game version's own names, taken from the game's data."
 msgstr "祭典與系列名稱改用遊戲資料中各版本自己的名稱。"
 
-#: .\changelog.py:24
+#: .\changelog.py:73
 msgid ""
 "A short welcome for first visits, guide links on the pages that need them, and a page of game words explained."
 msgstr "新增首次造訪的簡短歡迎、在需要的頁面加上攻略連結,以及遊戲用語說明頁。"
 
-#: .\changelog.py:33
+#: .\changelog.py:82
 msgid ""
 "Your seeds are saved to your profile. A new device or a cleared browser no longer loses them, and a line under the seed shows when it's saved."
 msgstr "你的種子碼現在會存到個人資料中。換裝置或清除瀏覽器都不會再遺失,種子碼下方也會顯示是否已儲存。"
 
-#: .\changelog.py:37
+#: .\changelog.py:86
 msgid ""
 "The Seed Finder checks your entry for the usual mistakes before it searches, and saves the seed it finds."
 msgstr "種子碼查詢會在搜尋前檢查常見錯誤,並儲存找到的種子碼。"
 
-#: .\changelog.py:40
+#: .\changelog.py:89
 msgid ""
 "Opening someone else's link no longer replaces your own seed until you choose to."
 msgstr "打開別人的連結時,除非你自己選擇,否則不會取代你的種子碼。"
 
-#: .\changelog.py:41
+#: .\changelog.py:90
 msgid "New step-by-step guides."
 msgstr "新增逐步教學攻略。"
 
-#: .\changelog.py:47
+#: .\changelog.py:96
 msgid "Import your collection from screenshots of the in-game Cat Guide."
 msgstr "可從遊戲內貓咪圖鑑的截圖匯入收藏。"
 
-#: .\changelog.py:48
+#: .\changelog.py:97
 msgid ""
 "The seed search and the rolls run in your browser, so they're much faster."
 msgstr "種子碼搜尋與抽卡計算改在你的瀏覽器中執行,速度快很多。"

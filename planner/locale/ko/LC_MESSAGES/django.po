@@ -17,58 +17,127 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
 
+#: .\changelog.py:12
+msgid ""
+"On phones the header takes two short rows, and the page links swipe sideways."
+msgstr "휴대폰에서는 헤더가 짧은 두 줄로 바뀌고, 페이지 링크는 옆으로 밀어 넘길 수 있습니다."
+
 #: .\changelog.py:13
+msgid ""
+"Collection's A-Z view has a section per letter, and a row of letters jumps to one."
+msgstr "컬렉션의 A-Z 보기가 첫 글자별로 나뉘고, 글자 줄에서 해당 구역으로 이동할 수 있습니다."
+
+#: .\changelog.py:14
+msgid "Every on/off option is now a tick box."
+msgstr "모든 켜기/끄기 옵션이 체크 상자로 바뀌었습니다."
+
+#: .\changelog.py:15
+msgid "Platinum and Legend Capsules no longer mark their cats as new."
+msgstr "플래티넘 뽑기와 레전드 뽑기의 캐릭터가 더 이상 첫 등장으로 표시되지 않습니다."
+
+#: .\changelog.py:16
+msgid "The banner search also matches a banner's subtitle."
+msgstr "뽑기 검색이 부제목도 찾습니다."
+
+#: .\changelog.py:23
+msgid ""
+"A new look across the site, and a simpler Collection: one toolbar of drop-downs, with a Missing filter."
+msgstr "사이트 전체 디자인을 새로 바꾸고 컬렉션을 단순하게 했습니다. 드롭다운을 도구 모음 한 줄에 모으고 미보유 필터를 추가했습니다."
+
+#: .\changelog.py:26
+msgid "A cat's popup lists the banners it drops from."
+msgstr "캐릭터 팝업에 그 캐릭터가 나오는 뽑기가 표시됩니다."
+
+#: .\changelog.py:28
+msgid ""
+"On Resources, a talent with levels takes a slider, so you can plan it short of its max."
+msgstr "자원 페이지에서 레벨이 있는 본능은 슬라이더로 정해, 최대보다 낮은 레벨까지 계획할 수 있습니다."
+
+#: .\changelog.py:32
+msgid ""
+"The seed field starts empty instead of at 0, which rolled the same cats on every banner."
+msgstr "시드 칸이 0이 아니라 빈칸으로 시작합니다. 0이면 모든 뽑기에서 같은 캐릭터가 나왔습니다."
+
+#: .\changelog.py:40
+msgid ""
+"Explore mode no longer runs out of memory with many banners and targets."
+msgstr "탐색 모드에서 뽑기와 목표를 많이 골라도 메모리가 부족해지지 않습니다."
+
+#: .\changelog.py:41
+msgid ""
+"Forms the game data hadn't caught up on yet can now be planned on Resources."
+msgstr "게임 데이터에 아직 반영되지 않았던 형태도 이제 자원 페이지에서 계획할 수 있습니다."
+
+#: .\changelog.py:47
+msgid ""
+"Collab and one-off banners show their official titles, in each version's language."
+msgstr "콜라보와 단발 뽑기는 각 버전의 언어로 공식 제목을 표시합니다."
+
+#: .\changelog.py:48
+msgid "Cats too new for the main game data are now listed."
+msgstr "주요 게임 데이터에 아직 없는 새 캐릭터도 이제 표시됩니다."
+
+#: .\changelog.py:54
+msgid "Each version's tier lists use that version's own cat names."
+msgstr "각 버전의 티어표는 그 버전의 캐릭터 이름을 씁니다."
+
+#: .\changelog.py:55
+msgid ""
+"On narrow windows the Rolls and Normal Capsules tables scroll in their own pane."
+msgstr "좁은 창에서는 배열 표와 냥코 뽑기 표가 각자의 칸 안에서 스크롤됩니다."
+
+#: .\changelog.py:62
 msgid ""
 "The site now speaks Japanese, Traditional Chinese and Korean. Each game version opens in its own language; pick another in the header."
 msgstr "이제 일본어, 번체 중국어, 한국어를 지원합니다. 게임 버전마다 그 언어로 열리며, 헤더에서 다른 언어도 고를 수 있습니다."
 
-#: .\changelog.py:16
+#: .\changelog.py:65
 msgid "Each game version has its own pages: /jp/, /tw/ and /kr/."
 msgstr "게임 버전마다 전용 페이지가 생겼습니다: /jp/, /tw/, /kr/."
 
-#: .\changelog.py:18
+#: .\changelog.py:67
 msgid ""
 "Your first visit opens the version your browser's language points to: Japanese, Traditional Chinese or Korean, else English."
 msgstr "처음 방문하면 브라우저 언어에 맞는 버전이 열립니다: 일본어, 번체 중국어, 한국어, 그 외에는 영어."
 
-#: .\changelog.py:21
+#: .\changelog.py:70
 msgid "The Seed Finder's checks now show as you pick each cat."
 msgstr "시드 찾기의 확인이 이제 캐릭터를 고를 때마다 바로 표시됩니다."
 
-#: .\changelog.py:22
+#: .\changelog.py:71
 msgid ""
 "Fest and set names use each game version's own names, taken from the game's data."
 msgstr "축제와 세트 이름은 게임 데이터에 있는 각 버전의 정식 이름으로 표시됩니다."
 
-#: .\changelog.py:24
+#: .\changelog.py:73
 msgid ""
 "A short welcome for first visits, guide links on the pages that need them, and a page of game words explained."
 msgstr "처음 온 분을 위한 짧은 안내, 필요한 페이지의 가이드 링크, 게임 용어 설명 페이지를 추가했습니다."
 
-#: .\changelog.py:33
+#: .\changelog.py:82
 msgid ""
 "Your seeds are saved to your profile. A new device or a cleared browser no longer loses them, and a line under the seed shows when it's saved."
 msgstr "시드가 프로필에 저장됩니다. 기기를 바꾸거나 브라우저를 지워도 사라지지 않으며, 시드 아래에 저장 여부가 표시됩니다."
 
-#: .\changelog.py:37
+#: .\changelog.py:86
 msgid ""
 "The Seed Finder checks your entry for the usual mistakes before it searches, and saves the seed it finds."
 msgstr "시드 찾기가 검색 전에 흔한 실수를 확인하고, 찾은 시드를 저장합니다."
 
-#: .\changelog.py:40
+#: .\changelog.py:89
 msgid ""
 "Opening someone else's link no longer replaces your own seed until you choose to."
 msgstr "다른 사람의 링크를 열어도, 직접 고르기 전까지 내 시드는 바뀌지 않습니다."
 
-#: .\changelog.py:41
+#: .\changelog.py:90
 msgid "New step-by-step guides."
 msgstr "단계별 가이드를 추가했습니다."
 
-#: .\changelog.py:47
+#: .\changelog.py:96
 msgid "Import your collection from screenshots of the in-game Cat Guide."
 msgstr "게임 내 냥코 도감 스크린샷으로 컬렉션을 가져올 수 있습니다."
 
-#: .\changelog.py:48
+#: .\changelog.py:97
 msgid ""
 "The seed search and the rolls run in your browser, so they're much faster."
 msgstr "시드 검색과 뽑기 계산이 브라우저에서 돌아가서 훨씬 빨라졌습니다."
