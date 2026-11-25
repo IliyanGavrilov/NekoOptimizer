@@ -497,3 +497,8 @@ msgstr[0] "%s회"
 msgid "Not in any rare capsule."
 msgstr "레어 뽑기에는 나오지 않습니다."
 
+msgid "Previous step (← key)"
+msgstr "이전 단계 (← 키)"
+
+msgid "Next step (→ key)"
+msgstr "다음 단계 (→ 키)"

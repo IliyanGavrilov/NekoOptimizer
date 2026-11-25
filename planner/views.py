@@ -1,6 +1,7 @@
 import json
 from copy import copy
 from dataclasses import asdict, dataclass
+from datetime import date
 from urllib.parse import urlsplit
 
 from django.conf import settings
@@ -30,6 +31,7 @@ from neko.roller import DEFAULT_COUNT, GUARANTEED_OPTIONS, prepare_active, prepa
 from neko.seekspec import MAX_MATCHES, normal_spec, seed_spec
 from neko.statsdata import ABILITY_LABELS, ATTACK_LABELS, IMMUNITY_LABELS, TARGET_LABELS
 from neko.tierdata import load_tiers
+from planner.catalogue_cache import catalogue_version
 from planner.changelog import CHANGES
 from planner.forms import (
     MAX_FUTURE_UBERS,
@@ -168,6 +170,9 @@ def planner(request):
         "saved_seed": saved,
         "target_groups": groups,
         "past_count": past_count,
+        # The Past rows' address names what they depend on - the catalogue, the day and
+        # the language - so the browser can keep them until one of those moves.
+        "past_key": f"{catalogue_version()}-{date.today().isoformat()}-{get_language()}",
         "target_flat": target_flat,
     }
 
@@ -185,7 +190,11 @@ def picker_past(request):
         )
     )
 
-    return render(request, "planner/_picker_rows.html", {"sections": groups.get("Past", [])})
+    response = render(request, "planner/_picker_rows.html", {"sections": groups.get("Past", [])})
+    # Its address carries the page's past_key, so a stale copy is never asked for again.
+    patch_cache_control(response, private=True, max_age=24 * 60 * 60)
+
+    return response
 
 
 def picker_carriers(request):

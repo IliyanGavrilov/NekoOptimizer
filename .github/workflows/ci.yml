@@ -72,6 +72,30 @@ jobs:
       - name: Tests
         run: pytest -q
 
+  # The pages in a real browser: catches a script that no longer parses or throws on load,
+  # which no Python test sees. Playwright lives here only, not in the dev requirements.
+  smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: "3.14"
+          cache: pip
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements-dev.txt playwright==1.61.0
+          playwright install --with-deps chromium
+
+      - name: Smoke test
+        run: pytest -q planner/test_smoke.py
+        env:
+          NEKO_SMOKE: "1"
+          # Playwright's sync API runs an event loop; Django only sees it from the test thread.
+          DJANGO_ALLOW_ASYNC_UNSAFE: "1"
+
   # The browser's Rust (seed sieve, Cat Guide reader): the source must pass its own tests,
   # and a fresh build must pass the same checks as the committed planner/static/planner/neko.wasm.
   wasm:

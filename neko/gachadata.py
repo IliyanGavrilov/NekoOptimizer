@@ -451,6 +451,14 @@ def load_tickets(region: str | None = None) -> dict[int, int]:
     return {int(k): v[1] for k, v in _read_series(series_path(region)).items()}
 
 
+def unshipped(
+    event_rows: Iterable[GachaEventRow], pools: Mapping[int, list[int]], today: date
+) -> list[GachaEventRow]:
+    """The announced runs - live or still to come - whose pool neither source has yet: a
+    banner the site would show with no cats and no title."""
+    return [e for e in event_rows if e.end >= today and e.pool_id not in pools]
+
+
 def refresh(region: str = DEFAULT_REGION, tarball: bytes | None = None) -> tuple[int, int]:
     """Fetch the live schedule + pools + series + official titles and rewrite one region's
     committed data files (network). Pools come from the game's own files, with godfat's

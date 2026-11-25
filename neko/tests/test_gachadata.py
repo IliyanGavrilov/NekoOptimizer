@@ -18,6 +18,7 @@ from neko.gachadata import (
     parse_godfat_gacha,
     parse_series,
     parse_title,
+    unshipped,
 )
 from neko.models import Rarity
 
@@ -204,3 +205,17 @@ def test_parse_godfat_gacha_reads_pools_in_our_unit_ids():
 def test_parse_godfat_gacha_tickets_the_special_capsules_by_their_rate():
     _, series = parse_godfat_gacha(GODFAT_BUILD)
     assert series == {1083: [6, 21], 1087: [21, 29], 1088: [46, 145]}
+
+
+def _scheduled(pool, end):
+    return GachaEventRow("e", "B", date(2026, 11, 1), end, pool, 7000, 2500, 500, 0, False, False)
+
+
+def test_unshipped_lists_announced_runs_whose_pool_is_missing():
+    events = [_scheduled(1, date(2026, 11, 30)), _scheduled(2, date(2026, 11, 30))]
+    assert [e.pool_id for e in unshipped(events, {1: [10]}, date(2026, 11, 25))] == [2]
+
+
+def test_unshipped_ignores_runs_already_over():
+    events = [_scheduled(2, date(2026, 11, 20))]
+    assert unshipped(events, {}, date(2026, 11, 25)) == []
