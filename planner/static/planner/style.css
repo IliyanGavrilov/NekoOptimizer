@@ -931,9 +931,14 @@ legend { color: var(--ink); padding: 0 0.4rem; }
 
 /* Keep the target picker compact so "Find plan" stays reachable */
 /* Rows scrolled up out of view fade out under the search bar instead of being cut at it. */
+/* The same room on the left as the right, so a picked banner's ring and glow show
+   evenly on both sides; the negative margin keeps the list lined up with the search. */
 .picker-scroll {
   max-height: 55vh;
   overflow-y: auto;
+  margin-left: -0.4rem;
+  padding-left: 0.4rem;
+  scroll-margin: calc(var(--header-h, 56px) + 0.5rem) 0 0.5rem;
   padding-right: 0.4rem;
   margin-top: 0.5rem;
   padding-top: 0.5rem;
@@ -1219,7 +1224,6 @@ section > h3, .banner-group > summary {
 .banner-group.capsule.included {
   box-shadow: 0 0 0 2px var(--sel), 0 0 16px -2px color-mix(in srgb, var(--sel) 55%, transparent);
 }
-.banner-group.included > summary { box-shadow: inset 4px 0 0 var(--sel); }
 .banner-group.included:not(.capsule) > summary {
   background: color-mix(in srgb, var(--accent) 12%, var(--panel-2));
 }
@@ -1239,11 +1243,12 @@ section > h3, .banner-group > summary {
   cursor: pointer;
 }
 .banner-count:hover { text-decoration: underline; filter: none; }
+/* A found banner lights up in the accent and fades back over a couple of seconds. */
 @keyframes flash-locate {
-  0%, 100% { box-shadow: 0 0 0 1px var(--accent); }
-  35% { box-shadow: 0 0 0 5px var(--accent); }
+  0%, 25% { box-shadow: 0 0 0 2px var(--accent), inset 0 0 0 100vmax color-mix(in srgb, var(--accent) 16%, transparent); }
+  100% { box-shadow: 0 0 0 2px transparent, inset 0 0 0 100vmax transparent; }
 }
-.banner-group.flash-locate { animation: flash-locate 0.9s ease-out; }
+.banner-group.flash-locate { animation: flash-locate 2.2s ease-out; }
 
 /* Rejected capsule pick (a run from a different time than the selected session). */
 @keyframes flash-blocked {
@@ -2326,6 +2331,7 @@ table.track th.guaranteed-col, table.track td.guaranteed-col {
   justify-content: center;
   width: 1.35rem;
   height: 1.35rem;
+  margin: 0;
   padding: 0;
   font: inherit;
   font-size: 0.85rem;
@@ -2337,7 +2343,9 @@ table.track th.guaranteed-col, table.track td.guaranteed-col {
   cursor: pointer;
 }
 .own-chip .catinfo { right: 0.5rem; }
-.own-chip .chip-star { right: 1.9rem; }
+/* Drawn, not typed: the two glyphs come from different fonts and never line up. */
+.own-chip :is(.chip-star, .catinfo) svg { display: block; width: 1.05em; height: 1.05em; }
+.own-chip .chip-star { right: 2.1rem; }
 .own-chip:is(:hover, :has(:focus-visible)) :is(.chip-star, .catinfo) { display: flex; }
 .own-chip:is(:hover, :has(:focus-visible)) .chip-own .tier-badge { opacity: 0; }
 .own-chip:is(:hover, :has(:focus-visible))::after {
@@ -2347,7 +2355,7 @@ table.track th.guaranteed-col, table.track td.guaranteed-col {
   right: 0;
   bottom: 0;
   z-index: 1;
-  width: 4.4rem;
+  width: 4.6rem;
   border-radius: 0 999px 999px 0;
   background: linear-gradient(90deg, transparent, var(--chip-bg) 1.1rem);
   pointer-events: none;
@@ -3481,3 +3489,247 @@ button, .chip, .entry, .banner-group, .banner-include, .step-card, .site-header 
 }
 .card-more:hover { text-decoration: underline; }
 .card-all { margin-top: 0.3rem; }
+
+/* ---- Wishlist panel: wanted cats on live / upcoming banners, above the search ---- */
+.wish-soon {
+  margin: 0 0 0.6rem;
+  border: 1px solid color-mix(in srgb, var(--r-super) 45%, var(--line));
+  border-radius: 12px;
+  background: var(--panel);
+}
+.wish-soon > summary {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.45rem 0.8rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  list-style: none;
+}
+.wish-soon > summary::-webkit-details-marker { display: none; }
+.wish-soon .wanted-star { color: var(--r-super); }
+.wish-soon .chevron { margin-left: auto; font-size: 0.7rem; color: var(--muted); transition: transform 0.15s; }
+.wish-soon[open] .chevron { transform: rotate(180deg); }
+.wish-soon ul { list-style: none; margin: 0; padding: 0 0.8rem 0.3rem; }
+/* The cat's icon and name, then its banners flowing beside it. */
+.wish-soon li {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.35rem 0;
+  border-top: 1px solid var(--line);
+}
+.wish-cat { flex: 0 0 13rem; display: flex; align-items: center; gap: 0.55rem; min-width: 0; }
+.wish-cat img { flex: none; width: 40px; height: auto; border-radius: 5px; }
+.wish-cat .catlink { margin: 0; overflow: hidden; color: var(--ink); font-weight: 700; text-align: left; text-overflow: ellipsis; white-space: nowrap; }
+.wish-more { margin: 0; padding: 0.2rem 0.8rem 0.55rem; font-size: 0.8rem; }
+.wish-runs { display: flex; flex-wrap: wrap; gap: 0.3rem; }
+.wish-run {
+  max-width: 100%;
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  padding: 0.1rem 0.6rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--muted);
+  font-size: 0.75rem;
+  cursor: pointer;
+}
+.wish-run b { color: var(--ink); font-weight: 600; }
+.wish-run:hover { border-color: var(--accent); filter: none; }
+.wish-run.live { border-color: color-mix(in srgb, var(--new) 60%, var(--line)); }
+.wish-run.live i { color: var(--new); font-style: normal; }
+.wish-run.platinum { border-color: var(--tkt-platinum); }
+.wish-run.legend { border-color: color-mix(in srgb, var(--r-legend) 60%, var(--line)); }
+
+/* ---- List / Timeline switch beside Display (gone while searching: results are a list) ---- */
+.view-toggle {
+  display: inline-flex;
+  height: 2.1rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  overflow: hidden;
+  background: var(--bg-2);
+}
+.view-toggle button {
+  margin: 0;
+  padding: 0 0.8rem;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: var(--muted);
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+.view-toggle button + button { border-left: 1px solid var(--line); }
+.view-toggle button:hover { color: var(--ink); filter: none; }
+.view-toggle button[aria-pressed="true"] { background: color-mix(in srgb, var(--accent) 16%, transparent); color: var(--accent); }
+.search-wrap:has(#targetSearch:not(:placeholder-shown)) .view-toggle { display: none; }
+
+/* ---- Timeline: the live and upcoming runs over the coming weeks, a row per set ---- */
+#targetBrowser.timeline-on:not(.searching) > :is(h2.group, .banner-group),
+#targetBrowser.timeline-on:not(.searching) > details.group-drop:not(#pastGroup) { display: none; }
+#targetBrowser.searching > .banner-timeline { display: none; }
+.banner-timeline { margin: 0.6rem 0 0.9rem; }
+.tl-host { overflow-x: auto; }
+.tl-grid { --label: 13rem; position: relative; padding-top: 1.1rem; font-size: 0.8rem; }
+/* Every day numbered, Mondays in full ink to mark the weeks. */
+.tl-days {
+  display: grid;
+  grid-template-columns: repeat(var(--days), 1fr);
+  margin-left: var(--label);
+  border-bottom: 1px solid var(--line);
+  color: var(--muted);
+  font-family: var(--head-font);
+  font-size: 0.68rem;
+}
+.tl-days span { padding: 0.15rem 0; text-align: center; border-left: 1px solid color-mix(in srgb, var(--line) 60%, transparent); }
+.tl-days span.monday { color: var(--ink); font-weight: 700; }
+.tl-row { display: flex; align-items: center; height: 1.7rem; }
+/* Pinned while the days scroll sideways on a narrow screen. */
+.tl-label {
+  position: sticky;
+  left: 0;
+  z-index: 3;
+  flex: none;
+  width: var(--label);
+  padding-right: 0.6rem;
+  overflow: hidden;
+  background: var(--panel);
+  font-family: var(--head-font);
+  font-size: 0.75rem;
+  line-height: 1.7rem;
+  text-align: right;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.tl-lane { position: relative; flex: 1; align-self: stretch; }
+.tl-bar {
+  position: absolute;
+  top: 0.25rem;
+  bottom: 0.25rem;
+  left: calc(var(--from) / var(--days) * 100%);
+  width: calc((var(--to) - var(--from)) / var(--days) * 100%);
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  margin: 0;
+  padding: 0 0.4rem;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--accent) 55%, transparent);
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--accent) 22%, var(--panel-2));
+  color: var(--ink);
+  font-size: 0.7rem;
+  line-height: 1;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.tl-bar:hover { filter: brightness(1.12); }
+.tl-bar.platinum { border-color: var(--tkt-platinum); background: linear-gradient(90deg, color-mix(in srgb, var(--tkt-platinum) 30%, var(--panel-2)), var(--panel-2)); }
+.tl-bar.legend { border-color: var(--r-legend); background: color-mix(in srgb, var(--r-legend) 22%, var(--panel-2)); }
+.tl-bar.picked { box-shadow: 0 0 0 2px var(--accent); }
+.tl-name { overflow: hidden; text-overflow: ellipsis; }
+.tl-mark { flex: none; font-weight: 700; }
+.tl-mark.g { color: var(--accent); }
+.tl-mark.w { color: var(--r-super); }
+.tl-mark.debut { padding: 0 0.2rem; border: 1px solid currentColor; border-radius: 4px; color: var(--new); font-size: 0.58rem; }
+.tl-now {
+  position: absolute;
+  top: 1.1rem;
+  bottom: 0;
+  left: calc(var(--label) + (100% - var(--label)) * var(--at) / var(--days));
+  z-index: 2;
+  width: 2px;
+  background: var(--new);
+  pointer-events: none;
+}
+.tl-now::before {
+  content: attr(data-label);
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  translate: -50% 0;
+  color: var(--new);
+  font-family: var(--head-font);
+  font-size: 0.62rem;
+  white-space: nowrap;
+}
+.tl-key { display: flex; flex-wrap: wrap; gap: 0.3rem 1rem; margin: 0.45rem 0 0; font-size: 0.75rem; }
+.tl-key .tl-mark { margin-right: 0.25rem; }
+.tl-key .tl-mark.debut { font-weight: 700; }
+/* A phone scrolls the days sideways rather than squeeze them under a finger's width. */
+@media (max-width: 640px) {
+  .tl-grid { --label: 8rem; min-width: calc(var(--label) + var(--days) * 1.5rem); }
+  .wish-soon li { flex-direction: column; align-items: start; gap: 0.3rem; }
+  .wish-cat { flex-basis: auto; }
+}
+
+/* ---- Settings menu: the colour-blind switch and the shortcuts sheet's entry ---- */
+.pref-check { display: flex; align-items: center; gap: 0.5rem; margin-top: 0.45rem; font-size: 0.85rem; cursor: pointer; }
+.pref-check input { flex: none; margin: 0; }
+.pref-link {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin: 0.2rem 0 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--ink);
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+.pref-link:hover { color: var(--accent); filter: none; }
+.pref-link kbd { background: transparent; color: inherit; border-color: currentColor; }
+kbd {
+  display: inline-block;
+  min-width: 1.4em;
+  padding: 0 0.35em;
+  border: 1px solid var(--line);
+  border-bottom-width: 2px;
+  border-radius: 5px;
+  background: var(--bg-2);
+  color: var(--ink);
+  font-family: var(--head-font);
+  font-size: 0.8em;
+  line-height: 1.5;
+  text-align: center;
+}
+.shortcuts-sheet h2 { margin: 0 1.5rem 0.8rem 0; font-size: 1.05rem; }
+.shortcuts-sheet dl { display: grid; grid-template-columns: auto 1fr; gap: 0.55rem 1rem; align-items: baseline; margin: 0; }
+.shortcuts-sheet dt { white-space: nowrap; text-align: right; }
+.shortcuts-sheet dd { margin: 0; }
+
+/* ---- Colour-blind friendly colours (Okabe-Ito based): no red/green pair carries meaning ---- */
+:root[data-cvd] {
+  --r-rare: #5a8dff;
+  --r-uber: #cc79a7;
+  --r-legend: #ff7a3d;
+  --new: #7fdcff;
+  --badge-rare: #1f5fc4;
+  --badge-uber: #9a3d78;
+  --badge-legend: #b34700;
+  --band-s: #ff7a3d;
+  --band-a: #e69f00;
+  --band-b: #f0e442;
+  --band-c: #56b4e9;
+  --band-d: #5a8dff;
+  --band-e: #cc79a7;
+}
+:root[data-cvd][data-theme="light"] {
+  --r-rare: #0058b8;
+  --r-uber: #a3407e;
+  --r-legend: #c04000;
+  --new: #006d8f;
+  --band-s: #c04000;
+  --band-a: #a86a00;
+  --band-b: #857500;
+  --band-c: #0077a8;
+  --band-d: #0050b0;
+  --band-e: #a3407e;
+}

@@ -118,6 +118,7 @@ from planner.services import (
     tracks_request,
     unit_form_names,
     unit_stats,
+    wishlist_runs,
 )
 
 
@@ -153,7 +154,7 @@ def planner(request):
     rank = {name: i for i, name in enumerate(RARITY_ORDER)}
     target_flat = sorted(cats, key=lambda cat: (-rank.get(cat.rarity, -1), cat.name))
 
-    groups, past_count = [], 0
+    groups, past_count, soon = [], 0, {}
     for label, rows in picker_groups(
         cats, titles=banner_titles(), banner_names=cat_banner_names(), debuts=live_run_debuts()
     ):
@@ -162,6 +163,15 @@ def planner(request):
             groups.append((label, None))  # rendered as a lazy shell in its place
         else:
             groups.append((label, rows))
+            soon[label] = rows
+    uids = {cat.name: cat.unit.unit_id for cat in cats if cat.unit}
+    wishlist = [
+        (name, uids.get(name), runs)
+        for name, runs in wishlist_runs(soon.get("Available now", ()), soon.get("Upcoming", ()))
+    ]
+    # A cat only the ticket capsules drop would list the same two pills as every other:
+    # the panel folds those into one line under the rest.
+    capsules_only = [name for name, _, runs in wishlist if all(row.capsule for row, _ in runs)]
 
     saved = Seed.saved(request.profile)
     context = {
@@ -174,6 +184,9 @@ def planner(request):
         # the language - so the browser can keep them until one of those moves.
         "past_key": f"{catalogue_version()}-{date.today().isoformat()}-{get_language()}",
         "target_flat": target_flat,
+        "wishlist_soon": [cat for cat in wishlist if cat[0] not in capsules_only],
+        "wishlist_capsules_only": capsules_only,
+        "wishlist_count": len(wishlist),
     }
 
     return render(request, "planner/planner.html", context)

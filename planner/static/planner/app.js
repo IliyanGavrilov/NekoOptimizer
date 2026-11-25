@@ -280,7 +280,8 @@ function setupFollowAlong(follow) {
 }
 
 // Keyboard shortcuts, away from any text field: "/" jumps to the page's search box, Esc
-// in one clears it, and the arrow keys step through the plan you're following.
+// in one clears it, the arrow keys step through the plan you're following, and "?" lists
+// them all (the sheet in base.html).
 const SEARCH_BOXES = "#targetSearch, #collectionSearch, .res-search, #seekBannerSearch";
 const typing = (el) => el.closest?.("input, textarea, select, [contenteditable]");
 document.addEventListener("keydown", (e) => {
@@ -291,6 +292,11 @@ document.addEventListener("keydown", (e) => {
     return;
   }
   if (typing(e.target) || document.querySelector("dialog[open]")) return;
+  if (e.key === "?") {
+    e.preventDefault();
+    openShortcuts();
+    return;
+  }
   if (e.key === "/") {
     const box = [...document.querySelectorAll(SEARCH_BOXES)].find((b) => b.offsetParent);
     if (!box) return;
@@ -620,6 +626,7 @@ if (picker) {
     locateIdx = 0;
     syncBannerChips();
     syncResources();
+    if (document.getElementById("bannerTimeline")?.hidden === false) drawTimeline();
     save();
   }
   // Whether a selected banner is a Platinum / a Legend capsule run: each capsule's
@@ -673,11 +680,15 @@ if (picker) {
     }
     bannerChips.hidden = !bannerChips.childElementCount;
   }
-  // Scroll the picker to a banner and pulse it (opening the group it hides in).
+  // Scroll the banner list to a banner and light it up (opening the section it hides in).
+  // Only the list scrolls; the page moves just enough to show the list if it's off-screen.
   function locate(group) {
     const drop = group.closest("details.group-drop");
     if (drop) drop.open = true;
-    group.scrollIntoView({ behavior: "smooth", block: "center" });
+    const list = picker.getBoundingClientRect();
+    const top = group.getBoundingClientRect().top - list.top + picker.scrollTop;
+    picker.scrollTo({ top: top - picker.clientHeight / 4, behavior: "smooth" });
+    picker.scrollIntoView({ behavior: "smooth", block: "nearest" });
     group.classList.remove("flash-locate");
     void group.offsetWidth; // restart the animation when stepping banner to banner
     group.classList.add("flash-locate");
@@ -692,6 +703,129 @@ if (picker) {
     locate(marked[locateIdx % marked.length]);
     locateIdx += 1;
   });
+  // The wishlist panel: each banner pill shows that banner in the list.
+  const rowFor = (title, start) =>
+    includes.map((b) => b.closest(".banner-group")).find((g) => g.dataset.title === title && g.dataset.start === start);
+  function showBanner(group) {
+    if (!group) return;
+    if (search.value) {
+      search.value = "";
+      applySearch();
+    }
+    setBannerView("list", false);
+    locate(group);
+  }
+  document.getElementById("wishSoon")?.addEventListener("click", (e) => {
+    const run = e.target.closest(".wish-run");
+    if (run) showBanner(rowFor(run.dataset.title, run.dataset.start));
+  });
+
+  // The live and upcoming runs as a timeline: a row per banner set, a named bar per run,
+  // marked like the list (guaranteed, wishlist, debut, picked). A bar shows its run in the
+  // list. Drawn from the list's own rows, so it never disagrees.
+  const VIEW_KEY = "neko:bannerView";
+  const viewToggle = document.getElementById("bannerView");
+  function timelineBar(g, from, to) {
+    const bar = document.createElement("button");
+    bar.type = "button";
+    bar.className = "tl-bar";
+    for (const kind of ["platinum", "legend"]) bar.classList.toggle(kind, g.classList.contains(kind));
+    bar.classList.toggle("picked", g.querySelector(".banner-include").getAttribute("aria-pressed") === "true");
+    bar.style.setProperty("--from", from);
+    bar.style.setProperty("--to", to);
+    const text = (sel) => g.querySelector(sel)?.textContent.replace(/\s+/g, " ").trim();
+    bar.title = [[g.dataset.title, text(".dates")].filter(Boolean).join(" "), text(".banner-wanted")].filter(Boolean).join("\n");
+    const mark = (kind, label) => {
+      const span = document.createElement("span");
+      span.className = `tl-mark ${kind}`;
+      span.textContent = label;
+      bar.appendChild(span);
+    };
+    const guaranteed = text(".run-pill.guaranteed");
+    if (guaranteed) mark("g", guaranteed.charAt(0));
+    if (g.classList.contains("has-wanted")) mark("w", "★");
+    if (g.dataset.new) mark("debut", g.dataset.newLabel.charAt(0).toUpperCase());
+    const name = document.createElement("span");
+    name.className = "tl-name";
+    name.textContent = g.dataset.title;
+    bar.appendChild(name);
+    bar.addEventListener("click", () => showBanner(g));
+    return bar;
+  }
+  function drawTimeline() {
+    const timeline = document.getElementById("bannerTimeline");
+    const DAY = 864e5;
+    const now = new Date();
+    const today = Date.UTC(now.getFullYear(), now.getMonth(), now.getDate());
+    const at = (iso) => (Date.parse(iso) - today) / DAY;
+    const capsule = (g) => (g.classList.contains("capsule") ? 0 : 1);
+    const runs = includes
+      .map((b) => b.closest(".banner-group"))
+      .filter((g) => g.dataset.end && at(g.dataset.end) >= 0)
+      .sort((x, y) => capsule(x) - capsule(y) || x.dataset.start.localeCompare(y.dataset.start));
+    // A few days back, so the live runs show where they began, through the last announced
+    // end: three to four weeks. The capsules' far-off placeholder end doesn't stretch it.
+    const first = -5;
+    const last = Math.max(0, ...runs.map((g) => at(g.dataset.end)).filter((d) => d < 60));
+    const days = Math.min(28, Math.max(22, Math.ceil(last) - first + 1));
+    const sets = new Map();
+    for (const g of runs) {
+      if (!sets.has(g.dataset.title)) sets.set(g.dataset.title, []);
+      sets.get(g.dataset.title).push(g);
+    }
+    const lang = document.documentElement.lang || undefined;
+    const dayNum = new Intl.DateTimeFormat(lang, { day: "numeric", timeZone: "UTC" });
+    const head = document.createElement("div");
+    head.className = "tl-days";
+    for (let i = 0; i < days; i++) {
+      const date = new Date(today + (first + i) * DAY);
+      const cell = document.createElement("span");
+      cell.textContent = dayNum.format(date);
+      cell.classList.toggle("monday", date.getUTCDay() === 1);
+      head.appendChild(cell);
+    }
+    const rows = [...sets.entries()].map(([title, groups]) => {
+      const row = document.createElement("div");
+      row.className = "tl-row";
+      const label = document.createElement("span");
+      label.className = "tl-label";
+      label.textContent = label.title = title;
+      const lane = document.createElement("span");
+      lane.className = "tl-lane";
+      for (const g of groups) {
+        // Runs change over at the mid-morning reset, so a bar ends half into its last day.
+        const from = Math.max(0, at(g.dataset.start) - first);
+        const to = Math.min(days, at(g.dataset.end) - first + 0.5);
+        if (to > from) lane.appendChild(timelineBar(g, from, to));
+      }
+      row.append(label, lane);
+      return row;
+    });
+    const nowLine = document.createElement("span");
+    nowLine.className = "tl-now";
+    nowLine.dataset.label = timeline.dataset.today;
+    nowLine.style.setProperty("--at", -first + (now.getHours() + now.getMinutes() / 60) / 24);
+    const grid = document.createElement("div");
+    grid.className = "tl-grid";
+    grid.style.setProperty("--days", days);
+    grid.append(head, ...rows, nowLine);
+    const host = timeline.querySelector(".tl-host");
+    host.replaceChildren(grid);
+    host.scrollLeft = 0;
+  }
+  function setBannerView(view, remember = true) {
+    const on = view === "timeline";
+    browser.classList.toggle("timeline-on", on);
+    document.getElementById("bannerTimeline").hidden = !on;
+    viewToggle.querySelectorAll("button").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.view === view)));
+    if (remember) localStorage.setItem(VIEW_KEY, view);
+    if (on) drawTimeline();
+  }
+  viewToggle.addEventListener("click", (e) => {
+    const btn = e.target.closest("button[data-view]");
+    if (btn) setBannerView(btn.dataset.view);
+  });
+  setBannerView(localStorage.getItem(VIEW_KEY) === "timeline" ? "timeline" : "list", false);
   // Platinum/Legend capsules run on scarce tickets, so they're opt-in: never part
   // of a session, and each toggles on its own. Match the ticket-capsule PHRASE, not a
   // bare "legend"/"platinum" - ordinary banners (Evangelion's "Limited Legend", the
@@ -779,6 +913,7 @@ if (picker) {
   function applySearch() {
     const query = search.value.trim().toLowerCase();
     const searching = query !== "";
+    grouped.classList.toggle("searching", searching);
     const drops = grouped.querySelectorAll("details.group-drop");
     if (searching && !browseState) {
       browseState = { open: new Map([...drops].map((drop) => [drop, drop.open])), scroll: picker.scrollTop };
@@ -2317,6 +2452,34 @@ document.querySelectorAll("select[data-autosubmit]").forEach((select) => {
   systemDark.addEventListener("change", applyTheme);
   applyTheme();
 }
+
+// ---- Colour-blind friendly colours: one switch in the settings menu, persisted --
+// The <head> bootstrap sets data-cvd before first paint; style.css swaps the red/green
+// pairs (Legend vs new, the S vs C tier bands) for ones that stay apart.
+{
+  const CVD_KEY = "nekoCvd";
+  const toggle = document.getElementById("cvdToggle");
+  if (toggle) {
+    toggle.checked = "cvd" in document.documentElement.dataset;
+    toggle.addEventListener("change", () => {
+      if (toggle.checked) localStorage.setItem(CVD_KEY, "1");
+      else localStorage.removeItem(CVD_KEY);
+      document.documentElement.toggleAttribute("data-cvd", toggle.checked);
+    });
+  }
+}
+
+// ---- The keyboard shortcuts sheet: "?" or the settings menu's entry opens it --
+const shortcutsSheet = document.getElementById("shortcutsSheet");
+function openShortcuts() {
+  for (const menu of document.querySelectorAll(".header-menu")) menu.open = false;
+  shortcutsSheet.showModal();
+}
+document.getElementById("shortcutsOpen")?.addEventListener("click", openShortcuts);
+shortcutsSheet?.addEventListener("click", (e) => {
+  // The close button, or a click on the backdrop (the dialog box itself is the target).
+  if (e.target === shortcutsSheet || e.target.closest("[data-close]")) shortcutsSheet.close();
+});
 
 // ---- Header menus (settings, account): fold away on a click elsewhere, or Escape --
 const headerMenus = [...document.querySelectorAll(".header-menu")];

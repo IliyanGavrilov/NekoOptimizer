@@ -1,5 +1,5 @@
 import json
-from datetime import date
+from datetime import date, timedelta
 from types import SimpleNamespace
 
 import pytest
@@ -15,6 +15,7 @@ from planner.services import (
     ADDONS_LABEL,
     REGULARS_LABEL,
     WIKI_BASE,
+    PickerRow,
     Run,
     TrackMarks,
     _pos_label,
@@ -55,6 +56,7 @@ from planner.services import (
     unit_stats,
     wiki_unit_url,
     wiki_url,
+    wishlist_runs,
 )
 
 U = Rarity.UBER_SUPER_RARE
@@ -2312,12 +2314,29 @@ def test_picker_groups_list_wanted_cats_only_from_the_runs_own_pool():
     banner = Banner.objects.create(name="Fest!")
     cats = []
     for unit_id, name in ((10, "In pool"), (11, "Later rerun only")):
-        cat = Cat.objects.create(name=name, unit=Unit.objects.create(unit_id=unit_id, name=name))
+        unit = Unit.objects.create(unit_id=unit_id, name=name)
+        cat = Cat.objects.create(name=name, rarity="Uber Super Rare", unit=unit)
         cat.banners.add(banner)
         cat.wanted, cat.owned = True, False
         cats.append(cat)
     groups = dict(picker_groups(cats, today=today, events=events, pools={1: [10]}))
     assert groups["Available now"][0].wanted == ["In pool"]
+
+
+@pytest.mark.django_db
+def test_picker_groups_leave_rares_out_of_a_runs_wanted_cats():
+    today = date(2026, 7, 1)
+    events = [_run(date(2026, 7, 1), date(2026, 7, 5), 1, "Fest!")]
+    banner = Banner.objects.create(name="Fest!")
+    cats = []
+    for unit_id, name, rarity in ((10, "Uber", "Uber Super Rare"), (11, "Rare", "Rare")):
+        unit = Unit.objects.create(unit_id=unit_id, name=name)
+        cat = Cat.objects.create(name=name, rarity=rarity, unit=unit)
+        cat.banners.add(banner)
+        cat.wanted, cat.owned = True, False
+        cats.append(cat)
+    groups = dict(picker_groups(cats, today=today, events=events, pools={1: [10, 11]}))
+    assert groups["Available now"][0].wanted == ["Uber"]
 
 
 def test_announced_through_skips_the_capsules_open_end():
@@ -2326,3 +2345,32 @@ def test_announced_through_skips_the_capsules_open_end():
         _run(date(2026, 11, 1), date(2030, 1, 1), 2, "Platinum"),
     ]
     assert announced_through(events) == "Dec 28, 2026"
+
+
+def _wish_row(title, start, wanted):
+    return PickerRow(title, title, Run(start, start + timedelta(days=3)), [], wanted=wanted)
+
+
+def test_wishlist_runs_lists_each_wanted_cat_with_every_run_that_drops_it():
+    live = _wish_row("Platinum", date(2026, 11, 20), ["Kasli"])
+    later = _wish_row("Uberfest", date(2026, 12, 4), ["Kasli", "Hare"])
+    assert wishlist_runs([live], [later]) == [
+        ("Kasli", [(live, True), (later, False)]),
+        ("Hare", [(later, False)]),
+    ]
+
+
+def test_wishlist_runs_name_each_banner_once_at_its_soonest_run():
+    live = _wish_row("Platinum", date(2026, 11, 20), ["Kasli"])
+    rerun = _wish_row("Platinum", date(2026, 11, 27), ["Kasli"])
+    assert wishlist_runs([live], [rerun]) == [("Kasli", [(live, True)])]
+
+
+def test_wishlist_runs_puts_a_cat_live_now_before_one_coming_sooner():
+    live = _wish_row("Platinum", date(2026, 10, 16), ["Zed"])
+    soon = _wish_row("Dynamites", date(2026, 11, 27), ["Akane"])
+    assert [name for name, _ in wishlist_runs([live], [soon])] == ["Zed", "Akane"]
+
+
+def test_wishlist_runs_is_empty_when_no_run_drops_a_wanted_cat():
+    assert wishlist_runs([_wish_row("Fest", date(2026, 11, 20), [])], []) == []

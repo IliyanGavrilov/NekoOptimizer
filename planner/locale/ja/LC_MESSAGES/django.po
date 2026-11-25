@@ -2972,4 +2972,47 @@ msgstr[0] "全%(n)sシリーズ &rsaquo;"
 msgid "Game data from version %(version)s; banners announced through %(through)s."
 msgstr "バージョン%(version)sのゲームデータ・%(through)sまでのガチャを掲載。"
 
+#, python-format
+msgid "%(n)s wishlist cat on live or upcoming banners"
+msgid_plural "%(n)s wishlist cats on live or upcoming banners"
+msgstr[0] "ほしいものリストの%(n)s体が開催中・開催予定のガチャに"
 
+msgid "Show this banner"
+msgstr "このガチャを表示"
+
+msgid "Show banners as"
+msgstr "ガチャの表示"
+
+msgid "List"
+msgstr "リスト"
+
+msgid "Timeline"
+msgstr "タイムライン"
+
+msgid "Colour-blind friendly colours"
+msgstr "色覚に配慮した配色"
+
+msgid "Keyboard shortcuts"
+msgstr "キーボードショートカット"
+
+msgid "Jump to this page's search"
+msgstr "このページの検索へ移動"
+
+msgid "Clear the search, or close a window"
+msgstr "検索を消す・ウィンドウを閉じる"
+
+msgid "Previous or next step of the plan you're following"
+msgstr "実行中のプランの前・次のステップ"
+
+msgid "Show this list"
+msgstr "この一覧を表示"
+
+msgid "live"
+msgstr "開催中"
+
+msgid "+ %(n)s more cat only on Platinum or Legend Capsules"
+msgid_plural "+ %(n)s more cats only on Platinum or Legend Capsules"
+msgstr[0] "+ ほか %(n)s 匹はプラチナガチャ・レジェンドガチャのみ"
+
+msgid "today"
+msgstr "今日"
