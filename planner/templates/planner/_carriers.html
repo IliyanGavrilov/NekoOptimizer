@@ -1,0 +1,16 @@
+{% load i18n %}{% comment %}A searched cat's card body: its first three sets as pills, then every set as a group
+(closed; its rows are fetched on opening - views.picker_carriers).{% endcomment %}{% for uid, name, sets in carriers %}
+<div class="carriers" data-uid="{{ uid }}">
+  <div class="card-sets">
+    {% for set in sets|slice:":3" %}<button type="button" class="set-pill {{ set.status }}" data-set="{{ set.title }}"><b>{{ set.title }}</b> &middot; {% if set.status == "live" %}{% translate "live now" %}{% elif set.status == "upcoming" %}{% blocktranslate with date=set.lead.short %}next {{ date }}{% endblocktranslate %}{% else %}{% blocktranslate with date=set.lead.label %}last {{ date }}{% endblocktranslate %}{% endif %}</button>{% endfor %}
+    {% if sets|length > 3 %}<button type="button" class="card-more">{% blocktranslate count n=sets|length %}All {{ n }} set &rsaquo;{% plural %}All {{ n }} sets &rsaquo;{% endblocktranslate %}</button>{% endif %}
+  </div>
+  <div class="card-all" hidden>
+    {% for set in sets %}
+      <details class="group-drop carrier-set {{ set.status }}" data-set="{{ set.title }}">
+        <summary>{{ set.title }} <span class="carrier-status">{% if set.status == "live" %}{% translate "live now" %}{% elif set.status == "upcoming" %}{% blocktranslate with date=set.lead.short %}next {{ date }}{% endblocktranslate %}{% else %}{% blocktranslate with date=set.lead.label %}last {{ date }}{% endblocktranslate %}{% endif %}</span> <span class="count-pill">{{ set.runs|length }}</span></summary>
+      </details>
+    {% endfor %}
+  </div>
+</div>
+{% endfor %}

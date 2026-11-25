@@ -33,18 +33,19 @@
       <div class="search-wrap">
         <input type="search" id="targetSearch" placeholder="{% translate "Search cats & banners…" %}" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
         <button type="button" id="targetSearchClear" class="search-clear" hidden aria-label="{% translate "Clear search and browse banners" %}">&times;</button>
+        {% include "planner/_display_menu.html" with display_id="pickDisplay" form_id="pickForm" %}
         <span class="search-hint" id="targetSearchHint" hidden>{% translate "Matching banners (every run) and cats · clear to browse" %}</span>
       </div>
 
-      <div id="targetPicker" class="picker-scroll">
-        <div id="targetFlat" class="chips flat" hidden>
-          {% for cat in target_flat %}
-            <button type="button" class="chip{% if cat.owned %} owned{% endif %}{% if cat.wanted %} wanted{% endif %}" data-pk="{{ cat.pk }}"
-                    data-name="{{ cat.name }}" data-rarity="{{ cat.rarity }}"{% if cat.unit %} data-forms="{{ cat.unit.forms|join:'|' }}"{% endif %}>{% if cat.rarity %}<span class="rarity" data-rarity="{{ cat.rarity }}">{% translate cat.rarity %}</span> {% endif %}{{ cat.name }}{% include "planner/_tier_badge.html" with badge=cat.tier_badge %}</button>
-          {% endfor %}
+      <div id="targetPicker" class="picker-scroll" data-pool-url="{% url 'picker_pool' %}">
+        <h3 class="search-head" id="searchCatsHead" hidden>{% translate "Cats" %}</h3>
+        <div id="targetCarriers" data-url="{% url 'picker_carriers' %}"></div>
+        <div id="targetFlat" class="chips flat cat-browser" hidden>
+          {% for cat in target_flat %}{% include "planner/_picker_chip.html" with cat=cat with_rarity=1 %}{% endfor %}
         </div>
 
-        <div class="cat-browser" id="targetBrowser">
+        <h3 class="search-head" id="searchBannersHead" hidden>{% translate "Banners by name" %}</h3>
+        <div class="cat-browser" id="targetBrowser" data-toggle-url="{% url 'collection_toggle' %}">
           {% for group_label, banner_sections in target_groups %}
             {% if group_label == "Available now" %}
               <h2 class="group">{% translate group_label %} <span class="count-pill">{{ banner_sections|length }}</span></h2>

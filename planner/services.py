@@ -1372,8 +1372,10 @@ def set_sections(
 def _effective_runs(events) -> list[tuple[GachaEventRow, date, date]]:
     """Schedule runs with overlapping same-name reruns sorted out: a rerun replaces the
     one before it (permanent banners carry a placeholder 2030 end, so the Platinum
-    Capsules' April run really ends the day before the July rerun starts). Sorted by
-    start; ends are inclusive."""
+    Capsules' April run really ends as the July rerun starts). A run's dates are its
+    changeover days - it ends at the daily reset on its last one, when the next begins -
+    so a replaced run ends on its successor's start, like every other banner swapped
+    that day. Sorted by start; ends are inclusive."""
     by_name: dict[str, list] = {}
     for event in events:
         by_name.setdefault(event.name, []).append(event)
@@ -1382,7 +1384,7 @@ def _effective_runs(events) -> list[tuple[GachaEventRow, date, date]]:
     for runs in by_name.values():
         runs.sort(key=lambda e: e.start)
         for event, successor in zip(runs, runs[1:] + [None], strict=True):
-            end = min(event.end, successor.start - timedelta(days=1)) if successor else event.end
+            end = min(event.end, successor.start) if successor else event.end
             capped.append((event, event.start, end))
 
     return sorted(capped, key=lambda run: run[1])
@@ -1466,6 +1468,8 @@ class PickerRow(NamedTuple):
     ending: bool = False
     span: str = ""
     rates: Sequence[RunRate] = ()
+    pool: int | None = None
+    first: bool = False
 
 
 class RunRate(NamedTuple):
@@ -1593,6 +1597,99 @@ def cat_banner_names() -> dict[int, list[str]]:
     return names
 
 
+class CarrierSet(NamedTuple):
+    """A set (every run under one title) that drops the searched cat: where it stands -
+    "live", "upcoming" or "past" - the run that says so, and its runs as picker rows,
+    newest first, the set's first run to carry the cat marked."""
+
+    title: str
+    status: str
+    lead: Run
+    runs: list[PickerRow]
+
+
+def pool_rarities(pool_id: int, cats: Iterable[Cat], pools=None) -> list:
+    """One run's own cats, binned by rarity like a picker row - straight from its pool, so
+    an old rerun shows what it really dropped rather than its name's newest lineup."""
+    pools = pools if pools is not None else load_pools()
+    by_uid = {cat.unit.unit_id: cat for cat in cats if cat.unit is not None}
+
+    return _by_rarity(
+        [by_uid[uid] for uid in pools.get(pool_id, ()) if uid in by_uid], reverse=True
+    )
+
+
+def cat_carriers(
+    unit_ids: Iterable[int], today: date | None = None, events=None, pools=None
+) -> list[tuple[int, str, list[CarrierSet]]]:
+    """The banners each of these units drops on, as ``[(unit id, cat name, [CarrierSet,
+    ...])]``:
+    per run, from that run's own pool, grouped by set title - live sets first, then
+    upcoming by their next start, then past by their latest run. Units no pool carries
+    are left out."""
+    today = today or date.today()
+    events = events if events is not None else load_events()
+    pools = pools if pools is not None else load_pools()
+    forms = unit_form_names()
+    pooled = {uid for pool in pools.values() for uid in pool}
+    matched = [(uid, forms[uid][0]) for uid in unit_ids if uid in pooled and forms.get(uid)]
+    if not matched:
+        return []
+
+    titles = banner_titles(events=events)
+    runs = _effective_runs(events)
+    carriers = []
+    for uid, name in matched:
+        by_title: dict[str, list] = {}
+        for event, start, end in runs:
+            if uid in pools.get(event.pool_id, ()):
+                title = titles.get(event.pool_id) or event.name
+                by_title.setdefault(title, []).append((event, Run(start, end)))
+
+        sets = []
+        for title, carried in by_title.items():
+            carried.sort(key=lambda run: run[1].start)
+            first = carried[0][0]
+            live = [dates for _e, dates in carried if dates.start <= today <= dates.end]
+            upcoming = [dates for _e, dates in carried if dates.start > today]
+            if live:
+                status, lead = "live", live[0]
+            elif upcoming:
+                status, lead = "upcoming", upcoming[0]
+            else:
+                status, lead = "past", carried[-1][1]
+
+            listed = [
+                PickerRow(
+                    e.name,
+                    title,
+                    dates,
+                    [],
+                    pills=run_pills(e),
+                    capsule=banner_currencies([e.name]).get(e.name, ""),
+                    left=time_left(dates.start, dates.end, today),
+                    ending=dates.start <= today and (dates.end - today).days <= 1,
+                    span=dates.short if dates.end >= today else "",
+                    rates=run_rates(e),
+                    pool=e.pool_id,
+                    first=e is first,
+                )
+                for e, dates in reversed(carried)
+            ]
+            sets.append(CarrierSet(title, status, lead, listed))
+
+        order = {"live": 0, "upcoming": 1, "past": 2}
+        sets.sort(
+            key=lambda s: (
+                order[s.status],
+                s.lead.start.toordinal() * (-1 if s.status == "past" else 1),
+            )
+        )
+        carriers.append((uid, name, sets))
+
+    return carriers
+
+
 def picker_groups(
     cats: Iterable[Cat],
     today: date | None = None,
@@ -1605,9 +1702,9 @@ def picker_groups(
     """The target picker's banner sections, one row per SCHEDULED RUN, like godfat: every
     rerun of every gacha, past and future. A recurring name (Platinum/Legend Capsules,
     reruns) gets its own row per run, each with its own dates, so picking one names an
-    exact session. Cats are matched onto rows by banner name from the roll-derived
-    catalogue; only a name's newest past row carries them, so the ~2000 old rows stay
-    light (a brand-new banner shows up without cats until it's imported).
+    exact session. Live and upcoming rows carry their cats, matched by banner name from
+    the roll-derived catalogue; past rows carry none - each loads its own pool's cats when
+    opened - so the ~2000 old rows stay light.
 
     ``titles`` maps a run's pool id to its set's display name (banner_titles); rows
     without one fall back to the run's marketing text. ``banner_names`` (cat_banner_names)
@@ -1646,7 +1743,7 @@ def picker_groups(
     def run_row(event, start, end, with_cats=True):
         new = debuts.get(event.event_id, ())
         base = row(event.name, Run(start, end), titles.get(event.pool_id, ""), with_cats, new)
-        base = base._replace(rates=run_rates(event))
+        base = base._replace(rates=run_rates(event), pool=event.pool_id)
         if end < today:
             return base
 
@@ -1677,11 +1774,9 @@ def picker_groups(
         (run for run in runs if run[2] < today), key=lambda run: run[1], reverse=True
     )
 
-    carried: set[str] = set()
-    past = []
-    for event, start, end in past_runs:
-        past.append(run_row(event, start, end, with_cats=event.name not in carried))
-        carried.add(event.name)
+    # A past run's cats come from its own pool when its row is opened (picker_pool), so the
+    # ~2000 rows ship without chips.
+    past = [run_row(event, start, end, with_cats=False) for event, start, end in past_runs]
 
     # DB-dated banners the schedule doesn't know (old godfat-era names) still get a row.
     scheduled = {event.name for event, _start, _end in runs}

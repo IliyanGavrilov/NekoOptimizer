@@ -1060,8 +1060,43 @@ section > h3, .banner-group > summary {
   font-size: 0.75rem;
   font-weight: 500;
 }
-/* Gold, like the Rolls table's "new" badge: a debut. Green stays "you don't own it". */
-.banner-new b { color: var(--accent); font-weight: 700; }
+/* A debut: the Rolls table's gold "new" badge, then each new cat's name in gold, which
+   opens its card. Green stays "you don't own it". */
+.banner-new .debut { margin-right: 0.3rem; }
+.banner-new .debut-name {
+  font: inherit;
+  font-weight: 700;
+  margin: 0 0.4rem 0 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--accent);
+  cursor: pointer;
+}
+.banner-new .debut-name:hover { text-decoration: underline; filter: none; }
+/* The same cat's chip inside the opened banner: a gold wash and a "new" tag on its corner. */
+.own-chip.pick-chip.is-debut {
+  --chip-bg: color-mix(in srgb, var(--accent) 12%, var(--bg-2));
+  border-color: color-mix(in srgb, var(--accent) 60%, var(--line));
+  background: linear-gradient(90deg, color-mix(in srgb, var(--accent) 22%, var(--bg-2)), var(--bg-2) 70%);
+}
+.own-chip.pick-chip.is-debut::before {
+  content: attr(data-new-label);
+  position: absolute;
+  top: -0.55rem;
+  left: 0.75rem;
+  z-index: 2;
+  padding: 0 0.25rem;
+  border-radius: 4px;
+  background: var(--accent);
+  color: var(--accent-ink);
+  font-family: var(--head-font);
+  font-size: 0.55rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  line-height: 1.5;
+}
 /* Wishlisted cats you don't own yet that this run can drop, starred like elsewhere. */
 .banner-name .banner-wanted {
   display: block;
@@ -1151,7 +1186,7 @@ section > h3, .banner-group > summary {
 
 /* Time to a run's start or end, after its dates - under them when the line runs out of
    room; a live run's last day or two in warning colour. */
-.banner-head .dates:has(.time-left) { white-space: normal; }
+.banner-head .dates.has-left { white-space: normal; }
 .dates .date-span, .dates .time-left { white-space: nowrap; }
 .time-left.ending { color: var(--warn); font-weight: 600; }
 
@@ -1170,13 +1205,22 @@ section > h3, .banner-group > summary {
   cursor: pointer;
 }
 .banner-include:hover { border-color: var(--accent); color: var(--ink); }
+/* A banner picked to roll is marked in its own colour - gold, or a capsule's ticket
+   colour - with a ring round the card, a stripe down its header and a filled tick, so a
+   capsule keeps its look and still reads as picked. Plain banners also take a gold wash. */
+.banner-group { --sel: var(--accent); }
+.banner-group.capsule { --sel: var(--tkt); }
 .banner-include[aria-pressed="true"] {
-  background: var(--accent);
+  background: var(--sel);
   color: var(--accent-ink);
-  border-color: var(--accent);
+  border-color: var(--sel);
 }
-.banner-group.included { border-color: var(--accent); }
-.banner-group.included > summary {
+.banner-group.included { border-color: var(--sel); box-shadow: 0 0 0 2px var(--sel); }
+.banner-group.capsule.included {
+  box-shadow: 0 0 0 2px var(--sel), 0 0 16px -2px color-mix(in srgb, var(--sel) 55%, transparent);
+}
+.banner-group.included > summary { box-shadow: inset 4px 0 0 var(--sel); }
+.banner-group.included:not(.capsule) > summary {
   background: color-mix(in srgb, var(--accent) 12%, var(--panel-2));
 }
 
@@ -1807,6 +1851,8 @@ table.track:not(.normal-track) .entry {
 /* Items carry no rarity or tier: just the name and the same dice track. */
 table.track.normal-track .entry { grid-template-columns: minmax(min-content, 1fr) 1.5rem; }
 table.track .entry > .arrow { grid-column: 1 / -1; }
+/* A name (with its icon and "new" badge) never gives up room to the rarity beside it. */
+table.track .entry-name { min-width: max-content; margin-right: 0.15rem; }
 table.track .entry-rarity, table.track .entry-tier { justify-self: start; }
 table.track .entry-dice { justify-self: end; }
 /* Two-level highlight: the whole on-path cell greys out, and inside it the exact
@@ -2266,34 +2312,62 @@ table.track th.guaranteed-col, table.track td.guaranteed-col {
   background: transparent;
   padding: 0.3rem 0.85rem;
 }
+/* Names: hovering swaps the tier badge for the star and info buttons, inside the chip's
+   right end over a fade, so nothing moves or pokes out. A wishlisted cat keeps a gold
+   star before its name. Touch screens show both buttons all along, after the badge. */
+.own-chip { position: relative; --chip-bg: var(--bg-2); }
 .own-chip :is(.chip-star, .catinfo) {
+  position: absolute;
+  top: 50%;
+  translate: 0 -50%;
+  z-index: 2;
   display: none;
   align-items: center;
+  justify-content: center;
+  width: 1.35rem;
+  height: 1.35rem;
+  padding: 0;
   font: inherit;
-  font-size: 0.85em;
+  font-size: 0.85rem;
   line-height: 1;
   border: 0;
-  background: transparent;
+  border-radius: 6px;
+  background: none;
   color: var(--muted);
-  padding: 0.3rem 0.25rem;
   cursor: pointer;
 }
-.own-chip .catinfo { padding-right: 0.65rem; }
-.own-chip .catinfo:hover { color: var(--accent); filter: none; }
+.own-chip .catinfo { right: 0.5rem; }
+.own-chip .chip-star { right: 1.9rem; }
+.own-chip:is(:hover, :has(:focus-visible)) :is(.chip-star, .catinfo) { display: flex; }
+.own-chip:is(:hover, :has(:focus-visible)) .chip-own .tier-badge { opacity: 0; }
+.own-chip:is(:hover, :has(:focus-visible))::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1;
+  width: 4.4rem;
+  border-radius: 0 999px 999px 0;
+  background: linear-gradient(90deg, transparent, var(--chip-bg) 1.1rem);
+  pointer-events: none;
+}
+.own-chip :is(.chip-star, .catinfo):hover { background: var(--panel-2); filter: none; }
+.own-chip .catinfo:hover { color: var(--accent); }
 /* An unstarred star lights white on hover, not gold: gold is what starred looks like, so
    a cat you just unstarred must not keep looking starred under the cursor. */
-.own-chip .chip-star:hover { color: var(--ink); filter: none; }
-.own-chip:is(:hover, :has(:focus-visible)) :is(.chip-star, .catinfo),
-.own-chip.wanted .chip-star { display: flex; }
-.own-chip:is(:hover, :has(:focus-visible)) .chip,
-.own-chip.wanted .chip { padding-right: 0.2rem; }
+.own-chip .chip-star:hover { color: var(--ink); }
+.own-chip.wanted .chip-own .catname::before { content: "★ "; color: var(--r-super); }
 @media (hover: none) {
-  .own-chip :is(.chip-star, .catinfo) { display: flex; opacity: 0.5; }
+  .own-chip :is(.chip-star, .catinfo) { display: flex; position: static; translate: none; }
+  .own-chip:is(:hover, :has(:focus-visible))::after { content: none; }
+  .own-chip:is(:hover, :has(:focus-visible)) .chip-own .tier-badge { opacity: 1; }
   .own-chip .chip { padding-right: 0.2rem; }
 }
 .own-chip:hover { border-color: var(--accent); }
 
 .own-chip.owned {
+  --chip-bg: color-mix(in srgb, var(--accent) 18%, var(--panel));
   background: color-mix(in srgb, var(--accent) 18%, transparent);
   border-color: var(--accent);
 }
@@ -2365,20 +2439,59 @@ table.track th.guaranteed-col, table.track td.guaranteed-col {
   background: color-mix(in srgb, var(--panel-2) 70%, transparent);
 }
 .cat-browser:is(.rolls-icons, .rolls-both) .own-chip.owned .chip-own::before { content: none; }
-.cat-browser:is(.rolls-icons, .rolls-both) .own-chip :is(.chip-star, .catinfo) {
-  position: absolute;
-  top: 0.3rem;
-  padding: 0.25rem 0.35rem;
-  border-radius: 999px;
-  background: var(--panel);
-  font-size: 0.85rem;
+/* Tiles: hovering lays a dark bar over the foot of the picture with the star and info
+   buttons; a wishlisted cat wears a gold star on the picture's top-right corner. The
+   picture is --cat-icon wide at the sprites' 104x79, from the tile's 0.7rem padding. */
+.cat-browser:is(.rolls-icons, .rolls-both) .own-chip {
+  --pic-foot: calc(0.7rem + var(--cat-icon) * 79 / 104);
+  --bar: 1.4rem;
 }
-.cat-browser:is(.rolls-icons, .rolls-both) .own-chip .catinfo { right: 0.3rem; }
-.cat-browser:is(.rolls-icons, .rolls-both) .own-chip .chip-star { right: 1.85rem; }
-.cat-browser:is(.rolls-icons, .rolls-both) .own-chip.wanted:not(:hover, :has(:focus-visible)) .chip-star {
+.cat-browser:is(.rolls-icons, .rolls-both) .own-chip .catname::before { content: none; }
+.cat-browser:is(.rolls-icons, .rolls-both) .own-chip:is(:hover, :has(:focus-visible))::after {
+  top: calc(var(--pic-foot) - var(--bar));
   right: auto;
-  left: 0.3rem;
-  background: transparent;
+  bottom: auto;
+  left: 50%;
+  translate: -50% 0;
+  width: var(--cat-icon);
+  height: var(--bar);
+  border-radius: 0 0 6px 6px;
+  background: rgba(10, 10, 9, 0.78);
+}
+.cat-browser:is(.rolls-icons, .rolls-both) .own-chip :is(.chip-star, .catinfo) {
+  top: calc(var(--pic-foot) - var(--bar));
+  translate: none;
+  height: var(--bar);
+  color: #e6e2d8;
+}
+.cat-browser:is(.rolls-icons, .rolls-both) .own-chip .chip-star { right: auto; left: calc(50% - 1.45rem); }
+.cat-browser:is(.rolls-icons, .rolls-both) .own-chip .catinfo { right: auto; left: calc(50% + 0.1rem); }
+.cat-browser:is(.rolls-icons, .rolls-both) .own-chip :is(.chip-star, .catinfo):hover { background: rgba(255, 255, 255, 0.12); }
+.cat-browser:is(.rolls-icons, .rolls-both) .own-chip.wanted .chip-star { display: flex; color: var(--r-super); }
+.cat-browser:is(.rolls-icons, .rolls-both) .own-chip.wanted:not(:hover, :has(:focus-visible)) .chip-star {
+  top: 0.35rem;
+  left: calc(50% + var(--cat-icon) / 2 - 0.75rem);
+  width: 1.2rem;
+  height: 1.2rem;
+  border: 1px solid var(--r-super);
+  border-radius: 50%;
+  background: var(--panel);
+  font-size: 0.7rem;
+}
+@media (hover: none) {
+  .cat-browser:is(.rolls-icons, .rolls-both) .own-chip :is(.chip-star, .catinfo) { position: absolute; }
+  .cat-browser:is(.rolls-icons, .rolls-both) .own-chip::after {
+    content: "";
+    position: absolute;
+    top: calc(var(--pic-foot) - var(--bar));
+    left: 50%;
+    translate: -50% 0;
+    width: var(--cat-icon);
+    height: var(--bar);
+    border-radius: 0 0 6px 6px;
+    background: rgba(10, 10, 9, 0.7);
+    pointer-events: none;
+  }
 }
 
 /* ---- Tier-list badges + page ------------------------------------------ */
@@ -2626,10 +2739,28 @@ table.track .cat-icon { width: var(--cat-icon-row); }
 .cat-popup-banners ul {
   max-height: 7.5rem;
   overflow-y: auto;
-  margin: 0.2rem 0 0;
-  padding-left: 1.1rem;
-  font-size: 0.8rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  margin: 0.3rem 0 0;
+  padding: 0;
+  list-style: none;
 }
+/* A set the cat drops on: a button that searches the planner for every run of it. */
+.popup-banner {
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 600;
+  padding: 0.15rem 0.55rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--bg-2);
+  color: var(--ink);
+  cursor: pointer;
+}
+.popup-banner:hover { border-color: var(--accent); color: var(--accent); }
+.popup-banner-note { font-weight: 500; color: var(--muted); }
+.popup-banner.live .popup-banner-note { color: var(--new); }
 .cat-popup-links { display: flex; flex-wrap: wrap; gap: 0.15rem 0.9rem; font-weight: 600; }
 
 /* ---- Outbound links to community tools -------------------------------- */
@@ -3257,3 +3388,96 @@ button, .chip, .entry, .banner-group, .banner-include, .step-card, .site-header 
 }
 .avatar-pick:hover, .avatar-pick:focus-visible { border-color: var(--accent); filter: none; }
 .avatar-pick img { display: block; width: 104px; height: auto; }
+
+/* ---- Picker search: cats, banners by name, banners a cat drops on ---------------- */
+.search-head {
+  font-family: var(--head-font);
+  font-size: 0.78rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+  margin: 0.9rem 0 0.45rem;
+}
+#targetPicker > .search-head:first-child { margin-top: 0.2rem; }
+.search-head b { color: var(--ink); text-transform: none; letter-spacing: 0; }
+
+/* A set's line in "Banners with ...": where it stands beside its name. */
+.carrier-status { font-family: var(--body-font); font-size: 0.78rem; font-weight: 500; color: var(--muted); }
+.carrier-set.live .carrier-status { color: var(--new); font-weight: 600; }
+.carriers .group-drop { margin-top: 0.4rem; }
+.run-pill.first { color: var(--new); border-color: color-mix(in srgb, var(--new) 55%, transparent); }
+
+/* ---- Target picker chips: Collection's chip, with "picked" in place of "owned" -------
+   Gold means picked as a target here, so an owned cat fades instead (you rarely chase
+   one), keeping its tick; the star and info button work as on Collection. */
+.pick-chip .chip { font-weight: 500; }
+.pick-chip .chip .rarity { margin-right: 0.3rem; }
+.own-chip.pick-chip.owned { --chip-bg: var(--bg-2); background: var(--bg-2); border-color: var(--line); }
+.own-chip.pick-chip.owned .chip { color: var(--muted); font-weight: 500; }
+.own-chip.pick-chip.owned .chip-own::before { color: var(--muted); }
+.own-chip.pick-chip.picked {
+  --chip-bg: color-mix(in srgb, var(--accent) 16%, var(--panel));
+  background: color-mix(in srgb, var(--accent) 16%, transparent);
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent) inset;
+}
+.own-chip.pick-chip .chip.selected {
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+  color: var(--accent);
+  font-weight: 700;
+}
+.cat-browser:is(.rolls-icons, .rolls-both) .pick-chip:not(.owned) .cat-icon { opacity: 1; filter: none; }
+.cat-browser:is(.rolls-icons, .rolls-both) .pick-chip:not(.owned) .catname { color: var(--ink); }
+.cat-browser:is(.rolls-icons, .rolls-both) .pick-chip.owned .cat-icon { opacity: 0.35; filter: grayscale(0.7); }
+.cat-browser:is(.rolls-icons, .rolls-both) .pick-chip.owned .catname { color: var(--muted); }
+.pick-chip .chip { white-space: nowrap; }
+/* On a phone the rarity label sits above its cats, so they get the row's full width. */
+@media (max-width: 560px) {
+  #targetBrowser .rarity-row { flex-direction: column; align-items: flex-start; gap: 0.4rem; }
+}
+
+/* In the picker an owned cat fades in every mode (gold means "picked" here). */
+.own-chip.pick-chip.owned .chip-own { opacity: 0.5; }
+.cat-browser:is(.rolls-icons, .rolls-both) .own-chip.pick-chip.owned .chip-own { opacity: 1; }
+
+/* A searched cat's card: its picture and chip, then its sets - the first three as pills,
+   all of them as groups once opened. */
+.cat-card {
+  margin: 0.5rem 0;
+  padding: 0.6rem 0.8rem;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--bg-2);
+}
+.card-head { display: flex; align-items: center; gap: 0.6rem; }
+.card-pic { width: 52px; border-radius: 6px; }
+.card-head .pick-chip { background: var(--panel); }
+.card-body { margin-top: 0.5rem; font-size: 0.85rem; }
+.card-sets { display: flex; flex-wrap: wrap; gap: 0.35rem; align-items: center; }
+.set-pill {
+  font: inherit;
+  font-size: 0.8rem;
+  padding: 0.15rem 0.65rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--panel);
+  color: var(--muted);
+  cursor: pointer;
+}
+.set-pill b { color: var(--accent); font-weight: 700; }
+.set-pill.live { color: var(--new); }
+.set-pill:hover { border-color: var(--accent); }
+.card-more {
+  font: inherit;
+  font-size: 0.82rem;
+  border: 0;
+  background: none;
+  padding: 0.15rem 0.3rem;
+  color: var(--accent);
+  cursor: pointer;
+}
+.card-more:hover { text-decoration: underline; }
+.card-all { margin-top: 0.3rem; }

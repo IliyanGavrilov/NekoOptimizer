@@ -1,3 +1,7 @@
-{% comment %}One target-picker cat chip. Rendered once per cat (see views._picker_cats)
-and reused on every banner row that carries it.{% endcomment %}<button type="button" class="chip{% if cat.owned %} owned{% endif %}{% if cat.wanted %} wanted{% endif %}" data-pk="{{ cat.pk }}"
-        data-name="{{ cat.name }}" data-rarity="{{ cat.rarity }}">{{ cat.name }}{% include "planner/_tier_badge.html" with badge=cat.tier_badge %}</button>
+{% load i18n %}{% comment %}One target-picker cat chip, built like Collection's: the name picks it as a target,
+the star wishlists it, the info button opens its card. Rendered once per cat (see
+views._picker_cats) and reused on every banner row that carries it.{% endcomment %}<span class="own-chip pick-chip{% if cat.owned %} owned{% endif %}{% if cat.wanted %} wanted{% endif %}"{% if cat.unit %} data-unit-pk="{{ cat.unit.pk }}"{% endif %}>
+  <button type="button" class="chip chip-own{% if cat.unit %} icon-host{% endif %}" data-pk="{{ cat.pk }}" data-name="{{ cat.name }}" data-rarity="{{ cat.rarity }}"{% if cat.unit %} data-uid="{{ cat.unit.unit_id }}" data-forms="{{ cat.unit.forms|join:'|' }}"{% endif %}>{% if with_rarity and cat.rarity %}<span class="rarity" data-rarity="{{ cat.rarity }}">{% translate cat.rarity %}</span> {% endif %}<span class="catname">{{ cat.name }}</span>{% include "planner/_tier_badge.html" with badge=cat.tier_badge %}</button>
+  {% if cat.unit %}<button type="button" class="chip-star" title="{% translate "Wishlist" %}" aria-label="{% translate "Toggle wishlist" %}">&#9733;</button>
+  <button type="button" class="catinfo" data-uid="{{ cat.unit.unit_id }}" data-name="{{ cat.name }}" title="{% translate "Forms & wiki" %}" aria-label="{% translate "Cat details" %}">&#9432;</button>{% endif %}
+</span>
