@@ -2967,3 +2967,9 @@ msgstr "このキャラが初めて入った開催"
 msgid "All %(n)s set &rsaquo;"
 msgid_plural "All %(n)s sets &rsaquo;"
 msgstr[0] "全%(n)sシリーズ &rsaquo;"
+
+#, python-format
+msgid "Game data from version %(version)s; banners announced through %(through)s."
+msgstr "バージョン%(version)sのゲームデータ・%(through)sまでのガチャを掲載。"
+
+

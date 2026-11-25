@@ -23,6 +23,7 @@ jobs:
     timeout-minutes: 60
     outputs:
       changed: ${{ steps.diff.outputs.changed }}
+      unshipped: ${{ steps.pools.outputs.unshipped }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
@@ -39,9 +40,11 @@ jobs:
         run: |
           curl -sSfL https://git.battlecatsmodding.org/fieryhenry/BCData/raw/metadata.json -o "$RUNNER_TEMP/metadata.json"
           for region in en jp tw kr; do
-            url=$(python -c 'import json, sys; from neko.bcdata import latest_version, release_url; m = json.load(open(sys.argv[1])); r = sys.argv[2]; print(release_url(m, latest_version(m, r), r))' "$RUNNER_TEMP/metadata.json" "$region")
+            version=$(python -c 'import json, sys; from neko.bcdata import latest_version; print(latest_version(json.load(open(sys.argv[1])), sys.argv[2]))' "$RUNNER_TEMP/metadata.json" "$region")
+            url=$(python -c 'import json, sys; from neko.bcdata import release_url; m = json.load(open(sys.argv[1])); print(release_url(m, sys.argv[3], sys.argv[2]))' "$RUNNER_TEMP/metadata.json" "$region" "$version")
             curl -sSfL "$url" -o "$RUNNER_TEMP/$region.tar.xz"
-            for command in fetch_units fetch_gamedata fetch_stats fetch_gacha; do
+            python manage.py fetch_units --region "$region" --tarball "$RUNNER_TEMP/$region.tar.xz" --game-version "$version"
+            for command in fetch_gamedata fetch_stats fetch_gacha; do
               python manage.py "$command" --region "$region" --tarball "$RUNNER_TEMP/$region.tar.xz"
             done
           done
@@ -52,6 +55,17 @@ jobs:
         run: |
           python manage.py fetch_guide
           python manage.py fetch_tiers
+
+      # An announced banner neither source has a pool for yet shows with no cats and no
+      # title; the day's data still lands, and the list goes to an issue below.
+      - name: Find banners without a pool
+        id: pools
+        run: |
+          {
+            echo "unshipped<<EOF"
+            python manage.py check_pools
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
 
       - name: Look for changes
         id: diff
@@ -135,4 +149,25 @@ jobs:
             gh issue comment "$issue" --body "Failed again: $RUN"
           else
             gh issue create --title "Game data refresh failed" --body "The daily refresh failed: $RUN"
+          fi
+
+  # Keeps one open issue listing the announced banners still missing their pool.
+  unshipped:
+    needs: fetch
+    if: needs.fetch.outputs.unshipped != ''
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+      LIST: ${{ needs.fetch.outputs.unshipped }}
+    steps:
+      - run: |
+          body=$(printf 'Announced banners neither BCData nor godfat has a pool for yet - the site shows them with no cats and no title:\n\n```\n%s\n```' "$LIST")
+          issue=$(gh issue list --state open --search "Banners without a pool in:title" --json number -q '.[0].number')
+          if [ -n "$issue" ]; then
+            gh issue comment "$issue" --body "$body"
+          else
+            gh issue create --title "Banners without a pool" --body "$body"
           fi

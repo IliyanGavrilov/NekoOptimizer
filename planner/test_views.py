@@ -960,3 +960,9 @@ def test_picker_carriers_lets_the_browser_keep_the_answer(client):
 @pytest.mark.django_db
 def test_picker_pool_rejects_a_non_numeric_pool(client):
     assert client.get("/picker/pool/", {"pool": "x"}).status_code == 400
+
+
+@pytest.mark.django_db
+def test_picker_past_lets_the_browser_keep_the_day(client):
+    response = client.get("/picker/past/", {"v": "1-2026-11-25-en"})
+    assert response["Cache-Control"] == "private, max-age=86400"

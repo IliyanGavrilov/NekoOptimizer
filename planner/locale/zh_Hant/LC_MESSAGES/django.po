@@ -2951,3 +2951,9 @@ msgstr "這個角色首次加入的那一期"
 msgid "All %(n)s set &rsaquo;"
 msgid_plural "All %(n)s sets &rsaquo;"
 msgstr[0] "全部%(n)s個 &rsaquo;"
+
+#, python-format
+msgid "Game data from version %(version)s; banners announced through %(through)s."
+msgstr "遊戲資料版本%(version)s・已公布的轉蛋至%(through)s。"
+
+

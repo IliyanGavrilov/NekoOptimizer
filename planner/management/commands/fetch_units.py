@@ -1,7 +1,13 @@
 import json
 from pathlib import Path
 
-from neko.bcdata import catalogue_from_tarball, catalogue_records, download_catalogue, units_path
+from neko.bcdata import (
+    catalogue_from_tarball,
+    catalogue_records,
+    download_catalogue,
+    units_path,
+    version_path,
+)
 from neko.bcinfo import download_units, fill_forms
 from planner.management.base import RegionCommand
 
@@ -15,12 +21,15 @@ class Command(RegionCommand):
     def add_arguments(self, parser):
         super().add_arguments(parser)
         parser.add_argument("--tarball", help="Use a downloaded BCData tarball instead.")
+        parser.add_argument(
+            "--game-version", help="The tarball's game version, noted for the site's footer."
+        )
 
     def handle(self, *args, **options):
         region = options["region"]
         if options["tarball"]:
             path = Path(options["tarball"])
-            version = path.name
+            version = options["game_version"] or path.name
             catalogue = catalogue_from_tarball(path.read_bytes(), region)
         else:
             version, catalogue = download_catalogue(region)
@@ -30,6 +39,8 @@ class Command(RegionCommand):
         target = units_path(region)
         target.parent.mkdir(parents=True, exist_ok=True)
         target.write_text(json.dumps(records, indent=2, ensure_ascii=False), encoding="utf-8")
+        if not options["tarball"] or options["game_version"]:
+            version_path(region).write_text(f"{version}\n", encoding="utf-8")
 
         self.stdout.write(
             self.style.SUCCESS(

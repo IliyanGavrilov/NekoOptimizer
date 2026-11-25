@@ -1,10 +1,12 @@
 from django.conf import settings
 from django.utils.translation import gettext_lazy as _
 
+from neko.bcdata import load_game_version
 from neko.region import CODES, DEFAULT_REGION, REGIONS
 from planner.links import PAGE_LINKS
 from planner.middleware import region_path, split_region
 from planner.seo import HREFLANG, REGION_PAGES, home_graph, ld_json, page_meta
+from planner.services import announced_through
 
 # The switcher's version names, in the interface language.
 REGION_NAMES = {"en": _("English"), "jp": _("Japan"), "tw": _("Taiwan"), "kr": _("Korea")}
@@ -35,6 +37,12 @@ def icons(request) -> dict:
         "item_base": settings.ITEM_BASE,
         "avatar_icon": f"{settings.ICON_BASE}/{unit}/{form}.png",
     }
+
+
+def data_note(request) -> dict:
+    """What the footer says the site's data covers: the game version its catalogue was
+    read from and the last day the announced banners run to."""
+    return {"game_version": load_game_version(), "announced_through": announced_through()}
 
 
 def tools(request) -> dict:

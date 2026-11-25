@@ -214,6 +214,8 @@ function wireFollowAlong(root) {
   root.querySelectorAll(".plan-follow").forEach(setupFollowAlong);
 }
 
+let lastFollow = null;
+
 function setupFollowAlong(follow) {
   if (follow.dataset.follow) return; // rendered fresh each time, but guard re-wiring
   follow.dataset.follow = "1";
@@ -256,7 +258,14 @@ function setupFollowAlong(follow) {
     render(scroll);
   };
 
+  // The arrow keys walk the plan last touched (see the shortcuts below).
+  follow.stepBy = (delta) => setStep(cur + delta, true);
+  const prev = follow.querySelector(".step-prev");
+  const next = follow.querySelector(".step-next");
+  if (prev) prev.title = gettext("Previous step (← key)");
+  if (next) next.title = gettext("Next step (→ key)");
   follow.addEventListener("click", (e) => {
+    lastFollow = follow;
     const card = e.target.closest(".step-card");
     if (card) {
       const n = Number(card.dataset.step);
@@ -269,6 +278,34 @@ function setupFollowAlong(follow) {
 
   render(false);
 }
+
+// Keyboard shortcuts, away from any text field: "/" jumps to the page's search box, Esc
+// in one clears it, and the arrow keys step through the plan you're following.
+const SEARCH_BOXES = "#targetSearch, #collectionSearch, .res-search, #seekBannerSearch";
+const typing = (el) => el.closest?.("input, textarea, select, [contenteditable]");
+document.addEventListener("keydown", (e) => {
+  if (e.ctrlKey || e.metaKey || e.altKey) return;
+  if (e.key === "Escape" && e.target.matches?.(SEARCH_BOXES) && e.target.value) {
+    e.target.value = "";
+    e.target.dispatchEvent(new Event("input", { bubbles: true }));
+    return;
+  }
+  if (typing(e.target) || document.querySelector("dialog[open]")) return;
+  if (e.key === "/") {
+    const box = [...document.querySelectorAll(SEARCH_BOXES)].find((b) => b.offsetParent);
+    if (!box) return;
+    e.preventDefault();
+    box.focus();
+    box.select();
+    return;
+  }
+  if (e.key !== "ArrowLeft" && e.key !== "ArrowRight") return;
+  const shown = [...document.querySelectorAll(".plan-follow")].filter((f) => f.offsetParent && f.stepBy);
+  const follow = shown.includes(lastFollow) ? lastFollow : shown[0];
+  if (!follow) return;
+  e.preventDefault();
+  follow.stepBy(e.key === "ArrowRight" ? 1 : -1);
+});
 
 // ---- Planner: target selection ---------------------------------------
 const picker = document.getElementById("targetPicker");

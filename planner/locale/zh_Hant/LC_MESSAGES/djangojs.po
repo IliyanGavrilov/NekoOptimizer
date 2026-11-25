@@ -494,3 +494,8 @@ msgstr[0] "%s期"
 msgid "Not in any rare capsule."
 msgstr "不會在稀有轉蛋中出現。"
 
+msgid "Previous step (← key)"
+msgstr "上一步(←鍵)"
+
+msgid "Next step (→ key)"
+msgstr "下一步(→鍵)"

@@ -54,7 +54,7 @@
               {% endfor %}
             {% elif group_label == "Past" %}
               {# ~2000 per-run rows: shipped on demand, fetched the first time it's opened. #}
-              <details class="group-drop" id="pastGroup" data-past-url="{% url 'picker_past' %}">
+              <details class="group-drop" id="pastGroup" data-past-url="{% url 'picker_past' %}?v={{ past_key }}">
                 <summary>{% translate "Past" %} <span class="count-pill">{{ past_count }}</span></summary>
                 <p class="muted past-loading" hidden>{% translate "Loading…" %}</p>
               </details>

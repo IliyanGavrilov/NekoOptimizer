@@ -18,6 +18,7 @@ from planner.services import (
     Run,
     TrackMarks,
     _pos_label,
+    announced_through,
     banner_currencies,
     banner_titles,
     build_tracks,
@@ -2317,3 +2318,11 @@ def test_picker_groups_list_wanted_cats_only_from_the_runs_own_pool():
         cats.append(cat)
     groups = dict(picker_groups(cats, today=today, events=events, pools={1: [10]}))
     assert groups["Available now"][0].wanted == ["In pool"]
+
+
+def test_announced_through_skips_the_capsules_open_end():
+    events = [
+        _run(date(2026, 11, 1), date(2026, 12, 28), 1, "Fest!"),
+        _run(date(2026, 11, 1), date(2030, 1, 1), 2, "Platinum"),
+    ]
+    assert announced_through(events) == "Dec 28, 2026"

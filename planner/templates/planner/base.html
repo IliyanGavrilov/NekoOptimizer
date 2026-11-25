@@ -180,6 +180,9 @@
         affiliated with PONOS.
       {% endblocktranslate %}
     </p>
+    {% if game_version %}<p class="data-note">{% blocktranslate trimmed with version=game_version through=announced_through %}
+      Game data from version {{ version }}; banners announced through {{ through }}.
+    {% endblocktranslate %}</p>{% endif %}
     <nav class="footer-links" aria-label="{% translate "More" %}">
       <a href="{% url 'guides' %}">{% translate "Guides" %}</a>
       &middot; <a href="{% url 'whats_new' %}">{% translate "What's new" %}</a>

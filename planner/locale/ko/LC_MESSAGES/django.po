@@ -2970,3 +2970,9 @@ msgstr "이 캐릭터가 처음 들어간 회차"
 msgid "All %(n)s set &rsaquo;"
 msgid_plural "All %(n)s sets &rsaquo;"
 msgstr[0] "전체 %(n)s개 &rsaquo;"
+
+#, python-format
+msgid "Game data from version %(version)s; banners announced through %(through)s."
+msgstr "버전 %(version)s 게임 데이터 · %(through)s까지 발표된 뽑기 포함."
+
+

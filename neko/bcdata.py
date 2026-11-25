@@ -25,11 +25,29 @@ BCDATA_BASE = "https://git.battlecatsmodding.org/fieryhenry/BCData"
 METADATA_URL = f"{BCDATA_BASE}/raw/metadata.json"
 
 UNITS_FILE = "units.json"
+# The game version the committed catalogue was read from, for the site's footer.
+VERSION_FILE = "game_version.txt"
 
 
 def units_path(region: str | None = None) -> Path:
     """Where one region's committed catalogue lives."""
     return data_path(UNITS_FILE, region)
+
+
+def version_path(region: str | None = None) -> Path:
+    """Where one region's game version note lives."""
+    return data_path(VERSION_FILE, region)
+
+
+@cache
+def _read_version(path: Path) -> str:
+    """The committed game version, memoized like the other data; "" before a fetch."""
+    return path.read_text(encoding="utf-8").strip() if path.exists() else ""
+
+
+def load_game_version(region: str | None = None) -> str:
+    """The game version one region's catalogue was read from, e.g. "15.6.1"."""
+    return _read_version(version_path(region))
 
 
 def _version_key(version: str) -> tuple[int, ...]:

@@ -496,3 +496,8 @@ msgstr[0] "開催%s回"
 msgid "Not in any rare capsule."
 msgstr "レアガチャには出ません。"
 
+msgid "Previous step (← key)"
+msgstr "前のステップ(←キー)"
+
+msgid "Next step (→ key)"
+msgstr "次のステップ(→キー)"

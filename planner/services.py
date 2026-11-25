@@ -1520,6 +1520,15 @@ def run_rates(event: GachaEventRow) -> list[RunRate]:
     ]
 
 
+def announced_through(events=None) -> str:
+    """The last day the announced banners run to, as the footer prints it ("Dec 28, 2026");
+    the permanent capsules' placeholder end doesn't count."""
+    events = events if events is not None else load_events()
+    ends = [e.end for e in events if e.end < _OPEN_ENDED]
+
+    return _day(max(ends)) if ends else ""
+
+
 def time_left(start: date, end: date, today: date) -> str:
     """How long until a run starts, or until a live one ends; '' once it's over or when it
     has no real end."""

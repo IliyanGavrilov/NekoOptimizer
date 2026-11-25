@@ -110,6 +110,7 @@ TEMPLATES = [
                 "planner.context_processors.region",
                 "planner.context_processors.icons",
                 "planner.context_processors.tools",
+                "planner.context_processors.data_note",
                 "planner.context_processors.seo",
             ],
         },
