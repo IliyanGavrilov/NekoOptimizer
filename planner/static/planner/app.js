@@ -357,6 +357,27 @@ if (picker) {
   }
 
   const chipsFor = (pk) => picker.querySelectorAll(`.chip[data-pk="${pk}"]`);
+  // A picked chip and its frame both light up (the frame by class: a :has() over
+  // thousands of chips slowed every search).
+  // A banner's debut cats light up inside it (the chips are shared by every banner, so
+  // the banner names them and the mark goes on here).
+  const markDebuts = (root) => {
+    const groups = root.matches?.(".banner-group[data-new]") ? [root] : root.querySelectorAll(".banner-group[data-new]");
+    for (const group of groups) {
+      const names = new Set(group.dataset.new.split("|"));
+      for (const chip of group.querySelectorAll(".pick-chip .chip-own")) {
+        if (!names.has(chip.dataset.name)) continue;
+        const wrap = chip.closest(".pick-chip");
+        wrap.classList.add("is-debut");
+        wrap.dataset.newLabel = group.dataset.newLabel;
+      }
+    }
+  };
+  markDebuts(picker);
+  const markPicked = (chip, on) => {
+    chip.classList.toggle("selected", on);
+    chip.closest(".pick-chip")?.classList.toggle("picked", on);
+  };
 
   // The picked cats become hidden ``targets`` inputs the form posts; the review/remove UI
   // for them lives in the unified Targets panel on the track (server-rendered), not here.
@@ -375,7 +396,7 @@ if (picker) {
     if (selected.has(pk)) selected.delete(pk);
     else selected.set(pk, name);
     const on = selected.has(pk);
-    chipsFor(pk).forEach((c) => c.classList.toggle("selected", on));
+    chipsFor(pk).forEach((c) => markPicked(c, on));
     render();
     save();
     // Targets double as "Find next" cats on the browse track - refresh its found list
@@ -400,24 +421,36 @@ if (picker) {
   // ⚠ (find_cats compares it against the selected banners' real pools), so there's no
   // client-side warning to recompute here as targets or banners change.
 
-  // Opening a rerun row without chips borrows them from the name's carrier row, so
-  // every Past run is browsable without rendering ~100k chips upfront. ("toggle"
-  // doesn't bubble - listen in the capture phase.)
-  browser.addEventListener("toggle", (e) => {
+  // Opening a row without chips fills it with its run's own cats, from that run's pool
+  // (an old rerun dropped a different lineup than its name's newest run). A row the
+  // schedule doesn't know borrows its name's chips instead. ("toggle" doesn't bubble -
+  // listen in the capture phase.)
+  const poolUrl = document.getElementById("targetPicker").dataset.poolUrl;
+  async function fillRow(e) {
     const group = e.target.closest ? e.target.closest(".banner-group") : null;
-    if (!group || !e.target.open || group.querySelector(".chip[data-pk]")) return;
-    const name = group.querySelector(".banner-include")?.dataset.banner;
-    if (!name) return;
-    const carrier = includes
-      .map((b) => b.closest(".banner-group"))
-      .find((g) => g !== group && g.querySelector(".banner-include")?.dataset.banner === name && g.querySelector(".chip[data-pk]"));
-    if (!carrier) return;
-    for (const row of carrier.querySelectorAll("[data-rarity-row]")) {
-      const clone = row.cloneNode(true);
-      clone.querySelectorAll(".chip[data-pk]").forEach((c) => c.classList.toggle("selected", selected.has(c.dataset.pk)));
-      group.appendChild(clone);
+    if (!group || !e.target.open || group.querySelector(".chip[data-pk]") || group.dataset.filling) return;
+    if (group.dataset.pool) {
+      group.dataset.filling = "1";
+      try {
+        const resp = await fetch(`${poolUrl}?pool=${group.dataset.pool}`);
+        if (resp.ok) group.insertAdjacentHTML("beforeend", await resp.text());
+      } finally {
+        delete group.dataset.filling;
+      }
+    } else {
+      const name = group.querySelector(".banner-include")?.dataset.banner;
+      const carrier = includes
+        .map((b) => b.closest(".banner-group"))
+        .find((g) => g !== group && g.querySelector(".banner-include")?.dataset.banner === name && g.querySelector(".chip[data-pk]"));
+      if (!carrier) return;
+      for (const row of carrier.querySelectorAll("[data-rarity-row]")) group.appendChild(row.cloneNode(true));
     }
-  }, true);
+    group.querySelectorAll(".chip[data-pk]").forEach((c) => markPicked(c, selected.has(c.dataset.pk)));
+    markDebuts(group);
+    showPicker(group);
+  }
+  browser.addEventListener("toggle", fillRow, true);
+  document.getElementById("targetCarriers").addEventListener("toggle", fillRow, true);
 
   // The Past group ships as an empty shell - its ~2000 per-run rows are most of the
   // page's bytes and render time - so fetch the rows the first time they're needed
@@ -435,6 +468,7 @@ if (picker) {
       pastGroup.insertAdjacentHTML("beforeend", await resp.text());
       includes.push(...pastGroup.querySelectorAll(".banner-include"));
       if (note) note.remove();
+      showPicker(pastGroup); // the arrived rows take the picker's display
       applySearch(); // rows that arrived mid-search must obey the current query
     } catch {
       pastLoaded = false; // reopen retries
@@ -446,6 +480,66 @@ if (picker) {
       if (pastGroup.open) loadPast();
     });
   }
+
+  // The picker's own Display menu: names, icons or both, in a chosen form - the same
+  // persisted picks as the Rolls table below, so the two always match.
+  const pickDisplay = document.getElementById("pickDisplay");
+  const pickForm = document.getElementById("pickForm");
+  restorePick(pickDisplay, DISPLAY_KEY);
+  restorePick(pickForm, FORM_KEY);
+  // Styles the given part of the picker - all of it on a display change, just the rows
+  // that arrived otherwise (re-styling ~thousands of chips per search was the slow part).
+  const pickerRoots = () => [browser, document.getElementById("targetFlat"), document.getElementById("targetCarriers")];
+  const showPicker = (roots = pickerRoots()) => {
+    const form = Number(pickForm.value);
+    for (const root of [roots].flat()) {
+      renameForms(root, form);
+      syncCatDisplay(root, pickDisplay.value, form);
+    }
+  };
+  for (const [mine, theirs, key] of [
+    [pickDisplay, "rollDisplay", DISPLAY_KEY],
+    [pickForm, "rollForm", FORM_KEY],
+  ]) {
+    mine.addEventListener("change", () => {
+      localStorage.setItem(key, mine.value);
+      const other = document.getElementById(theirs);
+      if (other && other.value !== mine.value) {
+        other.value = mine.value;
+        other.dispatchEvent(new Event("change"));
+      }
+      showPicker();
+    });
+    document.getElementById(theirs)?.addEventListener("change", (e) => {
+      if (mine.value === e.target.value) return;
+      mine.value = e.target.value;
+      showPicker();
+    });
+  }
+  showPicker();
+
+  // The star wishlists a cat right here, like on Collection; every chip of that unit
+  // follows, and a failed save puts it back.
+  picker.addEventListener("click", async (e) => {
+    const star = e.target.closest(".chip-star");
+    if (!star) return;
+    const chip = star.closest(".pick-chip");
+    const unit = chip.dataset.unitPk;
+    const on = !chip.classList.contains("wanted");
+    const mark = (wanted) =>
+      picker
+        .querySelectorAll(`.pick-chip[data-unit-pk="${unit}"]`)
+        .forEach((c) => c.classList.toggle("wanted", wanted));
+    mark(on);
+    const token = document.querySelector("[name=csrfmiddlewaretoken]").value;
+    const body = new URLSearchParams({ pk: unit, field: "wanted", on: on ? "1" : "0" });
+    const resp = await fetch(browser.dataset.toggleUrl, {
+      method: "POST",
+      headers: { "X-CSRFToken": token },
+      body,
+    }).catch(() => null);
+    if (!resp?.ok) mark(!on);
+  });
   const rangeOf = (btn) => {
     const d = btn.closest(".banner-group");
     return [d.dataset.start, d.dataset.end];
@@ -455,10 +549,19 @@ if (picker) {
   // consecutive, not concurrent (end is exclusive). ISO dates sort lexically.
   const liveOn = (range, day) => !!range[0] && range[0] <= day && day < range[1];
 
-  function setIncluded(btn, on) {
+  function markIncluded(btn, on) {
     btn.setAttribute("aria-pressed", on ? "true" : "false");
     btn.textContent = on ? "✓" : "+"; // selecting must not expand the cats
     btn.closest(".banner-group").classList.toggle("included", on);
+  }
+  // The same run can also show in a search's "Banners with ..." list; those copies follow
+  // the list's own button, which is the one that counts.
+  const sameRun = (a, b) => a.dataset.banner === b.dataset.banner && a.dataset.run === b.dataset.run;
+  const copiesOf = (btn) =>
+    [...document.querySelectorAll("#targetCarriers .banner-include")].filter((c) => sameRun(c, btn));
+  function setIncluded(btn, on) {
+    markIncluded(btn, on);
+    copiesOf(btn).forEach((copy) => markIncluded(copy, on));
   }
   function syncBanners() {
     bannerInputs.replaceChildren();
@@ -636,7 +739,6 @@ if (picker) {
   // and how far the list was scrolled. A search starts at the top of its results;
   // clearing it puts the browse view back exactly.
   let browseState = null;
-  let lastQuery = "";
   function applySearch() {
     const query = search.value.trim().toLowerCase();
     const searching = query !== "";
@@ -652,11 +754,17 @@ if (picker) {
     searchClear.hidden = !searching;
     searchHint.hidden = !searching;
     if (searching && !pastLoaded) loadPast(); // a set's past runs must be findable too
-    // A banner matches on its set title or its in-game subtitle (the run's own text).
-    grouped.querySelectorAll(".banner-group").forEach((group) => {
-      const text = `${group.dataset.title || ""} ${group.querySelector(".banner-sub")?.textContent || ""}`;
-      group.hidden = searching && !text.toLowerCase().includes(query);
-    });
+    // A banner matches on its set title or its in-game subtitle (the run's own text),
+    // read once per row; a row is only touched when its state flips.
+    for (const group of grouped.querySelectorAll(".banner-group")) {
+      let text = searchText.get(group);
+      if (text === undefined) {
+        text = `${group.dataset.title || ""} ${group.querySelector(".banner-sub")?.textContent || ""}`.toLowerCase();
+        searchText.set(group, text);
+      }
+      const hide = searching && !text.includes(query);
+      if (group.hidden !== hide) group.hidden = hide;
+    }
     // Group headings collapse away when nothing under them matches; matching drops
     // open so the hits are visible without another click.
     grouped.querySelectorAll("h2.group").forEach((h) => {
@@ -668,11 +776,22 @@ if (picker) {
       if (searching) drop.open = hasMatch;
     });
     if (searching) {
+      // A new query frees the cats the last one put on cards.
+      if (query !== carrierQuery) flat.querySelectorAll(".carded").forEach((w) => w.classList.remove("carded"));
       // Cats match on any of their form names, not just the base one.
-      flat.querySelectorAll("[data-name]").forEach((chip) => {
-        chip.hidden = !(chip.dataset.forms || chip.dataset.name).toLowerCase().includes(query);
-      });
+      for (const wrap of flat.querySelectorAll(".pick-chip")) {
+        let text = searchText.get(wrap);
+        if (text === undefined) {
+          const chip = wrap.querySelector(".chip-own");
+          text = (chip.dataset.forms || chip.dataset.name).toLowerCase();
+          searchText.set(wrap, text);
+        }
+        const hide = !text.includes(query) || wrap.classList.contains("carded");
+        if (wrap.hidden !== hide) wrap.hidden = hide;
+      }
     }
+    scheduleCarriers(searching ? query : "");
+    syncHeads(); // each kind of hit under its own heading, shown only when it has any
     if (searching && query !== lastQuery) picker.scrollTop = 0;
     if (!searching && browseState) {
       picker.scrollTop = browseState.scroll; // after the sections reopened, so it lands right
@@ -680,17 +799,160 @@ if (picker) {
     }
     lastQuery = searching ? query : "";
   }
+  let lastQuery = "";
+  const searchText = new WeakMap(); // row/chip -> its lowercased searchable text
+  // Search results: a card per matching cat - its picture, its chip (pick, star, info as
+  // anywhere) and the sets it drops on, from every run's own pool, which the page doesn't
+  // carry (fetched for all the cards at once) - then the banners whose name matches. Past
+  // CARD_LIMIT cats the rest stay plain chips.
+  const catsHead = document.getElementById("searchCatsHead");
+  const bannersHead = document.getElementById("searchBannersHead");
+  const carriers = document.getElementById("targetCarriers");
+  const GACHA = new Set(["Rare", "Super Rare", "Uber Super Rare", "Legend Rare"]);
+  const CARD_LIMIT = 12;
+  let carrierQuery = "";
+
+  function card(wrap) {
+    const chip = wrap.querySelector(".chip-own");
+    const el = document.createElement("div");
+    el.className = "cat-card";
+    el.dataset.uid = chip.dataset.uid || "";
+    const head = document.createElement("div");
+    head.className = "card-head";
+    if (chip.dataset.uid) {
+      const pic = document.createElement("img");
+      pic.className = "card-pic";
+      pic.alt = "";
+      pic.src = `${ICON_BASE}/${chip.dataset.uid}/${Math.min(Number(pickForm.value), 1)}.png`;
+      pic.addEventListener("error", () => pic.remove());
+      head.append(pic);
+    }
+    const copy = wrap.cloneNode(true);
+    copy.hidden = false;
+    copy.querySelectorAll(".cat-icon").forEach((img) => img.remove());
+    head.append(copy);
+    const body = document.createElement("div");
+    body.className = "card-body";
+    if (!GACHA.has(chip.dataset.rarity)) {
+      body.textContent = gettext("Not in any rare capsule.");
+      body.classList.add("muted");
+    }
+    el.append(head, body);
+    return el;
+  }
+
+  function scheduleCarriers(query) {
+    if (query === carrierQuery) return; // a re-filter, not a new search
+    carrierQuery = query;
+    carriers.replaceChildren();
+    if (!query) return;
+    const matched = [...flat.querySelectorAll(".pick-chip:not([hidden])")];
+    const carded = matched.slice(0, CARD_LIMIT);
+    carriers.append(...carded.map(card));
+    for (const wrap of carded) {
+      wrap.classList.add("carded"); // the card shows it; the rest stay chips
+      wrap.hidden = true;
+    }
+    const uids = carded
+      .map((wrap) => wrap.querySelector(".chip-own"))
+      .filter((chip) => chip.dataset.uid && GACHA.has(chip.dataset.rarity))
+      .map((chip) => chip.dataset.uid);
+    if (!uids.length) return;
+    const params = new URLSearchParams(uids.map((uid) => ["uid", uid]));
+    fetch(`${carriers.dataset.url}?${params}`)
+      .then((resp) => (resp.ok ? resp.text() : ""))
+      .then((html) => {
+        if (carrierQuery !== query) return; // the search moved on
+        const sets = document.createElement("template");
+        sets.innerHTML = html;
+        for (const el of carriers.querySelectorAll(".cat-card")) {
+          const block = sets.content.querySelector(`.carriers[data-uid="${el.dataset.uid}"]`);
+          const body = el.querySelector(".card-body");
+          if (block) body.append(block);
+          else if (!body.textContent) body.textContent = gettext("Not in any rare capsule.");
+        }
+        syncHeads();
+      });
+  }
+
+  function syncHeads() {
+    const searching = !!carrierQuery;
+    bannersHead.textContent = interpolate(gettext("Banners named “%s”"), [search.value.trim()]);
+    bannersHead.hidden = !searching || !grouped.querySelector(".banner-group:not([hidden])");
+    catsHead.hidden = !searching || !(carriers.childElementCount || flat.querySelector(".pick-chip:not([hidden])"));
+  }
+
+  // A set pill opens the card's full list at that set; "All N sets" opens the list.
+  carriers.addEventListener("click", (e) => {
+    const pill = e.target.closest(".set-pill, .card-more");
+    if (!pill) return;
+    const block = pill.closest(".carriers");
+    const all = block.querySelector(".card-all");
+    all.hidden = false;
+    block.querySelector(".card-more")?.remove();
+    if (pill.classList.contains("set-pill")) {
+      const set = [...all.querySelectorAll(".carrier-set")].find((d) => d.dataset.set === pill.dataset.set);
+      set.open = true;
+      set.scrollIntoView({ block: "nearest", behavior: "smooth" });
+    }
+  });
+  // A set's rows come when it's first opened ("toggle" doesn't bubble - capture it).
+  carriers.addEventListener(
+    "toggle",
+    async (e) => {
+      const set = e.target;
+      if (!set.classList?.contains("carrier-set") || !set.open || set.dataset.loaded) return;
+      set.dataset.loaded = "1";
+      const uid = set.closest(".carriers").dataset.uid;
+      const params = new URLSearchParams({ uid, set: set.dataset.set });
+      const resp = await fetch(`${carriers.dataset.url}?${params}`);
+      if (!resp.ok) {
+        delete set.dataset.loaded;
+        return;
+      }
+      set.insertAdjacentHTML("beforeend", await resp.text());
+      const pressed = new Set(includes.filter((b) => b.getAttribute("aria-pressed") === "true").map(runKey));
+      set.querySelectorAll(".banner-include").forEach((copy) => markIncluded(copy, pressed.has(runKey(copy))));
+      showPicker(set);
+    },
+    true,
+  );
+  // A copy's + works its twin in the list, so the session logic sees one button per run.
+  carriers.addEventListener("click", (e) => {
+    const copy = e.target.closest(".banner-include");
+    if (!copy) return;
+    e.preventDefault(); // don't toggle the <details>
+    e.stopPropagation();
+    const twin = includes.find((b) => sameRun(b, copy));
+    if (twin) toggleSession(twin);
+  });
+  const runKey = (b) => `${b.dataset.run}|${b.dataset.banner}`;
+  // The past runs start loading as you reach for the search, so they're in by the
+  // time you've typed.
+  search.addEventListener("focus", loadPast);
+  // Filtering ~2000 rows waits for a pause in typing, so the keys never lag.
+  let searchTimer = 0;
   search.addEventListener("input", () => {
-    applySearch();
-    save();
+    clearTimeout(searchTimer);
+    searchTimer = setTimeout(() => {
+      applySearch();
+      save();
+    }, 120);
   });
   // Selecting cats keeps the search open (multi-pick); this is the explicit way back.
   searchClear.addEventListener("click", () => {
+    clearTimeout(searchTimer);
     search.value = "";
     applySearch();
     save();
     search.focus();
   });
+  // A link from a cat's card elsewhere (?q=SUPERFEST) opens on that search.
+  if (linkParams.get("q")) {
+    search.value = linkParams.get("q");
+    applySearch();
+    search.scrollIntoView({ block: "center" });
+  }
 
   // Restore the saved form, then default whatever was never saved. A permalink
   // overrides only the seed here (its view controls are applied further down); the
@@ -2234,10 +2496,26 @@ if (catPopup) {
     );
     const banners = info.banners || [];
     bannersEl.hidden = !banners.length;
+    // Each set the cat drops on, by its title; clicking one searches the planner for it -
+    // every run of it, past and upcoming - right here, or by opening the planner.
     bannersEl.querySelector("ul").replaceChildren(
-      ...banners.map((name) => {
+      ...banners.map((set) => {
         const li = document.createElement("li");
-        li.textContent = name;
+        const b = document.createElement("button");
+        b.type = "button";
+        b.className = `popup-banner ${set.status}`;
+        b.dataset.title = set.title;
+        b.textContent = set.title;
+        const note = document.createElement("span");
+        note.className = "popup-banner-note";
+        note.textContent =
+          set.status === "live"
+            ? gettext("live now")
+            : set.status === "upcoming"
+              ? gettext("upcoming")
+              : interpolate(ngettext("%s run", "%s runs", set.runs), [set.runs]);
+        b.append(" ", note);
+        li.append(b);
         return li;
       }),
     );
@@ -2267,6 +2545,19 @@ if (catPopup) {
     if (!trigger) return;
     e.preventDefault();
     openFor(trigger.dataset.name, trigger.dataset.uid);
+  });
+  bannersEl.addEventListener("click", (e) => {
+    const b = e.target.closest(".popup-banner");
+    if (!b) return;
+    const search = document.getElementById("targetSearch");
+    if (!search) {
+      location.href = `${document.body.dataset.plannerUrl}?q=${encodeURIComponent(b.dataset.title)}`;
+      return;
+    }
+    catPopup.close();
+    search.value = b.dataset.title;
+    search.dispatchEvent(new Event("input"));
+    search.scrollIntoView({ block: "center", behavior: "smooth" });
   });
   // Close on the ×, or on a click in the backdrop (outside the dialog's box). Esc is
   // handled natively by showModal().

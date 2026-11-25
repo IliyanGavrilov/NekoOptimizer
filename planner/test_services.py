@@ -21,6 +21,7 @@ from planner.services import (
     banner_currencies,
     banner_titles,
     build_tracks,
+    cat_carriers,
     collection_sections,
     combo_filter_groups,
     cost_label,
@@ -37,6 +38,8 @@ from planner.services import (
     plan_summary,
     read_guide,
     run_debuts,
+    run_pills,
+    run_rates,
     series_names,
     set_sections,
     subset_plan,
@@ -45,6 +48,7 @@ from planner.services import (
     tier_list_doc,
     tier_list_index,
     tier_list_rows,
+    time_left,
     trace_marks,
     unit_facets,
     unit_stats,
@@ -423,7 +427,7 @@ def test_picker_groups_lists_each_scheduled_run_separately():
     groups = dict(picker_groups(Cat.objects.all(), today=today, events=events))
     now = [(r.name, r.dates) for r in groups["Available now"]]
     assert now == [
-        ("Platinum", (date(2026, 4, 24), date(2026, 7, 10))),
+        ("Platinum", (date(2026, 4, 24), date(2026, 7, 11))),
         ("Trixi", (date(2026, 6, 26), date(2026, 7, 3))),
     ]
     upcoming = [(r.name, r.dates) for r in groups["Upcoming"]]
@@ -443,7 +447,7 @@ def test_picker_groups_keeps_unscheduled_past_banners_db_dated():
 
 
 @pytest.mark.django_db
-def test_picker_groups_lists_every_past_rerun_with_cats_on_the_newest():
+def test_picker_groups_lists_every_past_rerun_by_its_own_pool():
     today = date(2026, 7, 3)
     events = [
         _run(date(2026, 2, 1), date(2026, 2, 5), 1, "Fest"),
@@ -457,8 +461,8 @@ def test_picker_groups_lists_every_past_rerun_with_cats_on_the_newest():
         ("Fest", (date(2026, 2, 1), date(2026, 2, 5))),
     ]
     newest, oldest = groups["Past"]
-    assert newest.rarities == [("Uber Super Rare", [cat])]
-    assert oldest.rarities == []
+    assert (newest.rarities, newest.pool) == ([], 2)
+    assert (oldest.rarities, oldest.pool) == ([], 1)
 
 
 def test_equivalent_banners_groups_identical_roll_sequences():
@@ -2206,3 +2210,110 @@ def test_read_guide_rejects_two_shots_of_one_page_that_disagree():
     assert read_guide(shots, pages).errors == [
         "a.png and b.png are both Rare page 1 of 2 but differ."
     ]
+
+
+@pytest.mark.django_db
+def test_cat_carriers_reads_each_runs_own_pool_and_marks_the_first():
+    Unit.objects.create(unit_id=42, name="Kasli", forms=["Kasli"])
+    events = [
+        _run(date(2026, 1, 1), date(2026, 1, 5), 90001, "Fest!"),
+        _run(date(2026, 3, 1), date(2026, 3, 5), 90002, "Fest!"),
+        _run(date(2026, 5, 1), date(2026, 5, 5), 90003, "Fest!"),
+    ]
+    pools = {90001: [7], 90002: [42, 7], 90003: [42]}
+    [(uid, name, sets)] = cat_carriers([42], today=date(2026, 7, 1), events=events, pools=pools)
+    [fest] = sets
+    assert (uid, name, fest.title, fest.status) == (42, "Kasli", "Fest!", "past")
+    assert [(run.dates.start, run.first) for run in fest.runs] == [
+        (date(2026, 5, 1), False),
+        (date(2026, 3, 1), True),
+    ]
+
+
+@pytest.mark.django_db
+def test_cat_carriers_leads_with_live_sets():
+    Unit.objects.create(unit_id=42, name="Kasli", forms=["Kasli"])
+    events = [
+        _run(date(2026, 1, 1), date(2026, 1, 5), 90001, "Old fest!"),
+        _run(date(2026, 7, 1), date(2026, 7, 9), 90002, "Live fest!"),
+    ]
+    pools = {90001: [42], 90002: [42]}
+    [(_uid, _name, sets)] = cat_carriers([42], today=date(2026, 7, 3), events=events, pools=pools)
+    assert [(s.title, s.status) for s in sets] == [("Live fest!", "live"), ("Old fest!", "past")]
+
+
+def _rated(uber=500, legend=30, guaranteed=False, step_up=False):
+    rare = 10000 - 2500 - uber - legend
+    return GachaEventRow(
+        "e",
+        "Fest!",
+        date(2026, 1, 1),
+        date(2026, 1, 5),
+        1,
+        rare,
+        2500,
+        uber,
+        legend,
+        guaranteed,
+        step_up,
+    )
+
+
+def test_time_left_counts_down_to_an_upcoming_start():
+    assert time_left(date(2026, 11, 27), date(2026, 11, 30), date(2026, 11, 24)) == "in 3d"
+
+
+def test_time_left_counts_down_to_a_live_end():
+    assert time_left(date(2026, 11, 23), date(2026, 11, 27), date(2026, 11, 25)) == "2d left"
+
+
+def test_time_left_calls_the_end_date_the_last_day():
+    assert time_left(date(2026, 11, 23), date(2026, 11, 27), date(2026, 11, 27)) == "last day"
+
+
+def test_time_left_skips_a_run_with_no_real_end():
+    assert time_left(date(2026, 11, 1), date(2030, 1, 1), date(2026, 11, 25)) == ""
+
+
+def test_short_span_names_the_month_once_within_it():
+    assert Run(date(2026, 11, 23), date(2026, 11, 27)).short == "Nov 23 – 27"
+
+
+def test_short_span_names_both_months_across_them():
+    assert Run(date(2026, 11, 30), date(2026, 12, 4)).short == "Nov 30 – Dec 4"
+
+
+def test_run_rates_flag_only_better_than_usual_odds():
+    rates = {r.rarity: r.up for r in run_rates(_rated(uber=900, legend=30))}
+    assert rates == {
+        "Rare": False,
+        "Super Rare": False,
+        "Uber Super Rare": True,
+        "Legend Rare": False,
+    }
+
+
+def test_run_rates_print_fractional_percentages():
+    assert [r.rate for r in run_rates(_rated(legend=60))] == ["69.4%", "25%", "5%", "0.6%"]
+
+
+def test_run_pills_name_the_multi_kinds():
+    assert [kind for kind, _ in run_pills(_rated(guaranteed=True, step_up=True))] == [
+        "guaranteed",
+        "step-up",
+    ]
+
+
+@pytest.mark.django_db
+def test_picker_groups_list_wanted_cats_only_from_the_runs_own_pool():
+    today = date(2026, 7, 1)
+    events = [_run(date(2026, 7, 1), date(2026, 7, 5), 1, "Fest!")]
+    banner = Banner.objects.create(name="Fest!")
+    cats = []
+    for unit_id, name in ((10, "In pool"), (11, "Later rerun only")):
+        cat = Cat.objects.create(name=name, unit=Unit.objects.create(unit_id=unit_id, name=name))
+        cat.banners.add(banner)
+        cat.wanted, cat.owned = True, False
+        cats.append(cat)
+    groups = dict(picker_groups(cats, today=today, events=events, pools={1: [10]}))
+    assert groups["Available now"][0].wanted == ["In pool"]

@@ -23,7 +23,9 @@ from planner.views import (
     normal_plan_engine,
     normal_seek_start,
     normal_tracks_engine,
+    picker_carriers,
     picker_past,
+    picker_pool,
     plan_row_engine,
     planner,
     resources,
@@ -48,6 +50,8 @@ from planner.views import (
 urlpatterns = [
     path("", planner, name="planner"),
     path("picker/past/", picker_past, name="picker_past"),
+    path("picker/carriers/", picker_carriers, name="picker_carriers"),
+    path("picker/pool/", picker_pool, name="picker_pool"),
     path("tracks/engine/", tracks_engine, name="tracks_engine"),
     path("seed/backtrack/", seed_backtrack, name="seed_backtrack"),
     path("seed/save/", save_seed, name="save_seed"),

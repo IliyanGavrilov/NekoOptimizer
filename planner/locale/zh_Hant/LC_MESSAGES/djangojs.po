@@ -472,3 +472,25 @@ msgstr "沒有可培養的項目：這隻角色沒有貓薄荷進化，也沒有
 
 msgid "Jump to a letter"
 msgstr "跳到首字"
+
+
+
+
+#, javascript-format
+msgid "Banners named “%s”"
+msgstr "名稱含「%s」的轉蛋"
+
+msgid "live now"
+msgstr "進行中"
+
+msgid "upcoming"
+msgstr "即將開始"
+
+#, javascript-format
+msgid "%s run"
+msgid_plural "%s runs"
+msgstr[0] "%s期"
+
+msgid "Not in any rare capsule."
+msgstr "不會在稀有轉蛋中出現。"
+

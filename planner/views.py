@@ -8,11 +8,11 @@ from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.views import LoginView, RedirectURLMixin
-from django.db.models import F
 from django.http import Http404, HttpResponse, HttpResponseBadRequest, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.template.loader import get_template, render_to_string
 from django.urls import Resolver404, resolve, reverse
+from django.utils.cache import patch_cache_control
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.utils.translation import get_language, gettext
 from django.views.decorators.http import require_POST
@@ -41,7 +41,7 @@ from planner.forms import (
 from planner.labels import stat_forms
 from planner.links import TOOL_DIRECTORY, unit_links
 from planner.middleware import adopt_guest, owner, region_path, split_region
-from planner.models import Banner, CannonPlan, Cat, Seed, TalentPlan, Unit, UnitPlan
+from planner.models import CannonPlan, Cat, Seed, TalentPlan, Unit, UnitPlan
 from planner.seo import (
     BRAND,
     CRAWL_BLOCKED,
@@ -70,6 +70,7 @@ from planner.services import (
     build_normal_tracks,
     build_tracks,
     cat_banner_names,
+    cat_carriers,
     cat_options,
     collection_facets,
     collection_sections,
@@ -96,6 +97,7 @@ from planner.services import (
     picker_groups,
     plan_request,
     plannable_form,
+    pool_rarities,
     read_guide,
     resources_board,
     section_notes,
@@ -184,6 +186,44 @@ def picker_past(request):
     )
 
     return render(request, "planner/_picker_rows.html", {"sections": groups.get("Past", [])})
+
+
+def picker_carriers(request):
+    """The banners a searched cat drops on (``uid``, its catalogue id), grouped by set -
+    the picker search's "Banners with ..." block: each set's line, or with ``set`` (a set
+    title) that set's run rows, fetched when it's opened. Rendering every row up front
+    was most of a search's wait."""
+    try:
+        unit_ids = [int(uid) for uid in request.GET.getlist("uid")]
+    except ValueError:
+        return HttpResponseBadRequest("uid must be a number")
+
+    carriers = cat_carriers(unit_ids)
+    title = request.GET.get("set")
+    if title is None:
+        response = render(request, "planner/_carriers.html", {"carriers": carriers})
+    else:
+        runs = next(
+            (s.runs for _uid, _name, sets in carriers for s in sets if s.title == title), []
+        )
+        response = render(request, "planner/_picker_rows.html", {"sections": runs})
+    # Nothing per player in it, so the browser keeps it: searching the same cat again
+    # costs no request (a function call on the host) for a while.
+    patch_cache_control(response, private=True, max_age=600)
+
+    return response
+
+
+def picker_pool(request):
+    """One run's own cats as a banner row's rarity rows, fetched when the row is opened."""
+    try:
+        pool_id = int(request.GET.get("pool", ""))
+    except ValueError:
+        return HttpResponseBadRequest("pool must be a number")
+
+    rarities = pool_rarities(pool_id, _picker_cats(request.profile))
+
+    return render(request, "planner/_rarity_rows.html", {"rarities": rarities})
 
 
 def _roll(seed, chosen_banners, count, last_cat="", simulate_guaranteed=0, future_ubers=None):
@@ -797,12 +837,11 @@ def unit_info(request):
             "links": [asdict(link) for link in unit_links(unit.unit_id, unit.name, unit.rarity)],
             "tier": tier_badges().get(unit.unit_id),
             "stats": stats,
-            "banners": list(
-                Banner.objects.filter(cats__unit=unit)
-                .order_by(F("start").desc(nulls_last=True), "name")
-                .values_list("name", flat=True)
-                .distinct()
-            ),
+            "banners": [
+                {"title": carrier.title, "status": carrier.status, "runs": len(carrier.runs)}
+                for _uid, _name, sets in cat_carriers([unit.unit_id])
+                for carrier in sets
+            ],
         }
     )
 

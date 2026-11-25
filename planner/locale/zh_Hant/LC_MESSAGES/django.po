@@ -2921,3 +2921,33 @@ msgstr "白金轉蛋"
 
 msgid "Legend Capsules"
 msgstr "傳說轉蛋"
+
+
+#, python-format
+msgid "last %(date)s"
+msgstr "上次 %(date)s"
+
+#, python-format
+msgid "next %(date)s"
+msgstr "下次 %(date)s"
+
+msgid "Banners by name"
+msgstr "名稱相符的轉蛋"
+
+msgid "Cats"
+msgstr "角色"
+
+msgid "First here"
+msgstr "此轉蛋首次"
+
+msgid "live now"
+msgstr "進行中"
+
+
+msgid "The first run of this set with this cat"
+msgstr "這個角色首次加入的那一期"
+
+#, python-format
+msgid "All %(n)s set &rsaquo;"
+msgid_plural "All %(n)s sets &rsaquo;"
+msgstr[0] "全部%(n)s個 &rsaquo;"

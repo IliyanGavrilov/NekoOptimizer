@@ -474,3 +474,25 @@ msgstr "育成するものなし：このキャラにはマタタビ進化も本
 
 msgid "Jump to a letter"
 msgstr "頭文字へ移動"
+
+
+
+
+#, javascript-format
+msgid "Banners named “%s”"
+msgstr "「%s」を含むガチャ"
+
+msgid "live now"
+msgstr "開催中"
+
+msgid "upcoming"
+msgstr "予定"
+
+#, javascript-format
+msgid "%s run"
+msgid_plural "%s runs"
+msgstr[0] "開催%s回"
+
+msgid "Not in any rare capsule."
+msgstr "レアガチャには出ません。"
+

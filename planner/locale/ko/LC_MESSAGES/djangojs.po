@@ -475,3 +475,25 @@ msgstr "육성할 것 없음: 이 캐릭터는 개다래 열매 진화도 본능
 
 msgid "Jump to a letter"
 msgstr "첫 글자로 이동"
+
+
+
+
+#, javascript-format
+msgid "Banners named “%s”"
+msgstr "“%s” 이름의 뽑기"
+
+msgid "live now"
+msgstr "진행 중"
+
+msgid "upcoming"
+msgstr "예정"
+
+#, javascript-format
+msgid "%s run"
+msgid_plural "%s runs"
+msgstr[0] "%s회"
+
+msgid "Not in any rare capsule."
+msgstr "레어 뽑기에는 나오지 않습니다."
+

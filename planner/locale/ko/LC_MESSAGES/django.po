@@ -2940,3 +2940,33 @@ msgstr "플래티넘 뽑기"
 
 msgid "Legend Capsules"
 msgstr "레전드 뽑기"
+
+
+#, python-format
+msgid "last %(date)s"
+msgstr "지난 %(date)s"
+
+#, python-format
+msgid "next %(date)s"
+msgstr "다음 %(date)s"
+
+msgid "Banners by name"
+msgstr "이름이 일치하는 뽑기"
+
+msgid "Cats"
+msgstr "캐릭터"
+
+msgid "First here"
+msgstr "이 뽑기 첫 등장"
+
+msgid "live now"
+msgstr "진행 중"
+
+
+msgid "The first run of this set with this cat"
+msgstr "이 캐릭터가 처음 들어간 회차"
+
+#, python-format
+msgid "All %(n)s set &rsaquo;"
+msgid_plural "All %(n)s sets &rsaquo;"
+msgstr[0] "전체 %(n)s개 &rsaquo;"

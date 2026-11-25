@@ -2937,3 +2937,33 @@ msgstr "プラチナガチャ"
 
 msgid "Legend Capsules"
 msgstr "レジェンドガチャ"
+
+
+#, python-format
+msgid "last %(date)s"
+msgstr "前回 %(date)s"
+
+#, python-format
+msgid "next %(date)s"
+msgstr "次回 %(date)s"
+
+msgid "Banners by name"
+msgstr "名前が一致するガチャ"
+
+msgid "Cats"
+msgstr "キャラ"
+
+msgid "First here"
+msgstr "このガチャ初"
+
+msgid "live now"
+msgstr "開催中"
+
+
+msgid "The first run of this set with this cat"
+msgstr "このキャラが初めて入った開催"
+
+#, python-format
+msgid "All %(n)s set &rsaquo;"
+msgid_plural "All %(n)s sets &rsaquo;"
+msgstr[0] "全%(n)sシリーズ &rsaquo;"
