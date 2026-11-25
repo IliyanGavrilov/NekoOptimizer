@@ -49,12 +49,15 @@ jobs:
             done
           done
 
-      # Both scrape community sites that may turn a runner away; the day's data still lands.
-      - name: Fetch the Cat Guide order and tier lists
+      # Each scrapes a community site that may turn a runner away; the day's data still
+      # lands, and one refusing doesn't skip the other.
+      - name: Fetch the Cat Guide order
         continue-on-error: true
-        run: |
-          python manage.py fetch_guide
-          python manage.py fetch_tiers
+        run: python manage.py fetch_guide
+
+      - name: Fetch the tier lists
+        continue-on-error: true
+        run: python manage.py fetch_tiers
 
       # An announced banner neither source has a pool for yet shows with no cats and no
       # title; the day's data still lands, and the list goes to an issue below.
@@ -113,11 +116,13 @@ jobs:
           git add neko/data
           git commit -m "Refresh game data"
           git push --force origin data-refresh
+          # GitHub's API answers the odd 502; retry each call rather than fail the day.
+          retry() { for attempt in 1 2 3 4; do "$@" && return; sleep $((attempt * 15)); done; return 1; }
           if [ "$(gh pr view data-refresh --json state -q .state 2>/dev/null)" != "OPEN" ]; then
-            gh pr create --base main --head data-refresh --title "Refresh game data" --body "The daily fetch found new game data. Merged automatically once the checks pass."
+            retry gh pr create --base main --head data-refresh --title "Refresh game data" --body "The daily fetch found new game data. Merged automatically once the checks pass."
           fi
-          echo "PR=$(gh pr view data-refresh --json url -q .url)" >> "$GITHUB_ENV"
-          gh pr merge data-refresh --auto --squash --delete-branch
+          echo "PR=$(retry gh pr view data-refresh --json url -q .url)" >> "$GITHUB_ENV"
+          retry gh pr merge data-refresh --auto --squash --delete-branch
 
       # Waits so a failing check fails this run, and the report below files an issue.
       - name: Wait for the merge

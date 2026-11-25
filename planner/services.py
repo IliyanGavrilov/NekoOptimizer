@@ -1520,6 +1520,27 @@ def run_rates(event: GachaEventRow) -> list[RunRate]:
     ]
 
 
+def wishlist_runs(now: Sequence[PickerRow], upcoming: Sequence[PickerRow]) -> list:
+    """Each wished-for cat you don't own that a live or announced run can drop, as (name,
+    [(row, live)]): one run per banner, its soonest, live ones first; cats in order of
+    their first run."""
+
+    def soonest(run):
+        row, live = run
+        return not live, row.dates.start
+
+    runs: dict[str, dict[str, tuple]] = {}
+    for live, rows in ((True, now), (False, upcoming)):
+        for row in rows:
+            for name in row.wanted:
+                by_title = runs.setdefault(name, {})
+                if row.title not in by_title or soonest((row, live)) < soonest(by_title[row.title]):
+                    by_title[row.title] = (row, live)
+
+    found = {name: sorted(by_title.values(), key=soonest) for name, by_title in runs.items()}
+    return sorted(found.items(), key=lambda item: (*soonest(item[1][0]), item[0]))
+
+
 def announced_through(events=None) -> str:
     """The last day the announced banners run to, as the footer prints it ("Dec 28, 2026");
     the permanent capsules' placeholder end doesn't count."""
@@ -1699,6 +1720,10 @@ def cat_carriers(
     return carriers
 
 
+# The rarities only some banners drop: what a banner's wishlist star calls out.
+_BANNER_RARITIES = {Rarity.UBER_SUPER_RARE, Rarity.LEGEND_RARE}
+
+
 def picker_groups(
     cats: Iterable[Cat],
     today: date | None = None,
@@ -1757,13 +1782,15 @@ def picker_groups(
             return base
 
         # The run's own pool, not the banner name's cats: reruns share a name, and a
-        # later run's new cat can't drop on this one.
+        # later run's new cat can't drop on this one. Rares and super rares drop from
+        # nearly every banner, so only the ubers name a banner worth calling out.
         pool = set(pools.get(event.pool_id, ()))
         wanted = sorted(
             cat.name
             for cat in by_name.get(event.name, ())
             if getattr(cat, "wanted", False)
             and not getattr(cat, "owned", False)
+            and cat.rarity in _BANNER_RARITIES
             and cat.unit is not None
             and cat.unit.unit_id in pool
         )

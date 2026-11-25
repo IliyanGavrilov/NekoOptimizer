@@ -34,6 +34,7 @@
         theme = matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";
       }
       document.documentElement.dataset.theme = theme;
+      try { if (localStorage.getItem("nekoCvd") === "1") document.documentElement.dataset.cvd = ""; } catch { /* off */ }
     })();
   </script>
   <link rel="preload" href="{% static 'planner/fonts/source-sans-3-latin.woff2' %}" as="font" type="font/woff2" crossorigin>
@@ -98,6 +99,8 @@
               <button type="button" data-set-theme="dark" title="{% translate "Dark theme" %}" aria-pressed="false"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg></button>
               <button type="button" data-set-theme="system" title="{% translate "Match my device" %}" aria-pressed="false"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="20" height="14" x="2" y="3" rx="2"/><line x1="8" x2="16" y1="21" y2="21"/><line x1="12" x2="12" y1="17" y2="21"/></svg></button>
             </div>
+            <label class="pref-check"><input type="checkbox" id="cvdToggle"> {% translate "Colour-blind friendly colours" %}</label>
+            <button type="button" class="pref-link" id="shortcutsOpen">{% translate "Keyboard shortcuts" %} <kbd>?</kbd></button>
           </div>
         </details>
         <div class="account">
@@ -211,6 +214,16 @@
       <ul></ul>
     </div>
     <div class="cat-popup-links"></div>
+  </dialog>
+  <dialog id="shortcutsSheet" class="cat-popup shortcuts-sheet" aria-labelledby="shortcutsTitle">
+    <button type="button" class="cat-popup-close" data-close aria-label="{% translate "Close" %}">&times;</button>
+    <h2 id="shortcutsTitle">{% translate "Keyboard shortcuts" %}</h2>
+    <dl>
+      <dt><kbd>/</kbd></dt><dd>{% translate "Jump to this page's search" %}</dd>
+      <dt><kbd>Esc</kbd></dt><dd>{% translate "Clear the search, or close a window" %}</dd>
+      <dt><kbd>&larr;</kbd> <kbd>&rarr;</kbd></dt><dd>{% translate "Previous or next step of the plan you're following" %}</dd>
+      <dt><kbd>?</kbd></dt><dd>{% translate "Show this list" %}</dd>
+    </dl>
   </dialog>
   <script src="{% url 'javascript_catalog' %}?v={{ LANGUAGE_CODE }}"></script>
   <script src="{% static 'planner/engine.js' %}"></script>

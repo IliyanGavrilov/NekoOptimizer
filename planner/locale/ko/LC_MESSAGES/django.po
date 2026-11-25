@@ -2975,4 +2975,47 @@ msgstr[0] "전체 %(n)s개 &rsaquo;"
 msgid "Game data from version %(version)s; banners announced through %(through)s."
 msgstr "버전 %(version)s 게임 데이터 · %(through)s까지 발표된 뽑기 포함."
 
+#, python-format
+msgid "%(n)s wishlist cat on live or upcoming banners"
+msgid_plural "%(n)s wishlist cats on live or upcoming banners"
+msgstr[0] "위시리스트 캐릭터 %(n)s마리가 진행 중·예정 뽑기에"
 
+msgid "Show this banner"
+msgstr "이 뽑기 보기"
+
+msgid "Show banners as"
+msgstr "뽑기 표시 방식"
+
+msgid "List"
+msgstr "목록"
+
+msgid "Timeline"
+msgstr "타임라인"
+
+msgid "Colour-blind friendly colours"
+msgstr "색각 이상 친화 색상"
+
+msgid "Keyboard shortcuts"
+msgstr "키보드 단축키"
+
+msgid "Jump to this page's search"
+msgstr "이 페이지 검색으로 이동"
+
+msgid "Clear the search, or close a window"
+msgstr "검색 지우기 또는 창 닫기"
+
+msgid "Previous or next step of the plan you're following"
+msgstr "따라가는 플랜의 이전·다음 단계"
+
+msgid "Show this list"
+msgstr "이 목록 보기"
+
+msgid "live"
+msgstr "진행 중"
+
+msgid "+ %(n)s more cat only on Platinum or Legend Capsules"
+msgid_plural "+ %(n)s more cats only on Platinum or Legend Capsules"
+msgstr[0] "+ 플래티넘 뽑기·레전드 뽑기에만 있는 %(n)s마리 더"
+
+msgid "today"
+msgstr "오늘"

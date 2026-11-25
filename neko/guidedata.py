@@ -17,6 +17,9 @@ GUIDE_API = (
     "https://battlecats.miraheze.org/w/api.php"
     "?action=parse&page=Cat_Guide/Units&prop=wikitext&format=json&formatversion=2"
 )
+# Miraheze turns generic clients away from data-centre addresses; its user-agent policy
+# asks bots to name themselves and where to find them.
+_WIKI_AGENT = "NekoOptimizer/1.0 (+https://github.com/IliyanGavrilov/NekoOptimizer)"
 GUIDE_PATH = Path(__file__).parent / "data" / "guide_order.json"
 
 # The page's tabber labels onto our region codes.
@@ -84,7 +87,7 @@ def refresh() -> dict[str, tuple[int, list[str]]]:
     and the names that didn't match (for alias curation). Every tab of the page names
     its units in English - only the ORDER is per region - so they all resolve against
     the English catalogue, and the unit ids that come out are version-independent."""
-    wikitext = json.loads(_get(GUIDE_API))["parse"]["wikitext"]
+    wikitext = json.loads(_get(GUIDE_API, _WIKI_AGENT))["parse"]["wikitext"]
     regions = parse_guide(wikitext)
     records = load_records(DEFAULT_REGION)
 

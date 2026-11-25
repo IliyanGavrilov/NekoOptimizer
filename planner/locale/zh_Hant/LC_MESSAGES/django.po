@@ -2956,4 +2956,47 @@ msgstr[0] "全部%(n)s個 &rsaquo;"
 msgid "Game data from version %(version)s; banners announced through %(through)s."
 msgstr "遊戲資料版本%(version)s・已公布的轉蛋至%(through)s。"
 
+#, python-format
+msgid "%(n)s wishlist cat on live or upcoming banners"
+msgid_plural "%(n)s wishlist cats on live or upcoming banners"
+msgstr[0] "願望清單中有%(n)s隻貓在進行中或即將開始的轉蛋"
 
+msgid "Show this banner"
+msgstr "顯示此轉蛋"
+
+msgid "Show banners as"
+msgstr "轉蛋顯示方式"
+
+msgid "List"
+msgstr "列表"
+
+msgid "Timeline"
+msgstr "時間軸"
+
+msgid "Colour-blind friendly colours"
+msgstr "色盲友善配色"
+
+msgid "Keyboard shortcuts"
+msgstr "鍵盤快捷鍵"
+
+msgid "Jump to this page's search"
+msgstr "跳到本頁搜尋"
+
+msgid "Clear the search, or close a window"
+msgstr "清除搜尋或關閉視窗"
+
+msgid "Previous or next step of the plan you're following"
+msgstr "目前計畫的上一步或下一步"
+
+msgid "Show this list"
+msgstr "顯示此列表"
+
+msgid "live"
+msgstr "進行中"
+
+msgid "+ %(n)s more cat only on Platinum or Legend Capsules"
+msgid_plural "+ %(n)s more cats only on Platinum or Legend Capsules"
+msgstr[0] "+ 另有 %(n)s 隻只在白金轉蛋或傳說轉蛋"
+
+msgid "today"
+msgstr "今天"

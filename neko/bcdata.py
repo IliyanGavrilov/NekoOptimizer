@@ -121,11 +121,11 @@ _RETRY_CODES = frozenset({429, 500, 502, 503, 504})
 _BACKOFF = 3  # seconds, times the attempt number
 
 
-def _get(url: str) -> bytes:
+def _get(url: str, user_agent: str = "Mozilla/5.0") -> bytes:
     if not url.startswith(("http://", "https://")):
         raise ValueError(f"refusing to fetch non-HTTP URL: {url!r}")
 
-    request = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
+    request = urllib.request.Request(url, headers={"User-Agent": user_agent})
     for attempt in range(1, _RETRIES + 1):
         try:
             with urllib.request.urlopen(request, timeout=60) as response:  # nosec B310

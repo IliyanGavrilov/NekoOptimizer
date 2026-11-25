@@ -26,6 +26,18 @@
       <div class="banner-chips" id="bannerChips" hidden></div>
       <p class="field-warning" id="bannerWarn" role="alert" aria-live="polite" hidden></p>
 
+      {% if wishlist_soon or wishlist_capsules_only %}
+      <details class="wish-soon" id="wishSoon">
+        <summary><span class="wanted-star" aria-hidden="true">&#9733;</span> {% blocktranslate count n=wishlist_count trimmed %}{{ n }} wishlist cat on live or upcoming banners{% plural %}{{ n }} wishlist cats on live or upcoming banners{% endblocktranslate %} <span class="chevron" aria-hidden="true">&#9662;</span></summary>
+        <ul>
+          {% for name, uid, runs in wishlist_soon %}
+          <li><span class="wish-cat">{% if uid is not None %}<img src="{{ icon_base }}/{{ uid }}/0.png" alt="" width="40" height="30" loading="lazy">{% endif %}<button type="button" class="catlink" data-name="{{ name }}"{% if uid is not None %} data-uid="{{ uid }}"{% endif %}>{{ name }}</button></span><span class="wish-runs">{% for row, live in runs %}<button type="button" class="wish-run{% if live %} live{% endif %}{% if row.capsule %} {{ row.capsule }}{% endif %}" data-title="{{ row.title }}" data-start="{{ row.dates.iso_start }}" title="{{ row.dates.label }} &middot; {% translate "Show this banner" %}"><b>{{ row.title }}</b> &middot; {% if live %}<i>{% translate "live" %}</i>{% if row.left %} &middot; {{ row.left }}{% endif %}{% else %}{{ row.span|default:row.dates.label }}{% endif %}</button>{% endfor %}</span></li>
+          {% endfor %}
+        </ul>
+        {% if wishlist_capsules_only %}<p class="wish-more muted" title="{{ wishlist_capsules_only|join:", " }}">{% blocktranslate count n=wishlist_capsules_only|length trimmed %}+ {{ n }} more cat only on Platinum or Legend Capsules{% plural %}+ {{ n }} more cats only on Platinum or Legend Capsules{% endblocktranslate %}</p>{% endif %}
+      </details>
+      {% endif %}
+
       {# Picked targets, your wishlist and toggled future ubers are reviewed and removed in #}
       {# one place: the Targets panel above the Rolls track (server-rendered by _tracks.html). #}
       {# Here, picking just highlights the chip and adds a hidden `targets` input (#targetInputs). #}
@@ -33,6 +45,7 @@
       <div class="search-wrap">
         <input type="search" id="targetSearch" placeholder="{% translate "Search cats & banners…" %}" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
         <button type="button" id="targetSearchClear" class="search-clear" hidden aria-label="{% translate "Clear search and browse banners" %}">&times;</button>
+        <div class="view-toggle" id="bannerView" role="group" aria-label="{% translate "Show banners as" %}"><button type="button" data-view="list" aria-pressed="true">{% translate "List" %}</button><button type="button" data-view="timeline" aria-pressed="false">{% translate "Timeline" %}</button></div>
         {% include "planner/_display_menu.html" with display_id="pickDisplay" form_id="pickForm" %}
         <span class="search-hint" id="targetSearchHint" hidden>{% translate "Matching banners (every run) and cats · clear to browse" %}</span>
       </div>
@@ -46,6 +59,10 @@
 
         <h3 class="search-head" id="searchBannersHead" hidden>{% translate "Banners by name" %}</h3>
         <div class="cat-browser" id="targetBrowser" data-toggle-url="{% url 'collection_toggle' %}">
+          <div class="banner-timeline" id="bannerTimeline" data-today="{% translate "today" %}" hidden>
+            <div class="tl-host"></div>
+            <p class="tl-key muted"><span><span class="tl-mark g">G</span>{% translate "Guaranteed" %}</span><span><span class="tl-mark w">&#9733;</span>{% translate "Wishlisted" %}</span>{% translate "new" as new_mark %}<span><span class="tl-mark debut">{{ new_mark|make_list|first|upper }}</span>{% translate "First appearance anywhere in the game" %}</span></p>
+          </div>
           {% for group_label, banner_sections in target_groups %}
             {% if group_label == "Available now" %}
               <h2 class="group">{% translate group_label %} <span class="count-pill">{{ banner_sections|length }}</span></h2>
